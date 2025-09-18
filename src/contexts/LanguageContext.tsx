@@ -13,7 +13,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 // Simple translation function - in a real app you'd use a proper i18n library
-const translations: Record<Language, Record<string, any>> = {
+const translations: Record<Language, Record<string, string>> = {
   en: {
     "app.name": "Treniren",
     "app.description": "Your personal training diary for tracking workouts, climbing sessions, and performance patterns",

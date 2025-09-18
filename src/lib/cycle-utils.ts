@@ -62,7 +62,7 @@ export function calculateCycleInfo(settings: CycleSettings, targetDate?: Date): 
 /**
  * Get phase information based on cycle day
  */
-function getPhaseInfo(cycleDay: number, cycleLength: number) {
+function getPhaseInfo(cycleDay: number, _cycleLength: number) {
   // Menstrual Phase (Days 1-7)
   if (cycleDay >= 1 && cycleDay <= 7) {
     return {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { getDefaultCycleSettings } from '@/lib/cycle-utils'
+// import { getDefaultCycleSettings } from '@/lib/cycle-utils'
 
 interface CycleSetupFormProps {
   onComplete: (settings: { cycleLength: number; lastPeriodDate: Date; timezone: string }) => void
@@ -120,7 +120,7 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
                 What happens next?
               </h3>
               <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                <li>• We'll calculate your current cycle phase</li>
+                <li>• We&apos;ll calculate your current cycle phase</li>
                 <li>• Training recommendations will appear in your workout form</li>
                 <li>• You can update your cycle info anytime in settings</li>
                 <li>• All data is private and secure</li>

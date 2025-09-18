@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { CycleInfo, CycleSettings, calculateCycleInfo, getDefaultCycleSettings } from '@/lib/cycle-utils'
+import { CycleInfo, CycleSettings, calculateCycleInfo } from '@/lib/cycle-utils'
 
 interface CycleContextType {
   cycleSettings: CycleSettings | null
