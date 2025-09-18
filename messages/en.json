@@ -1,0 +1,100 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "app": {
+    "title": "Treniren - Training Diary",
+    "description": "Personal training diary for tracking workouts, climbing sessions, and performance patterns",
+    "name": "Treniren"
+  },
+  "training": {
+    "types": {
+      "gym": "Gym",
+      "bouldering": "Bouldering", 
+      "circuits": "Circuits",
+      "leadRock": "Lead Rock",
+      "leadArtificial": "Lead Wall"
+    },
+    "volumes": {
+      "TR1": "TR1 - Very Light",
+      "TR2": "TR2 - Light", 
+      "TR3": "TR3 - Moderate",
+      "TR4": "TR4 - Hard",
+      "TR5": "TR5 - Very Hard"
+    },
+    "descriptions": {
+      "gym": "Strength training",
+      "bouldering": "Power & technique",
+      "circuits": "Endurance training", 
+      "leadRock": "Outdoor climbing",
+      "leadArtificial": "Indoor climbing"
+    }
+  },
+  "workouts": {
+    "title": "Manage Workouts",
+    "addNew": "Add New Workout",
+    "editWorkout": "Edit Workout",
+    "workoutType": "Workout Type",
+    "date": "Date",
+    "trainingVolume": "Training Volume",
+    "preSessionFeel": "Pre-session Feel (1-5)",
+    "dayAfterTiredness": "Day After Tiredness (1-5)",
+    "notes": "Notes",
+    "notesPlaceholder": "Add any notes about your workout...",
+    "noWorkouts": "No workouts found",
+    "loading": "Loading workouts...",
+    "createSuccess": "Workout created successfully",
+    "updateSuccess": "Workout updated successfully",
+    "deleteSuccess": "Workout deleted successfully"
+  },
+  "calendar": {
+    "title": "Training Calendar",
+    "loading": "Loading calendar...",
+    "legend": "Legend",
+    "cyclePhases": "Cycle Phases",
+    "noWorkoutsToday": "No workouts today"
+  },
+  "cycle": {
+    "title": "Track Your Menstrual Cycle?",
+    "description": "Enable cycle tracking to get personalized training recommendations based on your cycle phase. Your data will be kept private.",
+    "accept": "Yes, enable cycle tracking",
+    "decline": "No, thank you",
+    "setup": "Set Up Cycle Tracking",
+    "lastPeriodDate": "Last Period Start Date",
+    "cycleLength": "Average Cycle Length (days)",
+    "saveSettings": "Save Cycle Settings",
+    "phases": {
+      "menstrual": "Menstrual",
+      "follicular": "Follicular", 
+      "ovulation": "Ovulation",
+      "earlyLuteal": "Early Luteal",
+      "lateLuteal": "Late Luteal"
+    },
+    "day": "Cycle Day",
+    "selectedDate": "Selected Date:"
+  },
+  "features": {
+    "calendarSync": "Calendar Sync",
+    "calendarSyncDesc": "Sync your workouts with Google Calendar automatically",
+    "pwaReady": "PWA Ready", 
+    "pwaReadyDesc": "Install on your iPhone and use offline",
+    "trackProgress": "Track Progress",
+    "trackProgressDesc": "Monitor intensity, mood, and performance patterns"
+  },
+  "milestones": {
+    "m3Complete": "Milestone 3 Complete!",
+    "m3Desc": "Weekly/monthly calendar view with training type colors and cycle indicators is now available!",
+    "completed": "Completed"
+  }
+}

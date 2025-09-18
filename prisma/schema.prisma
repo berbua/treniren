@@ -1,0 +1,203 @@
+// Treniren Training Diary - Database Schema
+// Based on app-planning requirements
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum WorkoutType {
+  GYM
+  BOULDERING
+  CIRCUITS
+  LEAD_ROCK
+  LEAD_ARTIFICIAL
+}
+
+enum TrainingVolume {
+  TR1
+  TR2
+  TR3
+  TR4
+  TR5
+}
+
+enum BoulderType {
+  SLAB
+  VERTICAL
+  OVERHANG
+  ROOF
+  COMPSTYLE
+}
+
+enum BoulderFormation {
+  POWERFUL
+  TECHNICAL
+  COMPSTYLE
+}
+
+enum Formation {
+  SLAB
+  VERTICAL
+  SLIGHT_OVERHANG
+  STRONG_OVERHANG
+}
+
+// Models
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  profile      UserProfile?
+  plans        Plan[]
+  workouts     Workout[]
+  exercises    Exercise[]
+  tags         Tag[]
+  planTags     PlanTag[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  photoUrl               String?
+  googleSheetsUrl        String?
+  cycleAvgLengthDays     Int       @default(28)
+  lastPeriodDate         DateTime?
+  timezone               String    @default("Europe/Warsaw")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Plan {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  title     String
+  label     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workouts Workout[]
+  planTags PlanTag[]
+
+  @@map("plans")
+}
+
+model Workout {
+  id                  String         @id @default(cuid())
+  planId              String?
+  userId              String
+  type                WorkoutType
+  startTime           DateTime
+  endTime             DateTime?
+  trainingVolume      TrainingVolume?
+  details             Json?          // Type-specific fields
+  preSessionFeel      Int?           @db.SmallInt // 1-5
+  dayAfterTiredness   Int?           @db.SmallInt // 1-5
+  notes               String?
+  calendarEventId     String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  // Relations
+  plan            Plan?             @relation(fields: [planId], references: [id], onDelete: SetNull)
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutExercises WorkoutExercise[]
+
+  @@map("workouts")
+}
+
+model Exercise {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  category     String?
+  defaultUnit  String   @default("kg")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutExercises WorkoutExercise[]
+
+  @@map("exercises")
+}
+
+model WorkoutExercise {
+  id        String @id @default(cuid())
+  workoutId String
+  exerciseId String
+  order     Int
+
+  // Relations
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  sets    Set[]
+
+  @@unique([workoutId, exerciseId])
+  @@map("workout_exercises")
+}
+
+model Set {
+  id                String   @id @default(cuid())
+  workoutExerciseId String
+  setNumber         Int
+  reps              Int?
+  weight            Float?   // in kg
+  rir               Int?     // Reps in Reserve
+  success           Boolean?
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  // Relations
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@map("sets")
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   @default("#3b82f6")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planTags PlanTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model PlanTag {
+  planId String
+  tagId  String
+
+  // Relations
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([planId, tagId])
+  @@map("plan_tags")
+}

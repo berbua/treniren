@@ -1,0 +1,132 @@
+# App Planning – Training Diary
+
+Use this document as the single source of truth for MVP implementation.
+
+## 1) Vision & Goals
+- Primary goal: for me to see what kinds of trainings I am doing and when, their intensity, and when I feel the strongest and climb mentally best.
+- Who is it for: MVP – me only; Later – small group + trainer view.
+- Success (1–3 months): I log trainings consistently, see weekly/monthly views, and understand patterns (type, intensity, cycle).
+
+## 2) Key Features
+- MVP (must-have):
+  - [ ] Create/edit/delete training plans and workouts
+  - [ ] Training types: gym workout, bouldering, circuits, lead – rocks, lead – artificial wall (types may include specific extra fields)
+  - [ ] Exercises, sets, reps, weights, notes, mood/RPE
+  - [ ] Planning trainings in weekly view (drag/drop optional later)
+  - [ ] Sync workouts to Google Calendar (one-way)
+  - [ ] Mobile-friendly PWA (installable on iPhone)
+  - [ ] Local drafts/offline basics
+  - [ ] Menstrual cycle info in calendar + simple reminders per phase (doc-based)
+  - [ ] Monthly prompt for first day of period (user selects)
+- Later (nice-to-have):
+  - [ ] Calendar ↔ App two-way sync
+  - [ ] Push notifications (reminders)
+  - [ ] Templates/recurring plans expansion
+  - [ ] Charts/analytics (volume, PRs, 1RM est.)
+  - [ ] Tags/labels and filters
+
+## 3) User Stories (MVP)
+- As a user, I can log in as trainee (single protected session).
+- As a user, I can set profile photo from gallery.
+- As a user, I can create a workout with date/time so that it shows on my calendar.
+- As a user, I can log sets (reps/weight/RIR) for gym workouts so that I track progress.
+- As a user, I can set training volume (TR1-TR5) for non-gym workouts so that I track intensity.
+- As a user, I can write notes and mood (pre-session feel; next-day tiredness).
+- As a user, I can view a week/month overview of planned and completed workouts and distinguish types by color.
+- As a user, I can use the app on my iPhone as a PWA.
+- As a user, I can plan in a weekly view.
+
+## 4) Non-Functional Requirements
+- Performance: Fast load on 3G/4G, responsive on mobile
+- Availability: Occasional downtime acceptable (personal app)
+- Privacy: Personal data; keep private by default
+- Cost: Prefer free tiers (hosting/DB)
+- Locale/Timezone: Auto-detect device timezone (e.g., Europe/Warsaw)
+
+## 5) Data Model (initial MVP)
+- users: id, email, name, created_at
+- user_profile: user_id(PK/FK), photo_url, google_sheets_url (optional; can be added later), cycle_avg_length_days (default 28), last_period_date (date), timezone (IANA)
+- plans: id, user_id, date, title, label, notes
+- workouts: id, plan_id (nullable), user_id, type (enum: gym | bouldering | circuits | lead_rock | lead_artificial), start_time, end_time, training_volume (enum: TR1 | TR2 | TR3 | TR4 | TR5), details (JSON), pre_session_feel (int 1–5), day_after_tiredness (int 1–5), notes, calendar_event_id (nullable)
+- exercises: id, name, category, default_unit
+- workout_exercises: id, workout_id, exercise_id, order
+- sets: id, workout_exercise_id, set_number, reps, weight, rir, success (bool), notes
+- tags: id, user_id, name, color
+- plan_tags: plan_id, tag_id
+
+Notes:
+- Metric units (kg) for MVP.
+- Training volume: TR1-TR5 scale for all training types except gym workouts (gym workouts use sets/reps/weight instead)
+- Type-specific `details` examples:
+  - bouldering: intensity, formation (slab|vertical|overhang|roof), boulders type (powerful|technical|compstyle)
+  - lead_*: grade_system, attempts, sent (bool), partner, location
+  - circuits: duration_min, rounds, rest_intervals_sec, formation (slab|vertical|slight_overhang|strong_overhang[])
+
+## 6) Integrations
+- Auth: Single protected session for MVP (extendable later to Google login)
+- Google Calendar API: events.create/update/delete (one-way)
+- Optional later: error monitoring (Sentry), analytics (Plausible)
+
+## 7) Architecture Overview
+- Client: Next.js (React + TS), Tailwind CSS
+- Server/API: Next.js Route Handlers (REST) or tRPC (later)
+- DB: Supabase (Postgres) or Neon + Prisma/Drizzle
+- Hosting: Vercel (free tier)
+- PWA: manifest + service worker (next-pwa)
+
+## 8) PWA & Notifications (iOS)
+- iOS web push requires Add to Home Screen (PWA) – later
+- Service Worker to support offline and future push (`push`, `notificationclick`)
+- Ask notification permission only after explicit user action (later)
+
+## 9) Calendar Sync Strategy
+- Direction: One-way (App → Google Calendar) for MVP
+- Target calendar: Dedicated “Training” calendar
+- Mapping:
+  - title → summary
+  - notes/labels → description (include tags text if any)
+  - start/end with timezone → start/end
+  - event.id → workouts.calendar_event_id
+- Reliability: show subtle error + manual “Resync” button; implement retry queue later
+
+## 10) Security & Privacy
+- Store tokens securely; refresh tokens server-side (when using OAuth later)
+- Limit scopes to `calendar.events`
+- Personal app: optional device-level protection later (passcode/biometrics)
+
+## 11) UX/UI Guidelines
+- Weekly planner grid with type colors; monthly calendar view
+- Color scheme: deep autumn palette
+- While planning, show small cycle-phase bubble on each date cell
+- Template picker modal on “Add training” (templates, not full-week repeats)
+- Mobile-first forms with large tap targets for sets logging
+
+## 12) Milestones / Roadmap
+- M1: Project scaffolding, deploy Hello World
+- M2: DB schema + CRUD for workouts/exercises/sets
+- M3: Weekly/monthly calendar UI (source from DB)
+- M4: Google Calendar one-way sync (create/update/delete)
+- M5: PWA install + offline basics
+- M6: Cycle logic (store last period date, compute phases, UI bubbles + simple reminders)
+- Later: Push notifications, two-way sync, analytics, tagging & filters
+
+## 13) Definition of Done (MVP)
+- I can add a workout in the app and it appears in Google Calendar
+- I can log sets with reps and weights on mobile
+- I can install the app on my iPhone and use it offline
+- I can browse a weekly/monthly view of my trainings with type colors and cycle indicator
+
+## 14) Decisions (locked for MVP)
+- Training types: gym, bouldering, circuits, lead_rock, lead_artificial
+- Store type-specific fields in `workouts.details` (JSON) for MVP
+- Menstrual cycle: default 28 days; use `last_period_date` + `cycle_avg_length_days` to compute phases; reminders day-of/day-before in evening
+- Colors: by training type; cycle shown as a small bubble during planning
+- Auth: single protected session
+- Profile photo: upload and display as-is
+- RPE/mood: pre_session_feel 1–5; day_after_tiredness 1–5
+- Templates: select a training template when adding a training
+- Timezone: auto-detect from device (e.g., Europe/Warsaw)
+- Google Sheets link: deferred (not in MVP)
+- Climbing grade systems: free text for now; standardize later
+- Heart-rate fields: not needed
+- Training volume: TR1-TR5 scale for all training types except gym workouts

@@ -1,0 +1,100 @@
+{
+  "common": {
+    "loading": "Ładowanie...",
+    "error": "Błąd",
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "add": "Dodaj",
+    "today": "Dzisiaj",
+    "week": "Tydzień",
+    "month": "Miesiąc",
+    "previous": "Poprzedni",
+    "next": "Następny"
+  },
+  "app": {
+    "title": "Treniren - Dziennik Treningowy",
+    "description": "Osobisty dziennik treningowy do śledzenia treningów, sesji wspinaczkowych i wzorców wydajności",
+    "name": "Treniren"
+  },
+  "training": {
+    "types": {
+      "gym": "Siłownia",
+      "bouldering": "Boulder", 
+      "circuits": "Obwody",
+      "leadRock": "Prowadzenie - Skała",
+      "leadArtificial": "Prowadzenie - Ścianka"
+    },
+    "volumes": {
+      "TR1": "TR1 - Bardzo lekko",
+      "TR2": "TR2 - Lekko", 
+      "TR3": "TR3 - Umiarkowanie",
+      "TR4": "TR4 - Ciężko",
+      "TR5": "TR5 - Bardzo ciężko"
+    },
+    "descriptions": {
+      "gym": "Trening siłowy",
+      "bouldering": "Moc i technika",
+      "circuits": "Trening wytrzymałościowy", 
+      "leadRock": "Wspinaczka na skałach",
+      "leadArtificial": "Wspinaczka na ściance"
+    }
+  },
+  "workouts": {
+    "title": "Zarządzaj Treningami",
+    "addNew": "Dodaj Nowy Trening",
+    "editWorkout": "Edytuj Trening",
+    "workoutType": "Rodzaj Treningu",
+    "date": "Data",
+    "trainingVolume": "Intensywność Treningu",
+    "preSessionFeel": "Samopoczucie Przed (1-5)",
+    "dayAfterTiredness": "Zmęczenie Następnego Dnia (1-5)",
+    "notes": "Notatki",
+    "notesPlaceholder": "Dodaj notatki o swoim treningu...",
+    "noWorkouts": "Nie znaleziono treningów",
+    "loading": "Ładowanie treningów...",
+    "createSuccess": "Trening został utworzony",
+    "updateSuccess": "Trening został zaktualizowany",
+    "deleteSuccess": "Trening został usunięty"
+  },
+  "calendar": {
+    "title": "Kalendarz Treningowy",
+    "loading": "Ładowanie kalendarza...",
+    "legend": "Legenda",
+    "cyclePhases": "Fazy Cyklu",
+    "noWorkoutsToday": "Brak treningów dzisiaj"
+  },
+  "cycle": {
+    "title": "Śledzić Cykl Miesiączkowy?",
+    "description": "Włącz śledzenie cyklu, aby otrzymywać spersonalizowane rekomendacje treningowe na podstawie fazy cyklu. Twoje dane będą prywatne.",
+    "accept": "Tak, włącz śledzenie cyklu",
+    "decline": "Nie, dziękuję",
+    "setup": "Ustaw Śledzenie Cyklu",
+    "lastPeriodDate": "Data Ostatniej Miesiączki",
+    "cycleLength": "Średnia Długość Cyklu (dni)",
+    "saveSettings": "Zapisz Ustawienia Cyklu",
+    "phases": {
+      "menstrual": "Miesiączka",
+      "follicular": "Folikularna", 
+      "ovulation": "Owulacja",
+      "earlyLuteal": "Wczesna Lutealna",
+      "lateLuteal": "Późna Lutealna"
+    },
+    "day": "Dzień Cyklu",
+    "selectedDate": "Wybrana Data:"
+  },
+  "features": {
+    "calendarSync": "Synchronizacja Kalendarza",
+    "calendarSyncDesc": "Automatycznie synchronizuj treningi z Google Calendar",
+    "pwaReady": "Gotowe na PWA", 
+    "pwaReadyDesc": "Zainstaluj na iPhone i używaj offline",
+    "trackProgress": "Śledź Postęp",
+    "trackProgressDesc": "Monitoruj intensywność, nastrój i wzorce wydajności"
+  },
+  "milestones": {
+    "m3Complete": "Etap 3 Ukończony!",
+    "m3Desc": "Widok kalendarza tygodniowy/miesięczny z kolorami typów treningów i wskaźnikami cyklu jest już dostępny!",
+    "completed": "Ukończone"
+  }
+}
