@@ -46,7 +46,7 @@ export function calculateCycleInfo(settings: CycleSettings, targetDate?: Date): 
   nextOvulationDate.setDate(nextOvulationDate.getDate() + 14)
   
   // Determine current phase and get recommendations
-  const phaseInfo = getPhaseInfo(currentDay, cycleLength)
+  const phaseInfo = getPhaseInfo(currentDay)
   
   return {
     currentDay,
@@ -62,7 +62,7 @@ export function calculateCycleInfo(settings: CycleSettings, targetDate?: Date): 
 /**
  * Get phase information based on cycle day
  */
-function getPhaseInfo(cycleDay: number, _cycleLength: number) {
+function getPhaseInfo(cycleDay: number) {
   // Menstrual Phase (Days 1-7)
   if (cycleDay >= 1 && cycleDay <= 7) {
     return {
