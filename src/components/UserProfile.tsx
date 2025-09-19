@@ -108,7 +108,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
               <div className="flex items-center space-x-4">
                 <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
                   {profileData.photoUrl ? (
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={profileData.photoUrl}
                       alt="Profile"
