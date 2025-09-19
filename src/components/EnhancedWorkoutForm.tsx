@@ -51,6 +51,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
     dayAfterTiredness: initialData?.dayAfterTiredness || 3,
     notes: initialData?.notes || '',
     mentalState: initialData?.mentalState || {},
+    sector: initialData?.sector || '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -101,6 +102,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
         dayAfterTiredness: formData.dayAfterTiredness,
         notes: formData.notes,
         mentalState: formData.mentalState,
+        sector: formData.sector,
       };
 
       await onSubmit(workoutData);
@@ -288,10 +290,26 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
               </div>
             </div>
 
+            {/* Sector Field - Only for Lead Rock */}
+            {formData.type === 'LEAD_ROCK' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  🏔️ {t('workouts.sector') || 'Sector'}
+                </label>
+                <input
+                  type="text"
+                  value={formData.sector}
+                  onChange={(e) => updateFormData('sector', e.target.value)}
+                  placeholder={t('workouts.sectorPlaceholder') || 'Enter the climbing sector or area...'}
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                />
+              </div>
+            )}
+
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                📝 Notes
+                📝 {t('workouts.notes') || 'Notes'}
               </label>
               <textarea
                 value={formData.notes}

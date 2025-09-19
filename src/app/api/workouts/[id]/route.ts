@@ -57,6 +57,7 @@ export async function PUT(
       preSessionFeel,
       dayAfterTiredness,
       notes,
+      sector,
     } = body
 
     const userId = 'temp-user-id'
@@ -75,6 +76,7 @@ export async function PUT(
         preSessionFeel,
         dayAfterTiredness,
         notes,
+        sector,
       },
     })
 

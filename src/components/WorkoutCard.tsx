@@ -12,6 +12,7 @@ interface WorkoutCardProps {
     preSessionFeel?: number
     dayAfterTiredness?: number
     mentalState?: MentalState
+    sector?: string
   }
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
@@ -80,17 +81,19 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
           {onEdit && (
             <button
               onClick={() => onEdit(workout.id)}
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+              title="Edit workout"
             >
-              Edit
+              ✏️
             </button>
           )}
           {onDelete && (
             <button
               onClick={() => onDelete(workout.id)}
-              className="text-red-600 hover:text-red-800 text-sm"
+              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              title="Delete workout"
             >
-              Delete
+              🗑️
             </button>
           )}
         </div>
@@ -106,6 +109,14 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
           </div>
         )}
 
+        {workout.sector && (
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium text-slate-500">Sector:</span>
+            <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
+              🏔️ {workout.sector}
+            </span>
+          </div>
+        )}
 
         {workout.preSessionFeel && (
           <div className="flex items-center space-x-2">

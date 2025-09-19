@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       preSessionFeel,
       dayAfterTiredness,
       notes,
+      sector,
       planId,
     } = body
 
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
         preSessionFeel,
         dayAfterTiredness,
         notes,
+        sector,
         planId: planId || null,
       },
       include: {

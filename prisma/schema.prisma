@@ -114,6 +114,7 @@ model Workout {
   preSessionFeel      Int?           @db.SmallInt // 1-5
   dayAfterTiredness   Int?           @db.SmallInt // 1-5
   notes               String?
+  sector              String?        // For lead_rock workouts
   calendarEventId     String?
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt

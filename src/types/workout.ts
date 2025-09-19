@@ -18,6 +18,7 @@ export interface Workout {
   preSessionFeel?: number
   dayAfterTiredness?: number
   mentalState?: MentalState
+  sector?: string // For lead_rock workouts
   planId?: string
   userId: string
   createdAt: string
@@ -42,4 +43,5 @@ export interface WorkoutFormData {
   dayAfterTiredness: number
   notes: string
   mentalState?: MentalState
+  sector?: string // For lead_rock workouts
 }

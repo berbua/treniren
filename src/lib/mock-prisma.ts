@@ -29,6 +29,20 @@ const mockWorkouts: Workout[] = [
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
   },
+  {
+    id: '3',
+    type: 'LEAD_ROCK',
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    trainingVolume: 'TR3',
+    notes: 'Beautiful day on the crag!',
+    preSessionFeel: 5,
+    dayAfterTiredness: 2,
+    sector: 'Main Wall',
+    planId: undefined,
+    userId: 'temp-user-id',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
 ]
 
 const mockExercises: Exercise[] = [
@@ -64,7 +78,7 @@ export const mockPrisma = {
       const workout = mockWorkouts.find(w => w.id === options?.where.id)
       return workout || null
     },
-    create: async (options: { data: { type: string; date: Date; trainingVolume?: string; details?: unknown; notes?: string; preSessionFeel?: number; dayAfterTiredness?: number; planId?: string; userId: string }; include?: unknown }) => {
+    create: async (options: { data: { type: string; date: Date; trainingVolume?: string; details?: unknown; notes?: string; preSessionFeel?: number; dayAfterTiredness?: number; sector?: string; planId?: string; userId: string }; include?: unknown }) => {
       console.log('Mock: create workout', options)
       const newWorkout: Workout = {
         id: Math.random().toString(36).substr(2, 9),
@@ -74,6 +88,7 @@ export const mockPrisma = {
         notes: options.data.notes,
         preSessionFeel: options.data.preSessionFeel,
         dayAfterTiredness: options.data.dayAfterTiredness,
+        sector: options.data.sector,
         planId: options.data.planId,
         userId: options.data.userId,
         createdAt: new Date().toISOString(),
@@ -82,7 +97,7 @@ export const mockPrisma = {
       mockWorkouts.unshift(newWorkout)
       return newWorkout
     },
-    updateMany: async (options: { where: { id: string; userId: string }; data: { type: string; date: Date; trainingVolume?: string; details?: unknown; notes?: string; preSessionFeel?: number; dayAfterTiredness?: number } }) => {
+    updateMany: async (options: { where: { id: string; userId: string }; data: { type: string; date: Date; trainingVolume?: string; details?: unknown; notes?: string; preSessionFeel?: number; dayAfterTiredness?: number; sector?: string } }) => {
       console.log('Mock: updateMany workouts', options)
       const index = mockWorkouts.findIndex(w => w.id === options.where.id)
       if (index !== -1) {
@@ -94,6 +109,7 @@ export const mockPrisma = {
           notes: options.data.notes,
           preSessionFeel: options.data.preSessionFeel,
           dayAfterTiredness: options.data.dayAfterTiredness,
+          sector: options.data.sector,
           updatedAt: new Date().toISOString(),
         }
         return { count: 1 }
