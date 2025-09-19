@@ -2,6 +2,13 @@
 export type WorkoutType = 'GYM' | 'BOULDERING' | 'CIRCUITS' | 'LEAD_ROCK' | 'LEAD_ARTIFICIAL'
 export type TrainingVolume = 'TR1' | 'TR2' | 'TR3' | 'TR4' | 'TR5'
 
+export interface MentalState {
+  beforeClimbing?: number // 1-5 scale
+  duringClimbing?: number // 1-5 scale
+  tookFalls?: boolean
+  reflections?: string
+}
+
 export interface Workout {
   id: string
   type: WorkoutType
@@ -10,6 +17,7 @@ export interface Workout {
   notes?: string
   preSessionFeel?: number
   dayAfterTiredness?: number
+  mentalState?: MentalState
   planId?: string
   userId: string
   createdAt: string
@@ -33,4 +41,5 @@ export interface WorkoutFormData {
   preSessionFeel: number
   dayAfterTiredness: number
   notes: string
+  mentalState?: MentalState
 }

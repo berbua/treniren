@@ -61,7 +61,20 @@
     "loading": "Loading workouts...",
     "createSuccess": "Workout created successfully",
     "updateSuccess": "Workout updated successfully",
-    "deleteSuccess": "Workout deleted successfully"
+    "deleteSuccess": "Workout deleted successfully",
+    "strongMind": "Strong Mind",
+    "mentalStateTracking": "Track your mental state and climbing mindset",
+    "howFeltBefore": "How did I feel before climbing?",
+    "howFeltDuring": "How did I feel during climbing?",
+    "didTakeFalls": "Did I take any falls?",
+    "otherReflections": "Other reflections",
+    "reflectionsPlaceholder": "Share your thoughts about the session, what you learned, or how you overcame challenges...",
+    "mentalSummary": "Mental State Summary",
+    "before": "Before",
+    "during": "During",
+    "falls": "Falls",
+    "yes": "Yes",
+    "no": "No"
   },
   "calendar": {
     "title": "Training Calendar",

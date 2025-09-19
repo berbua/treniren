@@ -61,7 +61,20 @@
     "loading": "Ładowanie treningów...",
     "createSuccess": "Trening został utworzony",
     "updateSuccess": "Trening został zaktualizowany",
-    "deleteSuccess": "Trening został usunięty"
+    "deleteSuccess": "Trening został usunięty",
+    "strongMind": "Strong Mind",
+    "mentalStateTracking": "Śledź swój stan psychiczny i nastawienie podczas wspinaczki",
+    "howFeltBefore": "Jak się czułem przed wspinaczką?",
+    "howFeltDuring": "Jak się czułem podczas wspinaczki?",
+    "didTakeFalls": "Czy miałem jakieś odpadnięcia?",
+    "otherReflections": "Inne refleksje",
+    "reflectionsPlaceholder": "Podziel się swoimi przemyśleniami o sesji, czego się nauczyłeś lub jak pokonałeś wyzwania...",
+    "mentalSummary": "Podsumowanie Stanu Psychicznego",
+    "before": "Przed",
+    "during": "Podczas",
+    "falls": "Odpadnięcia",
+    "yes": "Tak",
+    "no": "Nie"
   },
   "calendar": {
     "title": "Kalendarz Treningowy",

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { WorkoutType, TrainingVolume, WorkoutFormData, Workout } from '@/types/workout';
+import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, MentalState } from '@/types/workout';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import CycleInfoComponent from './CycleInfo';
+import { StrongMindSection } from './StrongMindSection';
 
 interface EnhancedWorkoutFormProps {
   onSubmit: (workout: WorkoutFormData) => void;
@@ -49,6 +50,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
     preSessionFeel: initialData?.preSessionFeel || 3,
     dayAfterTiredness: initialData?.dayAfterTiredness || 3,
     notes: initialData?.notes || '',
+    mentalState: initialData?.mentalState || {},
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -98,6 +100,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
         preSessionFeel: formData.preSessionFeel,
         dayAfterTiredness: formData.dayAfterTiredness,
         notes: formData.notes,
+        mentalState: formData.mentalState,
       };
 
       await onSubmit(workoutData);
@@ -298,6 +301,13 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
                 className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
               />
             </div>
+
+            {/* Strong Mind Section */}
+            <StrongMindSection
+              mentalState={formData.mentalState}
+              onChange={(mentalState) => updateFormData('mentalState', mentalState)}
+              workoutType={formData.type}
+            />
           </form>
         </div>
 

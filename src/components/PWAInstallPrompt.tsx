@@ -15,8 +15,16 @@ export const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure this component only renders on the client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    if (!isClient) return;
+
     // Check if app is already installed
     const checkInstalled = () => {
       if (window.matchMedia('(display-mode: standalone)').matches || 
@@ -54,7 +62,7 @@ export const PWAInstallPrompt = () => {
     // For iOS Safari, show manual install instructions after a delay
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
-    
+
     if (isIOS && !isInStandaloneMode) {
       console.log('PWA: iOS detected, showing manual install instructions');
       // Show manual install prompt for iOS after 3 seconds
@@ -67,7 +75,7 @@ export const PWAInstallPrompt = () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [isClient]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
@@ -92,7 +100,8 @@ export const PWAInstallPrompt = () => {
     localStorage.setItem('pwa-install-dismissed', Date.now().toString());
   };
 
-  if (isInstalled || !showInstallPrompt || !deferredPrompt) {
+  // Don't render anything on the server side to prevent hydration mismatch
+  if (!isClient || isInstalled || !showInstallPrompt || !deferredPrompt) {
     return null;
   }
 

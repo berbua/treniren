@@ -6,6 +6,12 @@ import { useState, useEffect } from 'react';
 export const OfflineIndicator = () => {
   const { isOnline, unsyncedWorkouts, syncQueue } = useOffline();
   const [showIndicator, setShowIndicator] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure this component only renders on the client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (!isOnline) {
@@ -21,7 +27,8 @@ export const OfflineIndicator = () => {
 
   const pendingCount = unsyncedWorkouts.length + syncQueue.length;
 
-  if (!showIndicator && isOnline) {
+  // Don't render anything on the server side to prevent hydration mismatch
+  if (!isClient || (!showIndicator && isOnline)) {
     return null;
   }
 

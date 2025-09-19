@@ -48,6 +48,8 @@ export const saveOfflineWorkout = (workout: OfflineWorkout): void => {
 };
 
 export const getOfflineWorkouts = (): OfflineWorkout[] => {
+  if (typeof window === 'undefined') return []; // Server-side default
+  
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.OFFLINE_WORKOUTS);
     return stored ? JSON.parse(stored) : [];
@@ -141,10 +143,13 @@ export const generateOfflineId = (): string => {
 };
 
 export const isOnline = (): boolean => {
+  if (typeof window === 'undefined') return true; // Default to online on server
   return navigator.onLine;
 };
 
 export const getStorageSize = (): { used: number; total: number } => {
+  if (typeof window === 'undefined') return { used: 0, total: 0 }; // Server-side default
+  
   try {
     let used = 0;
     for (const key in localStorage) {

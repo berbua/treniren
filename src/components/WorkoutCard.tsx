@@ -1,6 +1,6 @@
 'use client'
 
-import { WorkoutType, TrainingVolume } from '@/types/workout'
+import { WorkoutType, TrainingVolume, MentalState } from '@/types/workout'
 
 interface WorkoutCardProps {
   workout: {
@@ -11,6 +11,7 @@ interface WorkoutCardProps {
     notes?: string
     preSessionFeel?: number
     dayAfterTiredness?: number
+    mentalState?: MentalState
   }
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
@@ -145,6 +146,65 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
         {workout.notes && (
           <div className="mt-2">
             <p className="text-sm text-slate-600 dark:text-slate-300">{workout.notes}</p>
+          </div>
+        )}
+
+        {/* Mental State Display */}
+        {workout.mentalState && (workout.mentalState.beforeClimbing || workout.mentalState.duringClimbing || workout.mentalState.tookFalls !== undefined) && (
+          <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-sm">🧠</span>
+              <span className="text-xs font-semibold text-purple-800 dark:text-purple-200">Strong Mind</span>
+            </div>
+            <div className="space-y-1 text-xs">
+              {workout.mentalState.beforeClimbing && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-purple-600 dark:text-purple-400">Before:</span>
+                  <span className={`font-medium ${
+                    workout.mentalState.beforeClimbing === 1 ? 'text-red-600' :
+                    workout.mentalState.beforeClimbing === 2 ? 'text-orange-600' :
+                    workout.mentalState.beforeClimbing === 3 ? 'text-yellow-600' :
+                    workout.mentalState.beforeClimbing === 4 ? 'text-blue-600' : 'text-green-600'
+                  }`}>
+                    {workout.mentalState.beforeClimbing === 1 ? '😰 Very Nervous' :
+                     workout.mentalState.beforeClimbing === 2 ? '😟 Nervous' :
+                     workout.mentalState.beforeClimbing === 3 ? '😐 Neutral' :
+                     workout.mentalState.beforeClimbing === 4 ? '😊 Confident' : '🤩 Very Confident'}
+                  </span>
+                </div>
+              )}
+              {workout.mentalState.duringClimbing && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-purple-600 dark:text-purple-400">During:</span>
+                  <span className={`font-medium ${
+                    workout.mentalState.duringClimbing === 1 ? 'text-red-600' :
+                    workout.mentalState.duringClimbing === 2 ? 'text-orange-600' :
+                    workout.mentalState.duringClimbing === 3 ? 'text-yellow-600' :
+                    workout.mentalState.duringClimbing === 4 ? 'text-blue-600' : 'text-green-600'
+                  }`}>
+                    {workout.mentalState.duringClimbing === 1 ? '😰 Very Nervous' :
+                     workout.mentalState.duringClimbing === 2 ? '😟 Nervous' :
+                     workout.mentalState.duringClimbing === 3 ? '😐 Neutral' :
+                     workout.mentalState.duringClimbing === 4 ? '😊 Confident' : '🤩 Very Confident'}
+                  </span>
+                </div>
+              )}
+              {(workout.type === 'LEAD_ROCK' || workout.type === 'LEAD_ARTIFICIAL') && workout.mentalState.tookFalls !== undefined && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-purple-600 dark:text-purple-400">Falls:</span>
+                  <span className={`font-medium ${workout.mentalState.tookFalls ? 'text-red-600' : 'text-green-600'}`}>
+                    {workout.mentalState.tookFalls ? '⚠️ Yes' : '✅ No'}
+                  </span>
+                </div>
+              )}
+              {workout.mentalState.reflections && (
+                <div className="mt-2">
+                  <p className="text-xs text-purple-700 dark:text-purple-300 italic">
+                    "{workout.mentalState.reflections}"
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
