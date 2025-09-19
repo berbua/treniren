@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { CycleProvider } from "@/contexts/CycleContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { ServiceWorkerProvider } from "@/components/ServiceWorkerProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,15 +38,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icon-192.svg" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Treniren" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <ServiceWorkerProvider />
         <LanguageProvider>
           <CycleProvider>
             {children}
+            <PWAInstallPrompt />
+            <OfflineIndicator />
           </CycleProvider>
         </LanguageProvider>
       </body>

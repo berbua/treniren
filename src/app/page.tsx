@@ -1,11 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import CycleSetupFlow from '@/components/CycleSetupFlow'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useOffline } from '@/hooks/useOffline'
+import { OfflineWorkoutForm } from '@/components/OfflineWorkoutForm'
 
 export default function Home() {
   const { t } = useLanguage()
+  const { isOnline, unsyncedWorkouts, storageSize } = useOffline()
+  const [showOfflineForm, setShowOfflineForm] = useState(false)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
       <CycleSetupFlow />
@@ -94,6 +99,26 @@ export default function Home() {
             </a>
           </div>
 
+          {/* PWA Status */}
+          <div className="mt-16 p-6 bg-blue-100 dark:bg-blue-900 rounded-lg max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">
+              📱 PWA Status
+            </h2>
+            <div className="text-sm text-slate-600 dark:text-slate-300 space-y-2">
+              <p>🌐 Status: <span className={`font-semibold ${isOnline ? 'text-green-600' : 'text-yellow-600'}`}>
+                {isOnline ? 'Online' : 'Offline'}
+              </span></p>
+              <p>📦 Unsynced workouts: <span className="font-semibold">{unsyncedWorkouts.length}</span></p>
+              <p>💾 Storage used: <span className="font-semibold">{Math.round(storageSize.used / 1024)}KB / {Math.round(storageSize.total / 1024)}KB</span></p>
+              <button
+                onClick={() => setShowOfflineForm(true)}
+                className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Test Offline Workout
+              </button>
+            </div>
+          </div>
+
           {/* Status */}
           <div className="mt-16 p-6 bg-green-100 dark:bg-green-900 rounded-lg max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">
@@ -108,10 +133,15 @@ export default function Home() {
               <p>✅ Calendar UI with weekly/monthly views</p>
               <p>✅ Training type colors and emojis</p>
               <p>✅ Internationalization (English/Polish)</p>
+              <p>✅ PWA install + offline basics</p>
             </div>
           </div>
         </div>
       </main>
+      
+      {showOfflineForm && (
+        <OfflineWorkoutForm onClose={() => setShowOfflineForm(false)} />
+      )}
     </div>
   );
 }
