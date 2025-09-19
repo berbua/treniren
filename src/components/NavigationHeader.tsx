@@ -16,9 +16,9 @@ export const NavigationHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigation = [
-    { name: t('nav.home'), href: '/', icon: '🏠' },
-    { name: t('nav.workouts'), href: '/workouts', icon: '🏋️' },
-    { name: t('nav.calendar'), href: '/calendar', icon: '📅' },
+    { name: t('nav.home') || 'Home', href: '/', icon: '🏠' },
+    { name: t('nav.workouts') || 'Workouts', href: '/workouts', icon: '🏋️' },
+    { name: t('nav.calendar') || 'Calendar', href: '/calendar', icon: '📅' },
   ];
 
   const isActive = (href: string) => {
@@ -127,7 +127,7 @@ export const NavigationHeader = () => {
               <div className="flex items-center space-x-2 text-sm">
                 <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-yellow-500'}`} />
                 <span className="text-slate-600 dark:text-slate-400">
-                  {isOnline ? t('common.online') : t('common.offline')}
+                  {isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}
                 </span>
               </div>
               
@@ -141,7 +141,7 @@ export const NavigationHeader = () => {
               >
                 <span className="text-lg">👤</span>
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t('nav.profile')}
+                  {t('nav.profile') || 'Profile'}
                 </span>
               </button>
             </div>
