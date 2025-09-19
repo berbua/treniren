@@ -211,7 +211,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
               {workout.mentalState.reflections && (
                 <div className="mt-2">
                   <p className="text-xs text-purple-700 dark:text-purple-300 italic">
-                    "{workout.mentalState.reflections}"
+                    &ldquo;{workout.mentalState.reflections}&rdquo;
                   </p>
                 </div>
               )}

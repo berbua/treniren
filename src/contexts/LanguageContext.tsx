@@ -17,7 +17,7 @@ import enTranslations from '../../messages/en.json'
 import plTranslations from '../../messages/pl.json'
 
 // Load translations from JSON files
-const translations: Record<Language, Record<string, any>> = {
+const translations: Record<Language, Record<string, unknown>> = {
   en: enTranslations,
   pl: plTranslations
 }
@@ -25,13 +25,13 @@ const translations: Record<Language, Record<string, any>> = {
 console.log('Translations loaded:', translations)
 
 // Helper function to get nested translation
-const getNestedTranslation = (obj: any, key: string): string => {
+const getNestedTranslation = (obj: unknown, key: string): string => {
   const keys = key.split('.')
   let current = obj
   
   for (const k of keys) {
-    if (current && typeof current === 'object' && k in current) {
-      current = current[k]
+    if (current && typeof current === 'object' && current !== null && k in current) {
+      current = (current as Record<string, unknown>)[k]
     } else {
       return key // Return key if not found
     }

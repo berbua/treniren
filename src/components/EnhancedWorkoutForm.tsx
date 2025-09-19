@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, MentalState } from '@/types/workout';
+import { WorkoutType, TrainingVolume, WorkoutFormData, Workout } from '@/types/workout';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
@@ -40,6 +40,7 @@ const moodLabels = {
 
 export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
+  const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
     type: initialData?.type || 'GYM',
@@ -159,17 +160,12 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
                         : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{type.emoji}</span>
-                      <div>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{type.emoji}</span>
                         <div className="font-medium text-slate-900 dark:text-slate-50">
                           {type.label}
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">
-                          {type.description}
-                        </div>
                       </div>
-                    </div>
                   </button>
                 ))}
               </div>
@@ -199,7 +195,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
             {/* Cycle Info Display */}
             {cycleInfoForSelectedDate && (
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                <CycleInfoComponent cycleInfo={cycleInfoForSelectedDate} />
+                <CycleInfoComponent 
+                  cycleInfo={cycleInfoForSelectedDate} 
+                  showRecommendations={true}
+                  isSelectedDate={true}
+                />
               </div>
             )}
 
@@ -209,24 +209,23 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   📊 Training Volume *
                 </label>
-                <div className="space-y-2">
+                <div className="flex space-x-2">
                   {trainingVolumes.map((volume) => (
-                    <label key={volume.value} className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">
+                    <label key={volume.value} className="flex-1 p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-center">
                       <input
                         type="radio"
                         name="trainingVolume"
                         value={volume.value}
                         checked={formData.trainingVolume === volume.value}
                         onChange={(e) => updateFormData('trainingVolume', e.target.value)}
-                        className="text-blue-600"
+                        className="sr-only"
                       />
-                      <div className="flex-1">
-                        <div className="font-medium text-slate-900 dark:text-slate-50">
-                          {volume.label}
-                        </div>
-                        <div className="text-sm text-slate-500 dark:text-slate-400">
-                          {volume.description}
-                        </div>
+                      <div className={`font-medium ${
+                        formData.trainingVolume === volume.value
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : 'text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {volume.value}
                       </div>
                     </label>
                   ))}
@@ -242,50 +241,72 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
               {/* Pre-session Feel */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                  😊 Pre-session Feel
+                  Pre-session Feel
                 </label>
-                <div className="space-y-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <label key={rating} className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="preSessionFeel"
-                        value={rating}
-                        checked={formData.preSessionFeel === rating}
-                        onChange={(e) => updateFormData('preSessionFeel', parseInt(e.target.value))}
-                        className="text-blue-600"
-                      />
-                      <span className="text-lg">{moodLabels[rating as keyof typeof moodLabels].emoji}</span>
-                      <span className={`font-medium ${moodLabels[rating as keyof typeof moodLabels].color}`}>
-                        {rating} - {moodLabels[rating as keyof typeof moodLabels].label}
-                      </span>
-                    </label>
-                  ))}
+                <div className="flex space-x-2">
+                  {[1, 2, 3, 4, 5].map((rating) => {
+                    const isFilled = rating <= (formData.preSessionFeel || 0);
+                    const isSelected = formData.preSessionFeel === rating;
+                    return (
+                      <label key={rating} className="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="preSessionFeel"
+                          value={rating}
+                          checked={formData.preSessionFeel === rating}
+                          onChange={(e) => updateFormData('preSessionFeel', parseInt(e.target.value))}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${
+                            isSelected
+                              ? 'border-blue-500'
+                              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                          } ${
+                            isFilled
+                              ? 'bg-green-500'
+                              : 'bg-gray-300 dark:bg-gray-600'
+                          }`}
+                        />
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Day After Tiredness */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                  😴 Day After Tiredness
+                  Day After Tiredness
                 </label>
-                <div className="space-y-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <label key={rating} className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="dayAfterTiredness"
-                        value={rating}
-                        checked={formData.dayAfterTiredness === rating}
-                        onChange={(e) => updateFormData('dayAfterTiredness', parseInt(e.target.value))}
-                        className="text-blue-600"
-                      />
-                      <span className="text-lg">{moodLabels[rating as keyof typeof moodLabels].emoji}</span>
-                      <span className={`font-medium ${moodLabels[rating as keyof typeof moodLabels].color}`}>
-                        {rating} - {moodLabels[rating as keyof typeof moodLabels].label}
-                      </span>
-                    </label>
-                  ))}
+                <div className="flex space-x-2">
+                  {[1, 2, 3, 4, 5].map((rating) => {
+                    const isFilled = rating <= (formData.dayAfterTiredness || 0);
+                    const isSelected = formData.dayAfterTiredness === rating;
+                    return (
+                      <label key={rating} className="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="dayAfterTiredness"
+                          value={rating}
+                          checked={formData.dayAfterTiredness === rating}
+                          onChange={(e) => updateFormData('dayAfterTiredness', parseInt(e.target.value))}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${
+                            isSelected
+                              ? 'border-blue-500'
+                              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                          } ${
+                            isFilled
+                              ? 'bg-red-500'
+                              : 'bg-gray-300 dark:bg-gray-600'
+                          }`}
+                        />
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -320,12 +341,14 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
               />
             </div>
 
-            {/* Strong Mind Section */}
-            <StrongMindSection
-              mentalState={formData.mentalState}
-              onChange={(mentalState) => updateFormData('mentalState', mentalState)}
-              workoutType={formData.type}
-            />
+            {/* Strong Mind Section - Only for Lead Climbing */}
+            {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL') && (
+              <StrongMindSection
+                mentalState={formData.mentalState}
+                onChange={(mentalState) => updateFormData('mentalState', mentalState)}
+                workoutType={formData.type}
+              />
+            )}
           </form>
         </div>
 

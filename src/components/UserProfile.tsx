@@ -88,7 +88,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
             ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'profile' | 'cycle' | 'settings')}
               className={`flex-1 px-4 py-3 text-sm font-medium ${
                 activeTab === tab.id
                   ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
