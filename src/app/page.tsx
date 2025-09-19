@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import CycleSetupFlow from '@/components/CycleSetupFlow'
-import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useOffline } from '@/hooks/useOffline'
 import { OfflineWorkoutForm } from '@/components/OfflineWorkoutForm'
@@ -15,10 +14,6 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
       <CycleSetupFlow />
       <main className="container mx-auto px-4 py-16">
-        {/* Language Switcher */}
-        <div className="flex justify-end mb-4">
-          <LanguageSwitcher />
-        </div>
         
         <div className="text-center space-y-8">
           {/* Header */}

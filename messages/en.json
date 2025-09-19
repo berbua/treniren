@@ -11,7 +11,12 @@
     "week": "Week",
     "month": "Month",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "close": "Close",
+    "online": "Online",
+    "offline": "Offline",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "app": {
     "title": "Treniren - Training Diary",
@@ -91,6 +96,50 @@
     "pwaReadyDesc": "Install on your iPhone and use offline",
     "trackProgress": "Track Progress",
     "trackProgressDesc": "Monitor intensity, mood, and performance patterns"
+  },
+  "nav": {
+    "home": "Home",
+    "workouts": "Workouts",
+    "calendar": "Calendar",
+    "profile": "Profile"
+  },
+  "profile": {
+    "title": "User Profile",
+    "tabs": {
+      "profile": "Profile",
+      "cycle": "Cycle",
+      "settings": "Settings"
+    },
+    "name": "Name",
+    "timezone": "Timezone",
+    "uploadPhoto": "Upload Photo",
+    "photoHint": "JPG, PNG up to 5MB",
+    "googleSheetsUrl": "Google Sheets URL (Optional)",
+    "googleSheetsHint": "Link to your Google Sheets for data export",
+    "cycleEnabled": "Cycle tracking is enabled",
+    "cycleDisabled": "Cycle tracking is disabled",
+    "cycleLength": "Cycle Length (days)",
+    "lastPeriodDate": "Last Period Date",
+    "disableCycle": "Disable Cycle Tracking",
+    "disableCycleConfirm": "Are you sure you want to disable cycle tracking? This will remove all cycle-related data.",
+    "enableCycleTracking": "Enable Cycle Tracking",
+    "cycleTrackingDescription": "Track your menstrual cycle to get personalized training recommendations and understand your performance patterns.",
+    "enableCycle": "Enable Cycle Tracking",
+    "appStatus": "App Status",
+    "connectionStatus": "Connection",
+    "online": "Online",
+    "offline": "Offline",
+    "storageUsed": "Storage Used",
+    "privacy": "Privacy Settings",
+    "dataCollection": "Data Collection",
+    "dataCollectionDesc": "Workout data and performance metrics",
+    "cycleTracking": "Cycle Tracking",
+    "cycleTrackingDesc": "Menstrual cycle data and phase tracking",
+    "dataExport": "Data Export",
+    "exportWorkouts": "Export Workouts",
+    "exportWorkoutsDesc": "Download workout data as CSV",
+    "exportStats": "Export Statistics",
+    "exportStatsDesc": "Download performance analytics"
   },
   "milestones": {
     "m3Complete": "Milestone 3 Complete!",

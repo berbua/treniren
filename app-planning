@@ -121,7 +121,8 @@ Notes:
 - M4: Google Calendar one-way sync (create/update/delete)
 - M5: PWA install + offline basics
 - M6: Cycle logic (store last period date, compute phases, UI bubbles + simple reminders)
-- M7: User panel - photo, cycle info
+- M7: User - start storing data aboout workouts and consent for cycle tracking, user panel - photo, cycle info
+- M8: statistics
 - Later: Push notifications, two-way sync, analytics, tagging & filters
 
 ## 13) Definition of Done (MVP)

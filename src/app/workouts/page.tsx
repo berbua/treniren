@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import WorkoutCard from '@/components/WorkoutCard'
-import WorkoutForm from '@/components/WorkoutForm'
+import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Workout, WorkoutFormData } from '@/types/workout'
 
 export default function WorkoutsPage() {
@@ -107,14 +108,7 @@ export default function WorkoutsPage() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-300">Loading workouts...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner message="Loading workouts..." fullScreen />
   }
 
   return (
@@ -167,7 +161,7 @@ export default function WorkoutsPage() {
         )}
 
         {showForm && (
-          <WorkoutForm
+          <EnhancedWorkoutForm
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             initialData={editingWorkout || undefined}

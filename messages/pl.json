@@ -11,7 +11,12 @@
     "week": "Tydzień",
     "month": "Miesiąc",
     "previous": "Poprzedni",
-    "next": "Następny"
+    "next": "Następny",
+    "close": "Zamknij",
+    "online": "Online",
+    "offline": "Offline",
+    "enabled": "Włączone",
+    "disabled": "Wyłączone"
   },
   "app": {
     "title": "Treniren - Dziennik Treningowy",
@@ -91,6 +96,50 @@
     "pwaReadyDesc": "Zainstaluj na iPhone i używaj offline",
     "trackProgress": "Śledź Postęp",
     "trackProgressDesc": "Monitoruj intensywność, nastrój i wzorce wydajności"
+  },
+  "nav": {
+    "home": "Strona główna",
+    "workouts": "Treningi",
+    "calendar": "Kalendarz",
+    "profile": "Profil"
+  },
+  "profile": {
+    "title": "Profil użytkownika",
+    "tabs": {
+      "profile": "Profil",
+      "cycle": "Cykl",
+      "settings": "Ustawienia"
+    },
+    "name": "Imię",
+    "timezone": "Strefa czasowa",
+    "uploadPhoto": "Wgraj zdjęcie",
+    "photoHint": "JPG, PNG do 5MB",
+    "googleSheetsUrl": "Link do Google Sheets (opcjonalne)",
+    "googleSheetsHint": "Link do Twojego Google Sheets do eksportu danych",
+    "cycleEnabled": "Śledzenie cyklu jest włączone",
+    "cycleDisabled": "Śledzenie cyklu jest wyłączone",
+    "cycleLength": "Długość cyklu (dni)",
+    "lastPeriodDate": "Data ostatniej miesiączki",
+    "disableCycle": "Wyłącz śledzenie cyklu",
+    "disableCycleConfirm": "Czy na pewno chcesz wyłączyć śledzenie cyklu? To usunie wszystkie dane związane z cyklem.",
+    "enableCycleTracking": "Włącz śledzenie cyklu",
+    "cycleTrackingDescription": "Śledź swój cykl menstruacyjny, aby otrzymywać spersonalizowane rekomendacje treningowe i zrozumieć wzorce wydajności.",
+    "enableCycle": "Włącz śledzenie cyklu",
+    "appStatus": "Status aplikacji",
+    "connectionStatus": "Połączenie",
+    "online": "Online",
+    "offline": "Offline",
+    "storageUsed": "Użycie pamięci",
+    "privacy": "Ustawienia prywatności",
+    "dataCollection": "Zbieranie danych",
+    "dataCollectionDesc": "Dane treningowe i metryki wydajności",
+    "cycleTracking": "Śledzenie cyklu",
+    "cycleTrackingDesc": "Dane cyklu menstruacyjnego i śledzenie faz",
+    "dataExport": "Eksport danych",
+    "exportWorkouts": "Eksport treningów",
+    "exportWorkoutsDesc": "Pobierz dane treningowe jako CSV",
+    "exportStats": "Eksport statystyk",
+    "exportStatsDesc": "Pobierz analitykę wydajności"
   },
   "milestones": {
     "m3Complete": "Etap 3 Ukończony!",

@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useCycle } from '@/contexts/CycleContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { calculateCycleInfo } from '@/lib/cycle-utils'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { WorkoutType, TrainingVolume } from '@/types/workout'
 
 interface Workout {
@@ -200,23 +200,12 @@ export default function CalendarPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-300">{t('calendar.loading')}</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner message={t('calendar.loading')} fullScreen />
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4 py-8">
-        {/* Language Switcher */}
-        <div className="flex justify-end mb-4">
-          <LanguageSwitcher />
-        </div>
         
         {/* Header */}
         <div className="mb-8">

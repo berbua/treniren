@@ -6,6 +6,8 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ServiceWorkerProvider } from "@/components/ServiceWorkerProvider";
+import { NavigationHeader } from "@/components/NavigationHeader";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,14 +46,17 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Treniren" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ServiceWorkerProvider />
-        <LanguageProvider>
-          <CycleProvider>
-            {children}
-            <PWAInstallPrompt />
-            <OfflineIndicator />
-          </CycleProvider>
-        </LanguageProvider>
+        <ErrorBoundary>
+          <ServiceWorkerProvider />
+          <LanguageProvider>
+            <CycleProvider>
+              <NavigationHeader />
+              {children}
+              <PWAInstallPrompt />
+              <OfflineIndicator />
+            </CycleProvider>
+          </LanguageProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
