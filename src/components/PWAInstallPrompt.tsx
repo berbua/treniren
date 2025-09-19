@@ -143,8 +143,8 @@ export const PWAInstallPrompt = () => {
                   <div className="mt-3 space-y-2">
                     <div className="text-xs text-gray-600">
                       <p>1. Tap the <strong>Share</strong> button below</p>
-                      <p>2. Scroll down and tap <strong>"Add to Home Screen"</strong></p>
-                      <p>3. Tap <strong>"Add"</strong> to confirm</p>
+                      <p>2. Scroll down and tap <strong>&quot;Add to Home Screen&quot;</strong></p>
+                      <p>3. Tap <strong>&quot;Add&quot;</strong> to confirm</p>
                     </div>
                     <div className="flex space-x-2">
                       <button

@@ -119,7 +119,7 @@ export default function Home() {
                 </button>
                 <div className="text-xs text-gray-500">
                   💡 <strong>To install as PWA:</strong><br/>
-                  Tap Share → "Add to Home Screen"
+                  Tap Share → &quot;Add to Home Screen&quot;
                 </div>
               </div>
             </div>
