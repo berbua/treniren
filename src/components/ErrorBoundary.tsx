@@ -1,7 +1,6 @@
 'use client';
 
 import { Component, ReactNode } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   children: ReactNode;
@@ -23,7 +22,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
     console.error('Error caught by boundary:', error, errorInfo);
   }
 

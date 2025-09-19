@@ -38,7 +38,6 @@ const moodLabels = {
 };
 
 export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }: EnhancedWorkoutFormProps) {
-  const { t } = useLanguage();
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   
   const [formData, setFormData] = useState({
@@ -109,7 +108,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
     }
   };
 
-  const updateFormData = (field: string, value: any) => {
+  const updateFormData = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {

@@ -1,6 +1,5 @@
 'use client';
 
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -9,7 +8,6 @@ interface LoadingSpinnerProps {
 }
 
 export const LoadingSpinner = ({ message, size = 'md', fullScreen = false }: LoadingSpinnerProps) => {
-  const { t } = useLanguage();
 
   const sizeClasses = {
     sm: 'h-4 w-4',
