@@ -5,8 +5,10 @@ import WorkoutCard from '@/components/WorkoutCard'
 import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Workout, WorkoutFormData } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function WorkoutsPage() {
+  const { t } = useLanguage()
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -108,7 +110,7 @@ export default function WorkoutsPage() {
   }, [])
 
   if (loading) {
-    return <LoadingSpinner message="Loading workouts..." fullScreen />
+    return <LoadingSpinner message={t('workouts.loading')} fullScreen />
   }
 
   return (
@@ -117,17 +119,17 @@ export default function WorkoutsPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
-              My Workouts
+              {t('workouts.title')}
             </h1>
             <p className="text-slate-600 dark:text-slate-300 mt-2">
-              Track your training sessions and progress
+              {t('workouts.description')}
             </p>
           </div>
           <button
             onClick={() => setShowForm(true)}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
           >
-            Add Workout
+            {t('workouts.addNew')}
           </button>
         </div>
 
@@ -135,16 +137,16 @@ export default function WorkoutsPage() {
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🏋️‍♀️</div>
             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-2">
-              No workouts yet
+              {t('workouts.noWorkouts')}
             </h2>
             <p className="text-slate-600 dark:text-slate-300 mb-6">
-              Start tracking your training by adding your first workout
+              {t('workouts.noWorkoutsDescription')}
             </p>
             <button
               onClick={() => setShowForm(true)}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
             >
-              Add Your First Workout
+              {t('workouts.addFirst')}
             </button>
           </div>
         ) : (

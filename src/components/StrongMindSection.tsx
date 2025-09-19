@@ -31,6 +31,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
   return (
     <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between text-left"
       >
@@ -67,6 +68,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
             <div className="grid grid-cols-5 gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
+                  type="button"
                   key={value}
                   onClick={() => updateMentalState({ beforeClimbing: value })}
                   className={`p-3 rounded-lg border-2 transition-all ${
@@ -92,6 +94,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
             <div className="grid grid-cols-5 gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
+                  type="button"
                   key={value}
                   onClick={() => updateMentalState({ duringClimbing: value })}
                   className={`p-3 rounded-lg border-2 transition-all ${
@@ -117,6 +120,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
               </label>
               <div className="flex space-x-4">
                 <button
+                  type="button"
                   onClick={() => updateMentalState({ tookFalls: true })}
                   className={`px-4 py-2 rounded-lg border-2 transition-all ${
                     mentalState.tookFalls === true
@@ -128,6 +132,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   {t('workouts.yes') || 'Yes'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => updateMentalState({ tookFalls: false })}
                   className={`px-4 py-2 rounded-lg border-2 transition-all ${
                     mentalState.tookFalls === false
