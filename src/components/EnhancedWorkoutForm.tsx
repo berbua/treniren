@@ -30,13 +30,6 @@ const trainingVolumes: { value: TrainingVolume; label: string; description: stri
   { value: 'TR5', label: 'TR5 - Very Hard', description: 'Maximum intensity training' },
 ];
 
-const moodLabels = {
-  1: { label: 'Very Poor', emoji: '😫', color: 'text-red-600' },
-  2: { label: 'Poor', emoji: '😞', color: 'text-orange-600' },
-  3: { label: 'Average', emoji: '😐', color: 'text-yellow-600' },
-  4: { label: 'Good', emoji: '😊', color: 'text-blue-600' },
-  5: { label: 'Excellent', emoji: '🤩', color: 'text-green-600' },
-};
 
 export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
@@ -114,7 +107,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
     }
   };
 
-  const updateFormData = (field: string, value: string | number) => {
+  const updateFormData = (field: string, value: string | number | object) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {

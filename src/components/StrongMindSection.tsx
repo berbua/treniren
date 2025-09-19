@@ -77,9 +77,9 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                       : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
                   }`}
                 >
-                  <div className="text-2xl mb-1">{mentalStateLabels[value].emoji}</div>
+                  <div className="text-2xl mb-1">{mentalStateLabels[value as keyof typeof mentalStateLabels].emoji}</div>
                   <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {mentalStateLabels[value].label}
+                    {mentalStateLabels[value as keyof typeof mentalStateLabels].label}
                   </div>
                 </button>
               ))}
@@ -103,9 +103,9 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                       : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
                   }`}
                 >
-                  <div className="text-2xl mb-1">{mentalStateLabels[value].emoji}</div>
+                  <div className="text-2xl mb-1">{mentalStateLabels[value as keyof typeof mentalStateLabels].emoji}</div>
                   <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {mentalStateLabels[value].label}
+                    {mentalStateLabels[value as keyof typeof mentalStateLabels].label}
                   </div>
                 </button>
               ))}
@@ -171,16 +171,16 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                 {mentalState.beforeClimbing && (
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-600 dark:text-gray-400">{t('workouts.before') || 'Before'}:</span>
-                    <span className={mentalStateLabels[mentalState.beforeClimbing].color}>
-                      {mentalStateLabels[mentalState.beforeClimbing].emoji} {mentalStateLabels[mentalState.beforeClimbing].label}
+                    <span className={mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].color}>
+                      {mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].emoji} {mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].label}
                     </span>
                   </div>
                 )}
                 {mentalState.duringClimbing && (
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-600 dark:text-gray-400">{t('workouts.during') || 'During'}:</span>
-                    <span className={mentalStateLabels[mentalState.duringClimbing].color}>
-                      {mentalStateLabels[mentalState.duringClimbing].emoji} {mentalStateLabels[mentalState.duringClimbing].label}
+                    <span className={mentalStateLabels[mentalState.duringClimbing as keyof typeof mentalStateLabels].color}>
+                      {mentalStateLabels[mentalState.duringClimbing as keyof typeof mentalStateLabels].emoji} {mentalStateLabels[mentalState.duringClimbing as keyof typeof mentalStateLabels].label}
                     </span>
                   </div>
                 )}
