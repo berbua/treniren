@@ -12,29 +12,17 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
+// Import translations directly (more reliable than dynamic imports)
+import enTranslations from '../../messages/en.json'
+import plTranslations from '../../messages/pl.json'
+
 // Load translations from JSON files
-let translations: Record<Language, Record<string, any>> = {
-  en: {},
-  pl: {}
+const translations: Record<Language, Record<string, any>> = {
+  en: enTranslations,
+  pl: plTranslations
 }
 
-// Load translations dynamically
-const loadTranslations = async () => {
-  try {
-    const [enTranslations, plTranslations] = await Promise.all([
-      import('../../messages/en.json'),
-      import('../../messages/pl.json')
-    ])
-    
-    translations = {
-      en: enTranslations.default,
-      pl: plTranslations.default
-    }
-    console.log('Translations loaded:', translations)
-  } catch (error) {
-    console.error('Failed to load translations:', error)
-  }
-}
+console.log('Translations loaded:', translations)
 
 // Helper function to get nested translation
 const getNestedTranslation = (obj: any, key: string): string => {
@@ -54,14 +42,6 @@ const getNestedTranslation = (obj: any, key: string): string => {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en')
-  const [translationsLoaded, setTranslationsLoaded] = useState(false)
-
-  // Load translations on mount
-  useEffect(() => {
-    loadTranslations().then(() => {
-      setTranslationsLoaded(true)
-    })
-  }, [])
 
   // Load language from localStorage on mount
   useEffect(() => {
@@ -81,10 +61,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }
 
   const t = (key: string): string => {
-    if (!translationsLoaded) {
-      return key // Return key while loading
-    }
-    
     return getNestedTranslation(translations[language], key)
   }
 
