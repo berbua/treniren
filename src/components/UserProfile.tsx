@@ -67,7 +67,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            👤 {t('profile.title')}
+            👤 {t('profile.title') || 'User Profile'}
           </h2>
           <button
             onClick={onClose}
@@ -81,11 +81,11 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
 
         {/* Tabs */}
         <div className="flex border-b border-slate-200 dark:border-slate-700">
-          {[
-            { id: 'profile', label: t('profile.tabs.profile'), icon: '👤' },
-            { id: 'cycle', label: t('profile.tabs.cycle'), icon: '🔄' },
-            { id: 'settings', label: t('profile.tabs.settings'), icon: '⚙️' },
-          ].map((tab) => (
+            {[
+              { id: 'profile', label: t('profile.tabs.profile') || 'Profile', icon: '👤' },
+              { id: 'cycle', label: t('profile.tabs.cycle') || 'Cycle', icon: '🔄' },
+              { id: 'settings', label: t('profile.tabs.settings') || 'Settings', icon: '⚙️' },
+            ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
@@ -123,7 +123,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
                     onClick={() => fileInputRef.current?.click()}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
                   >
-                    📷 {t('profile.uploadPhoto')}
+                    📷 {t('profile.uploadPhoto') || 'Upload Photo'}
                   </button>
                   <input
                     ref={fileInputRef}
@@ -132,7 +132,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
                     onChange={handlePhotoUpload}
                     className="hidden"
                   />
-                  <p className="text-xs text-slate-500 mt-1">{t('profile.photoHint')}</p>
+                    <p className="text-xs text-slate-500 mt-1">{t('profile.photoHint') || 'JPG, PNG up to 5MB'}</p>
                 </div>
               </div>
 
@@ -140,7 +140,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t('profile.name')}
+                    {t('profile.name') || 'Name'}
                   </label>
                   <input
                     type="text"
@@ -151,7 +151,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t('profile.timezone')}
+                    {t('profile.timezone') || 'Timezone'}
                   </label>
                   <select
                     value={profileData.timezone}
