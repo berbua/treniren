@@ -22,29 +22,27 @@ export const PWAInstallPrompt = () => {
       if (window.matchMedia('(display-mode: standalone)').matches || 
           (window.navigator as Navigator & { standalone?: boolean }).standalone === true) {
         setIsInstalled(true);
+        console.log('PWA: App is already installed');
+      } else {
+        console.log('PWA: App is not installed');
       }
     };
 
     checkInstalled();
 
-    // Listen for the beforeinstallprompt event
+    // Listen for the beforeinstallprompt event (Chrome/Edge)
     const handleBeforeInstallPrompt = (e: Event): void => {
+      console.log('PWA: beforeinstallprompt event received');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       
-      // Only show prompt if user hasn't dismissed it recently
-      const dismissed = localStorage.getItem('pwa-install-dismissed');
-      const dismissedTime = dismissed ? parseInt(dismissed) : 0;
-      const now = Date.now();
-      const daysSinceDismissed = (now - dismissedTime) / (1000 * 60 * 60 * 24);
-      
-      if (daysSinceDismissed > 7) { // Show again after 7 days
-        setShowInstallPrompt(true);
-      }
+      // Always show prompt for now (remove cooldown for testing)
+      setShowInstallPrompt(true);
     };
 
     // Listen for app installed event
     const handleAppInstalled = () => {
+      console.log('PWA: App installed event received');
       setIsInstalled(true);
       setShowInstallPrompt(false);
       setDeferredPrompt(null);
@@ -53,6 +51,18 @@ export const PWAInstallPrompt = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // For iOS Safari, show manual install instructions after a delay
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (isIOS && !isInStandaloneMode) {
+      console.log('PWA: iOS detected, showing manual install instructions');
+      // Show manual install prompt for iOS after 3 seconds
+      setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 3000);
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
@@ -60,22 +70,22 @@ export const PWAInstallPrompt = () => {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
-      // Remember dismissal for 7 days
-      localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      
+      setDeferredPrompt(null);
     }
-    
-    setDeferredPrompt(null);
     setShowInstallPrompt(false);
   };
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   const handleDismiss = () => {
     setShowInstallPrompt(false);
@@ -101,23 +111,74 @@ export const PWAInstallPrompt = () => {
             <h3 className="text-sm font-medium text-gray-900">
               Install Treniren
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Install this app on your device for quick access and offline use.
-            </p>
-            <div className="mt-3 flex space-x-2">
-              <button
-                onClick={handleInstallClick}
-                className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Install
-              </button>
-              <button
-                onClick={handleDismiss}
-                className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
-              >
-                Not now
-              </button>
-            </div>
+            {deferredPrompt ? (
+              <>
+                <p className="text-sm text-gray-500 mt-1">
+                  Install this app on your device for quick access and offline use.
+                </p>
+                <div className="mt-3 flex space-x-2">
+                  <button
+                    onClick={handleInstallClick}
+                    className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Install
+                  </button>
+                  <button
+                    onClick={handleDismiss}
+                    className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mt-1">
+                  {isIOS 
+                    ? 'To install this app on your iPhone:'
+                    : 'Install this app for quick access and offline use.'
+                  }
+                </p>
+                {isIOS ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="text-xs text-gray-600">
+                      <p>1. Tap the <strong>Share</strong> button below</p>
+                      <p>2. Scroll down and tap <strong>"Add to Home Screen"</strong></p>
+                      <p>3. Tap <strong>"Add"</strong> to confirm</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleDismiss}
+                        className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        Got it!
+                      </button>
+                      <button
+                        onClick={handleDismiss}
+                        className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
+                      >
+                        Maybe later
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 flex space-x-2">
+                    <button
+                      onClick={handleDismiss}
+                      className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      OK
+                    </button>
+                    <button
+                      onClick={handleDismiss}
+                      className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
+                    >
+                      Not now
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
           <button
             onClick={handleDismiss}

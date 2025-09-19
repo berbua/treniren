@@ -110,12 +110,18 @@ export default function Home() {
               </span></p>
               <p>📦 Unsynced workouts: <span className="font-semibold">{unsyncedWorkouts.length}</span></p>
               <p>💾 Storage used: <span className="font-semibold">{Math.round(storageSize.used / 1024)}KB / {Math.round(storageSize.total / 1024)}KB</span></p>
-              <button
-                onClick={() => setShowOfflineForm(true)}
-                className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Test Offline Workout
-              </button>
+              <div className="mt-3 flex flex-col space-y-2">
+                <button
+                  onClick={() => setShowOfflineForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Test Offline Workout
+                </button>
+                <div className="text-xs text-gray-500">
+                  💡 <strong>To install as PWA:</strong><br/>
+                  Tap Share → "Add to Home Screen"
+                </div>
+              </div>
             </div>
           </div>
 
