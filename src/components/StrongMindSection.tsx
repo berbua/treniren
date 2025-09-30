@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MentalState } from '@/types/workout';
+import { MentalState, ClimbSection, FocusState, ComfortZone } from '@/types/workout';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface StrongMindSectionProps {
@@ -11,11 +11,27 @@ interface StrongMindSectionProps {
 }
 
 const mentalStateLabels = {
-  1: { label: 'Very Nervous', emoji: '😰', color: 'text-red-600' },
-  2: { label: 'Nervous', emoji: '😟', color: 'text-orange-600' },
-  3: { label: 'Neutral', emoji: '😐', color: 'text-yellow-600' },
-  4: { label: 'Confident', emoji: '😊', color: 'text-blue-600' },
-  5: { label: 'Very Confident', emoji: '🤩', color: 'text-green-600' },
+  1: { label: 'Very Nervous', color: 'text-red-600' },
+  2: { label: 'Nervous', color: 'text-orange-600' },
+  3: { label: 'Neutral', color: 'text-yellow-600' },
+  4: { label: 'Confident', color: 'text-blue-600' },
+  5: { label: 'Very Confident', color: 'text-green-600' },
+};
+
+const focusStateLabels = {
+  CHOKE: { label: 'Choke', color: 'text-red-600' },
+  DISTRACTION: { label: 'Distraction', color: 'text-orange-600' },
+  PRESENT: { label: 'Present', color: 'text-yellow-600' },
+  FOCUSED: { label: 'Focused', color: 'text-blue-600' },
+  CLUTCH: { label: 'Clutch', color: 'text-green-600' },
+  FLOW: { label: 'Flow', color: 'text-purple-600' },
+};
+
+const comfortZoneLabels = {
+  COMFORT: { label: 'Comfort', color: 'text-green-600' },
+  STRETCH1: { label: 'Stretch 1', color: 'text-yellow-600' },
+  STRETCH2: { label: 'Stretch 2', color: 'text-orange-600' },
+  PANIC: { label: 'Panic', color: 'text-red-600' },
 };
 
 export const StrongMindSection = ({ mentalState, onChange, workoutType }: StrongMindSectionProps) => {
@@ -24,6 +40,30 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
 
   const updateMentalState = (updates: Partial<MentalState>) => {
     onChange({ ...mentalState, ...updates });
+  };
+
+  const addClimbSection = () => {
+    const newSection: ClimbSection = {
+      id: `climb-${Date.now()}`,
+      focusState: undefined,
+      tookFall: undefined,
+      comfortZone: undefined,
+      notes: ''
+    };
+    const updatedSections = [...(mentalState.climbSections || []), newSection];
+    updateMentalState({ climbSections: updatedSections });
+  };
+
+  const updateClimbSection = (sectionId: string, updates: Partial<ClimbSection>) => {
+    const updatedSections = (mentalState.climbSections || []).map(section =>
+      section.id === sectionId ? { ...section, ...updates } : section
+    );
+    updateMentalState({ climbSections: updatedSections });
+  };
+
+  const removeClimbSection = (sectionId: string) => {
+    const updatedSections = (mentalState.climbSections || []).filter(section => section.id !== sectionId);
+    updateMentalState({ climbSections: updatedSections });
   };
 
   const isLeadClimbing = workoutType === 'LEAD_ROCK' || workoutType === 'LEAD_ARTIFICIAL';
@@ -77,7 +117,6 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                       : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
                   }`}
                 >
-                  <div className="text-2xl mb-1">{mentalStateLabels[value as keyof typeof mentalStateLabels].emoji}</div>
                   <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
                     {mentalStateLabels[value as keyof typeof mentalStateLabels].label}
                   </div>
@@ -86,66 +125,139 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
             </div>
           </div>
 
-          {/* During Climbing */}
-          <div>
-            <label className="block text-sm font-medium text-purple-900 dark:text-purple-100 mb-3">
-              {t('workouts.howFeltDuring') || 'How did I feel during climbing?'}
-            </label>
-            <div className="grid grid-cols-5 gap-2">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  type="button"
-                  key={value}
-                  onClick={() => updateMentalState({ duringClimbing: value })}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    mentalState.duringClimbing === value
-                      ? 'border-purple-500 bg-purple-100 dark:bg-purple-800'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
-                  }`}
-                >
-                  <div className="text-2xl mb-1">{mentalStateLabels[value as keyof typeof mentalStateLabels].emoji}</div>
-                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {mentalStateLabels[value as keyof typeof mentalStateLabels].label}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
 
-          {/* Falls (only for lead climbing) */}
+          {/* Climb Sections (only for lead climbing) */}
           {isLeadClimbing && (
             <div>
-              <label className="block text-sm font-medium text-purple-900 dark:text-purple-100 mb-3">
-                {t('workouts.didTakeFalls') || 'Did I take any falls?'}
-              </label>
-              <div className="flex space-x-4">
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-medium text-purple-900 dark:text-purple-100">
+                  {t('workouts.climbs') || 'Climbs'}
+                </label>
                 <button
                   type="button"
-                  onClick={() => updateMentalState({ tookFalls: true })}
-                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                    mentalState.tookFalls === true
-                      ? 'border-red-500 bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-red-300'
-                  }`}
+                  onClick={addClimbSection}
+                  className="px-3 py-1 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  <span className="text-lg mr-2">⚠️</span>
-                  {t('workouts.yes') || 'Yes'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateMentalState({ tookFalls: false })}
-                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                    mentalState.tookFalls === false
-                      ? 'border-green-500 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-green-300'
-                  }`}
-                >
-                  <span className="text-lg mr-2">✅</span>
-                  {t('workouts.no') || 'No'}
+                  {t('workouts.addClimb') || 'Add Climb'}
                 </button>
               </div>
+              
+              {(mentalState.climbSections || []).map((section, index) => (
+                <div key={section.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-purple-200 dark:border-purple-700 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                      Climb {index + 1}
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => removeClimbSection(section.id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      {t('workouts.removeClimb') || 'Remove'}
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Focus State */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t('workouts.focusState') || 'Focus State'}
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {Object.entries(focusStateLabels).map(([key, { label, color }]) => (
+                          <button
+                            type="button"
+                            key={key}
+                            onClick={() => updateClimbSection(section.id, { focusState: key as FocusState })}
+                            className={`p-2 rounded-lg border-2 transition-all text-xs font-medium ${
+                              section.focusState === key
+                                ? 'border-purple-500 bg-purple-100 dark:bg-purple-800'
+                                : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
+                            }`}
+                          >
+                            <span className={color}>
+                              {t(`workouts.focusStates.${key}`) || label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Fall */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t('workouts.didTakeFalls') || 'Did I take any falls?'}
+                      </label>
+                      <div className="flex space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => updateClimbSection(section.id, { tookFall: true })}
+                          className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                            section.tookFall === true
+                              ? 'border-pink-500 bg-pink-100 dark:bg-pink-800 text-pink-700 dark:text-pink-300'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-pink-300'
+                          }`}
+                        >
+                          {t('workouts.yes') || 'Yes'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateClimbSection(section.id, { tookFall: false })}
+                          className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                            section.tookFall === false
+                              ? 'border-green-500 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-green-300'
+                          }`}
+                        >
+                          {t('workouts.no') || 'No'}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Comfort Zone */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t('workouts.comfortZone') || 'Comfort Zone'}
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(comfortZoneLabels).map(([key, { label, color }]) => (
+                          <button
+                            type="button"
+                            key={key}
+                            onClick={() => updateClimbSection(section.id, { comfortZone: key as ComfortZone })}
+                            className={`p-2 rounded-lg border-2 transition-all text-xs font-medium ${
+                              section.comfortZone === key
+                                ? 'border-purple-500 bg-purple-100 dark:bg-purple-800'
+                                : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
+                            }`}
+                          >
+                            <span className={color}>
+                              {t(`workouts.comfortZones.${key}`) || label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Notes */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t('workouts.climbNotes') || 'Climb Notes'}
+                      </label>
+                      <textarea
+                        value={section.notes || ''}
+                        onChange={(e) => updateClimbSection(section.id, { notes: e.target.value })}
+                        placeholder={t('workouts.climbNotesPlaceholder') || 'Add notes about this climb section...'}
+                        rows={3}
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
+
 
           {/* Reflections */}
           <div>
@@ -162,7 +274,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
           </div>
 
           {/* Mental State Summary */}
-          {(mentalState.beforeClimbing || mentalState.duringClimbing || mentalState.tookFalls !== undefined) && (
+          {(mentalState.beforeClimbing || (mentalState.climbSections && mentalState.climbSections.length > 0)) && (
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
               <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2">
                 {t('workouts.mentalSummary') || 'Mental State Summary'}
@@ -172,24 +284,33 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-600 dark:text-gray-400">{t('workouts.before') || 'Before'}:</span>
                     <span className={mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].color}>
-                      {mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].emoji} {mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].label}
+                      {mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].label}
                     </span>
                   </div>
                 )}
-                {mentalState.duringClimbing && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-600 dark:text-gray-400">{t('workouts.during') || 'During'}:</span>
-                    <span className={mentalStateLabels[mentalState.duringClimbing as keyof typeof mentalStateLabels].color}>
-                      {mentalStateLabels[mentalState.duringClimbing as keyof typeof mentalStateLabels].emoji} {mentalStateLabels[mentalState.duringClimbing as keyof typeof mentalStateLabels].label}
-                    </span>
-                  </div>
-                )}
-                {isLeadClimbing && mentalState.tookFalls !== undefined && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-600 dark:text-gray-400">{t('workouts.falls') || 'Falls'}:</span>
-                    <span className={mentalState.tookFalls ? 'text-red-600' : 'text-green-600'}>
-                      {mentalState.tookFalls ? '⚠️ Yes' : '✅ No'}
-                    </span>
+                {isLeadClimbing && mentalState.climbSections && mentalState.climbSections.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-gray-600 dark:text-gray-400">{t('workouts.climbs') || 'Climbs'}:</span>
+                    {mentalState.climbSections.map((section, index) => (
+                      <div key={section.id} className="ml-4 text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Climb {index + 1}:</span>
+                        {section.focusState && (
+                          <span className={`ml-2 ${focusStateLabels[section.focusState].color}`}>
+                            {t(`workouts.focusStates.${section.focusState}`) || focusStateLabels[section.focusState].label}
+                          </span>
+                        )}
+                        {section.tookFall !== undefined && (
+                          <span className={`ml-2 ${section.tookFall ? 'text-pink-600' : 'text-green-600'}`}>
+                            ({section.tookFall ? 'Fell' : 'No fall'})
+                          </span>
+                        )}
+                        {section.comfortZone && (
+                          <span className={`ml-2 ${comfortZoneLabels[section.comfortZone].color}`}>
+                            - {t(`workouts.comfortZones.${section.comfortZone}`) || comfortZoneLabels[section.comfortZone].label}
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

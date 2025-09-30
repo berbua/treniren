@@ -16,6 +16,7 @@ const config: Config = {
           circuits: '#EA580C',   // Orange-600
           leadRock: '#D97706',   // Amber-600
           leadArtificial: '#059669', // Emerald-600
+          mentalPractice: '#7C3AED', // Violet-600
         }
       },
       fontFamily: {

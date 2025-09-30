@@ -33,9 +33,9 @@ export default function WorkoutForm({ onSubmit, onCancel, initialData }: Workout
   
   const [formData, setFormData] = useState({
     type: initialData?.type || 'GYM',
-    date: initialData?.date 
-      ? new Date(initialData.date).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10),
+    date: initialData?.startTime 
+      ? new Date(initialData.startTime).toISOString().slice(0, 10)
+      : (typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15'),
     trainingVolume: initialData?.trainingVolume || 'TR3',
     preSessionFeel: initialData?.preSessionFeel || 3,
     dayAfterTiredness: initialData?.dayAfterTiredness || 3,

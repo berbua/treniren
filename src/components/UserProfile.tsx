@@ -258,7 +258,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
                     {t('profile.cycleTrackingDescription')}
                   </p>
                   <button
-                    onClick={() => setCycleData({ cycleLength: 28, lastPeriodDate: new Date().toISOString().slice(0, 10) })}
+                    onClick={() => setCycleData({ cycleLength: 28, lastPeriodDate: typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15' })}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
                   >
                     ✅ {t('profile.enableCycle')}

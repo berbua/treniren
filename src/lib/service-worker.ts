@@ -2,7 +2,6 @@
 
 export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-    console.log('Service Worker not supported');
     return null;
   }
 
@@ -11,7 +10,6 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
       scope: '/',
     });
 
-    console.log('Service Worker registered successfully:', registration);
 
     // Handle updates
     registration.addEventListener('updatefound', () => {
@@ -20,7 +18,6 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // New service worker is available
-            console.log('New service worker available');
             // You could show a notification to the user here
           }
         });
@@ -42,7 +39,6 @@ export const unregisterServiceWorker = async (): Promise<void> => {
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
     await Promise.all(registrations.map(registration => registration.unregister()));
-    console.log('Service Worker unregistered');
   } catch (error) {
     console.error('Service Worker unregistration failed:', error);
   }

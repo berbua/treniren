@@ -1,18 +1,23 @@
 'use client'
 
-import { WorkoutType, TrainingVolume, MentalState } from '@/types/workout'
+import { WorkoutType, TrainingVolume, MentalState, Tag } from '@/types/workout'
 
 interface WorkoutCardProps {
   workout: {
     id: string
     type: WorkoutType
-    date: string
+    startTime: string
     trainingVolume?: TrainingVolume
     notes?: string
     preSessionFeel?: number
     dayAfterTiredness?: number
+    focusLevel?: number
     mentalState?: MentalState
     sector?: string
+    mentalPracticeType?: string
+    gratitude?: string
+    improvements?: string
+    tags?: Tag[]
   }
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
@@ -30,6 +35,8 @@ const getTrainingTypeColor = (type: WorkoutType) => {
       return 'bg-training-leadRock'
     case 'LEAD_ARTIFICIAL':
       return 'bg-training-leadArtificial'
+    case 'MENTAL_PRACTICE':
+      return 'bg-training-mentalPractice'
     default:
       return 'bg-gray-500'
   }
@@ -47,18 +54,19 @@ const getTrainingTypeLabel = (type: WorkoutType) => {
       return '🏔️ Lead Rock'
     case 'LEAD_ARTIFICIAL':
       return '🧗‍♀️ Lead Wall'
+    case 'MENTAL_PRACTICE':
+      return '🧘 Mental Practice'
     default:
       return type
   }
 }
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const date = new Date(dateString)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  
+  return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
 }
 
 export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardProps) {
@@ -72,8 +80,21 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
               {getTrainingTypeLabel(workout.type)}
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-300">
-              {formatDate(workout.date)}
+              {formatDate(workout.startTime)}
             </p>
+            {workout.tags && workout.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {workout.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                    style={{ backgroundColor: tag.color }}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         
@@ -118,7 +139,16 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
           </div>
         )}
 
-        {workout.preSessionFeel && (
+        {workout.type === 'MENTAL_PRACTICE' && workout.mentalPracticeType && (
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium text-slate-500">Practice type:</span>
+            <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
+              🧘 {workout.mentalPracticeType}
+            </span>
+          </div>
+        )}
+
+        {workout.type !== 'MENTAL_PRACTICE' && workout.preSessionFeel && (
           <div className="flex items-center space-x-2">
             <span className="text-xs font-medium text-slate-500">Pre-session feel:</span>
             <div className="flex space-x-1">
@@ -136,7 +166,25 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
           </div>
         )}
 
-        {workout.dayAfterTiredness && (
+        {workout.type === 'MENTAL_PRACTICE' && workout.focusLevel && (
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium text-slate-500">Focus level:</span>
+            <div className="flex space-x-1">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <div
+                  key={rating}
+                  className={`w-2 h-2 rounded-full ${
+                    rating <= (workout.focusLevel || 0)
+                      ? 'bg-orange-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {workout.type !== 'MENTAL_PRACTICE' && workout.dayAfterTiredness && (
           <div className="flex items-center space-x-2">
             <span className="text-xs font-medium text-slate-500">Day after tiredness:</span>
             <div className="flex space-x-1">
@@ -161,7 +209,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
         )}
 
         {/* Mental State Display */}
-        {workout.mentalState && (workout.mentalState.beforeClimbing || workout.mentalState.duringClimbing || workout.mentalState.tookFalls !== undefined) && (
+        {workout.mentalState && (workout.mentalState.beforeClimbing || (workout.mentalState.climbSections && workout.mentalState.climbSections.length > 0)) && (
           <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
             <div className="flex items-center space-x-2 mb-2">
               <span className="text-sm">🧠</span>
@@ -177,35 +225,48 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
                     workout.mentalState.beforeClimbing === 3 ? 'text-yellow-600' :
                     workout.mentalState.beforeClimbing === 4 ? 'text-blue-600' : 'text-green-600'
                   }`}>
-                    {workout.mentalState.beforeClimbing === 1 ? '😰 Very Nervous' :
-                     workout.mentalState.beforeClimbing === 2 ? '😟 Nervous' :
-                     workout.mentalState.beforeClimbing === 3 ? '😐 Neutral' :
-                     workout.mentalState.beforeClimbing === 4 ? '😊 Confident' : '🤩 Very Confident'}
+                    {workout.mentalState.beforeClimbing === 1 ? 'Very Nervous' :
+                     workout.mentalState.beforeClimbing === 2 ? 'Nervous' :
+                     workout.mentalState.beforeClimbing === 3 ? 'Neutral' :
+                     workout.mentalState.beforeClimbing === 4 ? 'Confident' : 'Very Confident'}
                   </span>
                 </div>
               )}
-              {workout.mentalState.duringClimbing && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-purple-600 dark:text-purple-400">During:</span>
-                  <span className={`font-medium ${
-                    workout.mentalState.duringClimbing === 1 ? 'text-red-600' :
-                    workout.mentalState.duringClimbing === 2 ? 'text-orange-600' :
-                    workout.mentalState.duringClimbing === 3 ? 'text-yellow-600' :
-                    workout.mentalState.duringClimbing === 4 ? 'text-blue-600' : 'text-green-600'
-                  }`}>
-                    {workout.mentalState.duringClimbing === 1 ? '😰 Very Nervous' :
-                     workout.mentalState.duringClimbing === 2 ? '😟 Nervous' :
-                     workout.mentalState.duringClimbing === 3 ? '😐 Neutral' :
-                     workout.mentalState.duringClimbing === 4 ? '😊 Confident' : '🤩 Very Confident'}
-                  </span>
-                </div>
-              )}
-              {(workout.type === 'LEAD_ROCK' || workout.type === 'LEAD_ARTIFICIAL') && workout.mentalState.tookFalls !== undefined && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-purple-600 dark:text-purple-400">Falls:</span>
-                  <span className={`font-medium ${workout.mentalState.tookFalls ? 'text-red-600' : 'text-green-600'}`}>
-                    {workout.mentalState.tookFalls ? '⚠️ Yes' : '✅ No'}
-                  </span>
+              {(workout.type === 'LEAD_ROCK' || workout.type === 'LEAD_ARTIFICIAL') && workout.mentalState.climbSections && workout.mentalState.climbSections.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-purple-600 dark:text-purple-400">Climbs:</span>
+                  {workout.mentalState.climbSections.map((section, index) => (
+                    <div key={section.id} className="ml-2 text-xs">
+                      <span className="text-purple-600 dark:text-purple-400">Climb {index + 1}:</span>
+                      {section.focusState && (
+                        <span className={`ml-1 font-medium ${
+                          section.focusState === 'CHOKE' ? 'text-red-600' :
+                          section.focusState === 'DISTRACTION' ? 'text-orange-600' :
+                          section.focusState === 'PRESENT' ? 'text-yellow-600' :
+                          section.focusState === 'FOCUSED' ? 'text-blue-600' :
+                          section.focusState === 'CLUTCH' ? 'text-green-600' : 'text-purple-600'
+                        }`}>
+                          {section.focusState}
+                        </span>
+                      )}
+                      {section.tookFall !== undefined && (
+                        <span className={`ml-1 ${section.tookFall ? 'text-pink-600' : 'text-green-600'}`}>
+                          ({section.tookFall ? 'Fell' : 'No fall'})
+                        </span>
+                      )}
+                      {section.comfortZone && (
+                        <span className={`ml-1 ${
+                          section.comfortZone === 'COMFORT' ? 'text-green-600' :
+                          section.comfortZone === 'STRETCH1' ? 'text-yellow-600' :
+                          section.comfortZone === 'STRETCH2' ? 'text-orange-600' : 'text-red-600'
+                        }`}>
+                          - {section.comfortZone === 'COMFORT' ? 'Comfort' :
+                              section.comfortZone === 'STRETCH1' ? 'Stretch 1' :
+                              section.comfortZone === 'STRETCH2' ? 'Stretch 2' : 'Panic'}
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
               {workout.mentalState.reflections && (
@@ -216,6 +277,34 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Gratitude and Improvements */}
+        {(workout.gratitude || workout.improvements) && (
+          <div className="mt-3 space-y-2">
+            {workout.gratitude && (
+              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                <div className="flex items-center space-x-2 mb-2">
+                  <span className="text-sm">🙏</span>
+                  <span className="text-xs font-semibold text-green-800 dark:text-green-200">Gratitude</span>
+                </div>
+                <p className="text-xs text-green-700 dark:text-green-300">
+                  {workout.gratitude}
+                </p>
+              </div>
+            )}
+            {workout.improvements && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center space-x-2 mb-2">
+                  <span className="text-sm">🎯</span>
+                  <span className="text-xs font-semibold text-blue-800 dark:text-blue-200">Improvements</span>
+                </div>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  {workout.improvements}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

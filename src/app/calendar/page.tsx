@@ -5,17 +5,8 @@ import { useCycle } from '@/contexts/CycleContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { calculateCycleInfo } from '@/lib/cycle-utils'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { WorkoutType, TrainingVolume } from '@/types/workout'
-
-interface Workout {
-  id: string
-  type: WorkoutType
-  date: string
-  trainingVolume?: TrainingVolume
-  notes?: string
-  preSessionFeel?: number
-  dayAfterTiredness?: number
-}
+import { WorkoutType, Workout } from '@/types/workout'
+import TrainingTypeFilter from '@/components/TrainingTypeFilter'
 
 type ViewMode = 'week' | 'month'
 
@@ -31,6 +22,8 @@ const getTrainingTypeColor = (type: WorkoutType) => {
       return 'bg-training-leadRock'
     case 'LEAD_ARTIFICIAL':
       return 'bg-training-leadArtificial'
+    case 'MENTAL_PRACTICE':
+      return 'bg-training-mentalPractice'
     default:
       return 'bg-gray-500'
   }
@@ -48,6 +41,8 @@ const getTrainingTypeEmoji = (type: WorkoutType) => {
       return '🏔️'
     case 'LEAD_ARTIFICIAL':
       return '🧗‍♀️'
+    case 'MENTAL_PRACTICE':
+      return '🧘'
     default:
       return '📅'
   }
@@ -65,6 +60,8 @@ const getTrainingTypeLabel = (type: WorkoutType, t: (key: string) => string) => 
       return t('training.types.leadRock')
     case 'LEAD_ARTIFICIAL':
       return t('training.types.leadArtificial')
+    case 'MENTAL_PRACTICE':
+      return t('training.types.mentalPractice')
     default:
       return type
   }
@@ -92,8 +89,16 @@ export default function CalendarPage() {
   const { t } = useLanguage()
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('week')
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(() => {
+    // Use a fixed date for SSR consistency
+    if (typeof window === 'undefined') {
+      return new Date('2024-01-15T00:00:00.000Z')
+    }
+    return new Date()
+  })
   const [loading, setLoading] = useState(true)
+  const [selectedTypes, setSelectedTypes] = useState<WorkoutType[]>([])
+  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch workouts
   useEffect(() => {
@@ -155,7 +160,14 @@ export default function CalendarPage() {
   // Get workouts for a specific date
   const getWorkoutsForDate = (date: Date) => {
     const dateStr = date.toISOString().slice(0, 10)
-    return workouts.filter(workout => workout.date.startsWith(dateStr))
+    let filteredWorkouts = workouts.filter(workout => workout.startTime.startsWith(dateStr))
+    
+    // Apply type filter
+    if (selectedTypes.length > 0) {
+      filteredWorkouts = filteredWorkouts.filter(workout => selectedTypes.includes(workout.type))
+    }
+    
+    return filteredWorkouts
   }
 
   // Get cycle info for a specific date
@@ -190,12 +202,15 @@ export default function CalendarPage() {
   }
 
   const formatDateRange = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const monthsFull = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    
     if (viewMode === 'week') {
       const start = calendarDates[0]
       const end = calendarDates[6]
-      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+      return `${months[start.getMonth()]} ${start.getDate()} - ${months[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`
     } else {
-      return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      return `${monthsFull[currentDate.getMonth()]} ${currentDate.getFullYear()}`
     }
   }
 
@@ -214,6 +229,16 @@ export default function CalendarPage() {
               📅 {t('calendar.title')}
             </h1>
             <div className="flex space-x-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  showFilters || selectedTypes.length > 0
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'
+                }`}
+              >
+                🔍 Filters {selectedTypes.length > 0 && `(${selectedTypes.length})`}
+              </button>
               <button
                 onClick={() => setViewMode('week')}
                 className={`px-4 py-2 rounded-lg font-medium ${
@@ -265,6 +290,16 @@ export default function CalendarPage() {
           </div>
         </div>
 
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="mb-6 p-4 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+            <TrainingTypeFilter
+              selectedTypes={selectedTypes}
+              onTypesChange={setSelectedTypes}
+            />
+          </div>
+        )}
+
         {/* Calendar Grid */}
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden">
           {/* Day headers */}
@@ -286,7 +321,7 @@ export default function CalendarPage() {
             {calendarDates.map((date, index) => {
               const dayWorkouts = getWorkoutsForDate(date)
               const cycleInfo = getCycleInfoForDate(date)
-              const isToday = date.toDateString() === new Date().toDateString()
+              const isToday = typeof window !== 'undefined' && date.toDateString() === new Date().toDateString()
               const isCurrentMonth = date.getMonth() === currentDate.getMonth()
 
               return (
@@ -316,7 +351,7 @@ export default function CalendarPage() {
                       </span>
                       {viewMode === 'week' && (
                         <span className="text-sm text-slate-600 dark:text-slate-400 hidden md:block">
-                          {date.toLocaleDateString('en-US', { weekday: 'long' })}
+                          {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]}
                         </span>
                       )}
                     </div>
@@ -378,6 +413,10 @@ export default function CalendarPage() {
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded bg-training-leadArtificial"></div>
               <span className="text-sm text-slate-600 dark:text-slate-300">🧗‍♀️ {t('training.types.leadArtificial')}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded bg-training-mentalPractice"></div>
+              <span className="text-sm text-slate-600 dark:text-slate-300">🧘 {t('training.types.mentalPractice')}</span>
             </div>
           </div>
           

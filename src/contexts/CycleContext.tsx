@@ -20,16 +20,18 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
 
   // Load cycle settings from localStorage on mount
   useEffect(() => {
-    const savedSettings = localStorage.getItem('cycle-settings')
-    if (savedSettings) {
-      try {
-        const settings = JSON.parse(savedSettings)
-        // Convert date string back to Date object
-        settings.lastPeriodDate = new Date(settings.lastPeriodDate)
-        setCycleSettingsState(settings)
-        setIsCycleTrackingEnabled(true)
-      } catch (error) {
-        console.error('Error loading cycle settings:', error)
+    if (typeof window !== 'undefined') {
+      const savedSettings = localStorage.getItem('cycle-settings')
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings)
+          // Convert date string back to Date object
+          settings.lastPeriodDate = new Date(settings.lastPeriodDate)
+          setCycleSettingsState(settings)
+          setIsCycleTrackingEnabled(true)
+        } catch (error) {
+          console.error('Error loading cycle settings:', error)
+        }
       }
     }
   }, [])
@@ -46,14 +48,18 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     setCycleSettingsState(settings)
     setIsCycleTrackingEnabled(true)
     // Save to localStorage
-    localStorage.setItem('cycle-settings', JSON.stringify(settings))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cycle-settings', JSON.stringify(settings))
+    }
   }
 
   const disableCycleTracking = () => {
     setCycleSettingsState(null)
     setCycleInfo(null)
     setIsCycleTrackingEnabled(false)
-    localStorage.removeItem('cycle-settings')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('cycle-settings')
+    }
   }
 
   return (

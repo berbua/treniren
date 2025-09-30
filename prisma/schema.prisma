@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./prisma/dev.db"
 }
 
 // Enums
@@ -17,6 +17,7 @@ enum WorkoutType {
   CIRCUITS
   LEAD_ROCK
   LEAD_ARTIFICIAL
+  MENTAL_PRACTICE
 }
 
 enum TrainingVolume {
@@ -25,6 +26,28 @@ enum TrainingVolume {
   TR3
   TR4
   TR5
+}
+
+enum MentalPracticeType {
+  MEDITATION
+  REFLECTING
+  OTHER
+}
+
+enum FocusState {
+  CHOKE
+  DISTRACTION
+  PRESENT
+  FOCUSED
+  CLUTCH
+  FLOW
+}
+
+enum ComfortZone {
+  COMFORT
+  STRETCH1
+  STRETCH2
+  PANIC
 }
 
 enum BoulderType {
@@ -57,26 +80,26 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  profile      UserProfile?
-  plans        Plan[]
-  workouts     Workout[]
-  exercises    Exercise[]
-  tags         Tag[]
-  planTags     PlanTag[]
+  profile   UserProfile?
+  plans     Plan[]
+  workouts  Workout[]
+  exercises Exercise[]
+  tags      Tag[]
+  planTags  PlanTag[]
 
   @@map("users")
 }
 
 model UserProfile {
-  id                     String    @id @default(cuid())
-  userId                 String    @unique
-  photoUrl               String?
-  googleSheetsUrl        String?
-  cycleAvgLengthDays     Int       @default(28)
-  lastPeriodDate         DateTime?
-  timezone               String    @default("Europe/Warsaw")
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  photoUrl           String?
+  googleSheetsUrl    String?
+  cycleAvgLengthDays Int       @default(28)
+  lastPeriodDate     DateTime?
+  timezone           String    @default("Europe/Warsaw")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -103,38 +126,44 @@ model Plan {
 }
 
 model Workout {
-  id                  String         @id @default(cuid())
-  planId              String?
-  userId              String
-  type                WorkoutType
-  startTime           DateTime
-  endTime             DateTime?
-  trainingVolume      TrainingVolume?
-  details             Json?          // Type-specific fields
-  preSessionFeel      Int?           @db.SmallInt // 1-5
-  dayAfterTiredness   Int?           @db.SmallInt // 1-5
-  notes               String?
-  sector              String?        // For lead_rock workouts
-  calendarEventId     String?
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+  id                 String              @id @default(cuid())
+  planId             String?
+  userId             String
+  type               WorkoutType
+  startTime          DateTime
+  endTime            DateTime?
+  trainingVolume     TrainingVolume?
+  details            Json? // Type-specific fields
+  preSessionFeel     Int? // 1-5
+  dayAfterTiredness  Int? // 1-5
+  focusLevel         Int? // 1-5 for mental practice
+  notes              String?
+  sector             String? // For lead_rock workouts
+  mentalPracticeType MentalPracticeType? // For mental practice workouts
+  gratitude          String? // 3 things I am grateful for
+  improvements       String? // 3 things to do better next time
+  mentalState        Json? // Mental state data including climb sections
+  calendarEventId    String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   // Relations
-  plan            Plan?             @relation(fields: [planId], references: [id], onDelete: SetNull)
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan             Plan?             @relation(fields: [planId], references: [id], onDelete: SetNull)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   workoutExercises WorkoutExercise[]
+  workoutTags      WorkoutTag[]
 
   @@map("workouts")
 }
 
 model Exercise {
-  id           String   @id @default(cuid())
-  userId       String
-  name         String
-  category     String?
-  defaultUnit  String   @default("kg")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  category    String?
+  defaultUnit String   @default("kg")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -144,15 +173,15 @@ model Exercise {
 }
 
 model WorkoutExercise {
-  id        String @id @default(cuid())
-  workoutId String
+  id         String @id @default(cuid())
+  workoutId  String
   exerciseId String
-  order     Int
+  order      Int
 
   // Relations
-  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  workout  Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-  sets    Set[]
+  sets     Set[]
 
   @@unique([workoutId, exerciseId])
   @@map("workout_exercises")
@@ -163,8 +192,8 @@ model Set {
   workoutExerciseId String
   setNumber         Int
   reps              Int?
-  weight            Float?   // in kg
-  rir               Int?     // Reps in Reserve
+  weight            Float? // in kg
+  rir               Int? // Reps in Reserve
   success           Boolean?
   notes             String?
   createdAt         DateTime @default(now())
@@ -184,8 +213,9 @@ model Tag {
   updatedAt DateTime @updatedAt
 
   // Relations
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  planTags PlanTag[]
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planTags    PlanTag[]
+  workoutTags WorkoutTag[]
 
   @@unique([userId, name])
   @@map("tags")
@@ -196,9 +226,23 @@ model PlanTag {
   tagId  String
 
   // Relations
-  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
-  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  plan   Plan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  tag    Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  User   User?   @relation(fields: [userId], references: [id])
+  userId String?
 
   @@id([planId, tagId])
   @@map("plan_tags")
+}
+
+model WorkoutTag {
+  workoutId String
+  tagId     String
+
+  // Relations
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([workoutId, tagId])
+  @@map("workout_tags")
 }

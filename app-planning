@@ -123,7 +123,13 @@ Notes:
 - M6: Cycle logic (store last period date, compute phases, UI bubbles + simple reminders)
 - M7: User - start storing data aboout workouts and consent for cycle tracking, user panel - photo, cycle info
 - M8: statistics
-- Later: Push notifications, two-way sync, analytics, tagging & filters
+- M9: Strong Mind monitoring
+  Add new training type - mental practice
+- Later: Push notifications, two-way sync, analytics, 
+-m10: tagging & filters - i would like to add tags for trainings and then filter by them in the calendar view.
+  new tags: PM as warmup, fingerboard, intervals
+  i would also like to filter tranings in calendar view (multiselect - filter by traning type
+
 
 ## 13) Definition of Done (MVP)
 

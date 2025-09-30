@@ -1,7 +1,7 @@
 // Custom service worker for enhanced offline functionality
-const CACHE_NAME = 'treniren-v1';
-const STATIC_CACHE_NAME = 'treniren-static-v1';
-const DYNAMIC_CACHE_NAME = 'treniren-dynamic-v1';
+const CACHE_NAME = 'treniren-v6';
+const STATIC_CACHE_NAME = 'treniren-static-v6';
+const DYNAMIC_CACHE_NAME = 'treniren-dynamic-v6';
 
 // Static assets to cache
 const STATIC_ASSETS = [
@@ -31,6 +31,19 @@ self.addEventListener('install', (event) => {
       })
       .then(() => {
         console.log('Service Worker: Static assets cached');
+        // Clear old caches
+        return caches.keys().then((cacheNames) => {
+          return Promise.all(
+            cacheNames.map((cacheName) => {
+              if (cacheName.startsWith('treniren-') && !cacheName.includes('v6')) {
+                console.log('Service Worker: Deleting old cache:', cacheName);
+                return caches.delete(cacheName);
+              }
+            })
+          );
+        });
+      })
+      .then(() => {
         return self.skipWaiting();
       })
       .catch((error) => {
@@ -165,6 +178,23 @@ async function cacheFirstStrategy(request) {
     return networkResponse;
   } catch (error) {
     console.error('Service Worker: Failed to fetch', request.url, error);
+    
+    // For chunk files that fail to load, try to clear cache and retry
+    if (request.url.includes('/_next/static/chunks/')) {
+      console.log('Service Worker: Clearing cache for failed chunk:', request.url);
+      const cache = await caches.open(STATIC_CACHE_NAME);
+      await cache.delete(request);
+      
+      // Try one more time without cache
+      try {
+        return await fetch(request);
+      } catch (retryError) {
+        console.error('Service Worker: Retry also failed for', request.url, retryError);
+        // Return a minimal response to prevent the app from breaking
+        return new Response('', { status: 404, statusText: 'Not Found' });
+      }
+    }
+    
     throw error;
   }
 }

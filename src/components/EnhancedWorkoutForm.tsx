@@ -1,17 +1,20 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { WorkoutType, TrainingVolume, WorkoutFormData, Workout } from '@/types/workout';
+import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag } from '@/types/workout';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import CycleInfoComponent from './CycleInfo';
 import { StrongMindSection } from './StrongMindSection';
+import TagSelector from './TagSelector';
 
 interface EnhancedWorkoutFormProps {
   onSubmit: (workout: WorkoutFormData) => void;
   onCancel: () => void;
   initialData?: Workout;
+  availableTags?: Tag[];
+  onCreateTag?: (name: string, color: string) => void;
 }
 
 const workoutTypes: { value: WorkoutType; label: string; emoji: string; description: string }[] = [
@@ -20,6 +23,7 @@ const workoutTypes: { value: WorkoutType; label: string; emoji: string; descript
   { value: 'CIRCUITS', label: 'Circuits', emoji: '🔄', description: 'Endurance training circuits' },
   { value: 'LEAD_ROCK', label: 'Lead Rock', emoji: '🏔️', description: 'Outdoor lead climbing' },
   { value: 'LEAD_ARTIFICIAL', label: 'Lead Wall', emoji: '🧗‍♀️', description: 'Indoor lead climbing' },
+  { value: 'MENTAL_PRACTICE', label: 'Mental Practice', emoji: '🧘', description: 'Mindfulness & mental training' },
 ];
 
 const trainingVolumes: { value: TrainingVolume; label: string; description: string }[] = [
@@ -31,21 +35,26 @@ const trainingVolumes: { value: TrainingVolume; label: string; description: stri
 ];
 
 
-export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }: EnhancedWorkoutFormProps) {
+export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
     type: initialData?.type || 'GYM',
-    date: initialData?.date 
-      ? new Date(initialData.date).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10),
+    date: initialData?.startTime 
+      ? new Date(initialData.startTime).toISOString().slice(0, 10)
+      : (typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15'),
     trainingVolume: initialData?.trainingVolume || 'TR3',
     preSessionFeel: initialData?.preSessionFeel || 3,
     dayAfterTiredness: initialData?.dayAfterTiredness || 3,
+    focusLevel: initialData?.focusLevel || 3,
     notes: initialData?.notes || '',
     mentalState: initialData?.mentalState || {},
     sector: initialData?.sector || '',
+    mentalPracticeType: initialData?.mentalPracticeType || 'MEDITATION',
+    gratitude: initialData?.gratitude || '',
+    improvements: initialData?.improvements || '',
+    tagIds: initialData?.tags?.map(tag => tag.id) || [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,7 +79,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
       newErrors.date = 'Please select a date';
     }
 
-    if (formData.type !== 'GYM' && !formData.trainingVolume) {
+    if (formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && !formData.trainingVolume) {
       newErrors.trainingVolume = 'Please select training volume';
     }
 
@@ -94,9 +103,14 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
         trainingVolume: formData.trainingVolume,
         preSessionFeel: formData.preSessionFeel,
         dayAfterTiredness: formData.dayAfterTiredness,
+        focusLevel: formData.focusLevel,
         notes: formData.notes,
         mentalState: formData.mentalState,
         sector: formData.sector,
+        mentalPracticeType: formData.mentalPracticeType,
+        gratitude: formData.gratitude,
+        improvements: formData.improvements,
+        tagIds: formData.tagIds,
       };
 
       await onSubmit(workoutData);
@@ -196,8 +210,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
               </div>
             )}
 
-            {/* Training Volume (for non-gym workouts) */}
-            {formData.type !== 'GYM' && (
+            {/* Training Volume (for non-gym and non-mental practice workouts) */}
+            {formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   📊 Training Volume *
@@ -229,35 +243,35 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
               </div>
             )}
 
-            {/* Mood Ratings */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Pre-session Feel */}
+            {/* Mood Ratings - Different fields based on workout type */}
+            {formData.type === 'MENTAL_PRACTICE' ? (
+              /* Focus Level for Mental Practice */
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                  Pre-session Feel
+                  🧘 {t('workouts.focusLevel') || 'Focus Level (1-5)'}
                 </label>
                 <div className="flex space-x-2">
                   {[1, 2, 3, 4, 5].map((rating) => {
-                    const isFilled = rating <= (formData.preSessionFeel || 0);
-                    const isSelected = formData.preSessionFeel === rating;
+                    const isFilled = rating <= (formData.focusLevel || 0);
+                    const isSelected = formData.focusLevel === rating;
                     return (
                       <label key={rating} className="cursor-pointer">
                         <input
                           type="radio"
-                          name="preSessionFeel"
+                          name="focusLevel"
                           value={rating}
-                          checked={formData.preSessionFeel === rating}
-                          onChange={(e) => updateFormData('preSessionFeel', parseInt(e.target.value))}
+                          checked={formData.focusLevel === rating}
+                          onChange={(e) => updateFormData('focusLevel', parseInt(e.target.value))}
                           className="sr-only"
                         />
                         <div
                           className={`w-8 h-8 rounded-full border-2 transition-all ${
                             isSelected
-                              ? 'border-blue-500'
+                              ? 'border-orange-500'
                               : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
                           } ${
                             isFilled
-                              ? 'bg-green-500'
+                              ? 'bg-orange-500'
                               : 'bg-gray-300 dark:bg-gray-600'
                           }`}
                         />
@@ -266,43 +280,82 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
                   })}
                 </div>
               </div>
+            ) : (
+              /* Pre-session Feel and Day After Tiredness for other workout types */
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Pre-session Feel */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    {t('workouts.preSessionFeel') || 'Pre-session Feel'}
+                  </label>
+                  <div className="flex space-x-2">
+                    {[1, 2, 3, 4, 5].map((rating) => {
+                      const isFilled = rating <= (formData.preSessionFeel || 0);
+                      const isSelected = formData.preSessionFeel === rating;
+                      return (
+                        <label key={rating} className="cursor-pointer">
+                          <input
+                            type="radio"
+                            name="preSessionFeel"
+                            value={rating}
+                            checked={formData.preSessionFeel === rating}
+                            onChange={(e) => updateFormData('preSessionFeel', parseInt(e.target.value))}
+                            className="sr-only"
+                          />
+                          <div
+                            className={`w-8 h-8 rounded-full border-2 transition-all ${
+                              isSelected
+                                ? 'border-blue-500'
+                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                            } ${
+                              isFilled
+                                ? 'bg-green-500'
+                                : 'bg-gray-300 dark:bg-gray-600'
+                            }`}
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
 
-              {/* Day After Tiredness */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                  Day After Tiredness
-                </label>
-                <div className="flex space-x-2">
-                  {[1, 2, 3, 4, 5].map((rating) => {
-                    const isFilled = rating <= (formData.dayAfterTiredness || 0);
-                    const isSelected = formData.dayAfterTiredness === rating;
-                    return (
-                      <label key={rating} className="cursor-pointer">
-                        <input
-                          type="radio"
-                          name="dayAfterTiredness"
-                          value={rating}
-                          checked={formData.dayAfterTiredness === rating}
-                          onChange={(e) => updateFormData('dayAfterTiredness', parseInt(e.target.value))}
-                          className="sr-only"
-                        />
-                        <div
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${
-                            isSelected
-                              ? 'border-blue-500'
-                              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                          } ${
-                            isFilled
-                              ? 'bg-red-500'
-                              : 'bg-gray-300 dark:bg-gray-600'
-                          }`}
-                        />
-                      </label>
-                    );
-                  })}
+                {/* Day After Tiredness */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    {t('workouts.dayAfterTiredness') || 'Day After Tiredness'}
+                  </label>
+                  <div className="flex space-x-2">
+                    {[1, 2, 3, 4, 5].map((rating) => {
+                      const isFilled = rating <= (formData.dayAfterTiredness || 0);
+                      const isSelected = formData.dayAfterTiredness === rating;
+                      return (
+                        <label key={rating} className="cursor-pointer">
+                          <input
+                            type="radio"
+                            name="dayAfterTiredness"
+                            value={rating}
+                            checked={formData.dayAfterTiredness === rating}
+                            onChange={(e) => updateFormData('dayAfterTiredness', parseInt(e.target.value))}
+                            className="sr-only"
+                          />
+                          <div
+                            className={`w-8 h-8 rounded-full border-2 transition-all ${
+                              isSelected
+                                ? 'border-blue-500'
+                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                            } ${
+                              isFilled
+                                ? 'bg-red-500'
+                                : 'bg-gray-300 dark:bg-gray-600'
+                            }`}
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Sector Field - Only for Lead Rock */}
             {formData.type === 'LEAD_ROCK' && (
@@ -320,6 +373,24 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
               </div>
             )}
 
+            {/* Mental Practice Type - Only for Mental Practice */}
+            {formData.type === 'MENTAL_PRACTICE' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  🧘 {t('workouts.mentalPracticeType') || 'Practice Type'}
+                </label>
+                <select
+                  value={formData.mentalPracticeType}
+                  onChange={(e) => updateFormData('mentalPracticeType', e.target.value)}
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                >
+                  <option value="MEDITATION">{t('workouts.mentalPracticeTypes.meditation') || 'Meditation'}</option>
+                  <option value="REFLECTING">{t('workouts.mentalPracticeTypes.reflecting') || 'Reflecting'}</option>
+                  <option value="OTHER">{t('workouts.mentalPracticeTypes.other') || 'Other'}</option>
+                </select>
+              </div>
+            )}
+
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -334,6 +405,16 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
               />
             </div>
 
+            {/* Tags */}
+            {availableTags.length > 0 && (
+              <TagSelector
+                selectedTagIds={formData.tagIds}
+                onTagsChange={(tagIds) => updateFormData('tagIds', tagIds)}
+                availableTags={availableTags}
+                onCreateTag={onCreateTag}
+              />
+            )}
+
             {/* Strong Mind Section - Only for Lead Climbing */}
             {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL') && (
               <StrongMindSection
@@ -342,6 +423,34 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData }:
                 workoutType={formData.type}
               />
             )}
+
+            {/* Gratitude Section */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                {t('workouts.gratitude') || '3 things I am grateful for'}
+              </label>
+              <textarea
+                value={formData.gratitude}
+                onChange={(e) => updateFormData('gratitude', e.target.value)}
+                placeholder={t('workouts.gratitudePlaceholder') || 'What are you grateful for from this training session?'}
+                rows={3}
+                className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
+              />
+            </div>
+
+            {/* Improvements Section */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                {t('workouts.improvements') || '3 things to do better next time'}
+              </label>
+              <textarea
+                value={formData.improvements}
+                onChange={(e) => updateFormData('improvements', e.target.value)}
+                placeholder={t('workouts.improvementsPlaceholder') || 'What would you like to improve for next time?'}
+                rows={3}
+                className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
+              />
+            </div>
           </form>
         </div>
 

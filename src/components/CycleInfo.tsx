@@ -1,6 +1,7 @@
 'use client'
 
 import { CycleInfo, getPhaseColor } from '@/lib/cycle-utils'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface CycleInfoProps {
   cycleInfo: CycleInfo
@@ -9,6 +10,7 @@ interface CycleInfoProps {
 }
 
 export default function CycleInfoComponent({ cycleInfo, showRecommendations = false, isSelectedDate = false }: CycleInfoProps) {
+  const { t } = useLanguage()
   const phaseColor = getPhaseColor(cycleInfo.phase)
 
   return (
@@ -21,7 +23,7 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
           </span>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${phaseColor}`}>
-          {cycleInfo.phaseDescription}
+          {t(`cycle.phases.${cycleInfo.phaseDescription}`)}
         </span>
       </div>
 
@@ -30,18 +32,12 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
           <div>
             <span className="font-medium">Next period:</span>
             <br />
-            {cycleInfo.nextPeriodDate.toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric' 
-            })}
+            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][cycleInfo.nextPeriodDate.getMonth()]} {cycleInfo.nextPeriodDate.getDate()}
           </div>
           <div>
             <span className="font-medium">Next ovulation:</span>
             <br />
-            {cycleInfo.nextOvulationDate.toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric' 
-            })}
+            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][cycleInfo.nextOvulationDate.getMonth()]} {cycleInfo.nextOvulationDate.getDate()}
           </div>
         </div>
       </div>

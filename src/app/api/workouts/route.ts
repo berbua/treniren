@@ -17,8 +17,13 @@ export async function GET() {
             sets: true,
           },
         },
+        workoutTags: {
+          include: {
+            tag: true,
+          },
+        },
       },
-      orderBy: { date: 'desc' },
+      orderBy: { startTime: 'desc' },
     })
 
     return NextResponse.json(workouts)
@@ -42,8 +47,12 @@ export async function POST(request: NextRequest) {
       details,
       preSessionFeel,
       dayAfterTiredness,
+      focusLevel,
       notes,
       sector,
+      mentalPracticeType,
+      gratitude,
+      improvements,
       planId,
     } = body
 
@@ -54,13 +63,17 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         type,
-        date: new Date(date),
+        startTime: new Date(date),
         trainingVolume,
         details,
         preSessionFeel,
         dayAfterTiredness,
+        focusLevel,
         notes,
         sector,
+        mentalPracticeType,
+        gratitude,
+        improvements,
         planId: planId || null,
       },
       include: {
@@ -68,6 +81,11 @@ export async function POST(request: NextRequest) {
           include: {
             exercise: true,
             sets: true,
+          },
+        },
+        workoutTags: {
+          include: {
+            tag: true,
           },
         },
       },

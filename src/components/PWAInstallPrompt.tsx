@@ -30,9 +30,7 @@ export const PWAInstallPrompt = () => {
       if (window.matchMedia('(display-mode: standalone)').matches || 
           (window.navigator as Navigator & { standalone?: boolean }).standalone === true) {
         setIsInstalled(true);
-        console.log('PWA: App is already installed');
       } else {
-        console.log('PWA: App is not installed');
       }
     };
 
@@ -40,17 +38,15 @@ export const PWAInstallPrompt = () => {
 
     // Listen for the beforeinstallprompt event (Chrome/Edge)
     const handleBeforeInstallPrompt = (e: Event): void => {
-      console.log('PWA: beforeinstallprompt event received');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       
-      // Always show prompt for now (remove cooldown for testing)
+      // Show prompt for PWA installation
       setShowInstallPrompt(true);
     };
 
     // Listen for app installed event
     const handleAppInstalled = () => {
-      console.log('PWA: App installed event received');
       setIsInstalled(true);
       setShowInstallPrompt(false);
       setDeferredPrompt(null);
@@ -64,7 +60,6 @@ export const PWAInstallPrompt = () => {
     const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
 
     if (isIOS && !isInStandaloneMode) {
-      console.log('PWA: iOS detected, showing manual install instructions');
       // Show manual install prompt for iOS after 3 seconds
       setTimeout(() => {
         setShowInstallPrompt(true);
@@ -83,9 +78,7 @@ export const PWAInstallPrompt = () => {
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
       } else {
-        console.log('User dismissed the install prompt');
       }
       
       setDeferredPrompt(null);

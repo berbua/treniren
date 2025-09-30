@@ -22,7 +22,6 @@ const translations: Record<Language, Record<string, unknown>> = {
   pl: plTranslations
 }
 
-console.log('Translations loaded:', translations)
 
 // Helper function to get nested translation
 const getNestedTranslation = (obj: unknown, key: string): string => {
@@ -41,17 +40,26 @@ const getNestedTranslation = (obj: unknown, key: string): string => {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('en')
-
-  // Load language from localStorage on mount
-  useEffect(() => {
+  const [language, setLanguageState] = useState<Language>(() => {
+    // Initialize with default language to prevent hydration mismatch
     if (typeof window !== 'undefined') {
       const savedLanguage = localStorage.getItem('language') as Language
       if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'pl')) {
+        return savedLanguage
+      }
+    }
+    return 'en'
+  })
+
+  // Load language from localStorage on mount (only for updates, not initial state)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('language') as Language
+      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'pl') && savedLanguage !== language) {
         setLanguageState(savedLanguage)
       }
     }
-  }, [])
+  }, [language])
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)

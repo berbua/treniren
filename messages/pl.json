@@ -29,7 +29,8 @@
       "bouldering": "Boulder", 
       "circuits": "Obwody",
       "leadRock": "Prowadzenie - Skała",
-      "leadArtificial": "Prowadzenie - Ścianka"
+      "leadArtificial": "Prowadzenie - Ścianka",
+      "mentalPractice": "Praktyka Mentalna"
     },
     "volumes": {
       "TR1": "TR1 - Bardzo lekko",
@@ -43,7 +44,8 @@
       "bouldering": "Moc i technika",
       "circuits": "Trening wytrzymałościowy", 
       "leadRock": "Wspinaczka na skałach",
-      "leadArtificial": "Wspinaczka na ściance"
+      "leadArtificial": "Wspinaczka na ściance",
+      "mentalPractice": "Mindfulness i trening mentalny"
     }
   },
     "workouts": {
@@ -57,10 +59,18 @@
       "trainingVolume": "Intensywność Treningu",
       "preSessionFeel": "Samopoczucie Przed (1-5)",
       "dayAfterTiredness": "Zmęczenie Następnego Dnia (1-5)",
+      "focusLevel": "Poziom Skupienia (1-5)",
       "notes": "Notatki",
       "notesPlaceholder": "Dodaj notatki o swoim treningu...",
       "sector": "Sektor",
       "sectorPlaceholder": "Wprowadź sektor wspinaczkowy lub obszar...",
+      "mentalPracticeType": "Rodzaj Praktyki",
+      "mentalPracticeTypePlaceholder": "Wybierz rodzaj praktyki mentalnej...",
+      "mentalPracticeTypes": {
+        "meditation": "Medytacja",
+        "reflecting": "Refleksja",
+        "other": "Inne"
+      },
     "noWorkouts": "Brak treningów",
     "noWorkoutsDescription": "Zacznij śledzić swoje treningi, dodając pierwszy trening",
     "loading": "Ładowanie treningów...",
@@ -79,7 +89,33 @@
     "during": "Podczas",
     "falls": "Odpadnięcia",
     "yes": "Tak",
-    "no": "Nie"
+    "no": "Nie",
+    "climbs": "Wspinaczki",
+    "addClimb": "Dodaj Wspinaczkę",
+    "removeClimb": "Usuń Wspinaczkę",
+    "focusState": "Stan Skupienia",
+    "focusStatePlaceholder": "Wybierz stan skupienia...",
+    "focusStates": {
+      "CHOKE": "Zadławienie",
+      "DISTRACTION": "Rozproszenie",
+      "PRESENT": "Obecność",
+      "FOCUSED": "Skupienie",
+      "CLUTCH": "Kontrola",
+      "FLOW": "Przepływ"
+    },
+    "comfortZone": "Strefa Komfortu",
+    "comfortZones": {
+      "COMFORT": "Komfort",
+      "STRETCH1": "Rozciągnięcie 1",
+      "STRETCH2": "Rozciągnięcie 2",
+      "PANIC": "Panika"
+    },
+    "climbNotes": "Notatki o Wspinaczce",
+    "climbNotesPlaceholder": "Dodaj notatki o tej sekcji wspinaczki...",
+    "gratitude": "3 rzeczy, za które jestem wdzięczny",
+    "gratitudePlaceholder": "Za co jesteś wdzięczny z tej sesji treningowej?",
+    "improvements": "3 rzeczy do poprawy następnym razem",
+    "improvementsPlaceholder": "Co chciałbyś poprawić następnym razem?"
   },
   "calendar": {
     "title": "Kalendarz Treningowy",

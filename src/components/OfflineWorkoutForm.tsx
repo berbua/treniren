@@ -17,7 +17,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
   const { isOnline } = useOffline();
   const [formData, setFormData] = useState({
     type: 'gym' as OfflineWorkout['type'],
-    startTime: new Date().toISOString().slice(0, 16),
+    startTime: typeof window !== 'undefined' ? new Date().toISOString().slice(0, 16) : '2024-01-15T10:00',
     endTime: '',
     trainingVolume: 'TR3' as OfflineWorkout['trainingVolume'],
     preSessionFeel: 3,
@@ -35,7 +35,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
       trainingVolume: formData.trainingVolume,
       preSessionFeel: formData.preSessionFeel,
       notes: formData.notes || undefined,
-      createdAt: new Date().toISOString(),
+      createdAt: typeof window !== 'undefined' ? new Date().toISOString() : '2024-01-15T10:00:00.000Z',
       synced: isOnline,
       exercises: [],
     };

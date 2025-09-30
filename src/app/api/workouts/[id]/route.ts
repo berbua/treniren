@@ -22,6 +22,11 @@ export async function GET(
             sets: true,
           },
         },
+        workoutTags: {
+          include: {
+            tag: true,
+          },
+        },
       },
     })
 
@@ -56,8 +61,12 @@ export async function PUT(
       details,
       preSessionFeel,
       dayAfterTiredness,
+      focusLevel,
       notes,
       sector,
+      mentalPracticeType,
+      gratitude,
+      improvements,
     } = body
 
     const userId = 'temp-user-id'
@@ -70,13 +79,17 @@ export async function PUT(
       },
       data: {
         type,
-        date: new Date(date),
+        startTime: new Date(date),
         trainingVolume,
         details,
         preSessionFeel,
         dayAfterTiredness,
+        focusLevel,
         notes,
         sector,
+        mentalPracticeType,
+        gratitude,
+        improvements,
       },
     })
 
@@ -98,6 +111,11 @@ export async function PUT(
           include: {
             exercise: true,
             sets: true,
+          },
+        },
+        workoutTags: {
+          include: {
+            tag: true,
           },
         },
       },

@@ -8,14 +8,12 @@ export const ServiceWorkerProvider = () => {
     // Register service worker on component mount
     registerServiceWorker().then((registration) => {
       if (registration) {
-        console.log('Service Worker registered successfully');
         
         // Listen for service worker messages
         if (registration.active) {
           navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data?.type === 'SYNC_WORKOUTS') {
               // Handle sync message from service worker
-              console.log('Sync workouts message received from service worker');
               // You could dispatch a custom event or use a context here
               window.dispatchEvent(new CustomEvent('sync-workouts'));
             }

@@ -1,18 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import WorkoutCard from '@/components/WorkoutCard'
-import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
+import dynamic from 'next/dynamic'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { Workout, WorkoutFormData } from '@/types/workout'
+import { Workout, WorkoutFormData, Tag } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
+
+// Dynamically import components to avoid SSR issues
+const WorkoutCard = dynamic(() => import('@/components/WorkoutCard'), { ssr: false })
+const EnhancedWorkoutForm = dynamic(() => import('@/components/EnhancedWorkoutForm'), { ssr: false })
 
 export default function WorkoutsPage() {
   const { t } = useLanguage()
+  
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null)
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
 
   // Fetch workouts
   const fetchWorkouts = async () => {
@@ -29,13 +34,26 @@ export default function WorkoutsPage() {
     }
   }
 
+  // Fetch tags
+  const fetchTags = async () => {
+    try {
+      const response = await fetch('/api/tags')
+      if (response.ok) {
+        const data = await response.json()
+        setAvailableTags(data)
+      }
+    } catch (error) {
+      console.error('Error fetching tags:', error)
+    }
+  }
+
   // Create workout
   const createWorkout = async (workoutData: WorkoutFormData) => {
     try {
       const response = await fetch('/api/workouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(workoutData),
+        body: JSON.stringify({ ...workoutData, userId: 'temp-user-id' }),
       })
 
       if (response.ok) {
@@ -53,7 +71,7 @@ export default function WorkoutsPage() {
       const response = await fetch(`/api/workouts/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(workoutData),
+        body: JSON.stringify({ ...workoutData, userId: 'temp-user-id' }),
       })
 
       if (response.ok) {
@@ -73,6 +91,8 @@ export default function WorkoutsPage() {
     try {
       const response = await fetch(`/api/workouts/${id}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: 'temp-user-id' }),
       })
 
       if (response.ok) {
@@ -105,10 +125,34 @@ export default function WorkoutsPage() {
     setEditingWorkout(null)
   }
 
+  // Create new tag
+  const handleCreateTag = async (name: string, color: string) => {
+    try {
+      const response = await fetch('/api/tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          color,
+          userId: 'temp-user-id',
+        }),
+      })
+      if (response.ok) {
+        const newTag = await response.json()
+        setAvailableTags(prev => [...prev, newTag])
+      }
+    } catch (error) {
+      console.error('Error creating tag:', error)
+    }
+  }
+
   useEffect(() => {
     fetchWorkouts()
+    fetchTags()
   }, [])
-
+  
   if (loading) {
     return <LoadingSpinner message={t('workouts.loading')} fullScreen />
   }
@@ -167,6 +211,8 @@ export default function WorkoutsPage() {
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             initialData={editingWorkout || undefined}
+            availableTags={availableTags}
+            onCreateTag={handleCreateTag}
           />
         )}
       </div>

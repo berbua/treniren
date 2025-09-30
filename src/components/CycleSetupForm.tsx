@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 // import { getDefaultCycleSettings } from '@/lib/cycle-utils'
 
 interface CycleSetupFormProps {
@@ -11,9 +11,17 @@ interface CycleSetupFormProps {
 export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormProps) {
   const [formData, setFormData] = useState({
     cycleLength: 28,
-    lastPeriodDate: new Date().toISOString().slice(0, 10),
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    lastPeriodDate: typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15',
+    timezone: 'UTC',
   })
+
+  // Set timezone on client side only to avoid hydration issues
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    }))
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,7 +67,7 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
                 onChange={(e) => handleChange('lastPeriodDate', e.target.value)}
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
                 required
-                max={new Date().toISOString().slice(0, 10)}
+                max={typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15'}
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 This helps us calculate your current cycle phase

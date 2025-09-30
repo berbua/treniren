@@ -27,7 +27,7 @@ const DEFAULT_CYCLE_LENGTH = 28
  */
 export function calculateCycleInfo(settings: CycleSettings, targetDate?: Date): CycleInfo {
   const { cycleLength, lastPeriodDate } = settings
-  const date = targetDate || new Date()
+  const date = targetDate || (typeof window !== 'undefined' ? new Date() : new Date('2024-01-15T00:00:00.000Z'))
   
   // Calculate days since last period
   const daysSinceLastPeriod = Math.floor(
@@ -67,7 +67,7 @@ function getPhaseInfo(cycleDay: number) {
   if (cycleDay >= 1 && cycleDay <= 7) {
     return {
       phase: 'menstrual' as CyclePhase,
-      description: 'Menstrual Phase',
+      description: 'menstrual',
       recommendations: [
         'Maintain activity while reducing intensity',
         'Work on technique and mobility',
@@ -82,7 +82,7 @@ function getPhaseInfo(cycleDay: number) {
   if (cycleDay >= 8 && cycleDay <= 12) {
     return {
       phase: 'follicular' as CyclePhase,
-      description: 'Follicular Phase',
+      description: 'follicular',
       recommendations: [
         'Optimal time for intense training',
         'Focus on maximum strength sessions',
@@ -97,7 +97,7 @@ function getPhaseInfo(cycleDay: number) {
   if (cycleDay >= 13 && cycleDay <= 16) {
     return {
       phase: 'ovulation' as CyclePhase,
-      description: 'Ovulation',
+      description: 'ovulation',
       recommendations: [
         'Maximize power while taking care of joints',
         'Reach peak level of intensity if feeling strong',
@@ -112,7 +112,7 @@ function getPhaseInfo(cycleDay: number) {
   if (cycleDay >= 17 && cycleDay <= 20) {
     return {
       phase: 'early-luteal' as CyclePhase,
-      description: 'Early Luteal Phase',
+      description: 'earlyLuteal',
       recommendations: [
         'High intensity, low volume training',
         'Focus on dynamic movements',
@@ -126,7 +126,7 @@ function getPhaseInfo(cycleDay: number) {
   // Late Luteal Phase/PMS (Days 21-28)
   return {
     phase: 'late-luteal' as CyclePhase,
-    description: 'Late Luteal Phase (PMS)',
+    description: 'lateLuteal',
     recommendations: [
       'Maintain training consistency without pressure',
       'Good time for deload and calmer climbing',
@@ -161,11 +161,10 @@ export function getPhaseColor(phase: CyclePhase): string {
  * Format date for display
  */
 export function formatCycleDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  })
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  
+  return `${weekdays[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`
 }
 
 /**
@@ -174,7 +173,7 @@ export function formatCycleDate(date: Date): string {
 export function getDefaultCycleSettings(): CycleSettings {
   return {
     cycleLength: DEFAULT_CYCLE_LENGTH,
-    lastPeriodDate: new Date(),
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    lastPeriodDate: typeof window !== 'undefined' ? new Date() : new Date('2024-01-15T00:00:00.000Z'),
+    timezone: typeof window !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC',
   }
 }

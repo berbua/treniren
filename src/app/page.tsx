@@ -27,7 +27,7 @@ export default function Home() {
           </div>
 
           {/* Training Types Preview */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto mt-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-6xl mx-auto mt-12">
             <div className="bg-training-gym text-white p-4 rounded-lg shadow-md">
               <h3 className="font-semibold">🏋️ {t('training.types.gym')}</h3>
               <p className="text-sm opacity-90">{t('training.descriptions.gym')}</p>
@@ -47,6 +47,10 @@ export default function Home() {
             <div className="bg-training-leadArtificial text-white p-4 rounded-lg shadow-md">
               <h3 className="font-semibold">🧗‍♀️ {t('training.types.leadArtificial')}</h3>
               <p className="text-sm opacity-90">{t('training.descriptions.leadArtificial')}</p>
+            </div>
+            <div className="bg-training-mentalPractice text-white p-4 rounded-lg shadow-md">
+              <h3 className="font-semibold">🧘 {t('training.types.mentalPractice')}</h3>
+              <p className="text-sm opacity-90">{t('training.descriptions.mentalPractice')}</p>
             </div>
           </div>
 
@@ -110,7 +114,7 @@ export default function Home() {
                   onClick={() => setShowOfflineForm(true)}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  Test Offline Workout
+                  Offline Workout
                 </button>
                 <div className="text-xs text-gray-500">
                   💡 <strong>To install as PWA:</strong><br/>
@@ -120,23 +124,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Status */}
-          <div className="mt-16 p-6 bg-green-100 dark:bg-green-900 rounded-lg max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">
-              🚀 {t('milestones.m3Complete')}
-            </h2>
-            <p className="text-slate-600 dark:text-slate-300 mb-4">
-              {t('milestones.m3Desc')}
-            </p>
-            <div className="text-sm text-slate-600 dark:text-slate-300">
-              <p>✅ CRUD operations for workouts</p>
-              <p>✅ Menstrual cycle tracking integration</p>
-              <p>✅ Calendar UI with weekly/monthly views</p>
-              <p>✅ Training type colors and emojis</p>
-              <p>✅ Internationalization (English/Polish)</p>
-              <p>✅ PWA install + offline basics</p>
-            </div>
-          </div>
         </div>
       </main>
       

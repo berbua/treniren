@@ -1,4 +1,9 @@
-// Use mock Prisma client for now (until we set up the database)
-import { mockPrisma } from './mock-prisma'
+import { PrismaClient } from '@prisma/client'
 
-export const prisma = mockPrisma
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
