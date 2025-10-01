@@ -15,6 +15,7 @@ interface EnhancedWorkoutFormProps {
   initialData?: Workout;
   availableTags?: Tag[];
   onCreateTag?: (name: string, color: string) => void;
+  isSubmitting?: boolean;
 }
 
 const workoutTypes: { value: WorkoutType; label: string; emoji: string; description: string }[] = [
@@ -35,7 +36,7 @@ const trainingVolumes: { value: TrainingVolume; label: string; description: stri
 ];
 
 
-export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag }: EnhancedWorkoutFormProps) {
+export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t } = useLanguage();
   
@@ -58,7 +59,6 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calculate cycle info for the selected date
   const cycleInfoForSelectedDate = useMemo(() => {
@@ -90,35 +90,27 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!validateForm() || isSubmitting) {
       return;
     }
 
-    setIsSubmitting(true);
+    const workoutData: WorkoutFormData = {
+      type: formData.type,
+      date: formData.date,
+      trainingVolume: formData.trainingVolume,
+      preSessionFeel: formData.preSessionFeel,
+      dayAfterTiredness: formData.dayAfterTiredness,
+      focusLevel: formData.focusLevel,
+      notes: formData.notes,
+      mentalState: formData.mentalState,
+      sector: formData.sector,
+      mentalPracticeType: formData.mentalPracticeType,
+      gratitude: formData.gratitude,
+      improvements: formData.improvements,
+      tagIds: formData.tagIds,
+    };
 
-    try {
-      const workoutData: WorkoutFormData = {
-        type: formData.type,
-        date: formData.date,
-        trainingVolume: formData.trainingVolume,
-        preSessionFeel: formData.preSessionFeel,
-        dayAfterTiredness: formData.dayAfterTiredness,
-        focusLevel: formData.focusLevel,
-        notes: formData.notes,
-        mentalState: formData.mentalState,
-        sector: formData.sector,
-        mentalPracticeType: formData.mentalPracticeType,
-        gratitude: formData.gratitude,
-        improvements: formData.improvements,
-        tagIds: formData.tagIds,
-      };
-
-      await onSubmit(workoutData);
-    } catch (error) {
-      console.error('Error submitting workout:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await onSubmit(workoutData);
   };
 
   const updateFormData = (field: string, value: string | number | object) => {

@@ -18,6 +18,7 @@ export default function WorkoutsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null)
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch workouts
   const fetchWorkouts = async () => {
@@ -49,6 +50,9 @@ export default function WorkoutsPage() {
 
   // Create workout
   const createWorkout = async (workoutData: WorkoutFormData) => {
+    if (isSubmitting) return // Prevent double submission
+    
+    setIsSubmitting(true)
     try {
       const response = await fetch('/api/workouts', {
         method: 'POST',
@@ -62,11 +66,16 @@ export default function WorkoutsPage() {
       }
     } catch (error) {
       console.error('Error creating workout:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   // Update workout
   const updateWorkout = async (id: string, workoutData: WorkoutFormData) => {
+    if (isSubmitting) return // Prevent double submission
+    
+    setIsSubmitting(true)
     try {
       const response = await fetch(`/api/workouts/${id}`, {
         method: 'PUT',
@@ -81,6 +90,8 @@ export default function WorkoutsPage() {
       }
     } catch (error) {
       console.error('Error updating workout:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -213,6 +224,7 @@ export default function WorkoutsPage() {
             initialData={editingWorkout || undefined}
             availableTags={availableTags}
             onCreateTag={handleCreateTag}
+            isSubmitting={isSubmitting}
           />
         )}
       </div>
