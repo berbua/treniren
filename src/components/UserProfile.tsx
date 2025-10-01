@@ -37,20 +37,20 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
     }
   };
 
-  const handleCycleSave = () => {
+  const handleCycleSave = async () => {
     if (cycleData.lastPeriodDate) {
       const settings = {
         cycleLength: cycleData.cycleLength,
         lastPeriodDate: new Date(cycleData.lastPeriodDate),
         timezone: profileData.timezone,
       };
-      setCycleSettings(settings);
+      await setCycleSettings(settings);
     }
   };
 
-  const handleCycleDisable = () => {
+  const handleCycleDisable = async () => {
     if (confirm(t('profile.disableCycleConfirm'))) {
-      disableCycleTracking();
+      await disableCycleTracking();
       setCycleData({ cycleLength: 28, lastPeriodDate: '' });
     }
   };

@@ -32,8 +32,8 @@ export default function CycleSetupFlow() {
     // User declined, don't show setup
   }
 
-  const handleSetupComplete = (settings: { cycleLength: number; lastPeriodDate: Date; timezone: string }) => {
-    setCycleSettings(settings)
+  const handleSetupComplete = async (settings: { cycleLength: number; lastPeriodDate: Date; timezone: string }) => {
+    await setCycleSettings(settings)
     setShowSetup(false)
   }
 
