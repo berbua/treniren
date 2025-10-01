@@ -70,6 +70,7 @@ export default function TagSelector({
               >
                 {tag.name}
                 <button
+                  type="button"
                   onClick={() => handleTagToggle(tagId)}
                   className="ml-1 hover:bg-black/20 rounded-full p-0.5"
                 >
@@ -87,6 +88,7 @@ export default function TagSelector({
           .filter(tag => !selectedTagIds.includes(tag.id))
           .map(tag => (
             <button
+              type="button"
               key={tag.id}
               onClick={() => handleTagToggle(tag.id)}
               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
@@ -105,6 +107,7 @@ export default function TagSelector({
         <div>
           {!showCreateForm ? (
             <button
+              type="button"
               onClick={() => setShowCreateForm(true)}
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
             >
@@ -126,6 +129,7 @@ export default function TagSelector({
                 <div className="flex space-x-1">
                   {predefinedColors.map(color => (
                     <button
+                      type="button"
                       key={color}
                       onClick={() => setNewTagColor(color)}
                       className={`w-4 h-4 rounded-full border-2 ${
@@ -139,6 +143,7 @@ export default function TagSelector({
               
               <div className="flex space-x-2">
                 <button
+                  type="button"
                   onClick={handleCreateTag}
                   disabled={!newTagName.trim()}
                   className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
@@ -146,6 +151,7 @@ export default function TagSelector({
                   Create
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowCreateForm(false);
                     setNewTagName('');

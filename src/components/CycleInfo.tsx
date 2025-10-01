@@ -19,12 +19,19 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
         <div className="flex items-center space-x-2">
           <span className="text-lg">🌸</span>
           <span className="font-medium text-slate-900 dark:text-slate-50">
-            {isSelectedDate ? 'Selected Date: ' : ''}Cycle Day {cycleInfo.currentDay}
+            Cycle Day {cycleInfo.currentDay}
           </span>
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${phaseColor}`}>
-          {t(`cycle.phases.${cycleInfo.phaseDescription}`)}
-        </span>
+        <div className="text-right">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${phaseColor}`}>
+            {t(`cycle.phases.${cycleInfo.phaseDescription}`)}
+          </span>
+          {cycleInfo.isInFertileWindow && (
+            <div className="text-xs text-pink-600 dark:text-pink-400 font-medium mt-1">
+              💫 Fertile window
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="text-sm text-slate-600 dark:text-slate-300 mb-3">
@@ -58,11 +65,6 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
         </div>
       )}
 
-      {cycleInfo.isInFertileWindow && (
-        <div className="mt-2 text-xs text-pink-600 dark:text-pink-400 font-medium">
-          💫 Fertile window
-        </div>
-      )}
     </div>
   )
 }

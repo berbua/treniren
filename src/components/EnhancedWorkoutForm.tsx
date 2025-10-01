@@ -152,27 +152,27 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Workout Type Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 🏋️ Workout Type *
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {workoutTypes.map((type) => (
                   <button
                     key={type.value}
                     type="button"
                     onClick={() => updateFormData('type', type.value)}
-                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                    className={`p-2 rounded-lg border-2 text-center transition-all ${
                       formData.type === type.value
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                         : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                     }`}
                   >
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{type.emoji}</span>
-                        <div className="font-medium text-slate-900 dark:text-slate-50">
-                          {type.label}
-                        </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">{type.emoji}</span>
+                      <div className="text-xs font-medium text-slate-900 dark:text-slate-50">
+                        {type.label}
                       </div>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -180,6 +180,16 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                 <p className="mt-2 text-sm text-red-600">{errors.type}</p>
               )}
             </div>
+
+            {/* Tags */}
+            {availableTags.length > 0 && (
+              <TagSelector
+                selectedTagIds={formData.tagIds}
+                onTagsChange={(tagIds) => updateFormData('tagIds', tagIds)}
+                availableTags={availableTags}
+                onCreateTag={onCreateTag}
+              />
+            )}
 
             {/* Date Selection */}
             <div>
@@ -404,16 +414,6 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                 className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
               />
             </div>
-
-            {/* Tags */}
-            {availableTags.length > 0 && (
-              <TagSelector
-                selectedTagIds={formData.tagIds}
-                onTagsChange={(tagIds) => updateFormData('tagIds', tagIds)}
-                availableTags={availableTags}
-                onCreateTag={onCreateTag}
-              />
-            )}
 
             {/* Strong Mind Section - Only for Lead Climbing */}
             {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL') && (
