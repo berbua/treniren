@@ -17,7 +17,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
   const [profileData, setProfileData] = useState({
     name: 'Training User',
     photoUrl: '',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timezone: 'UTC',
     googleSheetsUrl: '',
   });
   const [cycleData, setCycleData] = useState({
@@ -26,12 +26,59 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load profile data on mount
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        const response = await fetch('/api/user-profile')
+        if (response.ok) {
+          const profile = await response.json()
+          if (profile) {
+            setProfileData(prev => ({
+              ...prev,
+              photoUrl: profile.photoUrl || '',
+              timezone: profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+              googleSheetsUrl: profile.googleSheetsUrl || '',
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile data:', error)
+        // Set timezone on client side
+        setProfileData(prev => ({
+          ...prev,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }))
+      }
+    }
+    
+    loadProfileData()
+  }, [])
+
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileData(prev => ({ ...prev, photoUrl: e.target?.result as string }));
+      reader.onload = async (e) => {
+        const photoUrl = e.target?.result as string;
+        setProfileData(prev => ({ ...prev, photoUrl }));
+        
+        // Save to database
+        try {
+          await fetch('/api/user-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              photoUrl,
+              cycleAvgLengthDays: cycleData.cycleLength,
+              lastPeriodDate: cycleData.lastPeriodDate,
+              timezone: profileData.timezone,
+              googleSheetsUrl: profileData.googleSheetsUrl,
+            })
+          })
+        } catch (error) {
+          console.error('Error saving photo:', error)
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -52,6 +99,24 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
     if (confirm(t('profile.disableCycleConfirm'))) {
       await disableCycleTracking();
       setCycleData({ cycleLength: 28, lastPeriodDate: '' });
+    }
+  };
+
+  const handleProfileSave = async () => {
+    try {
+      await fetch('/api/user-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          photoUrl: profileData.photoUrl,
+          cycleAvgLengthDays: cycleData.cycleLength,
+          lastPeriodDate: cycleData.lastPeriodDate,
+          timezone: profileData.timezone,
+          googleSheetsUrl: profileData.googleSheetsUrl,
+        })
+      })
+    } catch (error) {
+      console.error('Error saving profile:', error)
     }
   };
 

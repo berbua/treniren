@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { cycleAvgLengthDays, lastPeriodDate, timezone } = body
+    const { cycleAvgLengthDays, lastPeriodDate, timezone, photoUrl, name, googleSheetsUrl } = body
     const userId = 'temp-user-id' // For MVP, using hardcoded user ID
     
     const profile = await prisma.userProfile.upsert({
@@ -33,12 +33,16 @@ export async function POST(request: NextRequest) {
         cycleAvgLengthDays,
         lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
         timezone,
+        photoUrl,
+        googleSheetsUrl,
       },
       create: {
         userId,
         cycleAvgLengthDays,
         lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
         timezone,
+        photoUrl,
+        googleSheetsUrl,
       },
     })
     

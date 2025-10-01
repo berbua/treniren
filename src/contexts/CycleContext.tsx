@@ -27,7 +27,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
           const profile = await response.json()
           if (profile && profile.lastPeriodDate) {
             const settings = {
-              cycleAvgLengthDays: profile.cycleAvgLengthDays || 28,
+              cycleLength: profile.cycleAvgLengthDays || 28,
               lastPeriodDate: new Date(profile.lastPeriodDate),
               timezone: profile.timezone || 'Europe/Warsaw'
             }
