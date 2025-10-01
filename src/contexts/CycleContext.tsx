@@ -75,7 +75,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cycleAvgLengthDays: settings.cycleAvgLengthDays,
+          cycleAvgLengthDays: settings.cycleLength,
           lastPeriodDate: settings.lastPeriodDate.toISOString(),
           timezone: settings.timezone
         })
