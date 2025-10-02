@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { cycleAvgLengthDays, lastPeriodDate, timezone, photoUrl, name, googleSheetsUrl } = body
+    const { cycleAvgLengthDays, lastPeriodDate, timezone, photoUrl, googleSheetsUrl, latePeriodNotificationsEnabled } = body
     const userId = 'temp-user-id' // For MVP, using hardcoded user ID
     
     const profile = await prisma.userProfile.upsert({
@@ -34,7 +34,9 @@ export async function POST(request: NextRequest) {
         lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
         timezone,
         photoUrl,
-        googleSheetsUrl,
+        // Store late period notification preference in googleSheetsUrl field for now
+        // In a real app, you'd add a proper column to the schema
+        googleSheetsUrl: googleSheetsUrl || (latePeriodNotificationsEnabled !== undefined ? JSON.stringify({ latePeriodNotificationsEnabled }) : null),
       },
       create: {
         userId,
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
         lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
         timezone,
         photoUrl,
-        googleSheetsUrl,
+        googleSheetsUrl: googleSheetsUrl || (latePeriodNotificationsEnabled !== undefined ? JSON.stringify({ latePeriodNotificationsEnabled }) : null),
       },
     })
     

@@ -3,16 +3,17 @@
 import { useState } from 'react'
 
 interface CycleConsentModalProps {
-  onAccept: () => void
+  onAccept: (latePeriodNotifications?: boolean) => void
   onDecline: () => void
 }
 
 export default function CycleConsentModal({ onAccept, onDecline }: CycleConsentModalProps) {
   const [isOpen, setIsOpen] = useState(true)
+  const [latePeriodNotifications, setLatePeriodNotifications] = useState(true)
 
   const handleAccept = () => {
     setIsOpen(false)
-    onAccept()
+    onAccept(latePeriodNotifications)
   }
 
   const handleDecline = () => {
@@ -48,6 +49,32 @@ export default function CycleConsentModal({ onAccept, onDecline }: CycleConsentM
               <li>• Get personalized workout suggestions based on your phase</li>
               <li>• All data is private and stored securely</li>
             </ul>
+          </div>
+
+          {/* Notification Preferences */}
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-3">
+              📱 Notification Preferences
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="latePeriodNotifications"
+                  checked={latePeriodNotifications}
+                  onChange={(e) => setLatePeriodNotifications(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                />
+                <div>
+                  <label htmlFor="latePeriodNotifications" className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                    Late period reminders
+                  </label>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                    Get notified if your period is overdue (more than 32 days since last period)
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">

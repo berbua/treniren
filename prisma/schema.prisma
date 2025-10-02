@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // Enums
@@ -134,9 +134,9 @@ model Workout {
   endTime            DateTime?
   trainingVolume     TrainingVolume?
   details            Json? // Type-specific fields
-  preSessionFeel     Int?                @db.SmallInt // 1-5
-  dayAfterTiredness  Int?                @db.SmallInt // 1-5
-  focusLevel         Int?                @db.SmallInt // 1-5 for mental practice
+  preSessionFeel     Int? // 1-5
+  dayAfterTiredness  Int? // 1-5
+  focusLevel         Int? // 1-5 for mental practice
   notes              String?
   sector             String? // For lead_rock workouts
   mentalPracticeType MentalPracticeType? // For mental practice workouts

@@ -9,7 +9,7 @@ interface CycleInfoProps {
   isSelectedDate?: boolean
 }
 
-export default function CycleInfoComponent({ cycleInfo, showRecommendations = false, isSelectedDate = false }: CycleInfoProps) {
+export default function CycleInfoComponent({ cycleInfo, showRecommendations = false }: CycleInfoProps) {
   const { t } = useLanguage()
   const phaseColor = getPhaseColor(cycleInfo.phase)
 

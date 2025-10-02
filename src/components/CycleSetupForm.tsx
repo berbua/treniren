@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 // import { getDefaultCycleSettings } from '@/lib/cycle-utils'
 
 interface CycleSetupFormProps {
-  onComplete: (settings: { cycleLength: number; lastPeriodDate: Date; timezone: string }) => void
+  onComplete: (settings: { cycleLength: number; lastPeriodDate: Date; timezone: string; latePeriodNotifications?: boolean }) => void
   onCancel: () => void
 }
 
@@ -13,13 +13,18 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
     cycleLength: 28,
     lastPeriodDate: typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15',
     timezone: 'UTC',
+    latePeriodNotifications: true,
   })
 
-  // Set timezone on client side only to avoid hydration issues
+  // Set timezone and load notification preference on client side only to avoid hydration issues
   useEffect(() => {
+    const tempLatePeriodNotifications = localStorage.getItem('temp-late-period-notifications')
+    const latePeriodNotifications = tempLatePeriodNotifications ? JSON.parse(tempLatePeriodNotifications) : true
+    
     setFormData(prev => ({
       ...prev,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      latePeriodNotifications,
     }))
   }, [])
 
@@ -30,12 +35,13 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
       cycleLength: formData.cycleLength,
       lastPeriodDate: new Date(formData.lastPeriodDate),
       timezone: formData.timezone,
+      latePeriodNotifications: formData.latePeriodNotifications,
     }
     
     onComplete(settings)
   }
 
-  const handleChange = (field: string, value: string | number) => {
+  const handleChange = (field: string, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -120,6 +126,32 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Automatically detected from your device
               </p>
+            </div>
+
+            {/* Notification Preferences */}
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-3">
+                📱 Notification Preferences
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="latePeriodNotifications"
+                    checked={formData.latePeriodNotifications}
+                    onChange={(e) => handleChange('latePeriodNotifications', e.target.checked)}
+                    className="mt-1 h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  />
+                  <div>
+                    <label htmlFor="latePeriodNotifications" className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                      Late period reminders
+                    </label>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      Get notified if your period is overdue (more than 32 days since last period)
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Info Box */}

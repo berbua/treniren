@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useOffline } from '@/hooks/useOffline';
 import LanguageSwitcher from './LanguageSwitcher';
 import { UserProfile } from './UserProfile';
+import { NotificationBell } from './NotificationBell';
+import { StatisticsButton } from './StatisticsButton';
+import { StatisticsDashboard } from './StatisticsDashboard';
 
 export const NavigationHeader = () => {
   const { t } = useLanguage();
@@ -14,6 +17,9 @@ export const NavigationHeader = () => {
   const pathname = usePathname();
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [showStatistics, setShowStatistics] = useState(false);
 
   const navigation = [
     { name: t('nav.home') || 'Home', href: '/', icon: '🏠' },
@@ -27,6 +33,52 @@ export const NavigationHeader = () => {
     }
     return pathname.startsWith(href);
   };
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/user-profile');
+        if (response.ok) {
+          const profile = await response.json();
+          if (profile?.photoUrl) {
+            setUserPhotoUrl(profile.photoUrl);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  // Avatar component
+  const UserAvatar = ({ size = 'w-8 h-8', showLabel = false }: { size?: string; showLabel?: boolean }) => (
+    <div className="flex items-center space-x-2">
+      <div className={`${size} rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden`}>
+        {isLoadingProfile ? (
+          <div className="animate-pulse bg-slate-300 dark:bg-slate-600 w-full h-full rounded-full"></div>
+        ) : userPhotoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={userPhotoUrl}
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-lg">👤</span>
+        )}
+      </div>
+      {showLabel && (
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          {t('nav.profile') || 'Profile'}
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -48,12 +100,18 @@ export const NavigationHeader = () => {
               {/* Language switcher */}
               <LanguageSwitcher />
               
+              {/* Statistics button */}
+              <StatisticsButton size="sm" onClick={() => setShowStatistics(true)} />
+              
+              {/* Notification bell */}
+              <NotificationBell size="sm" />
+              
               {/* User profile button */}
               <button
                 onClick={() => setShowUserProfile(true)}
                 className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
               >
-                <span className="text-lg">👤</span>
+                <UserAvatar size="w-6 h-6" />
               </button>
 
               {/* Mobile menu button */}
@@ -134,15 +192,18 @@ export const NavigationHeader = () => {
               {/* Language switcher */}
               <LanguageSwitcher />
               
+              {/* Statistics button */}
+              <StatisticsButton size="md" showLabel={true} onClick={() => setShowStatistics(true)} />
+              
+              {/* Notification bell */}
+              <NotificationBell size="md" showLabel={true} />
+              
               {/* User profile button */}
               <button
                 onClick={() => setShowUserProfile(true)}
                 className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
               >
-                <span className="text-lg">👤</span>
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t('nav.profile') || 'Profile'}
-                </span>
+                <UserAvatar size="w-6 h-6" showLabel={true} />
               </button>
             </div>
           </div>
@@ -151,7 +212,18 @@ export const NavigationHeader = () => {
 
       {/* User Profile Modal */}
       {showUserProfile && (
-        <UserProfile onClose={() => setShowUserProfile(false)} />
+        <UserProfile 
+          onClose={() => setShowUserProfile(false)} 
+          onPhotoUpdate={(photoUrl: string | null) => setUserPhotoUrl(photoUrl)}
+        />
+      )}
+
+      {/* Statistics Dashboard */}
+      {showStatistics && (
+        <StatisticsDashboard 
+          isOpen={showStatistics} 
+          onClose={() => setShowStatistics(false)} 
+        />
       )}
     </>
   );

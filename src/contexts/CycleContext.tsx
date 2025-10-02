@@ -7,7 +7,8 @@ interface CycleContextType {
   cycleSettings: CycleSettings | null
   cycleInfo: CycleInfo | null
   isCycleTrackingEnabled: boolean
-  setCycleSettings: (settings: CycleSettings) => Promise<void>
+  isLoading: boolean
+  setCycleSettings: (settings: CycleSettings, latePeriodNotifications?: boolean) => Promise<void>
   disableCycleTracking: () => Promise<void>
 }
 
@@ -17,6 +18,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
   const [cycleSettings, setCycleSettingsState] = useState<CycleSettings | null>(null)
   const [cycleInfo, setCycleInfo] = useState<CycleInfo | null>(null)
   const [isCycleTrackingEnabled, setIsCycleTrackingEnabled] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Load cycle settings from database on mount
   useEffect(() => {
@@ -51,6 +53,8 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
+      } finally {
+        setIsLoading(false)
       }
     }
     
@@ -65,7 +69,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cycleSettings])
 
-  const setCycleSettings = async (settings: CycleSettings) => {
+  const setCycleSettings = async (settings: CycleSettings, latePeriodNotifications?: boolean) => {
     setCycleSettingsState(settings)
     setIsCycleTrackingEnabled(true)
     
@@ -77,14 +81,15 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({
           cycleAvgLengthDays: settings.cycleLength,
           lastPeriodDate: settings.lastPeriodDate.toISOString(),
-          timezone: settings.timezone
+          timezone: settings.timezone,
+          latePeriodNotificationsEnabled: latePeriodNotifications
         })
       })
     } catch (error) {
       console.error('Error saving cycle settings to database:', error)
       // Fallback to localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('cycle-settings', JSON.stringify(settings))
+        localStorage.setItem('cycle-settings', JSON.stringify({ ...settings, latePeriodNotifications }))
       }
     }
   }
@@ -121,6 +126,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
         cycleSettings,
         cycleInfo,
         isCycleTrackingEnabled,
+        isLoading,
         setCycleSettings,
         disableCycleTracking,
       }}

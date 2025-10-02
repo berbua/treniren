@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { CycleProvider } from "@/contexts/CycleContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ServiceWorkerProvider } from "@/components/ServiceWorkerProvider";
@@ -50,10 +51,12 @@ export default function RootLayout({
           <ServiceWorkerProvider />
           <LanguageProvider>
             <CycleProvider>
-              <NavigationHeader />
-              {children}
-              <PWAInstallPrompt />
-              <OfflineIndicator />
+              <NotificationProvider>
+                <NavigationHeader />
+                {children}
+                <PWAInstallPrompt />
+                <OfflineIndicator />
+              </NotificationProvider>
             </CycleProvider>
           </LanguageProvider>
         </ErrorBoundary>

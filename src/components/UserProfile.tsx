@@ -4,15 +4,18 @@ import { useState, useRef, useEffect } from 'react';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useOffline } from '@/hooks/useOffline';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 interface UserProfileProps {
   onClose: () => void;
+  onPhotoUpdate?: (photoUrl: string | null) => void;
 }
 
-export const UserProfile = ({ onClose }: UserProfileProps) => {
+export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   const { t } = useLanguage();
   const { cycleSettings, isCycleTrackingEnabled, setCycleSettings, disableCycleTracking } = useCycle();
   const { isOnline, storageSize } = useOffline();
+  const { settings: notificationSettings, updateSettings } = useNotifications();
   const [activeTab, setActiveTab] = useState<'profile' | 'cycle' | 'settings'>('profile');
   const [profileData, setProfileData] = useState({
     name: 'Training User',
@@ -63,6 +66,11 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
         const photoUrl = e.target?.result as string;
         setProfileData(prev => ({ ...prev, photoUrl }));
         
+        // Update parent component's avatar
+        if (onPhotoUpdate) {
+          onPhotoUpdate(photoUrl);
+        }
+        
         // Save to database
         try {
           await fetch('/api/user-profile', {
@@ -102,23 +110,6 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
     }
   };
 
-  const handleProfileSave = async () => {
-    try {
-      await fetch('/api/user-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          photoUrl: profileData.photoUrl,
-          cycleAvgLengthDays: cycleData.cycleLength,
-          lastPeriodDate: cycleData.lastPeriodDate,
-          timezone: profileData.timezone,
-          googleSheetsUrl: profileData.googleSheetsUrl,
-        })
-      })
-    } catch (error) {
-      console.error('Error saving profile:', error)
-    }
-  };
 
   const formatStorageSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -398,8 +389,50 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
                         {t('profile.cycleTrackingDesc')}
                       </p>
                     </div>
-                    <div className={isCycleTrackingEnabled ? 'text-green-600' : 'text-slate-400'}>
-                      {isCycleTrackingEnabled ? '✅' : '❌'} {isCycleTrackingEnabled ? t('profile.enabled') : t('profile.disabled')}
+                    <div className="flex items-center space-x-3">
+                      <div className={isCycleTrackingEnabled ? 'text-green-600' : 'text-slate-400'}>
+                        {isCycleTrackingEnabled ? '✅' : '❌'} {isCycleTrackingEnabled ? t('profile.enabled') : t('profile.disabled')}
+                      </div>
+                      {!isCycleTrackingEnabled && (
+                        <button
+                          onClick={() => {
+                            // Reset consent choice to show consent modal again
+                            if (typeof window !== 'undefined') {
+                              localStorage.removeItem('cycle-consent-declined')
+                            }
+                            // Force page reload to trigger consent modal
+                            window.location.reload()
+                          }}
+                          className="px-3 py-1 text-xs bg-pink-600 text-white rounded hover:bg-pink-700"
+                        >
+                          {t('profile.setupCycle')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-slate-50">
+                        {t('profile.latePeriodNotifications')}
+                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        {t('profile.latePeriodNotificationsDesc')}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={notificationSettings.latePeriodNotificationsEnabled}
+                        onChange={(e) => updateSettings({
+                          ...notificationSettings,
+                          latePeriodNotificationsEnabled: e.target.checked
+                        })}
+                        className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                      />
+                      <span className={notificationSettings.latePeriodNotificationsEnabled ? 'text-green-600' : 'text-slate-400'}>
+                        {notificationSettings.latePeriodNotificationsEnabled ? '✅' : '❌'}
+                      </span>
                     </div>
                   </div>
                 </div>

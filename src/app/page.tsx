@@ -4,11 +4,14 @@ import { useState } from 'react'
 import CycleSetupFlow from '@/components/CycleSetupFlow'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useOffline } from '@/hooks/useOffline'
+import { useNotifications } from '@/contexts/NotificationContext'
 import { OfflineWorkoutForm } from '@/components/OfflineWorkoutForm'
+import { MessagesPanel } from '@/components/MessagesPanel'
 
 export default function Home() {
   const { t } = useLanguage()
   const { isOnline, unsyncedWorkouts, storageSize } = useOffline()
+  const { isMessagesPanelOpen, setIsMessagesPanelOpen } = useNotifications()
   const [showOfflineForm, setShowOfflineForm] = useState(false)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
@@ -98,6 +101,7 @@ export default function Home() {
             </a>
           </div>
 
+
           {/* PWA Status */}
           <div className="mt-16 p-6 bg-blue-100 dark:bg-blue-900 rounded-lg max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">
@@ -130,6 +134,11 @@ export default function Home() {
       {showOfflineForm && (
         <OfflineWorkoutForm onClose={() => setShowOfflineForm(false)} />
       )}
+      
+      <MessagesPanel 
+        isOpen={isMessagesPanelOpen} 
+        onClose={() => setIsMessagesPanelOpen(false)} 
+      />
     </div>
   );
 }
