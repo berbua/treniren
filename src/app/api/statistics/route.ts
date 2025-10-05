@@ -108,6 +108,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action } = body;
 
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
     // Fetch current workouts for processing
     const workouts = await prisma.workout.findMany({
       where: { userId: user.id },
