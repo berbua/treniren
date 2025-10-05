@@ -27,7 +27,7 @@ const DEFAULT_CYCLE_LENGTH = 28
  */
 export function calculateCycleInfo(settings: CycleSettings, targetDate?: Date): CycleInfo {
   const { cycleLength, lastPeriodDate } = settings
-  const date = targetDate || (typeof window !== 'undefined' ? new Date() : new Date('2024-01-15T00:00:00.000Z'))
+  const date = targetDate || new Date()
   
   // Calculate days since last period
   const daysSinceLastPeriod = Math.floor(

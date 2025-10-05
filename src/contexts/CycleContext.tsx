@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { CycleInfo, CycleSettings, calculateCycleInfo } from '@/lib/cycle-utils'
 
 interface CycleContextType {
@@ -15,14 +16,22 @@ interface CycleContextType {
 const CycleContext = createContext<CycleContextType | undefined>(undefined)
 
 export function CycleProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession()
   const [cycleSettings, setCycleSettingsState] = useState<CycleSettings | null>(null)
   const [cycleInfo, setCycleInfo] = useState<CycleInfo | null>(null)
   const [isCycleTrackingEnabled, setIsCycleTrackingEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load cycle settings from database on mount
+  // Load cycle settings from database on mount - only if user is authenticated
   useEffect(() => {
     const loadCycleSettings = async () => {
+      // Don't load cycle settings if user is not authenticated
+      if (status === 'loading') return
+      if (!session?.user) {
+        setIsLoading(false)
+        return
+      }
+
       try {
         const response = await fetch('/api/user-profile')
         if (response.ok) {
@@ -36,22 +45,22 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
             setCycleSettingsState(settings)
             setIsCycleTrackingEnabled(true)
           }
+        } else if (response.status === 401) {
+          // User is not authenticated, this is expected for non-logged users
         }
       } catch (error) {
         console.error('Error loading cycle settings:', error)
-        // Fallback to localStorage for backward compatibility
-        if (typeof window !== 'undefined') {
+        // Fallback to localStorage for backward compatibility (client-side only)
+        try {
           const savedSettings = localStorage.getItem('cycle-settings')
           if (savedSettings) {
-            try {
-              const settings = JSON.parse(savedSettings)
-              settings.lastPeriodDate = new Date(settings.lastPeriodDate)
-              setCycleSettingsState(settings)
-              setIsCycleTrackingEnabled(true)
-            } catch (error) {
-              console.error('Error loading cycle settings from localStorage:', error)
-            }
+            const settings = JSON.parse(savedSettings)
+            settings.lastPeriodDate = new Date(settings.lastPeriodDate)
+            setCycleSettingsState(settings)
+            setIsCycleTrackingEnabled(true)
           }
+        } catch (localStorageError) {
+          console.error('Error loading cycle settings from localStorage:', localStorageError)
         }
       } finally {
         setIsLoading(false)
@@ -59,7 +68,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     }
     
     loadCycleSettings()
-  }, [])
+  }, [session, status])
 
   // Calculate cycle info when settings change
   useEffect(() => {

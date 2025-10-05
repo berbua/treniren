@@ -2,6 +2,7 @@
 export type WorkoutType = 'GYM' | 'BOULDERING' | 'CIRCUITS' | 'LEAD_ROCK' | 'LEAD_ARTIFICIAL' | 'MENTAL_PRACTICE'
 export type TrainingVolume = 'TR1' | 'TR2' | 'TR3' | 'TR4' | 'TR5'
 export type MentalPracticeType = 'MEDITATION' | 'REFLECTING' | 'OTHER'
+export type TimeOfDay = 'MORNING' | 'MIDDAY' | 'EVENING'
 export type FocusState = 'CHOKE' | 'DISTRACTION' | 'PRESENT' | 'FOCUSED' | 'CLUTCH' | 'FLOW'
 export type ComfortZone = 'COMFORT' | 'STRETCH1' | 'STRETCH2' | 'PANIC'
 
@@ -13,12 +14,24 @@ export interface ClimbSection {
   notes?: string
 }
 
+export interface ProcessGoalProgress {
+  goalId: string
+  progress: 1 | 2 | 3 // 1 = minimal progress, 2 = good progress, 3 = excellent progress
+}
+
+export interface ProjectGoalCompletion {
+  goalId: string
+  completed: boolean
+}
+
 export interface MentalState {
   beforeClimbing?: number // 1-5 scale
   duringClimbing?: number // 1-5 scale
   tookFalls?: boolean
   reflections?: string
   climbSections?: ClimbSection[] // For lead climbing
+  processGoals?: ProcessGoalProgress[] // Progress on process goals
+  projectGoals?: ProjectGoalCompletion[] // Completed project goals
 }
 
 export interface Workout {
@@ -34,6 +47,7 @@ export interface Workout {
   mentalState?: MentalState
   sector?: string // For lead_rock workouts
   mentalPracticeType?: MentalPracticeType // For mental practice workouts
+  timeOfDay?: TimeOfDay[] // For mental practice workouts - can be multiple times
   gratitude?: string // 3 things I am grateful for
   improvements?: string // 3 things to do better next time
   planId?: string
@@ -78,6 +92,7 @@ export interface WorkoutFormData {
   mentalState?: MentalState
   sector?: string // For lead_rock workouts
   mentalPracticeType?: MentalPracticeType // For mental practice workouts
+  timeOfDay?: TimeOfDay[] // For mental practice workouts - can be multiple times
   gratitude?: string // 3 things I am grateful for
   improvements?: string // 3 things to do better next time
   tagIds?: string[] // Array of tag IDs

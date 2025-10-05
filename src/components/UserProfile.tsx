@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useOffline } from '@/hooks/useOffline';
@@ -12,13 +13,15 @@ interface UserProfileProps {
 }
 
 export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
+  const { data: session } = useSession();
   const { t } = useLanguage();
   const { cycleSettings, isCycleTrackingEnabled, setCycleSettings, disableCycleTracking } = useCycle();
   const { isOnline, storageSize } = useOffline();
   const { settings: notificationSettings, updateSettings } = useNotifications();
   const [activeTab, setActiveTab] = useState<'profile' | 'cycle' | 'settings'>('profile');
   const [profileData, setProfileData] = useState({
-    name: 'Training User',
+    googleName: session?.user?.name || 'Training User',
+    displayName: session?.user?.name?.split(' ')[0] || 'Training User',
     photoUrl: '',
     timezone: 'UTC',
     googleSheetsUrl: '',
@@ -33,15 +36,29 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   useEffect(() => {
     const loadProfileData = async () => {
       try {
-        const response = await fetch('/api/user-profile')
-        if (response.ok) {
-          const profile = await response.json()
+        // Load user profile data
+        const profileResponse = await fetch('/api/user-profile')
+        if (profileResponse.ok) {
+          const profile = await profileResponse.json()
           if (profile) {
             setProfileData(prev => ({
               ...prev,
               photoUrl: profile.photoUrl || '',
               timezone: profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
               googleSheetsUrl: profile.googleSheetsUrl || '',
+            }))
+          }
+        }
+        
+        // Load user data (Google name and display name)
+        const userResponse = await fetch('/api/user')
+        if (userResponse.ok) {
+          const user = await userResponse.json()
+          if (user) {
+            setProfileData(prev => ({
+              ...prev,
+              googleName: user.name || 'Training User',
+              displayName: user.name?.split(' ')[0] || 'Training User',
             }))
           }
         }
@@ -118,16 +135,16 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-uc-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-uc-dark-bg rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+        <div className="flex items-center justify-between p-6 border-b border-uc-purple/20">
+          <h2 className="text-2xl font-bold text-uc-text-light">
             👤 {t('profile.title') || 'User Profile'}
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            className="text-uc-text-muted hover:text-uc-text-light transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -136,7 +153,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 dark:border-slate-700">
+        <div className="flex border-b border-uc-purple/20">
             {[
               { id: 'profile', label: t('profile.tabs.profile') || 'Profile', icon: '👤' },
               { id: 'cycle', label: t('profile.tabs.cycle') || 'Cycle', icon: '🔄' },
@@ -145,10 +162,10 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as 'profile' | 'cycle' | 'settings')}
-              className={`flex-1 px-4 py-3 text-sm font-medium ${
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300'
+                  ? 'text-uc-mustard border-b-2 border-uc-mustard bg-uc-purple/20'
+                  : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-dark-bg/50'
               }`}
             >
               {tab.icon} {tab.label}
@@ -162,7 +179,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
             <div className="space-y-6">
               {/* Profile Photo */}
               <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+                <div className="w-20 h-20 rounded-full bg-uc-black/50 border border-uc-purple/20 flex items-center justify-center overflow-hidden">
                   {profileData.photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -171,13 +188,13 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-2xl text-slate-500">👤</span>
+                    <span className="text-2xl text-uc-text-muted">👤</span>
                   )}
                 </div>
                 <div>
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
+                    className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-xl font-medium transition-colors shadow-lg"
                   >
                     📷 {t('profile.uploadPhoto') || 'Upload Photo'}
                   </button>
@@ -188,31 +205,50 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                     onChange={handlePhotoUpload}
                     className="hidden"
                   />
-                    <p className="text-xs text-slate-500 mt-1">{t('profile.photoHint') || 'JPG, PNG up to 5MB'}</p>
+                    <p className="text-xs text-uc-text-muted mt-1">{t('profile.photoHint') || 'JPG, PNG up to 5MB'}</p>
                 </div>
               </div>
 
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t('profile.name') || 'Name'}
+                  <label className="block text-sm font-medium text-uc-text-light mb-1">
+                    Google Name
                   </label>
                   <input
                     type="text"
-                    value={profileData.name}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                    value={profileData.googleName}
+                    readOnly
+                    className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-muted cursor-not-allowed"
+                    placeholder="Google account name"
                   />
+                  <p className="text-xs text-uc-text-muted mt-1">
+                    This is your full name from Google account
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-medium text-uc-text-light mb-1">
+                    Display Name
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.displayName}
+                    readOnly
+                    className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-muted cursor-not-allowed"
+                    placeholder="First name"
+                  />
+                  <p className="text-xs text-uc-text-muted mt-1">
+                    This is your first name used in the app
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-uc-text-light mb-1">
                     {t('profile.timezone') || 'Timezone'}
                   </label>
                   <select
                     value={profileData.timezone}
                     onChange={(e) => setProfileData(prev => ({ ...prev, timezone: e.target.value }))}
-                    className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                    className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-light focus:ring-2 focus:ring-uc-mustard focus:border-uc-mustard"
                   >
                     <option value="Europe/Warsaw">Europe/Warsaw</option>
                     <option value="Europe/London">Europe/London</option>
@@ -224,7 +260,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
 
               {/* Google Sheets Integration */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-sm font-medium text-uc-text-light mb-1">
                   {t('profile.googleSheetsUrl')}
                 </label>
                 <input
@@ -232,9 +268,9 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                   value={profileData.googleSheetsUrl}
                   onChange={(e) => setProfileData(prev => ({ ...prev, googleSheetsUrl: e.target.value }))}
                   placeholder="https://docs.google.com/spreadsheets/..."
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                  className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-light focus:ring-2 focus:ring-uc-mustard focus:border-uc-mustard"
                 />
-                <p className="text-xs text-slate-500 mt-1">{t('profile.googleSheetsHint')}</p>
+                <p className="text-xs text-uc-text-muted mt-1">{t('profile.googleSheetsHint')}</p>
               </div>
             </div>
           )}
@@ -242,17 +278,17 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
           {activeTab === 'cycle' && (
             <div className="space-y-6">
               {/* Cycle Status */}
-              <div className={`p-4 rounded-lg ${
+              <div className={`p-4 rounded-xl ${
                 isCycleTrackingEnabled 
-                  ? 'bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-                  : 'bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600'
+                  ? 'bg-uc-success/20 border border-uc-success/30'
+                  : 'bg-uc-dark-bg/50 border border-uc-purple/20'
               }`}>
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{isCycleTrackingEnabled ? '✅' : '❌'}</span>
                   <span className={`font-medium ${
                     isCycleTrackingEnabled 
-                      ? 'text-green-800 dark:text-green-200'
-                      : 'text-slate-600 dark:text-slate-400'
+                      ? 'text-uc-success'
+                      : 'text-uc-text-muted'
                   }`}>
                     {isCycleTrackingEnabled ? t('profile.cycleEnabled') : t('profile.cycleDisabled')}
                   </span>
@@ -264,7 +300,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-uc-text-light mb-1">
                         {t('profile.cycleLength')}
                       </label>
                       <input
@@ -273,18 +309,18 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                         max="35"
                         value={cycleData.cycleLength}
                         onChange={(e) => setCycleData(prev => ({ ...prev, cycleLength: parseInt(e.target.value) }))}
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                        className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-light focus:ring-2 focus:ring-uc-mustard focus:border-uc-mustard"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-uc-text-light mb-1">
                         {t('profile.lastPeriodDate')}
                       </label>
                       <input
                         type="date"
                         value={cycleData.lastPeriodDate}
                         onChange={(e) => setCycleData(prev => ({ ...prev, lastPeriodDate: e.target.value }))}
-                        className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                        className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-light focus:ring-2 focus:ring-uc-mustard focus:border-uc-mustard"
                       />
                     </div>
                   </div>
@@ -292,13 +328,13 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                   <div className="flex space-x-3">
                     <button
                       onClick={handleCycleSave}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                      className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-xl font-medium transition-colors shadow-lg"
                     >
                       💾 {t('common.save')}
                     </button>
                     <button
                       onClick={handleCycleDisable}
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                      className="bg-uc-alert hover:bg-uc-alert/90 text-uc-text-light px-4 py-2 rounded-xl font-medium transition-colors shadow-lg"
                     >
                       🚫 {t('profile.disableCycle')}
                     </button>
@@ -307,15 +343,15 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
               ) : (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-4">🔄</div>
-                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50 mb-2">
+                  <h3 className="text-lg font-medium text-uc-text-light mb-2">
                     {t('profile.enableCycleTracking')}
                   </h3>
-                  <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  <p className="text-uc-text-muted mb-4">
                     {t('profile.cycleTrackingDescription')}
                   </p>
                   <button
                     onClick={() => setCycleData({ cycleLength: 28, lastPeriodDate: typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15' })}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
+                    className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
                   >
                     ✅ {t('profile.enableCycle')}
                   </button>
@@ -328,31 +364,31 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
             <div className="space-y-6">
               {/* App Status */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50">
+                <h3 className="text-lg font-medium text-uc-text-light">
                   📱 {t('profile.appStatus')}
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                  <div className="p-4 bg-uc-black/50 rounded-xl border border-uc-purple/20">
                     <div className="flex items-center space-x-2 mb-2">
-                      <span className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
-                      <span className="font-medium text-slate-900 dark:text-slate-50">
+                      <span className={`w-3 h-3 rounded-full ${isOnline ? 'bg-uc-success' : 'bg-uc-mustard'}`}></span>
+                      <span className="font-medium text-uc-text-light">
                         {t('profile.connectionStatus')}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-uc-text-muted">
                       {isOnline ? t('profile.online') : t('profile.offline')}
                     </p>
                   </div>
 
-                  <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                  <div className="p-4 bg-uc-black/50 rounded-xl border border-uc-purple/20">
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-lg">💾</span>
-                      <span className="font-medium text-slate-900 dark:text-slate-50">
+                      <span className="font-medium text-uc-text-light">
                         {t('profile.storageUsed')}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-uc-text-muted">
                       {formatStorageSize(storageSize.used)} / {formatStorageSize(storageSize.total)}
                     </p>
                   </div>
@@ -361,36 +397,36 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
 
               {/* Privacy Settings */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50">
+                <h3 className="text-lg font-medium text-uc-text-light">
                   🔒 {t('profile.privacy')}
                 </h3>
                 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-slate-50">
+                      <p className="font-medium text-uc-text-light">
                         {t('profile.dataCollection')}
                       </p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                      <p className="text-sm text-uc-text-muted">
                         {t('profile.dataCollectionDesc')}
                       </p>
                     </div>
-                    <div className="text-green-600">
+                    <div className="text-uc-success">
                       ✅ {t('profile.enabled')}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-slate-50">
+                      <p className="font-medium text-uc-text-light">
                         {t('profile.cycleTracking')}
                       </p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                      <p className="text-sm text-uc-text-muted">
                         {t('profile.cycleTrackingDesc')}
                       </p>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <div className={isCycleTrackingEnabled ? 'text-green-600' : 'text-slate-400'}>
+                      <div className={isCycleTrackingEnabled ? 'text-uc-success' : 'text-uc-text-muted'}>
                         {isCycleTrackingEnabled ? '✅' : '❌'} {isCycleTrackingEnabled ? t('profile.enabled') : t('profile.disabled')}
                       </div>
                       {!isCycleTrackingEnabled && (
@@ -403,7 +439,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                             // Force page reload to trigger consent modal
                             window.location.reload()
                           }}
-                          className="px-3 py-1 text-xs bg-pink-600 text-white rounded hover:bg-pink-700"
+                          className="px-3 py-1 text-xs bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light rounded-xl transition-colors"
                         >
                           {t('profile.setupCycle')}
                         </button>
@@ -411,12 +447,12 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-slate-50">
+                      <p className="font-medium text-uc-text-light">
                         {t('profile.latePeriodNotifications')}
                       </p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                      <p className="text-sm text-uc-text-muted">
                         {t('profile.latePeriodNotificationsDesc')}
                       </p>
                     </div>
@@ -428,9 +464,9 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                           ...notificationSettings,
                           latePeriodNotificationsEnabled: e.target.checked
                         })}
-                        className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-uc-purple focus:ring-uc-purple border-uc-purple/20 rounded"
                       />
-                      <span className={notificationSettings.latePeriodNotificationsEnabled ? 'text-green-600' : 'text-slate-400'}>
+                      <span className={notificationSettings.latePeriodNotificationsEnabled ? 'text-uc-success' : 'text-uc-text-muted'}>
                         {notificationSettings.latePeriodNotificationsEnabled ? '✅' : '❌'}
                       </span>
                     </div>
@@ -440,19 +476,19 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
 
               {/* Export Data */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50">
+                <h3 className="text-lg font-medium text-uc-text-light">
                   📤 {t('profile.dataExport')}
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <button className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-left">
-                    <div className="font-medium text-blue-900 dark:text-blue-200">📊 {t('profile.exportWorkouts')}</div>
-                    <div className="text-sm text-blue-700 dark:text-blue-300">{t('profile.exportWorkoutsDesc')}</div>
+                  <button className="p-3 bg-uc-purple/20 border border-uc-purple/30 rounded-xl hover:bg-uc-purple/30 text-left transition-colors">
+                    <div className="font-medium text-uc-text-light">📊 {t('profile.exportWorkouts')}</div>
+                    <div className="text-sm text-uc-text-muted">{t('profile.exportWorkoutsDesc')}</div>
                   </button>
                   
-                  <button className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-left">
-                    <div className="font-medium text-green-900 dark:text-green-200">📈 {t('profile.exportStats')}</div>
-                    <div className="text-sm text-green-700 dark:text-green-300">{t('profile.exportStatsDesc')}</div>
+                  <button className="p-3 bg-uc-success/20 border border-uc-success/30 rounded-xl hover:bg-uc-success/30 text-left transition-colors">
+                    <div className="font-medium text-uc-text-light">📈 {t('profile.exportStats')}</div>
+                    <div className="text-sm text-uc-text-muted">{t('profile.exportStatsDesc')}</div>
                   </button>
                 </div>
               </div>

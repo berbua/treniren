@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth-helpers'
 
 // GET /api/user-profile - Get user profile
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const userId = 'temp-user-id' // For MVP, using hardcoded user ID
+    const user = await requireAuth(request)
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
     
     const profile = await prisma.userProfile.findUnique({
-      where: { userId },
+      where: { userId: user.id },
     })
     
     return NextResponse.json(profile)
@@ -24,11 +32,26 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { cycleAvgLengthDays, lastPeriodDate, timezone, photoUrl, googleSheetsUrl, latePeriodNotificationsEnabled } = body
-    const userId = 'temp-user-id' // For MVP, using hardcoded user ID
+    const { nickname, cycleAvgLengthDays, lastPeriodDate, timezone, photoUrl, googleSheetsUrl, latePeriodNotificationsEnabled } = body
+    const user = await requireAuth(request)
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
+    // Update user nickname if provided
+    if (nickname !== undefined) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { nickname }
+      })
+    }
     
     const profile = await prisma.userProfile.upsert({
-      where: { userId },
+      where: { userId: user.id },
       update: {
         cycleAvgLengthDays,
         lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
@@ -39,7 +62,7 @@ export async function POST(request: NextRequest) {
         googleSheetsUrl: googleSheetsUrl || (latePeriodNotificationsEnabled !== undefined ? JSON.stringify({ latePeriodNotificationsEnabled }) : null),
       },
       create: {
-        userId,
+        userId: user.id,
         cycleAvgLengthDays,
         lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
         timezone,

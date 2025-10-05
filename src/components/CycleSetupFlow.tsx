@@ -1,24 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { useCycle } from '@/contexts/CycleContext'
 import CycleConsentModal from './CycleConsentModal'
 import CycleSetupForm from './CycleSetupForm'
 
 export default function CycleSetupFlow() {
+  const { data: session, status } = useSession()
   const { isCycleTrackingEnabled, isLoading, setCycleSettings } = useCycle()
   const [showConsent, setShowConsent] = useState(false)
   const [showSetup, setShowSetup] = useState(false)
   const [hasCheckedConsent, setHasCheckedConsent] = useState(false)
 
+  // Clean up cycle state when user logs out
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      setShowConsent(false)
+      setShowSetup(false)
+      setHasCheckedConsent(false)
+    }
+  }, [status])
+
   // Show consent modal on first visit if cycle tracking is not enabled
   useEffect(() => {
     if (!isLoading && !hasCheckedConsent) {
-      // Check if user has previously declined consent
-      const hasDeclinedConsent = typeof window !== 'undefined' 
-        ? localStorage.getItem('cycle-consent-declined') === 'true'
-        : false
-      
+      // Check if user has previously declined consent (client-side only)
+      const hasDeclinedConsent = localStorage.getItem('cycle-consent-declined') === 'true'
       
       // Only show consent if:
       // 1. Not loading AND
@@ -30,6 +38,11 @@ export default function CycleSetupFlow() {
       setHasCheckedConsent(true)
     }
   }, [isLoading, isCycleTrackingEnabled, hasCheckedConsent])
+
+  // Don't show any cycle modals if user is not authenticated or during logout
+  if (status === 'loading' || !session?.user) {
+    return null
+  }
 
   // Show loading state while checking for existing cycle data
   if (isLoading) {

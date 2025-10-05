@@ -1,6 +1,6 @@
 {
-  "name": "Treniren - Training Diary",
-  "short_name": "Treniren",
+  "name": "Unicorn Climb - Train with your unicorn flow",
+  "short_name": "Unicorn Climb",
   "description": "Personal training diary for tracking workouts and climbing sessions",
   "start_url": "/",
   "display": "standalone",
@@ -24,7 +24,7 @@
   "categories": ["fitness", "lifestyle", "sports"],
   "lang": "en",
   "scope": "/",
-  "id": "treniren-training-diary",
+  "id": "unicorn-climb-app",
   "prefer_related_applications": false,
   "related_applications": [],
   "edge_side_panel": {

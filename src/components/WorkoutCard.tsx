@@ -15,6 +15,7 @@ interface WorkoutCardProps {
     mentalState?: MentalState
     sector?: string
     mentalPracticeType?: string
+    timeOfDay?: string[]
     gratitude?: string
     improvements?: string
     tags?: Tag[]
@@ -145,6 +146,23 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
             <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
               🧘 {workout.mentalPracticeType}
             </span>
+          </div>
+        )}
+
+        {workout.type === 'MENTAL_PRACTICE' && workout.timeOfDay && workout.timeOfDay.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium text-slate-500">Time of day:</span>
+            <div className="flex space-x-1">
+              {workout.timeOfDay.map((time, index) => {
+                const timeEmoji = time === 'MORNING' ? '🌅' : time === 'MIDDAY' ? '☀️' : '🌙';
+                const timeLabel = time === 'MORNING' ? 'Morning' : time === 'MIDDAY' ? 'Midday' : 'Evening';
+                return (
+                  <span key={index} className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
+                    {timeEmoji} {timeLabel}
+                  </span>
+                );
+              })}
+            </div>
           </div>
         )}
 

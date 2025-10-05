@@ -11,7 +11,7 @@ interface CycleSetupFormProps {
 export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormProps) {
   const [formData, setFormData] = useState({
     cycleLength: 28,
-    lastPeriodDate: typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15',
+    lastPeriodDate: '2024-01-15', // Default value, will be updated on client side
     timezone: 'UTC',
     latePeriodNotifications: true,
   })
@@ -23,6 +23,7 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
     
     setFormData(prev => ({
       ...prev,
+      lastPeriodDate: new Date().toISOString().slice(0, 10), // Set current date on client side
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       latePeriodNotifications,
     }))

@@ -1,19 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth-helpers'
 
 // GET /api/exercises - Get all exercises for a user
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const userId = 'temp-user-id'
+    const user = await requireAuth(request)
     
     const exercises = await prisma.exercise.findMany({
-      where: { userId },
+      where: { userId: user.id },
       orderBy: { name: 'asc' },
     })
 
     return NextResponse.json(exercises)
   } catch (error) {
     console.error('Error fetching exercises:', error)
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { error: 'Failed to fetch exercises' },
       { status: 500 }
@@ -27,11 +34,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, category, defaultUnit } = body
 
-    const userId = 'temp-user-id'
+    const user = await requireAuth(request)
 
     const exercise = await prisma.exercise.create({
       data: {
-        userId,
+        userId: user.id,
         name,
         category,
         defaultUnit: defaultUnit || 'kg',
@@ -41,6 +48,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(exercise, { status: 201 })
   } catch (error) {
     console.error('Error creating exercise:', error)
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { error: 'Failed to create exercise' },
       { status: 500 }

@@ -33,12 +33,12 @@ export const NotificationBell = ({ size = 'md', showLabel = false }: Notificatio
   return (
     <button
       onClick={() => setIsMessagesPanelOpen(true)}
-      className={`relative ${sizeClasses[size]} rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors group`}
+      className={`relative ${sizeClasses[size]} rounded-full bg-uc-dark-bg/50 hover:bg-uc-dark-bg flex items-center justify-center transition-colors group border border-uc-purple/20 hover:border-uc-purple/40`}
       title={t('nav.messages') || 'Messages'}
     >
       {/* Bell Icon */}
       <svg 
-        className={`${iconSizes[size]} text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100`} 
+        className={`${iconSizes[size]} text-uc-text-muted group-hover:text-uc-mustard transition-colors`} 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24"
@@ -53,14 +53,14 @@ export const NotificationBell = ({ size = 'md', showLabel = false }: Notificatio
 
       {/* Unread Badge */}
       {unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+        <span className="absolute -top-1 -right-1 bg-uc-alert text-uc-text-light text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
           {unreadCount > 99 ? '99+' : unreadCount}
         </span>
       )}
 
       {/* Label */}
       {showLabel && (
-        <span className={`ml-2 ${textSizes[size]} font-medium text-slate-700 dark:text-slate-300`}>
+        <span className={`ml-2 ${textSizes[size]} font-medium text-uc-text-light`}>
           {t('nav.messages') || 'Messages'}
         </span>
       )}

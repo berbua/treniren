@@ -40,36 +40,46 @@ const getNestedTranslation = (obj: unknown, key: string): string => {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    // Initialize with default language to prevent hydration mismatch
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('language') as Language
-      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'pl')) {
-        return savedLanguage
-      }
-    }
-    return 'en'
-  })
+  const [language, setLanguageState] = useState<Language>('pl') // Always start with default
+  const [isClient, setIsClient] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  // Load language from localStorage on mount (only for updates, not initial state)
+  // Load language from localStorage on client side only
   useEffect(() => {
+    console.log('Language context: Initializing client side') // Debug log
+    setIsClient(true)
     if (typeof window !== 'undefined') {
       const savedLanguage = localStorage.getItem('language') as Language
-      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'pl') && savedLanguage !== language) {
+      console.log('Language context: Saved language from localStorage:', savedLanguage) // Debug log
+      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'pl')) {
         setLanguageState(savedLanguage)
+        console.log('Language context: Set language to:', savedLanguage) // Debug log
       }
+      setIsInitialized(true)
+      console.log('Language context: Initialization complete') // Debug log
     }
-  }, [language])
+  }, [])
 
   const setLanguage = (lang: Language) => {
+    console.log('Language switcher: Setting language to', lang, 'isInitialized:', isInitialized) // Debug log
+    if (!isInitialized) {
+      console.log('Language switcher: Context not initialized yet, skipping language change') // Debug log
+      return
+    }
     setLanguageState(lang)
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', lang)
+      console.log('Language switcher: Saved to localStorage', lang) // Debug log
     }
   }
 
   const t = (key: string): string => {
-    return getNestedTranslation(translations[language], key)
+    const result = getNestedTranslation(translations[language], key)
+    // Debug log for translation issues
+    if (result === key && key.startsWith('strongMind.')) {
+      console.log(`Translation missing for key: ${key}, language: ${language}`)
+    }
+    return result
   }
 
   return (

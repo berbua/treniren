@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { statisticsService, TimeFrame } from '@/lib/statistics-service';
 import { processActivityNotifications } from '@/lib/activity-notifications';
+import { requireAuth } from '@/lib/auth-helpers';
 
 // GET /api/statistics - Get statistics for a specific timeframe
 export async function GET(request: NextRequest) {
   try {
-    const userId = 'temp-user-id'; // For MVP, using hardcoded user ID
+    const user = await requireAuth(request)
     const { searchParams } = new URL(request.url);
     const timeframe = (searchParams.get('timeframe') as TimeFrame) || '1month';
 
     // Fetch workouts with related data
     const workouts = await prisma.workout.findMany({
-      where: { userId },
+      where: { userId: user.id },
       include: {
         workoutTags: {
           include: {
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch all tags
     const dbTags = await prisma.tag.findMany({
-      where: { userId }
+      where: { userId: user.id }
     });
     
     const tags = dbTags.map(tag => ({
@@ -80,6 +81,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching statistics:', error);
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { error: 'Failed to fetch statistics' },
       { status: 500 }
@@ -90,13 +97,13 @@ export async function GET(request: NextRequest) {
 // POST /api/statistics - Process notifications and return updated stats
 export async function POST(request: NextRequest) {
   try {
-    const userId = 'temp-user-id'; // For MVP, using hardcoded user ID
+    const user = await requireAuth(request)
     const body = await request.json();
     const { action } = body;
 
     // Fetch current workouts for processing
     const workouts = await prisma.workout.findMany({
-      where: { userId },
+      where: { userId: user.id },
       include: {
         workoutTags: {
           include: {
@@ -175,6 +182,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error processing statistics:', error);
+    if (error instanceof Error && error.message === 'Authentication required') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { error: 'Failed to process statistics' },
       { status: 500 }

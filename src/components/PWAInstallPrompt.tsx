@@ -111,7 +111,7 @@ export const PWAInstallPrompt = () => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-medium text-gray-900">
-              Install Treniren
+              Install Unicorn Climb
             </h3>
             {deferredPrompt ? (
               <>

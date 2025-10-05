@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // Enums
@@ -32,6 +32,25 @@ enum MentalPracticeType {
   MEDITATION
   REFLECTING
   OTHER
+}
+
+enum TimeOfDay {
+  MORNING
+  MIDDAY
+  EVENING
+}
+
+enum EventType {
+  INJURY
+  PHYSIO
+  COMPETITION
+  TRIP
+  OTHER
+}
+
+enum TripClimbingType {
+  BOULDERING
+  SPORT_CLIMBING
 }
 
 enum FocusState {
@@ -73,21 +92,74 @@ enum Formation {
 
 // Models
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?   // Google name
+  nickname      String?   // User's preferred display name
+  password      String?   // For email/password authentication
+  emailVerified DateTime? // Email verification timestamp
+  image         String?   // Profile image URL (for OAuth providers)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  // Relations
-  profile   UserProfile?
-  plans     Plan[]
-  workouts  Workout[]
-  exercises Exercise[]
-  tags      Tag[]
-  planTags  PlanTag[]
+  // Authentication relations
+  accounts      Account[]
+  sessions      Session[]
+  resetTokens   PasswordResetToken[]
+
+  // App relations
+  profile       UserProfile?
+  plans         Plan[]
+  workouts      Workout[]
+  exercises     Exercise[]
+  events        Event[]
+  tags          Tag[]
 
   @@map("users")
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [email], references: [email], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
 }
 
 model UserProfile {
@@ -140,6 +212,7 @@ model Workout {
   notes              String?
   sector             String? // For lead_rock workouts
   mentalPracticeType MentalPracticeType? // For mental practice workouts
+  timeOfDay          Json? // For mental practice workouts - array of TimeOfDay values
   gratitude          String? // 3 things I am grateful for
   improvements       String? // 3 things to do better next time
   mentalState        Json? // Mental state data including climb sections
@@ -154,6 +227,35 @@ model Workout {
   workoutTags      WorkoutTag[]
 
   @@map("workouts")
+}
+
+model Event {
+  id                String            @id @default(cuid())
+  userId            String
+  type              EventType
+  title             String
+  date              DateTime
+  startTime         DateTime?
+  endTime           DateTime?
+  description       String?
+  location          String?
+  severity          Int? // 1-5 scale for injuries
+  status            String? // e.g., "Recovering", "Healed", "Ongoing" for injuries
+  notes             String?
+  // Trip-specific fields
+  tripStartDate     DateTime? // For trip events
+  tripEndDate       DateTime? // For trip events
+  destination       String? // For trip events
+  climbingType       TripClimbingType? // For trip events
+  showCountdown     Boolean @default(false) // For trip events - show countdown on landing page
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventTags   EventTag[]
+
+  @@map("events")
 }
 
 model Exercise {
@@ -216,6 +318,7 @@ model Tag {
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   planTags    PlanTag[]
   workoutTags WorkoutTag[]
+  eventTags   EventTag[]
 
   @@unique([userId, name])
   @@map("tags")
@@ -226,10 +329,8 @@ model PlanTag {
   tagId  String
 
   // Relations
-  plan   Plan    @relation(fields: [planId], references: [id], onDelete: Cascade)
-  tag    Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  User   User?   @relation(fields: [userId], references: [id])
-  userId String?
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([planId, tagId])
   @@map("plan_tags")
@@ -245,4 +346,16 @@ model WorkoutTag {
 
   @@id([workoutId, tagId])
   @@map("workout_tags")
+}
+
+model EventTag {
+  eventId String
+  tagId   String
+
+  // Relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, tagId])
+  @@map("event_tags")
 }

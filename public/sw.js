@@ -1,7 +1,7 @@
 // Custom service worker for enhanced offline functionality
-const CACHE_NAME = 'treniren-v6';
-const STATIC_CACHE_NAME = 'treniren-static-v6';
-const DYNAMIC_CACHE_NAME = 'treniren-dynamic-v6';
+const CACHE_NAME = 'treniren-v7';
+const STATIC_CACHE_NAME = 'treniren-static-v7';
+const DYNAMIC_CACHE_NAME = 'treniren-dynamic-v7';
 
 // Static assets to cache
 const STATIC_ASSETS = [
@@ -35,7 +35,7 @@ self.addEventListener('install', (event) => {
         return caches.keys().then((cacheNames) => {
           return Promise.all(
             cacheNames.map((cacheName) => {
-              if (cacheName.startsWith('treniren-') && !cacheName.includes('v6')) {
+              if (cacheName.startsWith('treniren-') && !cacheName.includes('v7')) {
                 console.log('Service Worker: Deleting old cache:', cacheName);
                 return caches.delete(cacheName);
               }

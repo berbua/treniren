@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MentalState, ClimbSection, FocusState, ComfortZone } from '@/types/workout';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -37,10 +37,16 @@ const comfortZoneLabels = {
 export const StrongMindSection = ({ mentalState, onChange, workoutType }: StrongMindSectionProps) => {
   const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const updateMentalState = (updates: Partial<MentalState>) => {
     onChange({ ...mentalState, ...updates });
   };
+
 
   const addClimbSection = () => {
     const newSection: ClimbSection = {

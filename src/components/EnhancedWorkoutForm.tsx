@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag } from '@/types/workout';
+import { useState, useMemo, useEffect } from 'react';
+import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag, TimeOfDay } from '@/types/workout';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import CycleInfoComponent from './CycleInfo';
 import { StrongMindSection } from './StrongMindSection';
+import { ProcessGoalsSection } from './ProcessGoalsSection';
 import TagSelector from './TagSelector';
 
 interface EnhancedWorkoutFormProps {
@@ -36,15 +37,117 @@ const trainingVolumes: { value: TrainingVolume; label: string; description: stri
 ];
 
 
+interface ProcessGoal {
+  id: string
+  timeframeValue: string
+  timeframeUnit: string
+  goalDescription: string
+}
+
+interface ProjectGoal {
+  id: string
+  climbingType: string
+  gradeSystem: string
+  routeGrade: string
+  routeName: string
+  sectorLocation: string
+}
+
 export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t } = useLanguage();
+  
+  // Goals state
+  const [processGoals, setProcessGoals] = useState<ProcessGoal[]>([])
+  const [projectGoals, setProjectGoals] = useState<ProjectGoal[]>([])
+  
+  // Fetch goals from localStorage (temporary solution) - client side only
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedProcessGoals = localStorage.getItem('processGoals')
+      const storedProjectGoals = localStorage.getItem('projectGoals')
+      
+      console.log('Loading goals from localStorage:', { storedProcessGoals, storedProjectGoals })
+      
+      if (storedProcessGoals) {
+        try {
+          const parsed = JSON.parse(storedProcessGoals)
+          console.log('Parsed process goals:', parsed)
+          setProcessGoals(parsed)
+        } catch (e) {
+          console.error('Error parsing process goals:', e)
+        }
+      } else {
+        console.log('No process goals found in localStorage')
+        // Create some sample goals for testing
+        const sampleGoals = [
+          {
+            id: 'goal-1',
+            timeframeValue: '1',
+            timeframeUnit: 'month',
+            goalDescription: 'Complete 10 routes at grade 7a'
+          },
+          {
+            id: 'goal-2', 
+            timeframeValue: '2',
+            timeframeUnit: 'weeks',
+            goalDescription: 'Improve endurance on long routes'
+          }
+        ]
+        console.log('Creating sample process goals:', sampleGoals)
+        setProcessGoals(sampleGoals)
+      }
+      
+      if (storedProjectGoals) {
+        try {
+          const parsed = JSON.parse(storedProjectGoals)
+          console.log('Parsed project goals:', parsed)
+          setProjectGoals(parsed)
+        } catch (e) {
+          console.error('Error parsing project goals:', e)
+        }
+      } else {
+        console.log('No project goals found in localStorage')
+        // Create some sample project goals for testing
+        const sampleProjectGoals = [
+          {
+            id: 'project-1',
+            climbingType: 'route',
+            gradeSystem: 'french',
+            routeGrade: '7a',
+            routeName: 'La Dura Dura',
+            sectorLocation: 'Oliana, Spain'
+          },
+          {
+            id: 'project-2',
+            climbingType: 'boulder',
+            gradeSystem: 'french',
+            routeGrade: '7B',
+            routeName: 'The Mandala',
+            sectorLocation: 'Bishop, USA'
+          }
+        ]
+        console.log('Creating sample project goals:', sampleProjectGoals)
+        setProjectGoals(sampleProjectGoals)
+      }
+    }
+  }, [])
+
+  // Set current date on client side to prevent hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !initialData?.startTime) {
+      setFormData(prev => ({
+        ...prev,
+        date: new Date().toISOString().slice(0, 10)
+      }))
+    }
+  }, [initialData?.startTime])
   
   const [formData, setFormData] = useState({
     type: initialData?.type || 'GYM',
     date: initialData?.startTime 
       ? new Date(initialData.startTime).toISOString().slice(0, 10)
-      : (typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15'),
+      : '2024-01-15', // Always use default date to prevent hydration mismatch
     trainingVolume: initialData?.trainingVolume || 'TR3',
     preSessionFeel: initialData?.preSessionFeel || 3,
     dayAfterTiredness: initialData?.dayAfterTiredness || 3,
@@ -53,6 +156,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     mentalState: initialData?.mentalState || {},
     sector: initialData?.sector || '',
     mentalPracticeType: initialData?.mentalPracticeType || 'MEDITATION',
+    timeOfDay: initialData?.timeOfDay || [],
     gratitude: initialData?.gratitude || '',
     improvements: initialData?.improvements || '',
     tagIds: initialData?.tags?.map(tag => tag.id) || [],
@@ -105,6 +209,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       mentalState: formData.mentalState,
       sector: formData.sector,
       mentalPracticeType: formData.mentalPracticeType,
+      timeOfDay: formData.timeOfDay,
       gratitude: formData.gratitude,
       improvements: formData.improvements,
       tagIds: formData.tagIds,
@@ -121,17 +226,60 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     }
   };
 
+  // Handle process goal progress
+  const updateProcessGoalProgress = (goalId: string, progress: 1 | 2 | 3) => {
+    const currentProcessGoals = formData.mentalState?.processGoals || []
+    const existingIndex = currentProcessGoals.findIndex(pg => pg.goalId === goalId)
+    
+    let updatedProcessGoals
+    if (existingIndex >= 0) {
+      updatedProcessGoals = [...currentProcessGoals]
+      updatedProcessGoals[existingIndex] = { goalId, progress }
+    } else {
+      updatedProcessGoals = [...currentProcessGoals, { goalId, progress }]
+    }
+    
+    updateFormData('mentalState', { ...formData.mentalState, processGoals: updatedProcessGoals })
+  }
+
+  const getProcessGoalProgress = (goalId: string): 1 | 2 | 3 | undefined => {
+    return formData.mentalState?.processGoals?.find(pg => pg.goalId === goalId)?.progress
+  }
+
+  // Handle project goal completion
+  const toggleProjectGoalCompletion = (goalId: string) => {
+    const currentProjectGoals = formData.mentalState?.projectGoals || []
+    const existingIndex = currentProjectGoals.findIndex(pg => pg.goalId === goalId)
+    
+    let updatedProjectGoals
+    if (existingIndex >= 0) {
+      updatedProjectGoals = [...currentProjectGoals]
+      updatedProjectGoals[existingIndex] = { 
+        ...updatedProjectGoals[existingIndex], 
+        completed: !updatedProjectGoals[existingIndex].completed 
+      }
+    } else {
+      updatedProjectGoals = [...currentProjectGoals, { goalId, completed: true }]
+    }
+    
+    updateFormData('mentalState', { ...formData.mentalState, projectGoals: updatedProjectGoals })
+  }
+
+  const isProjectGoalCompleted = (goalId: string): boolean => {
+    return formData.mentalState?.projectGoals?.find(pg => pg.goalId === goalId)?.completed || false
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-uc-dark-bg rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-uc-purple/20">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            {initialData ? '✏️ Edit Workout' : '➕ Add Workout'}
+        <div className="flex items-center justify-between p-6 border-b border-uc-purple/20">
+          <h2 className="text-2xl font-bold text-uc-text-light">
+            {initialData ? '✏️ Edytuj Trening' : '➕ Dodaj Trening'}
           </h2>
           <button
             onClick={onCancel}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            className="text-uc-text-muted hover:text-uc-text-light transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -175,12 +323,14 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
 
             {/* Tags */}
             {availableTags.length > 0 && (
-              <TagSelector
-                selectedTagIds={formData.tagIds}
-                onTagsChange={(tagIds) => updateFormData('tagIds', tagIds)}
-                availableTags={availableTags}
-                onCreateTag={onCreateTag}
-              />
+              <div className={formData.type === 'MENTAL_PRACTICE' ? 'hidden' : ''}>
+                <TagSelector
+                  selectedTagIds={formData.tagIds}
+                  onTagsChange={(tagIds) => updateFormData('tagIds', tagIds)}
+                  availableTags={availableTags}
+                  onCreateTag={onCreateTag}
+                />
+              </div>
             )}
 
             {/* Date Selection */}
@@ -203,7 +353,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
 
             {/* Cycle Info Display */}
             {cycleInfoForSelectedDate && (
-              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+              <div className={`p-4 bg-uc-purple/20 rounded-xl border border-uc-purple/30 ${formData.type === 'MENTAL_PRACTICE' ? 'hidden' : ''}`}>
                 <CycleInfoComponent 
                   cycleInfo={cycleInfoForSelectedDate} 
                   showRecommendations={true}
@@ -359,8 +509,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               </div>
             )}
 
-            {/* Sector Field - Only for Lead Rock */}
-            {formData.type === 'LEAD_ROCK' && (
+            {/* Sector Field - For Lead Rock, Lead Wall, Bouldering, and Circuits */}
+            {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING' || formData.type === 'CIRCUITS') && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   🏔️ {t('workouts.sector') || 'Sector'}
@@ -393,6 +543,41 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               </div>
             )}
 
+            {/* Time of Day - Only for Mental Practice */}
+            {formData.type === 'MENTAL_PRACTICE' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                  🕐 Time of Day
+                </label>
+                <div className="flex space-x-4">
+                  {[
+                    { value: 'MORNING', label: 'Morning', emoji: '🌅' },
+                    { value: 'MIDDAY', label: 'Midday', emoji: '☀️' },
+                    { value: 'EVENING', label: 'Evening', emoji: '🌙' }
+                  ].map((time) => (
+                    <label key={time.value} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.timeOfDay.includes(time.value as TimeOfDay)}
+                        onChange={(e) => {
+                          const currentTimes = formData.timeOfDay || [];
+                          if (e.target.checked) {
+                            updateFormData('timeOfDay', [...currentTimes, time.value]);
+                          } else {
+                            updateFormData('timeOfDay', currentTimes.filter(t => t !== time.value));
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">
+                        {time.emoji} {time.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -416,60 +601,75 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               />
             )}
 
-            {/* Gratitude Section */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                {t('workouts.gratitude') || '3 things I am grateful for'}
-              </label>
-              <textarea
-                value={formData.gratitude}
-                onChange={(e) => updateFormData('gratitude', e.target.value)}
-                placeholder={t('workouts.gratitudePlaceholder') || 'What are you grateful for from this training session?'}
-                rows={3}
-                className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
-              />
-            </div>
+            {/* Process Goals Section - For all workout types */}
+            <ProcessGoalsSection
+              key={`process-goals-${processGoals.length}-${projectGoals.length}`}
+              processGoals={processGoals}
+              projectGoals={projectGoals}
+              onProcessGoalProgress={updateProcessGoalProgress}
+              onProjectGoalCompletion={toggleProjectGoalCompletion}
+              getProcessGoalProgress={getProcessGoalProgress}
+              isProjectGoalCompleted={isProjectGoalCompleted}
+            />
 
-            {/* Improvements Section */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                {t('workouts.improvements') || '3 things to do better next time'}
-              </label>
-              <textarea
-                value={formData.improvements}
-                onChange={(e) => updateFormData('improvements', e.target.value)}
-                placeholder={t('workouts.improvementsPlaceholder') || 'What would you like to improve for next time?'}
-                rows={3}
-                className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
-              />
-            </div>
+            {/* Gratitude Section - Only for non-mental practice workouts */}
+            {formData.type !== 'MENTAL_PRACTICE' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  {t('workouts.gratitude') || '3 things I am grateful for'}
+                </label>
+                <textarea
+                  value={formData.gratitude}
+                  onChange={(e) => updateFormData('gratitude', e.target.value)}
+                  placeholder={t('workouts.gratitudePlaceholder') || 'What are you grateful for from this training session?'}
+                  rows={3}
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
+                />
+              </div>
+            )}
+
+            {/* Improvements Section - Only for non-mental practice workouts */}
+            {formData.type !== 'MENTAL_PRACTICE' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  {t('workouts.improvements') || '3 things to do better next time'}
+                </label>
+                <textarea
+                  value={formData.improvements}
+                  onChange={(e) => updateFormData('improvements', e.target.value)}
+                  placeholder={t('workouts.improvementsPlaceholder') || 'What would you like to improve for next time?'}
+                  rows={3}
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
+                />
+              </div>
+            )}
           </form>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end space-x-3 p-6 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex justify-end space-x-3 p-6 border-t border-uc-purple/20">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition-colors"
+            className="px-4 py-2 text-uc-text-muted hover:text-uc-text-light transition-colors bg-uc-dark-bg/50 hover:bg-uc-dark-bg rounded-xl border border-uc-purple/20"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+            className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-lg"
           >
             {isSubmitting ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Saving...</span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-uc-black"></div>
+                <span>{t('common.save')}...</span>
               </>
             ) : (
               <>
                 <span>💾</span>
-                <span>{initialData ? 'Update Workout' : 'Save Workout'}</span>
+                <span>{initialData ? 'Aktualizuj' : t('common.save')} Trening</span>
               </>
             )}
           </button>

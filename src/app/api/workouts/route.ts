@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth-helpers'
 
 // GET /api/workouts - Get all workouts for a user
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // For MVP, we'll use a hardcoded user ID
-    // Later this will come from authentication
-    const userId = 'temp-user-id'
+    const user = await requireAuth(request)
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
     
     const workouts = await prisma.workout.findMany({
-      where: { userId },
+      where: { userId: user.id },
       include: {
         workoutExercises: {
           include: {
@@ -51,17 +57,25 @@ export async function POST(request: NextRequest) {
       notes,
       sector,
       mentalPracticeType,
+      timeOfDay,
       gratitude,
       improvements,
+      mentalState,
       planId,
     } = body
 
-    // For MVP, we'll use a hardcoded user ID
-    const userId = 'temp-user-id'
+    const user = await requireAuth(request)
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
 
     const workout = await prisma.workout.create({
       data: {
-        userId,
+        userId: user.id,
         type,
         startTime: new Date(date),
         trainingVolume,
@@ -72,8 +86,10 @@ export async function POST(request: NextRequest) {
         notes,
         sector,
         mentalPracticeType,
+        timeOfDay,
         gratitude,
         improvements,
+        mentalState,
         planId: planId || null,
       },
       include: {

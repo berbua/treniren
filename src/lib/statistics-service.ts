@@ -1,5 +1,7 @@
 // Statistics service for workout analysis and insights
 import { Workout, WorkoutType, TrainingVolume, Tag } from '@/types/workout';
+import { Event } from '@/types/event';
+import { calculateCycleInfo, CycleSettings } from '@/lib/cycle-utils';
 
 export type TimeFrame = '1week' | '1month' | '3months' | '6months' | '1year' | 'custom';
 
@@ -12,8 +14,6 @@ export interface WorkoutTypeStats {
   type: WorkoutType;
   count: number;
   percentage: number;
-  totalDuration: number; // in minutes
-  averageDuration: number; // in minutes
   lastWorkout?: Date;
   frequency: number; // workouts per week
 }
@@ -54,11 +54,28 @@ export interface FallsStats {
   totalClimbingSessions: number;
 }
 
+export interface InjuryCycleStats {
+  totalInjuries: number;
+  injuriesByPhase: {
+    menstrual: number;
+    follicular: number;
+    ovulation: number;
+    earlyLuteal: number;
+    lateLuteal: number;
+  };
+  injuriesByCycleDay: Array<{
+    cycleDay: number;
+    count: number;
+    phase: string;
+  }>;
+  lastInjury?: Date;
+  daysSinceLastInjury: number;
+}
+
 export interface OverallStats {
   totalWorkouts: number;
-  totalDuration: number; // in minutes
   averageWorkoutsPerWeek: number;
-  averageSessionDuration: number; // in minutes
+  averageWorkoutsThisMonth: number;
   mostActiveDay: string;
   mostActiveTime: string;
   currentStreak: number; // consecutive days with workouts
@@ -74,6 +91,7 @@ export interface StatisticsData {
   trainingVolumes: TrainingVolumeStats[];
   mentalSessions: MentalSessionStats;
   falls: FallsStats;
+  injuryCycle: InjuryCycleStats;
 }
 
 class StatisticsService {
@@ -138,9 +156,8 @@ class StatisticsService {
     if (totalWorkouts === 0) {
       return {
         totalWorkouts: 0,
-        totalDuration: 0,
         averageWorkoutsPerWeek: 0,
-        averageSessionDuration: 0,
+        averageWorkoutsThisMonth: 0,
         mostActiveDay: 'N/A',
         mostActiveTime: 'N/A',
         currentStreak: 0,
@@ -148,23 +165,19 @@ class StatisticsService {
       };
     }
 
-    // Calculate total duration
-    const totalDuration = workouts.reduce((total, workout) => {
-      if (workout.endTime) {
-        const start = new Date(workout.startTime);
-        const end = new Date(workout.endTime);
-        return total + (end.getTime() - start.getTime()) / (1000 * 60); // minutes
-      }
-      return total;
-    }, 0);
-
     // Calculate average workouts per week
     const weeksInRange = Math.max(1, Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (7 * 24 * 60 * 60 * 1000)));
     const averageWorkoutsPerWeek = totalWorkouts / weeksInRange;
 
-    // Calculate average session duration
-    const sessionsWithDuration = workouts.filter(w => w.endTime).length;
-    const averageSessionDuration = sessionsWithDuration > 0 ? totalDuration / sessionsWithDuration : 0;
+    // Calculate average workouts this month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const monthWorkouts = workouts.filter(workout => {
+      const workoutDate = new Date(workout.startTime);
+      return workoutDate >= startOfMonth && workoutDate <= endOfMonth;
+    });
+    const averageWorkoutsThisMonth = monthWorkouts.length;
 
     // Find most active day and time
     const dayCounts = new Map<string, number>();
@@ -191,9 +204,8 @@ class StatisticsService {
 
     return {
       totalWorkouts,
-      totalDuration: Math.round(totalDuration),
       averageWorkoutsPerWeek: Math.round(averageWorkoutsPerWeek * 10) / 10,
-      averageSessionDuration: Math.round(averageSessionDuration),
+      averageWorkoutsThisMonth,
       mostActiveDay,
       mostActiveTime,
       currentStreak,
@@ -206,17 +218,11 @@ class StatisticsService {
    * Calculate workout type statistics
    */
   calculateWorkoutTypeStats(workouts: Workout[], timeRange: TimeRange): WorkoutTypeStats[] {
-    const typeCounts = new Map<WorkoutType, { count: number; duration: number; lastWorkout?: Date }>();
+    const typeCounts = new Map<WorkoutType, { count: number; lastWorkout?: Date }>();
     
     workouts.forEach(workout => {
-      const existing = typeCounts.get(workout.type) || { count: 0, duration: 0 };
+      const existing = typeCounts.get(workout.type) || { count: 0 };
       existing.count++;
-      
-      if (workout.endTime) {
-        const start = new Date(workout.startTime);
-        const end = new Date(workout.endTime);
-        existing.duration += (end.getTime() - start.getTime()) / (1000 * 60);
-      }
       
       const workoutDate = new Date(workout.startTime);
       if (!existing.lastWorkout || workoutDate > existing.lastWorkout) {
@@ -233,8 +239,6 @@ class StatisticsService {
       type,
       count: data.count,
       percentage: totalWorkouts > 0 ? Math.round((data.count / totalWorkouts) * 100) : 0,
-      totalDuration: Math.round(data.duration),
-      averageDuration: data.count > 0 ? Math.round(data.duration / data.count) : 0,
       lastWorkout: data.lastWorkout,
       frequency: Math.round((data.count / weeksInRange) * 10) / 10,
     })).sort((a, b) => b.count - a.count);
@@ -352,6 +356,95 @@ class StatisticsService {
   }
 
   /**
+   * Calculate injury cycle statistics
+   */
+  calculateInjuryCycleStats(events: Event[], cycleSettings?: CycleSettings): InjuryCycleStats {
+    const injuryEvents = events.filter(event => event.type === 'INJURY');
+    
+    if (injuryEvents.length === 0 || !cycleSettings) {
+      return {
+        totalInjuries: 0,
+        injuriesByPhase: {
+          menstrual: 0,
+          follicular: 0,
+          ovulation: 0,
+          earlyLuteal: 0,
+          lateLuteal: 0,
+        },
+        injuriesByCycleDay: [],
+        daysSinceLastInjury: Infinity,
+      };
+    }
+
+    const injuriesByPhase = {
+      menstrual: 0,
+      follicular: 0,
+      ovulation: 0,
+      earlyLuteal: 0,
+      lateLuteal: 0,
+    };
+
+    const injuriesByCycleDay: Array<{ cycleDay: number; count: number; phase: string }> = [];
+    const cycleDayCounts = new Map<number, number>();
+
+    let lastInjury: Date | undefined;
+
+    injuryEvents.forEach(event => {
+      const injuryDate = new Date(event.date);
+      const cycleInfo = calculateCycleInfo(cycleSettings, injuryDate);
+      
+      // Count by phase
+      switch (cycleInfo.phase) {
+        case 'menstrual':
+          injuriesByPhase.menstrual++;
+          break;
+        case 'follicular':
+          injuriesByPhase.follicular++;
+          break;
+        case 'ovulation':
+          injuriesByPhase.ovulation++;
+          break;
+        case 'early-luteal':
+          injuriesByPhase.earlyLuteal++;
+          break;
+        case 'late-luteal':
+          injuriesByPhase.lateLuteal++;
+          break;
+      }
+
+      // Count by cycle day
+      const currentCount = cycleDayCounts.get(cycleInfo.currentDay) || 0;
+      cycleDayCounts.set(cycleInfo.currentDay, currentCount + 1);
+
+      // Track last injury
+      if (!lastInjury || injuryDate > lastInjury) {
+        lastInjury = injuryDate;
+      }
+    });
+
+    // Convert cycle day counts to array
+    for (let day = 1; day <= cycleSettings.cycleLength; day++) {
+      const count = cycleDayCounts.get(day) || 0;
+      const cycleInfo = calculateCycleInfo(cycleSettings);
+      injuriesByCycleDay.push({
+        cycleDay: day,
+        count,
+        phase: cycleInfo.phase,
+      });
+    }
+
+    const daysSinceLastInjury = lastInjury ? Math.floor((Date.now() - lastInjury.getTime()) / (1000 * 60 * 60 * 24)) : Infinity;
+
+    return {
+      totalInjuries: injuryEvents.length,
+      injuriesByPhase,
+      injuriesByCycleDay,
+      lastInjury,
+      daysSinceLastInjury,
+    };
+  }
+
+  /**
    * Calculate falls statistics
    */
   calculateFallsStats(workouts: Workout[]): FallsStats {
@@ -413,10 +506,16 @@ class StatisticsService {
     workouts: Workout[], 
     tags: Tag[], 
     timeframe: TimeFrame, 
-    customRange?: TimeRange
+    customRange?: TimeRange,
+    events?: Event[],
+    cycleSettings?: CycleSettings
   ): StatisticsData {
     const timeRange = this.getTimeRange(timeframe, customRange);
     const filteredWorkouts = this.filterWorkoutsByTimeRange(workouts, timeRange);
+    const filteredEvents = events ? events.filter(event => {
+      const eventDate = new Date(event.date);
+      return eventDate >= timeRange.start && eventDate <= timeRange.end;
+    }) : [];
 
     return {
       timeRange,
@@ -426,6 +525,7 @@ class StatisticsService {
       trainingVolumes: this.calculateTrainingVolumeStats(filteredWorkouts),
       mentalSessions: this.calculateMentalSessionStats(filteredWorkouts),
       falls: this.calculateFallsStats(filteredWorkouts),
+      injuryCycle: this.calculateInjuryCycleStats(filteredEvents, cycleSettings),
     };
   }
 

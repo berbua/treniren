@@ -17,6 +17,7 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
   const [loading, setLoading] = useState(false);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
 
   // Load data
   useEffect(() => {
@@ -29,6 +30,8 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
         if (workoutsResponse.ok) {
           const workoutsData = await workoutsResponse.json();
           setWorkouts(workoutsData);
+        } else if (workoutsResponse.status === 401) {
+          // User is not authenticated, this is expected for protected components
         }
         
         // Load tags
@@ -36,7 +39,12 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
         if (tagsResponse.ok) {
           const tagsData = await tagsResponse.json();
           setTags(tagsData);
+        } else if (tagsResponse.status === 401) {
+          // User is not authenticated, this is expected for protected components
         }
+        
+        // Set last updated time on client side only
+        setLastUpdated(new Date().toLocaleTimeString('en-US', { hour12: false }));
       } catch (error) {
         console.error('Error loading statistics data:', error);
       } finally {
@@ -142,36 +150,36 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
             <div className="space-y-8">
               {/* Overall Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <div className="bg-uc-purple/20 p-4 rounded-xl border border-uc-purple/30">
+                  <div className="text-2xl font-bold text-uc-purple">
                     {statsData.overall.totalWorkouts}
                   </div>
-                  <div className="text-sm text-blue-800 dark:text-blue-300">
-                    {t('stats.totalWorkouts') || 'Total Workouts'}
+                  <div className="text-sm text-uc-text-muted">
+                    {t('stats.totalWorkouts')}
                   </div>
                 </div>
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {statisticsService.formatDuration(statsData.overall.totalDuration)}
+                <div className="bg-uc-mustard/20 p-4 rounded-xl border border-uc-mustard/30">
+                  <div className="text-2xl font-bold text-uc-mustard">
+                    {statsData.overall.averageWorkoutsThisMonth}
                   </div>
-                  <div className="text-sm text-green-800 dark:text-green-300">
-                    {t('stats.totalDuration') || 'Total Duration'}
+                  <div className="text-sm text-uc-text-muted">
+                    Ten Miesiąc
                   </div>
                 </div>
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <div className="bg-uc-success/20 p-4 rounded-xl border border-uc-success/30">
+                  <div className="text-2xl font-bold text-uc-success">
                     {statsData.overall.averageWorkoutsPerWeek}
                   </div>
-                  <div className="text-sm text-purple-800 dark:text-purple-300">
-                    {t('stats.avgPerWeek') || 'Avg/Week'}
+                  <div className="text-sm text-uc-text-muted">
+                    {t('stats.avgPerWeek')}
                   </div>
                 </div>
-                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                <div className="bg-uc-alert/20 p-4 rounded-xl border border-uc-alert/30">
+                  <div className="text-2xl font-bold text-uc-alert">
                     {statsData.overall.currentStreak}
                   </div>
-                  <div className="text-sm text-orange-800 dark:text-orange-300">
-                    {t('stats.currentStreak') || 'Current Streak'}
+                  <div className="text-sm text-uc-text-muted">
+                    {t('stats.currentStreak')}
                   </div>
                 </div>
               </div>
@@ -203,10 +211,6 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
                         <div className="flex justify-between">
                           <span className="text-slate-600 dark:text-slate-400">{t('stats.frequency') || 'Frequency'}:</span>
                           <span className="font-medium">{statisticsService.formatFrequency(typeStats.frequency)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-600 dark:text-slate-400">{t('stats.avgDuration') || 'Avg Duration'}:</span>
-                          <span className="font-medium">{statisticsService.formatDuration(typeStats.averageDuration)}</span>
                         </div>
                       </div>
                     </div>
@@ -292,30 +296,41 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
                         {t('stats.totalSessions') || 'Total Sessions'}
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                        {statsData.mentalSessions.averageFocusLevel}
+                    {statsData.mentalSessions.totalSessions > 0 && (
+                      <>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                            {statsData.mentalSessions.averageFocusLevel}
+                          </div>
+                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                            {t('stats.avgFocusLevel') || 'Avg Focus Level'}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                            {statsData.mentalSessions.daysSinceLastSession}
+                          </div>
+                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                            {t('stats.daysSinceLast') || 'Days Since Last'}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                            {statsData.mentalSessions.practiceTypes.meditation}
+                          </div>
+                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                            {t('stats.meditation') || 'Meditation'}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {statsData.mentalSessions.totalSessions === 0 && (
+                      <div className="col-span-3 flex items-center justify-center">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                          Brak sesji mentalnych w tym okresie
+                        </p>
                       </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {t('stats.avgFocusLevel') || 'Avg Focus Level'}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                        {statsData.mentalSessions.daysSinceLastSession}
-                      </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {t('stats.daysSinceLast') || 'Days Since Last'}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                        {statsData.mentalSessions.practiceTypes.meditation}
-                      </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {t('stats.meditation') || 'Meditation'}
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -337,28 +352,39 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                        {statsData.falls.fallsPerSession}
-                      </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {t('stats.fallsPerSession') || 'Falls/Session'}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                        {statsData.falls.daysSinceLastFall}
-                      </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {t('stats.daysSinceLastFall') || 'Days Since Last Fall'}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                         {statsData.falls.totalClimbingSessions}
                       </div>
                       <div className="text-sm text-slate-600 dark:text-slate-400">
                         {t('stats.climbingSessions') || 'Climbing Sessions'}
                       </div>
                     </div>
+                    {statsData.falls.totalFalls > 0 && (
+                      <>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                            {statsData.falls.fallsPerSession}
+                          </div>
+                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                            {t('stats.fallsPerSession') || 'Falls/Session'}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                            {statsData.falls.daysSinceLastFall}
+                          </div>
+                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                            {t('stats.daysSinceLastFall') || 'Days Since Last Fall'}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {statsData.falls.totalFalls === 0 && (
+                      <div className="col-span-2 flex items-center justify-center">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                          Brak upadków w tym okresie
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -373,7 +399,7 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
               {statsData && `${statsData.timeRange.start.toLocaleDateString()} - ${statsData.timeRange.end.toLocaleDateString()}`}
             </span>
             <span>
-              {t('stats.lastUpdated') || 'Last updated'}: {new Date().toLocaleTimeString()}
+              {t('stats.lastUpdated') || 'Last updated'}: {lastUpdated}
             </span>
           </div>
         </div>
