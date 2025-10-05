@@ -11,6 +11,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const timeframe = (searchParams.get('timeframe') as TimeFrame) || '1month';
 
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
     // Fetch workouts with related data
     const workouts = await prisma.workout.findMany({
       where: { userId: user.id },

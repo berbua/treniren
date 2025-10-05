@@ -11,6 +11,13 @@ export async function GET(
     const user = await requireAuth(request)
     const { id } = await params
     
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     const workout = await prisma.workout.findFirst({
       where: { 
         id,
@@ -80,6 +87,13 @@ export async function PUT(
 
     const user = await requireAuth(request)
     const { id } = await params
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
 
     const workout = await prisma.workout.updateMany({
       where: { 
@@ -156,6 +170,13 @@ export async function DELETE(
   try {
     const user = await requireAuth(request)
     const { id } = await params
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
 
     const workout = await prisma.workout.deleteMany({
       where: { 

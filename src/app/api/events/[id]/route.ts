@@ -12,6 +12,13 @@ export async function GET(
     const user = await requireAuth(request)
     const { id } = await params
     
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     const event = await prisma.event.findFirst({
       where: { 
         id,
@@ -36,12 +43,6 @@ export async function GET(
     return NextResponse.json(event)
   } catch (error) {
     console.error('Error fetching event:', error)
-    if (error instanceof Error && error.message === 'Authentication required') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
     return NextResponse.json(
       { error: 'Failed to fetch event' },
       { status: 500 }
@@ -78,6 +79,13 @@ export async function PUT(
 
     const user = await requireAuth(request)
     const { id } = await params
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
 
     // First, delete existing tags
     await prisma.eventTag.deleteMany({
@@ -144,12 +152,6 @@ export async function PUT(
     return NextResponse.json(updatedEvent)
   } catch (error) {
     console.error('Error updating event:', error)
-    if (error instanceof Error && error.message === 'Authentication required') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
     return NextResponse.json(
       { error: 'Failed to update event' },
       { status: 500 }
@@ -165,6 +167,13 @@ export async function DELETE(
   try {
     const user = await requireAuth(request)
     const { id } = await params
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
 
     const event = await prisma.event.deleteMany({
       where: { 
@@ -183,12 +192,6 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting event:', error)
-    if (error instanceof Error && error.message === 'Authentication required') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
     return NextResponse.json(
       { error: 'Failed to delete event' },
       { status: 500 }

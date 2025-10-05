@@ -6,6 +6,13 @@ export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request)
     
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     const tags = await prisma.tag.findMany({
       where: { userId: user.id },
     });
@@ -13,12 +20,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(tags);
   } catch (error) {
     console.error('Error fetching tags:', error);
-    if (error instanceof Error && error.message === 'Authentication required') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
     return NextResponse.json(
       { error: 'Failed to fetch tags' },
       { status: 500 }
@@ -40,6 +41,13 @@ export async function POST(request: NextRequest) {
     
     const user = await requireAuth(request)
     
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
     const newTag = await prisma.tag.create({
       data: {
         name,
@@ -51,12 +59,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newTag, { status: 201 });
   } catch (error) {
     console.error('Error creating tag:', error);
-    if (error instanceof Error && error.message === 'Authentication required') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
     return NextResponse.json(
       { error: 'Failed to create tag' },
       { status: 500 }
