@@ -56,7 +56,7 @@ npx prisma generate
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+Open [http://localhost:2137](http://localhost:2137) to view the application.
 
 ## Database Setup
 

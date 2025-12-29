@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag, TimeOfDay } from '@/types/workout';
+import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag, TimeOfDay, Exercise, WorkoutExerciseData, FingerboardWorkoutHang } from '@/types/workout';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import CycleInfoComponent from './CycleInfo';
 import { StrongMindSection } from './StrongMindSection';
-import { ProcessGoalsSection } from './ProcessGoalsSection';
 import TagSelector from './TagSelector';
+import WorkoutExerciseTracker from './WorkoutExerciseTracker';
+import FingerboardHangTracker from './FingerboardHangTracker';
 
 interface EnhancedWorkoutFormProps {
   onSubmit: (workout: WorkoutFormData) => void;
@@ -17,6 +18,9 @@ interface EnhancedWorkoutFormProps {
   availableTags?: Tag[];
   onCreateTag?: (name: string, color: string) => void;
   isSubmitting?: boolean;
+  availableExercises?: Exercise[];
+  onCreateExercise?: (name: string, category?: string, defaultUnit?: string) => Promise<Exercise>;
+  defaultDate?: string; // Optional default date to pre-fill
 }
 
 const workoutTypes: { value: WorkoutType; label: string; emoji: string; description: string }[] = [
@@ -26,6 +30,7 @@ const workoutTypes: { value: WorkoutType; label: string; emoji: string; descript
   { value: 'LEAD_ROCK', label: 'Lead Rock', emoji: '🏔️', description: 'Outdoor lead climbing' },
   { value: 'LEAD_ARTIFICIAL', label: 'Lead Wall', emoji: '🧗‍♀️', description: 'Indoor lead climbing' },
   { value: 'MENTAL_PRACTICE', label: 'Mental Practice', emoji: '🧘', description: 'Mindfulness & mental training' },
+  { value: 'FINGERBOARD', label: 'Fingerboard', emoji: '🖐️', description: 'Finger strength training' },
 ];
 
 const trainingVolumes: { value: TrainingVolume; label: string; description: string }[] = [
@@ -37,132 +42,82 @@ const trainingVolumes: { value: TrainingVolume; label: string; description: stri
 ];
 
 
-interface ProcessGoal {
-  id: string
-  timeframeValue: string
-  timeframeUnit: string
-  goalDescription: string
-}
-
-interface ProjectGoal {
-  id: string
-  climbingType: string
-  gradeSystem: string
-  routeGrade: string
-  routeName: string
-  sectorLocation: string
-}
-
-export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false }: EnhancedWorkoutFormProps) {
+export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t } = useLanguage();
-  
-  // Goals state
-  const [processGoals, setProcessGoals] = useState<ProcessGoal[]>([])
-  const [projectGoals, setProjectGoals] = useState<ProjectGoal[]>([])
-  
-  // Fetch goals from localStorage (temporary solution) - client side only
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedProcessGoals = localStorage.getItem('processGoals')
-      const storedProjectGoals = localStorage.getItem('projectGoals')
-      
-      console.log('Loading goals from localStorage:', { storedProcessGoals, storedProjectGoals })
-      
-      if (storedProcessGoals) {
-        try {
-          const parsed = JSON.parse(storedProcessGoals)
-          console.log('Parsed process goals:', parsed)
-          setProcessGoals(parsed)
-        } catch (e) {
-          console.error('Error parsing process goals:', e)
-        }
-      } else {
-        console.log('No process goals found in localStorage')
-        // Create some sample goals for testing
-        const sampleGoals = [
-          {
-            id: 'goal-1',
-            timeframeValue: '1',
-            timeframeUnit: 'month',
-            goalDescription: 'Complete 10 routes at grade 7a'
-          },
-          {
-            id: 'goal-2', 
-            timeframeValue: '2',
-            timeframeUnit: 'weeks',
-            goalDescription: 'Improve endurance on long routes'
-          }
-        ]
-        console.log('Creating sample process goals:', sampleGoals)
-        setProcessGoals(sampleGoals)
-      }
-      
-      if (storedProjectGoals) {
-        try {
-          const parsed = JSON.parse(storedProjectGoals)
-          console.log('Parsed project goals:', parsed)
-          setProjectGoals(parsed)
-        } catch (e) {
-          console.error('Error parsing project goals:', e)
-        }
-      } else {
-        console.log('No project goals found in localStorage')
-        // Create some sample project goals for testing
-        const sampleProjectGoals = [
-          {
-            id: 'project-1',
-            climbingType: 'route',
-            gradeSystem: 'french',
-            routeGrade: '7a',
-            routeName: 'La Dura Dura',
-            sectorLocation: 'Oliana, Spain'
-          },
-          {
-            id: 'project-2',
-            climbingType: 'boulder',
-            gradeSystem: 'french',
-            routeGrade: '7B',
-            routeName: 'The Mandala',
-            sectorLocation: 'Bishop, USA'
-          }
-        ]
-        console.log('Creating sample project goals:', sampleProjectGoals)
-        setProjectGoals(sampleProjectGoals)
-      }
-    }
-  }, [])
 
   // Set current date on client side to prevent hydration mismatch
   useEffect(() => {
     if (typeof window !== 'undefined' && !initialData?.startTime) {
       setFormData(prev => ({
         ...prev,
-        date: new Date().toISOString().slice(0, 10)
+        date: defaultDate || new Date().toISOString().slice(0, 10)
       }))
     }
-  }, [initialData?.startTime])
+  }, [initialData?.startTime, defaultDate])
+
+  // Load exercises and fingerboard hangs from initialData
+  useEffect(() => {
+    if (initialData) {
+      // Load exercises
+      if (initialData.workoutExercises && initialData.workoutExercises.length > 0) {
+        const exercisesData: WorkoutExerciseData[] = initialData.workoutExercises.map((we: any) => ({
+          exerciseId: we.exercise.id,
+          exerciseName: we.exercise.name,
+          order: we.order,
+          sets: we.sets?.map((s: any) => ({
+            reps: s.reps || undefined,
+            weight: s.weight || undefined,
+            rir: s.rir || undefined,
+            notes: s.notes || undefined,
+          })) || [],
+        }))
+        setFormData(prev => ({ ...prev, exercises: exercisesData }))
+      }
+
+      // Load fingerboard hangs
+      if (initialData.fingerboardHangs && initialData.fingerboardHangs.length > 0) {
+        const hangsData: FingerboardWorkoutHang[] = initialData.fingerboardHangs.map((fh: any) => ({
+          order: fh.order,
+          handType: fh.handType,
+          gripType: fh.gripType,
+          crimpSize: fh.crimpSize || undefined,
+          customDescription: fh.customDescription || undefined,
+          load: fh.load || undefined,
+          unload: fh.unload || undefined,
+          reps: fh.reps || undefined,
+          timeSeconds: fh.timeSeconds || undefined,
+          notes: fh.notes || undefined,
+        }))
+        setFormData(prev => ({ ...prev, fingerboardHangs: hangsData }))
+      }
+    } else {
+      // Clear exercises and hangs when no initialData
+      setFormData(prev => ({ ...prev, exercises: [], fingerboardHangs: [] }))
+    }
+  }, [initialData])
   
   const [formData, setFormData] = useState({
     type: initialData?.type || 'GYM',
     date: initialData?.startTime 
       ? new Date(initialData.startTime).toISOString().slice(0, 10)
-      : '2024-01-15', // Always use default date to prevent hydration mismatch
+      : defaultDate || '2024-01-15', // Use defaultDate if provided, otherwise use default
     trainingVolume: initialData?.trainingVolume || 'TR3',
-    preSessionFeel: initialData?.preSessionFeel || 3,
-    dayAfterTiredness: initialData?.dayAfterTiredness || 3,
     focusLevel: initialData?.focusLevel || 3,
     notes: initialData?.notes || '',
     mentalState: initialData?.mentalState || {},
     sector: initialData?.sector || '',
     mentalPracticeType: initialData?.mentalPracticeType || 'MEDITATION',
     timeOfDay: initialData?.timeOfDay || [],
+    tagIds: initialData?.tags?.map(tag => tag.id) || [],
+    exercises: [] as WorkoutExerciseData[],
+    fingerboardHangs: [] as FingerboardWorkoutHang[],
     gratitude: initialData?.gratitude || '',
     improvements: initialData?.improvements || '',
-    tagIds: initialData?.tags?.map(tag => tag.id) || [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isGratitudeExpanded, setIsGratitudeExpanded] = useState(false);
 
   // Calculate cycle info for the selected date
   const cycleInfoForSelectedDate = useMemo(() => {
@@ -183,7 +138,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       newErrors.date = 'Please select a date';
     }
 
-    if (formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && !formData.trainingVolume) {
+    if (formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && formData.type !== 'FINGERBOARD' && !formData.trainingVolume) {
       newErrors.trainingVolume = 'Please select training volume';
     }
 
@@ -202,17 +157,17 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       type: formData.type,
       date: formData.date,
       trainingVolume: formData.trainingVolume,
-      preSessionFeel: formData.preSessionFeel,
-      dayAfterTiredness: formData.dayAfterTiredness,
       focusLevel: formData.focusLevel,
       notes: formData.notes,
       mentalState: formData.mentalState,
       sector: formData.sector,
       mentalPracticeType: formData.mentalPracticeType,
       timeOfDay: formData.timeOfDay,
-      gratitude: formData.gratitude,
-      improvements: formData.improvements,
       tagIds: formData.tagIds,
+      exercises: formData.exercises.length > 0 ? formData.exercises : undefined,
+      fingerboardHangs: formData.fingerboardHangs.length > 0 ? formData.fingerboardHangs : undefined,
+      gratitude: formData.gratitude || undefined,
+      improvements: formData.improvements || undefined,
     };
 
     await onSubmit(workoutData);
@@ -226,48 +181,6 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     }
   };
 
-  // Handle process goal progress
-  const updateProcessGoalProgress = (goalId: string, progress: 1 | 2 | 3) => {
-    const currentProcessGoals = formData.mentalState?.processGoals || []
-    const existingIndex = currentProcessGoals.findIndex(pg => pg.goalId === goalId)
-    
-    let updatedProcessGoals
-    if (existingIndex >= 0) {
-      updatedProcessGoals = [...currentProcessGoals]
-      updatedProcessGoals[existingIndex] = { goalId, progress }
-    } else {
-      updatedProcessGoals = [...currentProcessGoals, { goalId, progress }]
-    }
-    
-    updateFormData('mentalState', { ...formData.mentalState, processGoals: updatedProcessGoals })
-  }
-
-  const getProcessGoalProgress = (goalId: string): 1 | 2 | 3 | undefined => {
-    return formData.mentalState?.processGoals?.find(pg => pg.goalId === goalId)?.progress
-  }
-
-  // Handle project goal completion
-  const toggleProjectGoalCompletion = (goalId: string) => {
-    const currentProjectGoals = formData.mentalState?.projectGoals || []
-    const existingIndex = currentProjectGoals.findIndex(pg => pg.goalId === goalId)
-    
-    let updatedProjectGoals
-    if (existingIndex >= 0) {
-      updatedProjectGoals = [...currentProjectGoals]
-      updatedProjectGoals[existingIndex] = { 
-        ...updatedProjectGoals[existingIndex], 
-        completed: !updatedProjectGoals[existingIndex].completed 
-      }
-    } else {
-      updatedProjectGoals = [...currentProjectGoals, { goalId, completed: true }]
-    }
-    
-    updateFormData('mentalState', { ...formData.mentalState, projectGoals: updatedProjectGoals })
-  }
-
-  const isProjectGoalCompleted = (goalId: string): boolean => {
-    return formData.mentalState?.projectGoals?.find(pg => pg.goalId === goalId)?.completed || false
-  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -362,8 +275,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               </div>
             )}
 
-            {/* Training Volume (for non-gym and non-mental practice workouts) */}
-            {formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && (
+            {/* Training Volume (for non-gym, non-mental practice, and non-fingerboard workouts) */}
+            {formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && formData.type !== 'FINGERBOARD' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   📊 Training Volume *
@@ -395,9 +308,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               </div>
             )}
 
-            {/* Mood Ratings - Different fields based on workout type */}
-            {formData.type === 'MENTAL_PRACTICE' ? (
-              /* Focus Level for Mental Practice */
+            {/* Focus Level - Only for Mental Practice */}
+            {formData.type === 'MENTAL_PRACTICE' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   🧘 {t('workouts.focusLevel') || 'Focus Level (1-5)'}
@@ -430,81 +342,6 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                       </label>
                     );
                   })}
-                </div>
-              </div>
-            ) : (
-              /* Pre-session Feel and Day After Tiredness for other workout types */
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Pre-session Feel */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                    {t('workouts.preSessionFeel') || 'Pre-session Feel'}
-                  </label>
-                  <div className="flex space-x-2">
-                    {[1, 2, 3, 4, 5].map((rating) => {
-                      const isFilled = rating <= (formData.preSessionFeel || 0);
-                      const isSelected = formData.preSessionFeel === rating;
-                      return (
-                        <label key={rating} className="cursor-pointer">
-                          <input
-                            type="radio"
-                            name="preSessionFeel"
-                            value={rating}
-                            checked={formData.preSessionFeel === rating}
-                            onChange={(e) => updateFormData('preSessionFeel', parseInt(e.target.value))}
-                            className="sr-only"
-                          />
-                          <div
-                            className={`w-8 h-8 rounded-full border-2 transition-all ${
-                              isSelected
-                                ? 'border-blue-500'
-                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                            } ${
-                              isFilled
-                                ? 'bg-green-500'
-                                : 'bg-gray-300 dark:bg-gray-600'
-                            }`}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Day After Tiredness */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                    {t('workouts.dayAfterTiredness') || 'Day After Tiredness'}
-                  </label>
-                  <div className="flex space-x-2">
-                    {[1, 2, 3, 4, 5].map((rating) => {
-                      const isFilled = rating <= (formData.dayAfterTiredness || 0);
-                      const isSelected = formData.dayAfterTiredness === rating;
-                      return (
-                        <label key={rating} className="cursor-pointer">
-                          <input
-                            type="radio"
-                            name="dayAfterTiredness"
-                            value={rating}
-                            checked={formData.dayAfterTiredness === rating}
-                            onChange={(e) => updateFormData('dayAfterTiredness', parseInt(e.target.value))}
-                            className="sr-only"
-                          />
-                          <div
-                            className={`w-8 h-8 rounded-full border-2 transition-all ${
-                              isSelected
-                                ? 'border-blue-500'
-                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                            } ${
-                              isFilled
-                                ? 'bg-red-500'
-                                : 'bg-gray-300 dark:bg-gray-600'
-                            }`}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
                 </div>
               </div>
             )}
@@ -578,6 +415,24 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               </div>
             )}
 
+            {/* Exercise Tracker - Only for GYM workouts */}
+            {formData.type === 'GYM' && (
+              <WorkoutExerciseTracker
+                exercises={formData.exercises}
+                onExercisesChange={(exercises) => updateFormData('exercises', exercises)}
+                availableExercises={availableExercises}
+                onCreateExercise={onCreateExercise}
+              />
+            )}
+
+            {/* Fingerboard Hang Tracker - Only for FINGERBOARD workouts */}
+            {formData.type === 'FINGERBOARD' && (
+              <FingerboardHangTracker
+                hangs={formData.fingerboardHangs}
+                onHangsChange={(hangs) => updateFormData('fingerboardHangs', hangs)}
+              />
+            )}
+
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -592,6 +447,69 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               />
             </div>
 
+            {/* Gratitude Section - Collapsed by default */}
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+              <button
+                type="button"
+                onClick={() => setIsGratitudeExpanded(!isGratitudeExpanded)}
+                className="w-full flex items-center justify-between text-left p-4"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">🙏</span>
+                  <div>
+                    <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
+                      {t('workouts.gratitude') || 'Gratitude'}
+                    </h3>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      {t('workouts.gratitudeDescription') || 'Reflect on what you\'re grateful for and what to improve'}
+                    </p>
+                  </div>
+                </div>
+                <svg
+                  className={`w-5 h-5 text-yellow-600 dark:text-yellow-400 transition-transform ${
+                    isGratitudeExpanded ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isGratitudeExpanded && (
+                <div className="px-4 pb-4 space-y-4">
+                  {/* 3 things I am grateful for */}
+                  <div>
+                    <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-2">
+                      {t('workouts.gratefulFor') || '3 things I am grateful for'}
+                    </label>
+                    <textarea
+                      value={formData.gratitude}
+                      onChange={(e) => updateFormData('gratitude', e.target.value)}
+                      placeholder={t('workouts.gratefulForPlaceholder') || 'What are you grateful for today? What went well? What made you happy?'}
+                      rows={4}
+                      className="w-full border border-yellow-300 dark:border-yellow-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
+                    />
+                  </div>
+
+                  {/* 3 things to do better next time */}
+                  <div>
+                    <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-2">
+                      {t('workouts.improvements') || '3 things to do better next time'}
+                    </label>
+                    <textarea
+                      value={formData.improvements}
+                      onChange={(e) => updateFormData('improvements', e.target.value)}
+                      placeholder={t('workouts.improvementsPlaceholder') || 'What could you do better? What did you learn? How can you improve?'}
+                      rows={4}
+                      className="w-full border border-yellow-300 dark:border-yellow-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Strong Mind Section - Only for Lead Climbing */}
             {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL') && (
               <StrongMindSection
@@ -601,48 +519,6 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               />
             )}
 
-            {/* Process Goals Section - For all workout types */}
-            <ProcessGoalsSection
-              key={`process-goals-${processGoals.length}-${projectGoals.length}`}
-              processGoals={processGoals}
-              projectGoals={projectGoals}
-              onProcessGoalProgress={updateProcessGoalProgress}
-              onProjectGoalCompletion={toggleProjectGoalCompletion}
-              getProcessGoalProgress={getProcessGoalProgress}
-              isProjectGoalCompleted={isProjectGoalCompleted}
-            />
-
-            {/* Gratitude Section - Only for non-mental practice workouts */}
-            {formData.type !== 'MENTAL_PRACTICE' && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  {t('workouts.gratitude') || '3 things I am grateful for'}
-                </label>
-                <textarea
-                  value={formData.gratitude}
-                  onChange={(e) => updateFormData('gratitude', e.target.value)}
-                  placeholder={t('workouts.gratitudePlaceholder') || 'What are you grateful for from this training session?'}
-                  rows={3}
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
-                />
-              </div>
-            )}
-
-            {/* Improvements Section - Only for non-mental practice workouts */}
-            {formData.type !== 'MENTAL_PRACTICE' && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  {t('workouts.improvements') || '3 things to do better next time'}
-                </label>
-                <textarea
-                  value={formData.improvements}
-                  onChange={(e) => updateFormData('improvements', e.target.value)}
-                  placeholder={t('workouts.improvementsPlaceholder') || 'What would you like to improve for next time?'}
-                  rows={3}
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
-                />
-              </div>
-            )}
           </form>
         </div>
 

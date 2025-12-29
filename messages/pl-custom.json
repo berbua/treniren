@@ -1,0 +1,148 @@
+{
+    "nav": {
+        "routines": "Sety ćwiczeń",
+        "fingerboardProtocols": "Chwytka",
+        "dashboard": "Start"
+    },
+    "workouts": {
+        "strongMind": "Strong Mind",
+        "didTakeFalls": "Czy miał_m jakieś lotki?",
+        "mentalSummary": "Podsumowanie - Mental",
+        "falls": "Lotki",
+        "focusStates": {
+            "CHOKE": "Dławienie",
+            "DISTRACTION": "Rozproszenie",
+            "PRESENT": "Obecność",
+            "FOCUSED": "Skupienie",
+            "CLUTCH": "Trudno ale walczę",
+            "FLOW": "Flow"
+        },
+        "comfortZones": {
+            "COMFORT": "Komfort",
+            "STRETCH1": "Stretch 1",
+            "STRETCH2": "Stretch 2",
+            "PANIC": "Panika"
+        }
+    },
+    "events": {
+        "_comment": "Add custom event translations here"
+    },
+    "profile": {
+        "_comment": "Add custom profile translations here"
+    },
+    "strongMind": {
+        "_comment": "Add custom strong mind translations here"
+    },
+    "stats": {
+        "mentalSessions": "Mental",
+        "fallsTracking": "Śledzenie lotek",
+        "totalFalls": "Łącznie lotek",
+        "fallsPerSession": "Lotki/sesja",
+        "daysSinceLastFall": "Dni od ostatniej lotki"
+    },
+    "dashboard": {
+       "hi": "Siemka"
+    },
+    "calendar": {
+        "_comment": "Add custom calendar translations here"
+    },
+    "exercises": {
+        "_comment": "Add custom exercise translations here"
+    },
+    "routines": {
+        "_comment": "Add custom routine translations here"
+    },
+    "training": {
+        "types": {
+            "gym": "Siłka",
+            "leadRock": "Prowadzenie - Skałka",
+            "leadArtificial": "Prowadzenie - Ścianka"
+        },
+        "descriptions": {
+            "leadRock": "Wspinaczka w skałce",
+            "leadArtificial": "Wspinaczka na ściance"
+        }
+    },
+    "landing": {
+        "upcomingTrips": "Nadchodzące tripy",
+        "dayToGo": "dzień do wyjazdu",
+        "daysToGo": "dni do wyjazdu"
+    },
+    "workoutTypes": {
+        "gym": "Siłka",
+        "gymDescription": "Pompa, szmata, moc",
+        "bouldering": "Buldering",
+        "boulderingDescription": "Moc i technika",
+        "circuits": "Obwody",
+        "circuitsDescription": "Trening wytrzymałościowy",
+        "leadRock": "Prowadzenie - Skałka",
+        "leadRockDescription": "Wspinaczka w skałce",
+        "leadArtificial": "Prowadzenie - Ścianka",
+        "leadArtificialDescription": "Wspinaczka na ściance",
+        "mentalPractice": "Praktyka Mentalna",
+        "mentalPracticeDescription": "Mindfulness i bycie obecn_"
+    },
+    "workoutFields": {
+        "mentalStateTracking": "Śledzenie Stanu Mentalnego",
+        "fallsReflections": "Lotki i Refleksje"
+    },
+    "landingFeatures": {
+        "leadClimbingStrongMind": "Prowadzenie + Strong Mind",
+        "leadClimbingDescription": "Zaawansowane śledzenie mentalne i integracja celów",
+        "mentalStateTracking": "Śledzenie Stanu Mentalnego i komfortu",
+        "focusStatesComfortZones": "Stany Skupienia i Strefy Komfortu",
+        "goalsIntegration": "Integracja Celów Procesowych i Projektowych",
+        "gratitudeImprovements": "Wdzięczność i obszary do porawy",
+        "eventsInjuries": "Wydarzenia i Kontuzje",
+        "eventsInjuriesDescription": "Śledź kontuzje, zawody i wyjazdy",
+        "injuryTracking": "Śledzenie Kontuzji (Część Ciała i Opis)",
+        "competitionPhysio": "Wyniki Zawodów i Wizyty Fizjoterapeutyczne",
+        "tripCountdownCycle": "Odliczanie do Wyjazdu i Korelacja z Cyklem",
+        "strongMindGoals": "Cele Strong Mind",
+        "strongMindGoalsDescription": "Śledzenie celów procesowych i projektowych",
+        "processGoals": "Cele Procesowe (Długoterminowe i Krótkoterminowe)",
+        "projectGoals": "Cele Projektowe (Drogi i Buldery)",
+        "progressAchievements": "Śledzenie Postępów i Osiągnięć",
+        "statisticsAnalytics": "Statystyki i Analityka",
+        "statisticsDescription": "Zaawansowane wglądy i wzorce",
+        "injuryCycleCorrelation": "Korelacja Kontuzji z Cyklem",
+        "goalProgressTracking": "Śledzenie Postępów Celów",
+        "gratitudeImprovementsAnalysis": "Analiza Wdzięczności i Obszarów do poprawy",
+        "performancePatternAnalysis": "Analiza Wzorców Wydajności",
+        "dataExportBackup": "Eksport Danych i Backup",
+        "dataExportDescription": "Pełna przenośność danych",
+        "exportAllData": "Eksport Wszystkich Danych (JSON/CSV)",
+        "versionedExport": "Wersjonowany Format Eksportu",
+        "completeBackup": "Kompletna Kopia Zapasowa",
+        "exercisesRoutines": "Ćwiczenia i Rutyny",
+        "exercisesRoutinesDescription": "Własne ćwiczenia i szablony treningów",
+        "customExerciseLibrary": "Biblioteka Własnych Ćwiczeń",
+        "workoutRoutinesVariations": "Rutyny Treningowe i Wariacje",
+        "quickAddWorkouts": "Szybkie Dodawanie do Treningów",
+        "fingerboardTraining": "Trening na Chwytce",
+        "fingerboardDescription": "Protokoły i testy siły",
+        "trainingProtocols": "Protokoły Treningowe",
+        "strengthTestingProtocols": "Protokoły Testowania Siły",
+        "progressChartsAnalytics": "Wykresy Postępów i Analityka",
+        "pwaOffline": "PWA i Offline",
+        "pwaOfflineDescription": "Działa offline i można zainstalować",
+        "offlineRecording": "Nagrywanie Treningów Offline",
+        "installableApp": "Aplikacja do Zainstalowania (iOS/Android)",
+        "autoSync": "Automatyczna Synchronizacja Online",
+        "cycleTracking": "Śledzenie Cyklu",
+        "cycleDescription": "Korelacja z cyklem miesiączkowym",
+        "cyclePhaseVisualization": "Wizualizacja Faz Cyklu",
+        "cyclePerformancePatternAnalysis": "Analiza Wzorców Wydajności",
+        "injuryCorrelationInsights": "Wglądy w Korelację Kontuzji"
+    },
+    "fingerboard": {
+        "title": "Protokoły Chwytotablicy",
+        "subtitle": "Twórz wielokrotnego użytku protokoły treningowe na chwytkę",
+        "loading": "Ładowanie protokołów...",
+        "testYourself": "Przetestuj się",
+        "testYourselfTooltip": "Śledź swoje postępy na chwytce, wykonując regularne testy. Zapisz, jak długo możesz wisieć i z jakim obciążeniem, aby wizualizować swoje ulepszenia.",
+        "noProtocolsDescription": "Utwórz swój pierwszy chwytkowy protokół, aby szybko dodawać zwisy do treningów",
+        "hang": "zwis",
+        "hangs": "zwisów"
+    }
+}

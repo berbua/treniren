@@ -47,23 +47,15 @@ export const ProcessGoalsSection = ({
   }, []);
 
   // Debug logging
-  useEffect(() => {
-    console.log('ProcessGoalsSection - isClient:', isClient, 'processGoals:', processGoals, 'projectGoals:', projectGoals);
-  }, [isClient, processGoals, projectGoals]);
-
   // Prevent hydration mismatch by not rendering until client-side
   if (!isClient) {
-    console.log('ProcessGoalsSection - not rendering: not client yet');
     return null;
   }
 
   // Don't render if no goals exist at all
   if (processGoals.length === 0 && projectGoals.length === 0) {
-    console.log('ProcessGoalsSection - not rendering: no goals');
     return null;
   }
-
-  console.log('ProcessGoalsSection - RENDERING with toggles');
 
   return (
     <div className="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">

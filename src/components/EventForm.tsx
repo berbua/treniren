@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { EventType, EventFormData, Event, Tag, TripClimbingType } from '@/types/event';
 import { useLanguage } from '@/contexts/LanguageContext';
 import TagSelector from './TagSelector';
@@ -12,6 +12,7 @@ interface EventFormProps {
   availableTags?: Tag[];
   onCreateTag?: (name: string, color: string) => void;
   isSubmitting?: boolean;
+  defaultDate?: string; // Optional default date to pre-fill
 }
 
 const eventTypes: { value: EventType; label: string; emoji: string; description: string }[] = [
@@ -22,14 +23,14 @@ const eventTypes: { value: EventType; label: string; emoji: string; description:
   { value: 'OTHER', label: 'Other', emoji: '📅', description: 'Other events' },
 ];
 
-export default function EventForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false }: EventFormProps) {
+export default function EventForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, defaultDate }: EventFormProps) {
   const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
     type: initialData?.type || 'INJURY',
     date: initialData?.date 
       ? new Date(initialData.date).toISOString().slice(0, 10)
-      : (typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15'),
+      : (defaultDate || (typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15')),
     description: initialData?.description || initialData?.notes || '',
     bodyPart: initialData?.location || '', // For injuries, this will store body part instead of location
     location: initialData?.location || '', // Keep for non-injury events
@@ -48,31 +49,41 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Update date when defaultDate changes (for calendar integration)
+  useEffect(() => {
+    if (defaultDate && !initialData) {
+      setFormData(prev => ({
+        ...prev,
+        date: defaultDate
+      }))
+    }
+  }, [defaultDate, initialData])
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.type) {
-      newErrors.type = 'Please select an event type';
+      newErrors.type = t('events.eventTypeRequired') || 'Please select an event type';
     }
 
     // For non-trip events, require a date
     if (formData.type !== 'TRIP' && !formData.date) {
-      newErrors.date = 'Please select a date';
+      newErrors.date = t('events.dateRequired') || 'Please select a date';
     }
 
     // Trip-specific validation
     if (formData.type === 'TRIP') {
       if (!formData.tripStartDate) {
-        newErrors.tripStartDate = 'Please select a start date for the trip';
+        newErrors.tripStartDate = t('events.tripStartDateRequired') || 'Please select a start date for the trip';
       }
       if (!formData.tripEndDate) {
-        newErrors.tripEndDate = 'Please select an end date for the trip';
+        newErrors.tripEndDate = t('events.tripEndDateRequired') || 'Please select an end date for the trip';
       }
       if (!formData.destination.trim()) {
-        newErrors.destination = 'Please enter a destination';
+        newErrors.destination = t('events.destinationRequired') || 'Please enter a destination';
       }
       if (formData.tripStartDate && formData.tripEndDate && formData.tripStartDate > formData.tripEndDate) {
-        newErrors.tripEndDate = 'End date must be after start date';
+        newErrors.tripEndDate = t('events.tripEndDateAfterStart') || 'End date must be after start date';
       }
     }
 
@@ -129,7 +140,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-uc-purple/20">
           <h2 className="text-2xl font-bold text-uc-text-light">
-            {initialData ? '✏️ Edytuj Wydarzenie' : '➕ Dodaj Wydarzenie'}
+            {initialData ? `✏️ ${t('events.editEvent') || 'Edit Event'}` : `➕ ${t('events.addEvent') || 'Add Event'}`}
           </h2>
           <button
             onClick={onCancel}
@@ -147,7 +158,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             {/* Event Type Selection */}
             <div>
               <label className="block text-sm font-medium text-uc-text-light mb-2">
-                📅 Rodzaj Wydarzenia *
+                📅 {t('events.eventType') || 'Event Type'} *
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {eventTypes.map((type) => (
@@ -171,7 +182,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                 ))}
               </div>
               {errors.type && (
-                <p className="mt-2 text-sm text-uc-alert">{errors.type}</p>
+                <p className="mt-2 text-sm text-uc-alert">{t('events.eventTypeRequired') || errors.type}</p>
               )}
             </div>
 
@@ -179,13 +190,13 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             {formData.type === 'INJURY' && (
               <div>
                 <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  🦵 Część Ciała
+                  🦵 {t('events.bodyPart') || 'Body Part'}
                 </label>
                 <input
                   type="text"
                   value={formData.bodyPart}
                   onChange={(e) => updateFormData('bodyPart', e.target.value)}
-                  placeholder="np. lewy nadgarstek, prawy bark, dolna część pleców..."
+                  placeholder={t('events.bodyPartPlaceholder') || 'e.g. left wrist, right shoulder, lower back...'}
                   className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
                 />
               </div>
@@ -195,13 +206,13 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             {formData.type !== 'TRIP' && formData.type !== 'INJURY' && (
               <div>
                 <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  📍 Lokalizacja
+                  📍 {t('events.location') || 'Location'}
                 </label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => updateFormData('location', e.target.value)}
-                  placeholder="Wprowadź lokalizację..."
+                  placeholder={t('events.locationPlaceholder') || 'Enter location...'}
                   className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
                 />
               </div>
@@ -211,7 +222,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             {formData.type !== 'TRIP' && (
               <div>
                 <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  📅 Data *
+                  📅 {t('events.date') || 'Date'} *
                 </label>
                 <input
                   type="date"
@@ -222,7 +233,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                   }`}
                 />
                 {errors.date && (
-                  <p className="mt-2 text-sm text-uc-alert">{errors.date}</p>
+                  <p className="mt-2 text-sm text-uc-alert">{t('events.dateRequired') || errors.date}</p>
                 )}
               </div>
             )}
@@ -231,19 +242,19 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             {/* Description/Notes - Consolidated field */}
             <div>
               <label className="block text-sm font-medium text-uc-text-light mb-2">
-                📝 {formData.type === 'INJURY' ? 'Opis Kontuzji' : 
-                     formData.type === 'PHYSIO' ? 'Opis Wizyty' :
-                     formData.type === 'COMPETITION' ? 'Opis Zawodów' :
-                     'Opis Wydarzenia'}
+                📝 {formData.type === 'INJURY' ? (t('events.injuryDescription') || 'Injury Description') : 
+                     formData.type === 'PHYSIO' ? (t('events.physioDescription') || 'Visit Description') :
+                     formData.type === 'COMPETITION' ? (t('events.competitionDescription') || 'Competition Description') :
+                     (t('events.description') || 'Description')}
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => updateFormData('description', e.target.value)}
                 placeholder={
-                  formData.type === 'INJURY' ? 'Opisz kontuzję, objawy, przyczyny...' :
-                  formData.type === 'PHYSIO' ? 'Opisz wizytę, zalecenia, postępy...' :
-                  formData.type === 'COMPETITION' ? 'Opisz zawody, wyniki, wrażenia...' :
-                  'Wprowadź opis wydarzenia...'
+                  formData.type === 'INJURY' ? (t('events.injuryDescriptionPlaceholder') || 'Describe the injury, symptoms, causes...') :
+                  formData.type === 'PHYSIO' ? (t('events.physioDescriptionPlaceholder') || 'Describe the visit, recommendations, progress...') :
+                  formData.type === 'COMPETITION' ? (t('events.competitionDescriptionPlaceholder') || 'Describe the competition, results, impressions...') :
+                  (t('events.eventDescriptionPlaceholder') || 'Enter event description...')
                 }
                 rows={4}
                 className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none resize-none"
@@ -257,7 +268,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                 {/* Trip Start Date */}
                 <div>
                   <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🛫 Data Rozpoczęcia Wyjazdu *
+                    🛫 {t('events.tripStartDate') || 'Trip Start Date'} *
                   </label>
                   <input
                     type="date"
@@ -268,14 +279,14 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                     }`}
                   />
                   {errors.tripStartDate && (
-                    <p className="mt-2 text-sm text-uc-alert">{errors.tripStartDate}</p>
+                    <p className="mt-2 text-sm text-uc-alert">{t('events.tripStartDateRequired') || errors.tripStartDate}</p>
                   )}
                 </div>
 
                 {/* Trip End Date */}
                 <div>
                   <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🛬 Data Zakończenia Wyjazdu *
+                    🛬 {t('events.tripEndDate') || 'Trip End Date'} *
                   </label>
                   <input
                     type="date"
@@ -286,33 +297,37 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                     }`}
                   />
                   {errors.tripEndDate && (
-                    <p className="mt-2 text-sm text-uc-alert">{errors.tripEndDate}</p>
+                    <p className="mt-2 text-sm text-uc-alert">
+                      {errors.tripEndDate === 'End date must be after start date' 
+                        ? (t('events.tripEndDateAfterStart') || errors.tripEndDate)
+                        : (t('events.tripEndDateRequired') || errors.tripEndDate)}
+                    </p>
                   )}
                 </div>
 
-                {/* Destination */}
+                {/* Destination - Moved below date fields */}
                 <div>
                   <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🌍 Miejsce Docelowe *
+                    🌍 {t('events.destination') || 'Destination'} *
                   </label>
                   <input
                     type="text"
                     value={formData.destination}
                     onChange={(e) => updateFormData('destination', e.target.value)}
-                    placeholder="Wprowadź miejsce docelowe (np. Fontainebleau, Francja)"
+                    placeholder={t('events.destinationPlaceholder') || 'Enter destination (e.g. Fontainebleau, France)'}
                     className={`w-full border rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:outline-none ${
                       errors.destination ? 'border-uc-alert' : 'border-uc-purple/20 focus:border-uc-purple'
                     }`}
                   />
                   {errors.destination && (
-                    <p className="mt-2 text-sm text-uc-alert">{errors.destination}</p>
+                    <p className="mt-2 text-sm text-uc-alert">{t('events.destinationRequired') || errors.destination}</p>
                   )}
                 </div>
 
                 {/* Climbing Type */}
                 <div>
                   <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🧗 Rodzaj Wspinaczki
+                    🧗 {t('events.climbingType') || 'Climbing Type'}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -327,7 +342,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">🧗</span>
                         <div className="text-sm font-medium text-uc-text-light">
-                          Boulder
+                          {t('events.bouldering') || 'Bouldering'}
                         </div>
                       </div>
                     </button>
@@ -343,7 +358,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">🧗‍♀️</span>
                         <div className="text-sm font-medium text-uc-text-light">
-                          Wspinaczka Sportowa
+                          {t('events.sportClimbing') || 'Sport Climbing'}
                         </div>
                       </div>
                     </button>
@@ -360,11 +375,11 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                       className="w-4 h-4 text-uc-purple bg-uc-black border-uc-purple/20 rounded focus:ring-uc-purple focus:ring-2"
                     />
                     <span className="text-sm font-medium text-uc-text-light">
-                      📅 Pokaż odliczanie na stronie głównej: &quot;Czas do wyjazdu {formData.destination || 'docelowego'}: XX dni&quot;
+                      📅 {t('events.showCountdown') || 'Show countdown on homepage'}: &quot;{t('dashboard.daysToGo') || 'days to go'} {formData.destination || (t('events.destination') || 'destination')}: XX {t('dashboard.daysToGo') || 'days'}&quot;
                     </span>
                   </label>
                   <p className="text-xs text-uc-text-muted mt-2">
-                    Włącz to, aby wyjazd pojawił się na stronie głównej z odliczaniem dni
+                    {t('events.showCountdownDescription') || 'Enable this to show the trip on the homepage with a countdown'}
                   </p>
                 </div>
               </>
@@ -398,7 +413,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             ) : (
               <>
                 <span>💾</span>
-                <span>{initialData ? 'Aktualizuj' : t('common.save')} Wydarzenie</span>
+                <span>{initialData ? (t('events.updateEvent') || 'Update Event') : (t('events.saveEvent') || 'Save Event')}</span>
               </>
             )}
           </button>

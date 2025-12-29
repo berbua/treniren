@@ -28,6 +28,11 @@ export async function GET(request: NextRequest) {
             tag: true,
           },
         },
+        fingerboardHangs: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
       },
       orderBy: { startTime: 'desc' },
     })
@@ -62,6 +67,9 @@ export async function POST(request: NextRequest) {
       improvements,
       mentalState,
       planId,
+      tagIds,
+      exercises,
+      fingerboardHangs,
     } = body
 
     const user = await requireAuth(request)
@@ -73,12 +81,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Create workout with tags and exercises
     const workout = await prisma.workout.create({
       data: {
         userId: user.id,
         type,
         startTime: new Date(date),
-        trainingVolume,
+        trainingVolume: trainingVolume || null,
         details,
         preSessionFeel,
         dayAfterTiredness,
@@ -91,17 +100,60 @@ export async function POST(request: NextRequest) {
         improvements,
         mentalState,
         planId: planId || null,
+        workoutTags: tagIds && tagIds.length > 0 ? {
+          create: tagIds.map((tagId: string) => ({
+            tagId,
+          })),
+        } : undefined,
+        workoutExercises: exercises && exercises.length > 0 ? {
+          create: exercises.map((exerciseData: any, index: number) => ({
+            exerciseId: exerciseData.exerciseId,
+            order: exerciseData.order !== undefined ? exerciseData.order : index,
+            sets: exerciseData.sets && exerciseData.sets.length > 0 ? {
+              create: exerciseData.sets.map((set: any, setIndex: number) => ({
+                setNumber: setIndex + 1,
+                reps: set.reps || null,
+                weight: set.weight || null,
+                rir: set.rir || null,
+                notes: set.notes || null,
+              })),
+            } : undefined,
+          })),
+        } : undefined,
+        fingerboardHangs: fingerboardHangs && fingerboardHangs.length > 0 ? {
+          create: fingerboardHangs.map((hang: any, index: number) => ({
+            order: hang.order !== undefined ? hang.order : index,
+            handType: hang.handType,
+            gripType: hang.gripType,
+            crimpSize: hang.crimpSize || null,
+            customDescription: hang.customDescription || null,
+            load: hang.load || null,
+            unload: hang.unload || null,
+            reps: hang.reps || null,
+            timeSeconds: hang.timeSeconds || null,
+            notes: hang.notes || null,
+          })),
+        } : undefined,
       },
       include: {
         workoutExercises: {
           include: {
             exercise: true,
-            sets: true,
+            sets: {
+              orderBy: {
+                setNumber: 'asc',
+              },
+            },
           },
         },
         workoutTags: {
           include: {
             tag: true,
+          },
+        },
+        fingerboardHangs: {
+          orderBy: {
+            order: 'asc',
           },
         },
       },
@@ -110,8 +162,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(workout, { status: 201 })
   } catch (error) {
     console.error('Error creating workout:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create workout'
     return NextResponse.json(
-      { error: 'Failed to create workout' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

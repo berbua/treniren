@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth-helpers'
 
-// GET /api/exercises - Get all exercises for a user
+// GET /api/exercises - Get all exercises for a user with usage stats
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request)
@@ -16,10 +16,45 @@ export async function GET(request: NextRequest) {
     
     const exercises = await prisma.exercise.findMany({
       where: { userId: user.id },
+      include: {
+        workoutExercises: {
+          include: {
+            workout: {
+              select: {
+                startTime: true,
+              }
+            }
+          }
+        }
+      },
       orderBy: { name: 'asc' },
     })
 
-    return NextResponse.json(exercises)
+    // Add usage stats to each exercise
+    const exercisesWithStats = exercises.map(exercise => {
+      const timesUsed = exercise.workoutExercises.length
+      const lastUsed = exercise.workoutExercises.length > 0
+        ? exercise.workoutExercises
+            .map(we => new Date(we.workout.startTime))
+            .sort((a, b) => b.getTime() - a.getTime())[0]
+        : null
+
+      return {
+        id: exercise.id,
+        name: exercise.name,
+        category: exercise.category,
+        defaultUnit: exercise.defaultUnit,
+        userId: exercise.userId,
+        createdAt: exercise.createdAt.toISOString(),
+        updatedAt: exercise.updatedAt.toISOString(),
+        stats: {
+          timesUsed,
+          lastUsed: lastUsed?.toISOString() || null,
+        }
+      }
+    })
+
+    return NextResponse.json(exercisesWithStats)
   } catch (error) {
     console.error('Error fetching exercises:', error)
     return NextResponse.json(

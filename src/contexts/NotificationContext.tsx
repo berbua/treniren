@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { notificationService, NotificationMessage, NotificationSettings } from '@/lib/notification-service';
 import { processCycleNotifications, scheduleDailyCycleCheck } from '@/lib/cycle-notifications';
 import { processActivityNotifications, scheduleDailyActivityCheck } from '@/lib/activity-notifications';
+import { processWorkoutInactivityNotifications, scheduleDailyWorkoutInactivityCheck } from '@/lib/workout-inactivity-notifications';
+import { processTestReminderNotifications, scheduleDailyTestReminderCheck } from '@/lib/test-reminder-notifications';
 import { useCycle } from './CycleContext';
 
 interface NotificationContextType {
@@ -71,11 +73,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           const workouts = await response.json();
           if (workouts.length > 0) {
             // Process activity notifications
-            const newNotifications = processActivityNotifications(workouts);
+            const activityNotifications = processActivityNotifications(workouts);
+            
+            // Process workout inactivity notifications
+            const inactivityNotifications = processWorkoutInactivityNotifications(workouts, {
+              workoutInactivityEnabled: settings.workoutInactivityEnabled,
+              workoutInactivityDays: settings.workoutInactivityDays
+            });
+            
+            // Combine all notifications
+            const allNotifications = [...activityNotifications, ...inactivityNotifications];
             
             // Send push notifications for new messages if enabled
             if (settings.pushNotificationsEnabled) {
-              newNotifications.forEach(notification => {
+              allNotifications.forEach(notification => {
                 notificationService.sendPushNotification(notification);
               });
             }
@@ -87,6 +98,46 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     };
 
     loadWorkouts();
+  }, [settings.pushNotificationsEnabled, settings.workoutInactivityEnabled, settings.workoutInactivityDays]);
+
+  // Process test reminder notifications
+  useEffect(() => {
+    const loadTestReminders = async () => {
+      try {
+        // Load test reminder settings
+        const settingsResponse = await fetch('/api/test-reminder');
+        if (settingsResponse.ok) {
+          const reminderSettings = await settingsResponse.json();
+          
+          if (reminderSettings.testReminderEnabled && reminderSettings.testReminderInterval && reminderSettings.testReminderUnit) {
+            // Load test results
+            const testResultsResponse = await fetch('/api/fingerboard-test-results?protocolId=all');
+            if (testResultsResponse.ok) {
+              const testResults = await testResultsResponse.json();
+              
+              if (testResults.length > 0) {
+                const testNotifications = processTestReminderNotifications(testResults, {
+                  testReminderEnabled: reminderSettings.testReminderEnabled,
+                  testReminderInterval: reminderSettings.testReminderInterval,
+                  testReminderUnit: reminderSettings.testReminderUnit
+                });
+                
+                // Send push notifications for new messages if enabled
+                if (settings.pushNotificationsEnabled) {
+                  testNotifications.forEach(notification => {
+                    notificationService.sendPushNotification(notification);
+                  });
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading test reminders:', error);
+      }
+    };
+
+    loadTestReminders();
   }, [settings.pushNotificationsEnabled]);
 
   // Schedule daily cycle checks
@@ -105,8 +156,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         if (response.ok) {
           const workouts = await response.json();
           if (workouts.length > 0) {
-            const cleanup = scheduleDailyActivityCheck(workouts);
-            return cleanup;
+            const activityCleanup = scheduleDailyActivityCheck(workouts);
+            const inactivityCleanup = scheduleDailyWorkoutInactivityCheck(workouts, {
+              workoutInactivityEnabled: settings.workoutInactivityEnabled,
+              workoutInactivityDays: settings.workoutInactivityDays
+            });
+            
+            return () => {
+              activityCleanup();
+              inactivityCleanup();
+            };
           }
         }
       } catch (error) {
@@ -116,6 +175,43 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     };
 
     const cleanupPromise = loadWorkoutsForScheduling();
+    return () => {
+      cleanupPromise.then(cleanup => cleanup());
+    };
+  }, [settings.workoutInactivityEnabled, settings.workoutInactivityDays]);
+
+  // Schedule daily test reminder checks
+  useEffect(() => {
+    const loadTestRemindersForScheduling = async () => {
+      try {
+        const settingsResponse = await fetch('/api/test-reminder');
+        if (settingsResponse.ok) {
+          const reminderSettings = await settingsResponse.json();
+          
+          if (reminderSettings.testReminderEnabled && reminderSettings.testReminderInterval && reminderSettings.testReminderUnit) {
+            const testResultsResponse = await fetch('/api/fingerboard-test-results?protocolId=all');
+            if (testResultsResponse.ok) {
+              const testResults = await testResultsResponse.json();
+              
+              if (testResults.length > 0) {
+                const testCleanup = scheduleDailyTestReminderCheck(testResults, {
+                  testReminderEnabled: reminderSettings.testReminderEnabled,
+                  testReminderInterval: reminderSettings.testReminderInterval,
+                  testReminderUnit: reminderSettings.testReminderUnit
+                });
+                
+                return testCleanup;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading test reminders for scheduling:', error);
+      }
+      return () => {};
+    };
+
+    const cleanupPromise = loadTestRemindersForScheduling();
     return () => {
       cleanupPromise.then(cleanup => cleanup());
     };

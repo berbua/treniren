@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { notificationService, NotificationMessage } from '@/lib/notification-service';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCycle } from '@/contexts/CycleContext';
@@ -13,6 +14,7 @@ interface MessagesPanelProps {
 
 export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelProps) => {
   const { t } = useLanguage();
+  const router = useRouter();
   const { setCycleSettings } = useCycle();
   const [messages, setMessages] = useState<NotificationMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -65,6 +67,34 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
           }
           break;
 
+        case 'create_workout':
+          // Navigate to workouts page to create a workout
+          router.push('/workouts');
+          notificationService.markAsRead(message.id);
+          onClose();
+          break;
+
+        case 'create_mental_workout':
+          // Navigate to workouts page with mental practice type
+          router.push('/workouts?type=MENTAL_PRACTICE');
+          notificationService.markAsRead(message.id);
+          onClose();
+          break;
+
+        case 'create_climbing_workout':
+          // Navigate to workouts page
+          router.push('/workouts');
+          notificationService.markAsRead(message.id);
+          onClose();
+          break;
+
+        case 'perform_test':
+          // Navigate to fingerboard testing page
+          router.push('/fingerboard-testing');
+          notificationService.markAsRead(message.id);
+          onClose();
+          break;
+
         default:
       }
 
@@ -98,6 +128,8 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
       case 'cycle_overdue':
         return '⚠️';
       case 'workout_reminder':
+        return '🏋️';
+      case 'workout_inactivity':
         return '🏋️';
       default:
         return '📢';

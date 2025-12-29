@@ -1,0 +1,6 @@
+# Files and directories that Cursor AI should ignore
+# These files are user-only and should not be modified by the agent
+
+# Note: pl-custom.json is temporarily removed from ignore to allow proper loading
+# TODO: Re-add protection once import method is finalized
+

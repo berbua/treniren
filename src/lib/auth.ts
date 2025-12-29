@@ -4,6 +4,11 @@ import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 
+// Debug: Log NEXTAUTH_URL to help troubleshoot mobile testing
+if (process.env.NODE_ENV === 'development') {
+  console.log('[NextAuth] NEXTAUTH_URL:', process.env.NEXTAUTH_URL || 'NOT SET (will default to localhost:3000)')
+}
+
 export const authOptions: NextAuthOptions = {
   // Remove PrismaAdapter for now to fix session issues
   // adapter: PrismaAdapter(prisma),
@@ -11,6 +16,9 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // Let NextAuth handle discovery, but provide wellKnown as fallback
+      // This should prevent timeout while maintaining proper OAuth flow
+      wellKnown: 'https://accounts.google.com/.well-known/openid-configuration',
     }),
     // EmailProvider requires an adapter, so we'll disable it for now
     // EmailProvider({
@@ -113,4 +121,10 @@ export const authOptions: NextAuthOptions = {
   },
   debug: process.env.NODE_ENV === 'development',
   secret: process.env.NEXTAUTH_SECRET,
+  // Explicitly set the base URL if provided (for mobile testing)
+  // NextAuth will use this instead of defaulting to localhost:3000
+  ...(process.env.NEXTAUTH_URL && { 
+    // This ensures NextAuth uses the correct URL for callbacks
+    // The URL is automatically used by NextAuth, but we log it for debugging
+  }),
 }

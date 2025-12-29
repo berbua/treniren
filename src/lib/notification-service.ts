@@ -3,7 +3,7 @@
 
 export interface NotificationMessage {
   id: string;
-  type: 'cycle_reminder' | 'cycle_overdue' | 'workout_reminder' | 'general';
+  type: 'cycle_reminder' | 'cycle_overdue' | 'workout_reminder' | 'workout_inactivity' | 'general';
   title: string;
   message: string;
   actionButton?: {
@@ -22,6 +22,8 @@ export interface NotificationSettings {
   cycleOverdueEnabled: boolean;
   latePeriodNotificationsEnabled: boolean;
   workoutRemindersEnabled: boolean;
+  workoutInactivityEnabled: boolean;
+  workoutInactivityDays: number;
 }
 
 class NotificationService {
@@ -207,7 +209,9 @@ class NotificationService {
       cycleRemindersEnabled: true,
       cycleOverdueEnabled: true,
       latePeriodNotificationsEnabled: true,
-      workoutRemindersEnabled: false
+      workoutRemindersEnabled: false,
+      workoutInactivityEnabled: false,
+      workoutInactivityDays: 3
     };
   }
 

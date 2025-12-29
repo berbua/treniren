@@ -154,7 +154,7 @@ export default function EventsPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
               Events
@@ -165,7 +165,7 @@ export default function EventsPage() {
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            className="mt-4 lg:mt-0 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-full lg:w-auto"
           >
             <span>➕</span>
             <span>Add Event</span>

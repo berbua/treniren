@@ -18,7 +18,6 @@ function ProfilePageContent() {
 
   const handlePhotoUpdate = (photoUrl: string | null) => {
     // Photo update is handled within the UserProfile component
-    console.log('Photo updated:', photoUrl)
   }
 
   return (

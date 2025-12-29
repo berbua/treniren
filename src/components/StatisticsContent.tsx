@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { statisticsService, StatisticsData, TimeFrame } from '@/lib/statistics-service';
-import { Workout, Tag } from '@/types/workout';
+import { Workout, Tag, WorkoutType } from '@/types/workout';
 import { Event } from '@/types/event';
 import { useCycle } from '@/contexts/CycleContext';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
@@ -18,6 +18,7 @@ export const StatisticsContent = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [gratitudeFilter, setGratitudeFilter] = useState<'all' | 'gratitude' | 'improvements'>('all');
 
   // Load data
   useEffect(() => {
@@ -107,10 +108,46 @@ export const StatisticsContent = () => {
     return volume.replace('TR', 'TR ');
   };
 
+  const getTrainingTypeLabel = (type: WorkoutType) => {
+    const typeMap: Record<WorkoutType, string> = {
+      'GYM': 'gym',
+      'BOULDERING': 'bouldering',
+      'CIRCUITS': 'circuits',
+      'LEAD_ROCK': 'leadRock',
+      'LEAD_ARTIFICIAL': 'leadArtificial',
+      'MENTAL_PRACTICE': 'mentalPractice',
+      'FINGERBOARD': 'fingerboard',
+    };
+    return t(`training.types.${typeMap[type]}`) || type;
+  };
+
+  // Filter workouts with gratitude/improvements based on timeframe
+  const filteredGratitudeWorkouts = useMemo(() => {
+    if (!statsData) return [];
+    
+    const timeRange = statisticsService.getTimeRange(timeframe);
+    const workoutsInRange = workouts.filter(workout => {
+      const workoutDate = new Date(workout.startTime);
+      return workoutDate >= timeRange.start && workoutDate <= timeRange.end;
+    });
+
+    const workoutsWithGratitude = workoutsInRange
+      .filter((w: Workout) => w.gratitude || w.improvements)
+      .sort((a: Workout, b: Workout) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+
+    if (gratitudeFilter === 'gratitude') {
+      return workoutsWithGratitude.filter(w => w.gratitude);
+    }
+    if (gratitudeFilter === 'improvements') {
+      return workoutsWithGratitude.filter(w => w.improvements);
+    }
+    return workoutsWithGratitude;
+  }, [workouts, timeframe, statsData, gratitudeFilter, t]);
+
   return (
     <div className="bg-uc-dark-bg rounded-2xl shadow-lg border border-uc-purple/20">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-uc-purple/20">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-6 border-b border-uc-purple/20">
         <div className="flex items-center space-x-3">
           <h2 className="text-2xl font-bold text-uc-text-light">
             📊 {t('stats.title')}
@@ -121,7 +158,7 @@ export const StatisticsContent = () => {
         </div>
         
         {/* Timeframe Selector */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 mt-4 lg:mt-0">
           <label className="text-sm font-medium text-uc-text-light">
             {t('stats.timeframe')}:
           </label>
@@ -513,6 +550,158 @@ export const StatisticsContent = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Gratitude & Improvements */}
+            {filteredGratitudeWorkouts.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-uc-text-light mb-4">
+                  🙏 {t('strongMind.gratitudeAndImprovements') || 'Gratitude & Improvements'}
+                </h3>
+                <p className="text-uc-text-muted mb-4 text-sm">
+                  {t('strongMind.gratitudeAndImprovementsDescription') || 'Reflect on your recent workouts and what you\'re grateful for, and what you want to improve.'}
+                </p>
+
+                {/* Filter buttons */}
+                <div className="flex space-x-2 mb-6">
+                  <button
+                    onClick={() => setGratitudeFilter('all')}
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors text-sm ${
+                      gratitudeFilter === 'all'
+                        ? 'bg-uc-mustard text-uc-black shadow-lg'
+                        : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
+                    }`}
+                  >
+                    {t('common.all') || 'All'}
+                  </button>
+                  <button
+                    onClick={() => setGratitudeFilter('gratitude')}
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors text-sm ${
+                      gratitudeFilter === 'gratitude'
+                        ? 'bg-yellow-500 text-uc-black shadow-lg'
+                        : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
+                    }`}
+                  >
+                    ✨ {t('strongMind.gratitude') || 'Gratitude'}
+                  </button>
+                  <button
+                    onClick={() => setGratitudeFilter('improvements')}
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors text-sm ${
+                      gratitudeFilter === 'improvements'
+                        ? 'bg-orange-500 text-uc-black shadow-lg'
+                        : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
+                    }`}
+                  >
+                    📈 {t('strongMind.improvements') || 'Improvements'}
+                  </button>
+                </div>
+
+                {/* Gratitude Tiles */}
+                {(gratitudeFilter === 'all' || gratitudeFilter === 'gratitude') && (
+                  <div className="mb-8">
+                    <h4 className="text-md font-semibold text-uc-text-light mb-4">
+                      ✨ {t('strongMind.gratefulFor') || 'Gratitude Thoughts'}
+                    </h4>
+                    {filteredGratitudeWorkouts.filter(w => w.gratitude).length === 0 ? (
+                      <div className="bg-uc-black/30 p-6 rounded-xl border border-uc-purple/10 text-center">
+                        <p className="text-uc-text-muted text-sm">
+                          {t('strongMind.noGratitudeEntries') || 'No gratitude entries in this timeframe.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredGratitudeWorkouts.filter(w => w.gratitude).map((workout) => (
+                          <div key={workout.id} className="bg-uc-black/50 p-6 rounded-xl border border-yellow-500/20 hover:border-yellow-500/40 transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h5 className="text-lg font-semibold text-uc-text-light">
+                                  {new Date(workout.startTime).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </h5>
+                                <div className="flex items-center gap-2 flex-wrap mt-1">
+                                  <p className="text-sm text-uc-text-muted">
+                                    {getTrainingTypeLabel(workout.type)}
+                                  </p>
+                                  {workout.sector && (
+                                    <>
+                                      <span className="text-uc-text-muted">•</span>
+                                      <p className="text-sm text-uc-text-muted">
+                                        📍 {workout.sector}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                              <p className="text-uc-text-light text-sm whitespace-pre-wrap">
+                                {workout.gratitude}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Improvements Tiles */}
+                {(gratitudeFilter === 'all' || gratitudeFilter === 'improvements') && (
+                  <div>
+                    <h4 className="text-md font-semibold text-uc-text-light mb-4">
+                      📈 {t('strongMind.improvements') || 'Improvements for Next Time'}
+                    </h4>
+                    {filteredGratitudeWorkouts.filter(w => w.improvements).length === 0 ? (
+                      <div className="bg-uc-black/30 p-6 rounded-xl border border-uc-purple/10 text-center">
+                        <p className="text-uc-text-muted text-sm">
+                          {t('strongMind.noImprovementsEntries') || 'No improvement entries in this timeframe.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredGratitudeWorkouts.filter(w => w.improvements).map((workout) => (
+                          <div key={`improvements-${workout.id}`} className="bg-uc-black/50 p-6 rounded-xl border border-orange-500/20 hover:border-orange-500/40 transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h5 className="text-lg font-semibold text-uc-text-light">
+                                  {new Date(workout.startTime).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </h5>
+                                <div className="flex items-center gap-2 flex-wrap mt-1">
+                                  <p className="text-sm text-uc-text-muted">
+                                    {getTrainingTypeLabel(workout.type)}
+                                  </p>
+                                  {workout.sector && (
+                                    <>
+                                      <span className="text-uc-text-muted">•</span>
+                                      <p className="text-sm text-uc-text-muted">
+                                        📍 {workout.sector}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                              <p className="text-uc-text-light text-sm whitespace-pre-wrap">
+                                {workout.improvements}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

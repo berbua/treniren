@@ -16,10 +16,54 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 import enTranslations from '../../messages/en.json'
 import plTranslations from '../../messages/pl.json'
 
+// Import custom Polish translations (user-only file)
+// Using static import - Next.js will bundle this at build time
+// @ts-ignore - File exists and is valid JSON
+import plCustomTranslationsRaw from '../../messages/pl-custom.json'
+
+// Type assertion for custom translations
+const plCustomTranslations = plCustomTranslationsRaw as Record<string, unknown>
+
+// Debug: Log if custom translations are loaded (development only)
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  console.log('Custom Polish translations loaded:', Object.keys(plCustomTranslations).filter(k => !k.startsWith('_')).length, 'sections')
+}
+
+// Deep merge function to combine standard and custom translations
+// Custom translations take precedence over standard ones
+// Ignores keys starting with "_" (comments/documentation)
+function deepMerge<T extends Record<string, unknown>>(
+  target: T,
+  source: Partial<T>
+): T {
+  const output = { ...target }
+  
+  for (const key in source) {
+    // Skip comment/documentation keys (starting with _)
+    if (key.startsWith('_')) {
+      continue
+    }
+    
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      output[key] = deepMerge(
+        (target[key] as Record<string, unknown>) || {},
+        source[key] as Record<string, unknown>
+      ) as T[Extract<keyof T, string>]
+    } else if (source[key] !== undefined) {
+      output[key] = source[key] as T[Extract<keyof T, string>]
+    }
+  }
+  
+  return output
+}
+
+// Merge standard Polish with custom Polish (custom takes precedence)
+const mergedPolishTranslations = deepMerge(plTranslations, plCustomTranslations)
+
 // Load translations from JSON files
 const translations: Record<Language, Record<string, unknown>> = {
   en: enTranslations,
-  pl: plTranslations
+  pl: mergedPolishTranslations
 }
 
 
@@ -46,37 +90,30 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   // Load language from localStorage on client side only
   useEffect(() => {
-    console.log('Language context: Initializing client side') // Debug log
     setIsClient(true)
     if (typeof window !== 'undefined') {
       const savedLanguage = localStorage.getItem('language') as Language
-      console.log('Language context: Saved language from localStorage:', savedLanguage) // Debug log
       if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'pl')) {
         setLanguageState(savedLanguage)
-        console.log('Language context: Set language to:', savedLanguage) // Debug log
       }
       setIsInitialized(true)
-      console.log('Language context: Initialization complete') // Debug log
     }
   }, [])
 
   const setLanguage = (lang: Language) => {
-    console.log('Language switcher: Setting language to', lang, 'isInitialized:', isInitialized) // Debug log
     if (!isInitialized) {
-      console.log('Language switcher: Context not initialized yet, skipping language change') // Debug log
       return
     }
     setLanguageState(lang)
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', lang)
-      console.log('Language switcher: Saved to localStorage', lang) // Debug log
     }
   }
 
   const t = (key: string): string => {
     const result = getNestedTranslation(translations[language], key)
-    // Debug log for translation issues
-    if (result === key && key.startsWith('strongMind.')) {
+    // Debug log for translation issues (development only)
+    if (process.env.NODE_ENV === 'development' && result === key && key.startsWith('strongMind.')) {
       console.log(`Translation missing for key: ${key}, language: ${language}`)
     }
     return result

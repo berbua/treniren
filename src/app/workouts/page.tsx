@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { Workout, WorkoutFormData, Tag } from '@/types/workout'
+import { Workout, WorkoutFormData, Tag, Exercise } from '@/types/workout'
 import { Event, EventFormData } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
 import AuthGuard from '@/components/AuthGuard'
@@ -33,6 +33,7 @@ function WorkoutsPageContent() {
   const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
+  const [availableExercises, setAvailableExercises] = useState<Exercise[]>([])
   const [showInfo, setShowInfo] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -75,6 +76,37 @@ function WorkoutsPageContent() {
     }
   }
 
+  // Fetch exercises
+  const fetchExercises = async () => {
+    try {
+      const response = await fetch('/api/exercises')
+      if (response.ok) {
+        const data = await response.json()
+        setAvailableExercises(data)
+      }
+    } catch (error) {
+      console.error('Error fetching exercises:', error)
+    }
+  }
+
+  // Create exercise
+  const handleCreateExercise = async (name: string, category?: string, defaultUnit?: string): Promise<Exercise> => {
+    const response = await fetch('/api/exercises', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, category, defaultUnit: defaultUnit || 'kg' }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+      throw new Error(error.error || 'Failed to create exercise')
+    }
+
+    const newExercise = await response.json()
+    await fetchExercises() // Refresh list
+    return newExercise
+  }
+
   // Create workout
   const createWorkout = async (workoutData: WorkoutFormData) => {
     if (isSubmitting) return // Prevent double submission
@@ -90,9 +122,14 @@ function WorkoutsPageContent() {
       if (response.ok) {
         await fetchWorkouts()
         setShowForm(false)
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Error creating workout:', errorData)
+        alert(`Failed to create workout: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error creating workout:', error)
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to create workout'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -264,7 +301,7 @@ function WorkoutsPageContent() {
 
   useEffect(() => {
     const fetchAllData = async () => {
-      await Promise.all([fetchWorkouts(), fetchEvents(), fetchTags()])
+      await Promise.all([fetchWorkouts(), fetchEvents(), fetchTags(), fetchExercises()])
       setLoading(false)
     }
     fetchAllData()
@@ -277,7 +314,7 @@ function WorkoutsPageContent() {
   return (
     <div className="min-h-screen bg-uc-black">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-uc-text-light">
               {t('workouts.title')}
@@ -286,7 +323,7 @@ function WorkoutsPageContent() {
               {t('workouts.description')}
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 mt-4 lg:mt-0">
             <button
               onClick={() => setShowInfo(!showInfo)}
               className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-uc-dark-bg/50 hover:bg-uc-dark-bg transition-colors border border-uc-purple/20"
@@ -502,6 +539,8 @@ function WorkoutsPageContent() {
             availableTags={availableTags}
             onCreateTag={handleCreateTag}
             isSubmitting={isSubmitting}
+            availableExercises={availableExercises}
+            onCreateExercise={handleCreateExercise}
           />
         )}
 

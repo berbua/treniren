@@ -52,15 +52,15 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-4 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-4 sm:space-y-8">
         <div>
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
               🦄
             </div>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-slate-50">
+          <h2 className="mt-2 sm:mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-slate-50">
             {t('auth.signIn') || 'Sign in to your account'}
           </h2>
           <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-300">
@@ -71,7 +71,7 @@ export default function LoginForm() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-4 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
               <div className="text-sm text-red-800 dark:text-red-200">{error}</div>

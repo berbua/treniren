@@ -18,6 +18,7 @@ enum WorkoutType {
   LEAD_ROCK
   LEAD_ARTIFICIAL
   MENTAL_PRACTICE
+  FINGERBOARD
 }
 
 enum TrainingVolume {
@@ -90,6 +91,17 @@ enum Formation {
   STRONG_OVERHANG
 }
 
+enum HandType {
+  ONE_HAND
+  BOTH_HANDS
+}
+
+enum GripType {
+  OPEN_HAND
+  CRIMP
+  SLOPER
+}
+
 // Models
 model User {
   id            String    @id @default(cuid())
@@ -114,6 +126,10 @@ model User {
   exercises     Exercise[]
   events        Event[]
   tags          Tag[]
+  routines      Routine[]
+  fingerboardProtocols FingerboardProtocol[]
+  fingerboardTestingProtocols FingerboardTestingProtocol[]
+  fingerboardTestResults FingerboardTestResult[]
 
   @@map("users")
 }
@@ -170,6 +186,10 @@ model UserProfile {
   cycleAvgLengthDays Int       @default(28)
   lastPeriodDate     DateTime?
   timezone           String    @default("Europe/Warsaw")
+  // Test reminder settings
+  testReminderEnabled Boolean  @default(false)
+  testReminderInterval Int?    // Number (1-12)
+  testReminderUnit     String? // "days", "weeks", "months"
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -225,6 +245,7 @@ model Workout {
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   workoutExercises WorkoutExercise[]
   workoutTags      WorkoutTag[]
+  fingerboardHangs FingerboardWorkoutHang[]
 
   @@map("workouts")
 }
@@ -270,6 +291,7 @@ model Exercise {
   // Relations
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   workoutExercises WorkoutExercise[]
+  routineExercises RoutineExercise[]
 
   @@map("exercises")
 }
@@ -358,4 +380,169 @@ model EventTag {
 
   @@id([eventId, tagId])
   @@map("event_tags")
+}
+
+model Routine {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  routineExercises RoutineExercise[]
+  variations       RoutineVariation[]
+
+  @@map("routines")
+}
+
+model RoutineExercise {
+  id         String @id @default(cuid())
+  routineId  String
+  exerciseId String
+  order      Int
+  notes      String?
+
+  // Relations
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([routineId, exerciseId])
+  @@map("routine_exercises")
+}
+
+model RoutineVariation {
+  id                String   @id @default(cuid())
+  routineId         String
+  name              String
+  description       String?
+  defaultSets       Int?
+  defaultRepRangeMin Int?
+  defaultRepRangeMax Int?
+  defaultRIR        Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  @@map("routine_variations")
+}
+
+model FingerboardProtocol {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hangs FingerboardProtocolHang[]
+
+  @@map("fingerboard_protocols")
+}
+
+model FingerboardProtocolHang {
+  id                String   @id @default(cuid())
+  protocolId        String
+  order             Int
+  handType          HandType
+  gripType          GripType
+  crimpSize         Int? // crimp size in mm (only used when gripType is CRIMP)
+  customDescription String? // optional custom description
+  defaultLoad       Float? // kg to add
+  defaultUnload      Float? // kg to remove
+  defaultReps       Int?
+  defaultTimeSeconds Int? // hang duration in seconds
+  notes             String?
+
+  // Relations
+  protocol FingerboardProtocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+
+  @@map("fingerboard_protocol_hangs")
+}
+
+model FingerboardWorkoutHang {
+  id            String   @id @default(cuid())
+  workoutId    String
+  order         Int
+  handType      HandType
+  gripType      GripType
+  crimpSize     Int? // crimp size in mm (only used when gripType is CRIMP)
+  customDescription String? // optional custom description
+  load          Float? // actual kg added
+  unload        Float? // actual kg removed
+  reps          Int? // actual reps
+  timeSeconds   Int? // actual time in seconds
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  @@map("fingerboard_workout_hangs")
+}
+
+model FingerboardTestingProtocol {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testHangs FingerboardTestHang[]
+  testResults FingerboardTestResult[]
+
+  @@map("fingerboard_testing_protocols")
+}
+
+model FingerboardTestHang {
+  id                String   @id @default(cuid())
+  protocolId        String
+  order             Int
+  handType          HandType
+  gripType          GripType
+  crimpSize         Int? // crimp size in mm (only used when gripType is CRIMP)
+  customDescription String? // optional custom description
+  targetLoad        Float? // optional target load for testing
+  targetTimeSeconds Int? // optional target time for testing
+  notes             String?
+
+  // Relations
+  protocol FingerboardTestingProtocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  testResults FingerboardTestResult[]
+
+  @@map("fingerboard_test_hangs")
+}
+
+model FingerboardTestResult {
+  id            String   @id @default(cuid())
+  protocolId    String
+  testHangId    String // which hang from protocol
+  userId        String
+  date          DateTime
+  handType      HandType
+  gripType      GripType
+  crimpSize     Int? // crimp size in mm (only used when gripType is CRIMP)
+  customDescription String? // optional custom description
+  load          Float? // actual kg added
+  unload        Float? // actual kg removed
+  timeSeconds   Int? // actual time hung (seconds)
+  success       Boolean? // did they complete the hang?
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  protocol FingerboardTestingProtocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  testHang FingerboardTestHang @relation(fields: [testHangId], references: [id], onDelete: Cascade)
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fingerboard_test_results")
 }

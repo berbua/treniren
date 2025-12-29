@@ -27,12 +27,24 @@ export async function GET(
         workoutExercises: {
           include: {
             exercise: true,
-            sets: true,
+            sets: {
+              orderBy: {
+                setNumber: 'asc',
+              },
+            },
+          },
+          orderBy: {
+            order: 'asc',
           },
         },
         workoutTags: {
           include: {
             tag: true,
+          },
+        },
+        fingerboardHangs: {
+          orderBy: {
+            order: 'asc',
           },
         },
       },
@@ -135,12 +147,24 @@ export async function PUT(
         workoutExercises: {
           include: {
             exercise: true,
-            sets: true,
+            sets: {
+              orderBy: {
+                setNumber: 'asc',
+              },
+            },
+          },
+          orderBy: {
+            order: 'asc',
           },
         },
         workoutTags: {
           include: {
             tag: true,
+          },
+        },
+        fingerboardHangs: {
+          orderBy: {
+            order: 'asc',
           },
         },
       },

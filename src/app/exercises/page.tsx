@@ -1,0 +1,179 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import AuthGuard from '@/components/AuthGuard'
+import { Exercise } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
+import ExerciseForm from '@/components/ExerciseForm'
+import { ExerciseLibrary } from '@/components/ExerciseLibrary'
+
+export default function ExercisesPage() {
+  return (
+    <AuthGuard>
+      <ExercisesPageContent />
+    </AuthGuard>
+  )
+}
+
+function ExercisesPageContent() {
+  const { t } = useLanguage()
+  const [exercises, setExercises] = useState<Exercise[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+
+  // Fetch exercises
+  useEffect(() => {
+    fetchExercises()
+  }, [])
+
+  const fetchExercises = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/exercises')
+      if (response.ok) {
+        const data = await response.json()
+        setExercises(data)
+      }
+    } catch (error) {
+      console.error('Error fetching exercises:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateExercise = () => {
+    setEditingExercise(null)
+    setShowForm(true)
+  }
+
+  const handleEditExercise = (exercise: Exercise) => {
+    setEditingExercise(exercise)
+    setShowForm(true)
+  }
+
+  const handleDeleteExercise = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this exercise? This will also remove it from all workouts.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/exercises/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        await fetchExercises()
+      } else {
+        const error = await response.json()
+        alert(`Failed to delete exercise: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error deleting exercise:', error)
+      alert('Failed to delete exercise')
+    }
+  }
+
+  const handleFormSubmit = async (exerciseData: { name: string; category?: string; defaultUnit: string }) => {
+    try {
+      const url = editingExercise ? `/api/exercises/${editingExercise.id}` : '/api/exercises'
+      const method = editingExercise ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(exerciseData),
+      })
+
+      if (response.ok) {
+        await fetchExercises()
+        setShowForm(false)
+        setEditingExercise(null)
+      } else {
+        const error = await response.json()
+        alert(`Failed to ${editingExercise ? 'update' : 'create'} exercise: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error saving exercise:', error)
+      alert(`Failed to ${editingExercise ? 'update' : 'create'} exercise`)
+    }
+  }
+
+  // Get unique categories
+  const categories = ['all', ...Array.from(new Set(exercises.map(e => e.category).filter(Boolean) as string[]))]
+
+  // Filter exercises
+  const filteredExercises = exercises.filter(exercise => {
+    const matchesSearch = exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === 'all' || exercise.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  if (loading) {
+    return <LoadingSpinner message="Loading exercises..." fullScreen />
+  }
+
+  return (
+    <div className="min-h-screen bg-uc-black">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="mb-4">
+            <h1 className="text-3xl font-bold text-uc-text-light">
+              💪 {t('exercises.title') || 'Exercise Library'}
+            </h1>
+            <p className="text-uc-text-muted mt-2">
+              {t('exercises.subtitle') || 'Manage your exercise library and track your progress'}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/routines"
+              className="bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 sm:px-6 py-3 rounded-xl font-medium transition-colors border border-uc-purple/20 flex items-center space-x-2 whitespace-nowrap"
+            >
+              <span>👯</span>
+              <span>{t('exercises.addRoutine') || 'Add Routine'}</span>
+            </Link>
+            <button
+              onClick={handleCreateExercise}
+              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 sm:px-6 py-3 rounded-xl font-medium transition-colors shadow-lg flex items-center space-x-2 whitespace-nowrap"
+            >
+              <span>➕</span>
+              <span>{t('exercises.addExercise') || 'Add Exercise'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Exercise Library Component */}
+        <ExerciseLibrary
+          exercises={filteredExercises}
+          onEdit={handleEditExercise}
+          onDelete={handleDeleteExercise}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          categories={categories}
+          onQuickAdd={handleFormSubmit}
+        />
+
+        {/* Exercise Form Modal */}
+        {showForm && (
+          <ExerciseForm
+            exercise={editingExercise}
+            onSubmit={handleFormSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingExercise(null)
+            }}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
