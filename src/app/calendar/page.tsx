@@ -11,7 +11,6 @@ import TrainingTypeFilter from '@/components/TrainingTypeFilter'
 import AuthGuard from '@/components/AuthGuard'
 import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
 import EventForm from '@/components/EventForm'
-import RecurringWorkoutModal from '@/components/RecurringWorkoutModal'
 
 type ViewMode = 'week' | 'month'
 type FilterType = 'workouts' | 'events'
