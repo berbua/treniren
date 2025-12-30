@@ -69,11 +69,11 @@ function getPhaseInfo(cycleDay: number) {
       phase: 'menstrual' as CyclePhase,
       description: 'menstrual',
       recommendations: [
-        'Maintain activity while reducing intensity',
-        'Work on technique and mobility',
-        'Reduce volume and increase rest between attempts',
-        'Focus on sub-maximal strength training (70-90%)',
-        'Consider planning a recovery week'
+        'cycle.recommendations.menstrual.1',
+        'cycle.recommendations.menstrual.2',
+        'cycle.recommendations.menstrual.3',
+        'cycle.recommendations.menstrual.4',
+        'cycle.recommendations.menstrual.5'
       ]
     }
   }
@@ -84,11 +84,11 @@ function getPhaseInfo(cycleDay: number) {
       phase: 'follicular' as CyclePhase,
       description: 'follicular',
       recommendations: [
-        'Optimal time for intense training',
-        'Focus on maximum strength sessions',
-        'Work on difficult projects and test limits',
-        'Good for hard bouldering and power training',
-        'Monitor your well-being and energy levels'
+        'cycle.recommendations.follicular.1',
+        'cycle.recommendations.follicular.2',
+        'cycle.recommendations.follicular.3',
+        'cycle.recommendations.follicular.4',
+        'cycle.recommendations.follicular.5'
       ]
     }
   }
@@ -99,11 +99,11 @@ function getPhaseInfo(cycleDay: number) {
       phase: 'ovulation' as CyclePhase,
       description: 'ovulation',
       recommendations: [
-        'Maximize power while taking care of joints',
-        'Reach peak level of intensity if feeling strong',
-        'Long warm-up and caution with dynamic moves',
-        'Higher injury risk - focus on training load and recovery',
-        'Tackle difficult projects but don\'t force joints'
+        'cycle.recommendations.ovulation.1',
+        'cycle.recommendations.ovulation.2',
+        'cycle.recommendations.ovulation.3',
+        'cycle.recommendations.ovulation.4',
+        'cycle.recommendations.ovulation.5'
       ]
     }
   }
@@ -114,11 +114,11 @@ function getPhaseInfo(cycleDay: number) {
       phase: 'early-luteal' as CyclePhase,
       description: 'earlyLuteal',
       recommendations: [
-        'High intensity, low volume training',
-        'Focus on dynamic movements',
-        'Train intensely with fewer repetitions',
-        'Adjust intensity based on how you feel',
-        'Good time for strength endurance training'
+        'cycle.recommendations.earlyLuteal.1',
+        'cycle.recommendations.earlyLuteal.2',
+        'cycle.recommendations.earlyLuteal.3',
+        'cycle.recommendations.earlyLuteal.4',
+        'cycle.recommendations.earlyLuteal.5'
       ]
     }
   }
@@ -128,11 +128,11 @@ function getPhaseInfo(cycleDay: number) {
     phase: 'late-luteal' as CyclePhase,
     description: 'lateLuteal',
     recommendations: [
-      'Maintain training consistency without pressure',
-      'Good time for deload and calmer climbing',
-      'Focus on technique, execution, and tactics',
-      'Reduce strength load',
-      'Use for repeats and refining details'
+      'cycle.recommendations.lateLuteal.1',
+      'cycle.recommendations.lateLuteal.2',
+      'cycle.recommendations.lateLuteal.3',
+      'cycle.recommendations.lateLuteal.4',
+      'cycle.recommendations.lateLuteal.5'
     ]
   }
 }

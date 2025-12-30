@@ -19,7 +19,7 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
         <div className="flex items-center space-x-2">
           <span className="text-lg">🌸</span>
           <span className="font-medium text-slate-900 dark:text-slate-50">
-            Cycle Day {cycleInfo.currentDay}
+            {t('cycle.day') || 'Cycle Day'} {cycleInfo.currentDay}
           </span>
         </div>
         <div className="text-right">
@@ -28,7 +28,7 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
           </span>
           {cycleInfo.isInFertileWindow && (
             <div className="text-xs text-pink-600 dark:text-pink-400 font-medium mt-1">
-              💫 Fertile window
+              💫 {t('cycle.fertileWindow') || 'Fertile window'}
             </div>
           )}
         </div>
@@ -39,12 +39,12 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
           <div>
             <span className="font-medium">{t('common.nextPeriod') || 'Next period:'}</span>
             <br />
-            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][cycleInfo.nextPeriodDate.getMonth()]} {cycleInfo.nextPeriodDate.getDate()}
+            {cycleInfo.nextPeriodDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
           </div>
           <div>
             <span className="font-medium">{t('common.nextOvulation') || 'Next ovulation:'}</span>
             <br />
-            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][cycleInfo.nextOvulationDate.getMonth()]} {cycleInfo.nextOvulationDate.getDate()}
+            {cycleInfo.nextOvulationDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
           </div>
         </div>
       </div>
@@ -52,13 +52,13 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
       {showRecommendations && (
         <div className="mt-3">
           <h4 className="font-medium text-slate-900 dark:text-slate-50 mb-2">
-            Training Recommendations:
+            {t('cycle.trainingRecommendations') || 'Training Recommendations:'}
           </h4>
           <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
             {cycleInfo.trainingRecommendations.slice(0, 3).map((recommendation, index) => (
               <li key={index} className="flex items-start">
                 <span className="text-pink-500 mr-2 mt-0.5">•</span>
-                {recommendation}
+                {t(recommendation) || recommendation}
               </li>
             ))}
           </ul>

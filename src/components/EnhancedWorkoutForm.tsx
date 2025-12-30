@@ -86,6 +86,46 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     }
   }, [initialData?.startTime, defaultDate])
 
+  // Load goals from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedProcessGoals = localStorage.getItem('processGoals')
+      const storedProjectGoals = localStorage.getItem('projectGoals')
+      
+      if (storedProcessGoals) {
+        try {
+          const goals = JSON.parse(storedProcessGoals)
+          setProcessGoals(goals)
+        } catch (e) {
+          console.error('Error parsing process goals:', e)
+        }
+      }
+      
+      if (storedProjectGoals) {
+        try {
+          const goals = JSON.parse(storedProjectGoals)
+          setProjectGoals(goals)
+        } catch (e) {
+          console.error('Error parsing project goals:', e)
+        }
+      }
+    }
+  }, [])
+
+  // Load selected goals from initialData
+  useEffect(() => {
+    if (initialData?.mentalState) {
+      const processGoalIds = new Set(
+        initialData.mentalState.processGoals?.map((pg: any) => pg.goalId) || []
+      )
+      const projectGoalIds = new Set(
+        initialData.mentalState.projectGoals?.map((pg: any) => pg.goalId) || []
+      )
+      setSelectedProcessGoalIds(processGoalIds)
+      setSelectedProjectGoalIds(projectGoalIds)
+    }
+  }, [initialData])
+
   // Load exercises and fingerboard hangs from initialData
   useEffect(() => {
     if (initialData) {
@@ -157,6 +197,28 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGratitudeExpanded, setIsGratitudeExpanded] = useState(false);
+  const [isCycleExpanded, setIsCycleExpanded] = useState(false);
+  const [isGoalsExpanded, setIsGoalsExpanded] = useState(false);
+  const [processGoals, setProcessGoals] = useState<Array<{
+    id: string
+    timeframeValue: string
+    timeframeUnit: string
+    startDate: string
+    goalDescription: string
+    createdAt: string
+  }>>([]);
+  const [projectGoals, setProjectGoals] = useState<Array<{
+    id: string
+    climbingType: string
+    gradeSystem: string
+    routeGrade: string
+    routeName: string
+    sectorLocation: string
+    relatedProcessGoal: string
+    createdAt: string
+  }>>([]);
+  const [selectedProcessGoalIds, setSelectedProcessGoalIds] = useState<Set<string>>(new Set());
+  const [selectedProjectGoalIds, setSelectedProjectGoalIds] = useState<Set<string>>(new Set());
 
   // Calculate cycle info for the selected date
   const cycleInfoForSelectedDate = useMemo(() => {
@@ -205,13 +267,26 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       details.routineVariation = formData.routineVariation
     }
 
+    // Build mentalState with selected goals
+    const mentalState = {
+      ...formData.mentalState,
+      processGoals: Array.from(selectedProcessGoalIds).map(goalId => ({
+        goalId,
+        progress: formData.mentalState?.processGoals?.find((pg: any) => pg.goalId === goalId)?.progress || 1
+      })),
+      projectGoals: Array.from(selectedProjectGoalIds).map(goalId => ({
+        goalId,
+        completed: formData.mentalState?.projectGoals?.find((pg: any) => pg.goalId === goalId)?.completed || false
+      }))
+    }
+
     const workoutData: WorkoutFormData & { details?: any } = {
       type: formData.type,
       date: formData.date,
       trainingVolume: formData.trainingVolume,
       focusLevel: formData.focusLevel,
       notes: formData.notes,
-      mentalState: formData.mentalState,
+      mentalState,
       sector: formData.sector,
       mentalPracticeType: formData.mentalPracticeType,
       timeOfDay: formData.timeOfDay,
@@ -258,6 +333,24 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
         {/* Form Content */}
         <div className="p-6 overflow-y-auto max-h-[70vh]">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Date Selection - At the top */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                📅 {t('workouts.date') || 'Date'} *
+              </label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => updateFormData('date', e.target.value)}
+                className={`w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 ${
+                  errors.date ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
+                }`}
+              />
+              {errors.date && (
+                <p className="mt-2 text-sm text-red-600">{errors.date}</p>
+              )}
+            </div>
+
             {/* Workout Type Selection */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -301,32 +394,174 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               </div>
             )}
 
-            {/* Date Selection */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                📅 {t('workouts.date') || 'Date'} *
-              </label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => updateFormData('date', e.target.value)}
-                className={`w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 ${
-                  errors.date ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
-                }`}
-              />
-              {errors.date && (
-                <p className="mt-2 text-sm text-red-600">{errors.date}</p>
-              )}
-            </div>
+            {/* Cycle Info Display - Collapsible */}
+            {cycleInfoForSelectedDate && formData.type !== 'MENTAL_PRACTICE' && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                <button
+                  type="button"
+                  onClick={() => setIsCycleExpanded(!isCycleExpanded)}
+                  className="w-full flex items-center justify-between text-left p-4"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">🌸</span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-100">
+                        {t('workouts.labels.cycleInfo') || 'Cycle Information'}
+                      </h3>
+                      <p className="text-sm text-purple-700 dark:text-purple-300">
+                        {t('workouts.labels.cycleInfoDescription') || 'View your cycle information and recommendations'}
+                      </p>
+                    </div>
+                  </div>
+                  <svg
+                    className={`w-5 h-5 text-purple-600 dark:text-purple-400 transition-transform ${
+                      isCycleExpanded ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isCycleExpanded && (
+                  <div className="px-4 pb-4">
+                    <CycleInfoComponent 
+                      cycleInfo={cycleInfoForSelectedDate} 
+                      showRecommendations={true}
+                      isSelectedDate={true}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
-            {/* Cycle Info Display */}
-            {cycleInfoForSelectedDate && (
-              <div className={`p-4 bg-uc-purple/20 rounded-xl border border-uc-purple/30 ${formData.type === 'MENTAL_PRACTICE' ? 'hidden' : ''}`}>
-                <CycleInfoComponent 
-                  cycleInfo={cycleInfoForSelectedDate} 
-                  showRecommendations={true}
-                  isSelectedDate={true}
-                />
+            {/* Goals Section - Collapsible */}
+            {(processGoals.length > 0 || projectGoals.length > 0) && (
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                <button
+                  type="button"
+                  onClick={() => setIsGoalsExpanded(!isGoalsExpanded)}
+                  className="w-full flex items-center justify-between text-left p-4"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">🎯</span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
+                        {t('workouts.labels.goals') || 'Goals'}
+                      </h3>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                        {t('workouts.labels.goalsDescription') || 'Link this workout to your goals'}
+                        {selectedProcessGoalIds.size > 0 || selectedProjectGoalIds.size > 0 ? (
+                          <span className="ml-2 font-medium">
+                            ({selectedProcessGoalIds.size + selectedProjectGoalIds.size} {t('workouts.labels.selected') || 'selected'})
+                          </span>
+                        ) : null}
+                      </p>
+                    </div>
+                  </div>
+                  <svg
+                    className={`w-5 h-5 text-yellow-600 dark:text-yellow-400 transition-transform ${
+                      isGoalsExpanded ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isGoalsExpanded && (
+                  <div className="px-4 pb-4 space-y-4">
+                    {/* Process Goals */}
+                    {processGoals.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-3">
+                          🎯 {t('strongMind.processGoals') || 'Process Goals'}
+                        </label>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {processGoals.map(goal => (
+                            <label
+                              key={goal.id}
+                              className="flex items-start space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedProcessGoalIds.has(goal.id)}
+                                onChange={(e) => {
+                                  const newSet = new Set(selectedProcessGoalIds)
+                                  if (e.target.checked) {
+                                    newSet.add(goal.id)
+                                  } else {
+                                    newSet.delete(goal.id)
+                                  }
+                                  setSelectedProcessGoalIds(newSet)
+                                }}
+                                className="mt-1 w-4 h-4 text-yellow-600 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500 dark:focus:ring-yellow-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                              />
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                  {goal.timeframeValue} {t(`strongMind.${goal.timeframeUnit}`) || goal.timeframeUnit}: {goal.goalDescription}
+                                </div>
+                                {goal.startDate && (
+                                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                    {t('strongMind.startingFrom') || 'starting from'} {new Date(goal.startDate).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Project Goals */}
+                    {projectGoals.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-3">
+                          🏔️ {t('strongMind.projectGoals') || 'Project Goals'}
+                        </label>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {projectGoals.map(goal => (
+                            <label
+                              key={goal.id}
+                              className="flex items-start space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedProjectGoalIds.has(goal.id)}
+                                onChange={(e) => {
+                                  const newSet = new Set(selectedProjectGoalIds)
+                                  if (e.target.checked) {
+                                    newSet.add(goal.id)
+                                  } else {
+                                    newSet.delete(goal.id)
+                                  }
+                                  setSelectedProjectGoalIds(newSet)
+                                }}
+                                className="mt-1 w-4 h-4 text-yellow-600 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500 dark:focus:ring-yellow-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                              />
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                  {goal.routeGrade} {goal.routeName} - {goal.sectorLocation}
+                                </div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                  {goal.climbingType === 'route' ? '🧗‍♀️ Route' : '🧗 Boulder'} • {goal.gradeSystem}
+                                </div>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {processGoals.length === 0 && projectGoals.length === 0 && (
+                      <div className="text-center py-4 text-sm text-yellow-700 dark:text-yellow-300">
+                        {t('workouts.labels.noGoalsAvailable') || 'No goals available. Create goals in the Strong Mind section.'}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

@@ -29,6 +29,7 @@ function StrongMindPageContent() {
   const [timeframeUnit, setTimeframeUnit] = useState<string>('week')
   const [startDate, setStartDate] = useState<string>('')
   const [goalDescription, setGoalDescription] = useState<string>('')
+  const [editingProcessGoalId, setEditingProcessGoalId] = useState<string | null>(null)
   
   // Project goal form state
   const [climbingType, setClimbingType] = useState<string>('route')
@@ -37,6 +38,7 @@ function StrongMindPageContent() {
   const [routeName, setRouteName] = useState<string>('')
   const [sectorLocation, setSectorLocation] = useState<string>('')
   const [relatedProcessGoal, setRelatedProcessGoal] = useState<string>('')
+  const [editingProjectGoalId, setEditingProjectGoalId] = useState<string | null>(null)
   
   // Goals storage
   const [processGoals, setProcessGoals] = useState<Array<{
@@ -132,19 +134,38 @@ function StrongMindPageContent() {
   const handleAddGoal = () => {
     if (!goalDescription.trim()) return
     
-    const newGoal = {
-      id: `goal-${idCounter}`,
-      timeframeValue,
-      timeframeUnit,
-      startDate,
-      goalDescription,
-      createdAt: new Date().toISOString()
+    if (editingProcessGoalId) {
+      // Update existing goal
+      const updatedGoals = processGoals.map(goal => 
+        goal.id === editingProcessGoalId
+          ? {
+              ...goal,
+              timeframeValue,
+              timeframeUnit,
+              startDate,
+              goalDescription
+            }
+          : goal
+      )
+      setProcessGoals(updatedGoals)
+      localStorage.setItem('processGoals', JSON.stringify(updatedGoals))
+      setEditingProcessGoalId(null)
+    } else {
+      // Add new goal
+      const newGoal = {
+        id: `goal-${idCounter}`,
+        timeframeValue,
+        timeframeUnit,
+        startDate,
+        goalDescription,
+        createdAt: new Date().toISOString()
+      }
+      
+      const updatedGoals = [...processGoals, newGoal]
+      setProcessGoals(updatedGoals)
+      localStorage.setItem('processGoals', JSON.stringify(updatedGoals))
+      setIdCounter(prev => prev + 1)
     }
-    
-    const updatedGoals = [...processGoals, newGoal]
-    setProcessGoals(updatedGoals)
-    localStorage.setItem('processGoals', JSON.stringify(updatedGoals))
-    setIdCounter(prev => prev + 1)
     
     // Reset form
     setTimeframeValue('1')
@@ -153,24 +174,74 @@ function StrongMindPageContent() {
     setGoalDescription('')
   }
 
+  const handleEditProcessGoal = (goalId: string) => {
+    const goal = processGoals.find(g => g.id === goalId)
+    if (goal) {
+      setTimeframeValue(goal.timeframeValue)
+      setTimeframeUnit(goal.timeframeUnit)
+      setStartDate(goal.startDate)
+      setGoalDescription(goal.goalDescription)
+      setEditingProcessGoalId(goalId)
+      // Scroll to form
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handleDeleteProcessGoal = (goalId: string) => {
+    if (confirm(t('strongMind.deleteGoalConfirm') || 'Are you sure you want to delete this goal?')) {
+      const updatedGoals = processGoals.filter(g => g.id !== goalId)
+      setProcessGoals(updatedGoals)
+      localStorage.setItem('processGoals', JSON.stringify(updatedGoals))
+      if (editingProcessGoalId === goalId) {
+        setEditingProcessGoalId(null)
+        // Reset form
+        setTimeframeValue('1')
+        setTimeframeUnit('week')
+        setStartDate('')
+        setGoalDescription('')
+      }
+    }
+  }
+
   const handleAddRouteGoal = () => {
     if (!routeGrade || !routeName.trim() || !sectorLocation.trim()) return
     
-    const newProjectGoal = {
-      id: `project-${idCounter}`,
-      climbingType,
-      gradeSystem,
-      routeGrade,
-      routeName,
-      sectorLocation,
-      relatedProcessGoal,
-      createdAt: new Date().toISOString()
+    if (editingProjectGoalId) {
+      // Update existing goal
+      const updatedGoals = projectGoals.map(goal => 
+        goal.id === editingProjectGoalId
+          ? {
+              ...goal,
+              climbingType,
+              gradeSystem,
+              routeGrade,
+              routeName,
+              sectorLocation,
+              relatedProcessGoal
+            }
+          : goal
+      )
+      setProjectGoals(updatedGoals)
+      localStorage.setItem('projectGoals', JSON.stringify(updatedGoals))
+      setEditingProjectGoalId(null)
+    } else {
+      // Add new goal
+      const newProjectGoal = {
+        id: `project-${idCounter}`,
+        climbingType,
+        gradeSystem,
+        routeGrade,
+        routeName,
+        sectorLocation,
+        relatedProcessGoal,
+        createdAt: new Date().toISOString()
+      }
+      
+      const updatedGoals = [...projectGoals, newProjectGoal]
+      setProjectGoals(updatedGoals)
+      localStorage.setItem('projectGoals', JSON.stringify(updatedGoals))
+      setIdCounter(prev => prev + 1)
     }
-    
-    const updatedGoals = [...projectGoals, newProjectGoal]
-    setProjectGoals(updatedGoals)
-    localStorage.setItem('projectGoals', JSON.stringify(updatedGoals))
-    setIdCounter(prev => prev + 1)
     
     // Reset form
     setClimbingType('route')
@@ -179,6 +250,39 @@ function StrongMindPageContent() {
     setRouteName('')
     setSectorLocation('')
     setRelatedProcessGoal('')
+  }
+
+  const handleEditProjectGoal = (goalId: string) => {
+    const goal = projectGoals.find(g => g.id === goalId)
+    if (goal) {
+      setClimbingType(goal.climbingType)
+      setGradeSystem(goal.gradeSystem)
+      setRouteGrade(goal.routeGrade)
+      setRouteName(goal.routeName)
+      setSectorLocation(goal.sectorLocation)
+      setRelatedProcessGoal(goal.relatedProcessGoal)
+      setEditingProjectGoalId(goalId)
+      // Scroll to form
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handleDeleteProjectGoal = (goalId: string) => {
+    if (confirm(t('strongMind.deleteGoalConfirm') || 'Are you sure you want to delete this goal?')) {
+      const updatedGoals = projectGoals.filter(g => g.id !== goalId)
+      setProjectGoals(updatedGoals)
+      localStorage.setItem('projectGoals', JSON.stringify(updatedGoals))
+      if (editingProjectGoalId === goalId) {
+        setEditingProjectGoalId(null)
+        // Reset form
+        setClimbingType('route')
+        setRouteGrade('')
+        setGradeSystem('french')
+        setRouteName('')
+        setSectorLocation('')
+        setRelatedProcessGoal('')
+      }
+    }
   }
 
   // Get available grade systems based on climbing type
@@ -301,7 +405,7 @@ function StrongMindPageContent() {
           {/* Goal Creation Form */}
           <div className="bg-uc-black/50 p-6 rounded-xl border border-uc-purple/20 mb-6">
             <h3 className="text-lg font-medium text-uc-text-light mb-4">
-              ➕ {t('strongMind.addNewGoal') || 'Add New Goal'}
+              {editingProcessGoalId ? '✏️ ' + (t('strongMind.editGoal') || 'Edit Goal') : '➕ ' + (t('strongMind.addNewGoal') || 'Add New Goal')}
             </h3>
             
             <div className="space-y-4">
@@ -406,14 +510,28 @@ function StrongMindPageContent() {
                 />
               </div>
 
-              {/* Add Goal Button */}
-              <div className="flex justify-end">
+              {/* Add/Update Goal Button */}
+              <div className="flex justify-end gap-2">
+                {editingProcessGoalId && (
+                  <button 
+                    onClick={() => {
+                      setEditingProcessGoalId(null)
+                      setTimeframeValue('1')
+                      setTimeframeUnit('week')
+                      setStartDate('')
+                      setGoalDescription('')
+                    }}
+                    className="bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-2 rounded-xl font-medium transition-colors border border-uc-purple/20"
+                  >
+                    {t('common.cancel') || 'Cancel'}
+                  </button>
+                )}
                 <button 
                   onClick={handleAddGoal}
                   disabled={!goalDescription.trim() || !startDate}
                   className="bg-uc-mustard hover:bg-uc-mustard/90 disabled:bg-uc-text-muted disabled:cursor-not-allowed text-uc-black px-6 py-2 rounded-xl font-medium transition-colors shadow-lg"
                 >
-                  ➕ {t('strongMind.addGoal') || 'Add Goal'}
+                  {editingProcessGoalId ? '💾 ' + (t('common.save') || 'Save') : '➕ ' + (t('strongMind.addGoal') || 'Add Goal')}
                 </button>
               </div>
             </div>
@@ -453,9 +571,22 @@ function StrongMindPageContent() {
                             </span>
                           )}
                         </div>
-                        <button className="text-uc-text-muted hover:text-uc-alert text-sm">
-                          🗑️
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => handleEditProcessGoal(goal.id)}
+                            className="text-uc-text-muted hover:text-uc-purple text-sm"
+                            title={t('common.edit') || 'Edit'}
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteProcessGoal(goal.id)}
+                            className="text-uc-text-muted hover:text-uc-alert text-sm"
+                            title={t('common.delete') || 'Delete'}
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </div>
                       <p className="text-uc-text-light text-sm">{goal.goalDescription}</p>
                       <GoalProgressDisplay 
@@ -497,9 +628,22 @@ function StrongMindPageContent() {
                             </span>
                           )}
                         </div>
-                        <button className="text-uc-text-muted hover:text-uc-alert text-sm">
-                          🗑️
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => handleEditProcessGoal(goal.id)}
+                            className="text-uc-text-muted hover:text-uc-purple text-sm"
+                            title={t('common.edit') || 'Edit'}
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteProcessGoal(goal.id)}
+                            className="text-uc-text-muted hover:text-uc-alert text-sm"
+                            title={t('common.delete') || 'Delete'}
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </div>
                       <p className="text-uc-text-light text-sm">{goal.goalDescription}</p>
                       <GoalProgressDisplay 
@@ -689,7 +833,7 @@ function StrongMindPageContent() {
           {/* Project Goal Creation Form */}
           <div className="bg-uc-black/50 p-6 rounded-xl border border-uc-purple/20 mb-6">
             <h3 className="text-lg font-medium text-uc-text-light mb-4">
-              ➕ {t('strongMind.addNewProjectGoal') || 'Add New Project Goal'}
+              {editingProjectGoalId ? '✏️ ' + (t('strongMind.editProjectGoal') || 'Edit Project Goal') : '➕ ' + (t('strongMind.addNewProjectGoal') || 'Add New Project Goal')}
             </h3>
             
             <div className="space-y-4">
@@ -830,14 +974,30 @@ function StrongMindPageContent() {
                 </select>
               </div>
 
-              {/* Add Route Goal Button */}
-              <div className="flex justify-end">
+              {/* Add/Update Route Goal Button */}
+              <div className="flex justify-end gap-2">
+                {editingProjectGoalId && (
+                  <button 
+                    onClick={() => {
+                      setEditingProjectGoalId(null)
+                      setClimbingType('route')
+                      setRouteGrade('')
+                      setGradeSystem('french')
+                      setRouteName('')
+                      setSectorLocation('')
+                      setRelatedProcessGoal('')
+                    }}
+                    className="bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-2 rounded-xl font-medium transition-colors border border-uc-purple/20"
+                  >
+                    {t('common.cancel') || 'Cancel'}
+                  </button>
+                )}
                 <button 
                   onClick={handleAddRouteGoal}
                   disabled={!routeGrade || !routeName.trim() || !sectorLocation.trim()}
                   className="bg-uc-mustard hover:bg-uc-mustard/90 disabled:bg-uc-text-muted disabled:cursor-not-allowed text-uc-black px-6 py-2 rounded-xl font-medium transition-colors shadow-lg"
                 >
-                  ➕ {t('strongMind.addProjectGoal') || 'Add Project Goal'}
+                  {editingProjectGoalId ? '💾 ' + (t('common.save') || 'Save') : '➕ ' + (t('strongMind.addProjectGoal') || 'Add Project Goal')}
                 </button>
               </div>
             </div>
@@ -871,9 +1031,22 @@ function StrongMindPageContent() {
                           {goal.climbingType === 'boulder' ? 'Boulder' : 'Route'}
                         </span>
                       </div>
-                      <button className="text-uc-text-muted hover:text-uc-alert text-sm">
-                        🗑️
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => handleEditProjectGoal(goal.id)}
+                          className="text-uc-text-muted hover:text-uc-purple text-sm"
+                          title={t('common.edit') || 'Edit'}
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteProjectGoal(goal.id)}
+                          className="text-uc-text-muted hover:text-uc-alert text-sm"
+                          title={t('common.delete') || 'Delete'}
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                     <div className="mb-2">
                       <p className="text-uc-text-light text-sm font-medium">{goal.routeName}</p>

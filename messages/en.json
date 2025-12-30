@@ -354,6 +354,12 @@
       "type": "Workout Type",
       "date": "Date",
       "trainingVolume": "Training Volume",
+      "goals": "Goals",
+      "goalsDescription": "Mark  which goals this workout is related to",
+      "selected": "selected",
+      "noGoalsAvailable": "No goals available. Create goals in the Strong Mind section.",
+      "cycleInfo": "Cycle Information",
+      "cycleInfoDescription": "View your cycle information and recommendations",
       "mentalPracticeType": "Practice Type",
       "timeOfDay": "Time of Day",
       "morning": "Morning",
@@ -512,7 +518,46 @@
       "lateLuteal": "Late Luteal"
     },
     "day": "Cycle Day",
-    "selectedDate": "Selected Date:"
+    "selectedDate": "Selected Date:",
+    "fertileWindow": "Fertile window",
+    "trainingRecommendations": "Training Recommendations:",
+    "recommendations": {
+      "menstrual": {
+        "1": "Maintain activity while reducing intensity",
+        "2": "Work on technique and mobility",
+        "3": "Reduce volume and increase rest between attempts",
+        "4": "Focus on sub-maximal strength training (70-90%)",
+        "5": "Consider planning a recovery week"
+      },
+      "follicular": {
+        "1": "Optimal time for intense training",
+        "2": "Focus on maximum strength sessions",
+        "3": "Work on difficult projects and test limits",
+        "4": "Good for hard bouldering and power training",
+        "5": "Monitor your well-being and energy levels"
+      },
+      "ovulation": {
+        "1": "Maximize power while taking care of joints",
+        "2": "Reach peak level of intensity if feeling strong",
+        "3": "Long warm-up and caution with dynamic moves",
+        "4": "Higher injury risk - focus on training load and recovery",
+        "5": "Tackle difficult projects but don't force joints"
+      },
+      "earlyLuteal": {
+        "1": "High intensity, low volume training",
+        "2": "Focus on dynamic movements",
+        "3": "Train intensely with fewer repetitions",
+        "4": "Adjust intensity based on how you feel",
+        "5": "Good time for strength endurance training"
+      },
+      "lateLuteal": {
+        "1": "Maintain training consistency without pressure",
+        "2": "Good time for deload and calmer climbing",
+        "3": "Focus on technique, execution, and tactics",
+        "4": "Reduce strength load",
+        "5": "Use for repeats and refining details"
+      }
+    }
   },
   "features": {
     "calendarSync": "Calendar Sync",
@@ -816,7 +861,14 @@
     "addGradeGoal": "Add Grade Goal",
     "addAreaGoal": "Add Area Goal",
     "addNewGoal": "Add New Goal",
+    "editGoal": "Edit Goal",
+    "editProjectGoal": "Edit Project Goal",
+    "deleteGoalConfirm": "Are you sure you want to delete this goal?",
     "selectTimeframe": "Select Timeframe",
+    "linkedWorkouts": "Linked Workouts",
+    "achievementHistory": "Achievement History",
+    "progress": "Progress",
+    "achieved": "Achieved!",
     "goalDescription": "Goal Description",
     "goalPlaceholder": "Describe your goal in detail...",
     "existingGoals": "Existing Goals",

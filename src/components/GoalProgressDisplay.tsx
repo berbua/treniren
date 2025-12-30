@@ -71,25 +71,58 @@ export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgress
     );
   }
 
+  // Sort workouts by date (newest first)
+  const sortedWorkouts = [...relevantWorkouts].sort((a, b) => 
+    new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+  );
+
+  const getWorkoutTypeEmoji = (type: string) => {
+    const emojiMap: { [key: string]: string } = {
+      'GYM': '🏋️',
+      'BOULDERING': '🧗',
+      'CIRCUITS': '🔄',
+      'LEAD_ROCK': '🏔️',
+      'LEAD_ARTIFICIAL': '🧗‍♀️',
+      'MENTAL_PRACTICE': '🧘',
+      'FINGERBOARD': '🖐️',
+    };
+    return emojiMap[type] || '💪';
+  };
+
   return (
-    <div className="mt-2 p-2 bg-uc-black/20 rounded-lg">
-      <div className="text-xs text-uc-text-muted mb-2">
-        {goalType === 'process' ? 'Progress History:' : 'Achievement History:'}
+    <div className="mt-3 p-3 bg-uc-black/20 rounded-lg border border-uc-purple/20">
+      <div className="text-xs font-medium text-uc-text-light mb-3">
+        {goalType === 'process' 
+          ? (t('strongMind.linkedWorkouts') || 'Linked Workouts') 
+          : (t('strongMind.achievementHistory') || 'Achievement History')}
+        <span className="ml-2 text-uc-text-muted">({sortedWorkouts.length})</span>
       </div>
-      <div className="space-y-1">
-        {relevantWorkouts.map(workout => {
-          const date = new Date(workout.startTime).toLocaleDateString();
+      <div className="space-y-2">
+        {sortedWorkouts.map(workout => {
+          const date = new Date(workout.startTime);
+          const formattedDate = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          });
           
           if (goalType === 'process') {
             const progress = workout.mentalState?.processGoals?.find(pg => pg.goalId === goalId)?.progress;
             return (
-              <div key={workout.id} className="flex items-center justify-between text-xs">
-                <span className="text-uc-text-light">{date}</span>
-                <div className="flex space-x-1">
+              <div key={workout.id} className="flex items-center justify-between p-2 bg-uc-black/30 rounded border border-uc-purple/10">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm">{getWorkoutTypeEmoji(workout.type)}</span>
+                  <div>
+                    <div className="text-xs font-medium text-uc-text-light">{formattedDate}</div>
+                    <div className="text-xs text-uc-text-muted">{workout.type}</div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span className="text-xs text-uc-text-muted mr-2">{t('strongMind.progress') || 'Progress'}:</span>
                   {[1, 2, 3].map(level => (
                     <div
                       key={level}
-                      className={`w-4 h-4 rounded-full border text-xs flex items-center justify-center ${
+                      className={`w-5 h-5 rounded-full border text-xs flex items-center justify-center font-medium ${
                         progress && progress >= level
                           ? 'border-purple-500 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-200'
                           : 'border-slate-300 dark:border-slate-600 text-slate-400'
@@ -103,10 +136,18 @@ export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgress
             );
           } else {
             return (
-              <div key={workout.id} className="flex items-center space-x-2 text-xs">
-                <span className="text-uc-text-light">{date}</span>
-                <span className="text-yellow-500">🏆</span>
-                <span className="text-uc-text-muted">Achieved!</span>
+              <div key={workout.id} className="flex items-center justify-between p-2 bg-uc-black/30 rounded border border-yellow-500/20">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm">{getWorkoutTypeEmoji(workout.type)}</span>
+                  <div>
+                    <div className="text-xs font-medium text-uc-text-light">{formattedDate}</div>
+                    <div className="text-xs text-uc-text-muted">{workout.type}</div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-lg">🏆</span>
+                  <span className="text-xs text-yellow-500 font-medium">{t('strongMind.achieved') || 'Achieved!'}</span>
+                </div>
               </div>
             );
           }
