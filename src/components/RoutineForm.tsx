@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Routine, RoutineFormData, Exercise, RoutineExercise, RoutineVariation } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { LoadingSpinner } from './LoadingSpinner'
@@ -11,6 +12,7 @@ interface RoutineFormProps {
   onSubmit: (data: RoutineFormData) => void
   onCancel: () => void
   isSubmitting?: boolean
+  onRefreshExercises?: () => void
 }
 
 export default function RoutineForm({
@@ -19,19 +21,59 @@ export default function RoutineForm({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  onRefreshExercises,
 }: RoutineFormProps) {
   const { t } = useLanguage()
-  const [formData, setFormData] = useState<RoutineFormData>({
-    name: '',
-    description: '',
-    exercises: [],
-    variations: [],
+  const router = useRouter()
+  const STORAGE_KEY = 'routine-form-draft'
+  
+  // Load draft from localStorage if no routine is being edited
+  const loadDraft = (): RoutineFormData | null => {
+    if (routine || typeof window === 'undefined') return null
+    try {
+      const draft = localStorage.getItem(STORAGE_KEY)
+      if (draft) {
+        return JSON.parse(draft)
+      }
+    } catch (error) {
+      console.error('Error loading draft:', error)
+    }
+    return null
+  }
+
+  const [formData, setFormData] = useState<RoutineFormData>(() => {
+    if (routine) {
+      return {
+        name: routine.name,
+        description: routine.description || '',
+        exercises: [],
+        variations: [],
+      }
+    }
+    const draft = loadDraft()
+    return draft || {
+      name: '',
+      description: '',
+      exercises: [],
+      variations: [],
+    }
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showExerciseSelector, setShowExerciseSelector] = useState(false)
   const [showVariationForm, setShowVariationForm] = useState(false)
   const [editingVariationIndex, setEditingVariationIndex] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Save draft to localStorage on every change (only for new routines)
+  useEffect(() => {
+    if (!routine && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
+      } catch (error) {
+        console.error('Error saving draft:', error)
+      }
+    }
+  }, [formData, routine])
 
   useEffect(() => {
     if (routine) {
@@ -56,6 +98,26 @@ export default function RoutineForm({
     }
   }, [routine])
 
+  // Clear draft when form is successfully submitted
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateForm() || isSubmitting) {
+      return
+    }
+
+    // Clear draft before submitting
+    if (!routine && typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(STORAGE_KEY)
+      } catch (error) {
+        console.error('Error clearing draft:', error)
+      }
+    }
+
+    onSubmit(formData)
+  }
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
@@ -65,16 +127,6 @@ export default function RoutineForm({
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm() || isSubmitting) {
-      return
-    }
-
-    onSubmit(formData)
   }
 
   const handleAddExercise = (exercise: Exercise) => {
@@ -227,7 +279,13 @@ export default function RoutineForm({
               </label>
               <button
                 type="button"
-                onClick={() => setShowExerciseSelector(true)}
+                onClick={() => {
+                  // Refresh exercises if callback provided
+                  if (onRefreshExercises) {
+                    onRefreshExercises()
+                  }
+                  setShowExerciseSelector(true)
+                }}
                 className="bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 + {t('routines.form.addExercise') || 'Add Exercise'}
@@ -345,7 +403,17 @@ export default function RoutineForm({
           <div className="flex gap-4 pt-4 border-t border-uc-purple/20">
             <button
               type="button"
-              onClick={onCancel}
+              onClick={() => {
+                // Clear draft when canceling
+                if (!routine && typeof window !== 'undefined') {
+                  try {
+                    localStorage.removeItem(STORAGE_KEY)
+                  } catch (error) {
+                    console.error('Error clearing draft:', error)
+                  }
+                }
+                onCancel()
+              }}
               className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-3 rounded-xl font-medium transition-colors"
             >
               {t('routines.form.cancel') || 'Cancel'}
@@ -390,7 +458,30 @@ export default function RoutineForm({
                 />
                 <div className="max-h-64 overflow-y-auto space-y-2">
                   {filteredExercises.length === 0 ? (
-                    <p className="text-uc-text-muted text-center py-4">{t('routines.form.noExercisesFound') || 'No exercises found'}</p>
+                    <div className="text-center py-6 space-y-4">
+                      <p className="text-uc-text-muted">
+                        {availableExercises.length === 0
+                          ? (t('routines.form.noExercisesAvailable') || 'No exercises available')
+                          : (t('routines.form.noExercisesFound') || 'No exercises found')}
+                      </p>
+                      {availableExercises.length === 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-uc-text-muted">
+                            {t('routines.form.createExercisesFirst') || 'You need to create exercises first before adding them to a routine.'}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowExerciseSelector(false)
+                              router.push('/exercises')
+                            }}
+                            className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
+                          >
+                            {t('routines.form.goToExercises') || 'Go to Exercises'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     filteredExercises.map((exercise) => (
                       <button

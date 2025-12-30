@@ -281,6 +281,9 @@
       "selectExercise": "Select Exercise",
       "searchExercises": "Search exercises...",
       "noExercisesFound": "No exercises found",
+      "noExercisesAvailable": "No exercises available",
+      "createExercisesFirst": "You need to create exercises first before adding them to a routine.",
+      "goToExercises": "Go to Exercises",
       "unknownExercise": "Unknown Exercise",
       "variationForm": {
         "addTitle": "Add Variation",

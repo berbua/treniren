@@ -281,6 +281,9 @@
       "selectExercise": "Wybierz Ćwiczenie",
       "searchExercises": "Szukaj ćwiczeń...",
       "noExercisesFound": "Nie znaleziono ćwiczeń",
+      "noExercisesAvailable": "Brak dostępnych ćwiczeń",
+      "createExercisesFirst": "Najpierw musisz utworzyć ćwiczenia, zanim dodasz je do rutyny.",
+      "goToExercises": "Przejdź do Ćwiczeń",
       "unknownExercise": "Nieznane Ćwiczenie",
       "variationForm": {
         "addTitle": "Dodaj Wariację",

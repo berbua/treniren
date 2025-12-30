@@ -277,6 +277,7 @@ function RoutinesPageContent() {
             onSubmit={handleSubmitRoutine}
             onCancel={handleCancelForm}
             isSubmitting={isSubmitting}
+            onRefreshExercises={fetchExercises}
           />
         )}
       </div>

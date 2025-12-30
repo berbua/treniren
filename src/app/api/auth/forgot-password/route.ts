@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
     // TODO: Send email with reset link
     // For now, we'll just return success
     // SECURITY: Never log password reset tokens in production
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Password reset token for ${email}: ${token}`)
-      console.log(`Reset link: ${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`)
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log(`Password reset token for ${email}: ${token}`)
+    //   console.log(`Reset link: ${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`)
+    // }
 
     return NextResponse.json(
       { message: 'If the email exists, a password reset link has been sent' },
