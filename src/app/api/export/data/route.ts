@@ -333,7 +333,7 @@ export async function GET(request: NextRequest) {
         updatedAt: tag.updatedAt.toISOString()
       })),
       plans: plans.map(plan => {
-        const { planTags, workouts, ...planData } = plan;
+        const { planTags, ...planData } = plan;
         return {
           ...planData,
           date: plan.date.toISOString(),
