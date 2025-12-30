@@ -50,11 +50,12 @@ export function getCrimpSizeLabel(crimpSize: number | null | undefined): string 
   return `${crimpSize}mm`
 }
 
-export function formatHangDescription(handType: HandType, gripType: GripType, crimpSize?: number | null): string {
+export function formatHangDescription(handType: HandType, gripType: GripType, crimpSize?: number | null, customDescription?: string | null): string {
   const handLabel = getHandTypeLabel(handType)
   const gripLabel = getGripTypeLabel(gripType)
   const crimpLabel = gripType === 'CRIMP' && crimpSize ? ` • ${crimpSize}mm` : ''
-  return `${handLabel} • ${gripLabel}${crimpLabel}`
+  const customLabel = customDescription ? ` • ${customDescription}` : ''
+  return `${handLabel} • ${gripLabel}${crimpLabel}${customLabel}`
 }
 
 export function shouldShowCrimpSize(gripType: GripType): boolean {

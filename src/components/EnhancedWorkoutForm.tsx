@@ -11,10 +11,38 @@ import TagSelector from './TagSelector';
 import WorkoutExerciseTracker from './WorkoutExerciseTracker';
 import FingerboardHangTracker from './FingerboardHangTracker';
 
+// Extended Workout type that includes relations from API
+type WorkoutWithRelations = Workout & {
+  workoutExercises?: Array<{
+    id: string;
+    exercise: Exercise;
+    order: number;
+    sets?: Array<{
+      reps?: number | null;
+      weight?: number | null;
+      rir?: number | null;
+      notes?: string | null;
+    }>;
+  }>;
+  fingerboardHangs?: Array<{
+    id: string;
+    order: number;
+    handType: string;
+    gripType: string;
+    crimpSize?: number | null;
+    customDescription?: string | null;
+    load?: number | null;
+    unload?: number | null;
+    reps?: number | null;
+    timeSeconds?: number | null;
+    notes?: string | null;
+  }>;
+};
+
 interface EnhancedWorkoutFormProps {
   onSubmit: (workout: WorkoutFormData) => void;
   onCancel: () => void;
-  initialData?: Workout;
+  initialData?: WorkoutWithRelations;
   availableTags?: Tag[];
   onCreateTag?: (name: string, color: string) => void;
   isSubmitting?: boolean;

@@ -68,6 +68,8 @@ export interface Exercise {
   stats?: {
     timesUsed: number
     lastUsed: string | null
+    lastWeight?: number | null
+    lastReps?: number | null
   }
 }
 
@@ -114,6 +116,8 @@ export interface WorkoutFormData {
   fingerboardHangs?: FingerboardWorkoutHang[] // Hangs for FINGERBOARD workouts
   gratitude?: string // 3 things I am grateful for
   improvements?: string // 3 things to do better next time
+  preSessionFeel?: number // 1-5 scale
+  dayAfterTiredness?: number // 1-5 scale
 }
 
 export interface RoutineVariation {

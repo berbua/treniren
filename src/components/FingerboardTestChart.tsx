@@ -145,7 +145,7 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
             dataKey="date"
             stroke="#9CA3AF"
             tick={{ fill: '#9CA3AF' }}
-            tickFormatter={(value) => new Date(value).toLocaleDateString()}
+            tickFormatter={(value: number) => new Date(value).toLocaleDateString()}
           />
           <YAxis
             stroke="#9CA3AF"
@@ -163,7 +163,7 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
               border: '1px solid #6B21A8',
               borderRadius: '8px',
             }}
-            labelFormatter={(value) => new Date(value).toLocaleDateString()}
+            labelFormatter={(value: number) => new Date(value).toLocaleDateString()}
           />
           <Legend />
           {Array.from(uniqueHangLabels).map((label, index) => (

@@ -181,11 +181,12 @@ export default function WorkoutExerciseTracker({
     exerciseIndex: number,
     setIndex: number,
     field: keyof WorkoutSet,
-    value: number | string
+    value: number | string | undefined
   ) => {
     const newExercises = [...exercises]
     const set = newExercises[exerciseIndex].sets[setIndex]
-    set[field] = value as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(set as any)[field] = value
     onExercisesChange(newExercises)
   }
 
@@ -368,7 +369,7 @@ export default function WorkoutExerciseTracker({
                             exerciseIndex,
                             setIndex,
                             'rir',
-                            e.target.value ? parseInt(e.target.value) : undefined
+                            e.target.value ? parseInt(e.target.value) : 0
                           )
                         }
                         placeholder="RIR"

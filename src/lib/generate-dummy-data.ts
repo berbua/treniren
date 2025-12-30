@@ -154,7 +154,6 @@ export function generateDummyData(options: DummyDataOptions = {}): any {
         color: tag.color,
       })),
       fingerboardHangs,
-      planId: null,
       planTitle: null,
     };
   });
