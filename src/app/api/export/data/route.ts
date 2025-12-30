@@ -299,7 +299,7 @@ export async function GET(request: NextRequest) {
         };
       }),
       fingerboardTestingProtocols: fingerboardTestingProtocols.map(protocol => {
-        const { testHangs, testResults, ...protocolData } = protocol;
+        const { testHangs, ...protocolData } = protocol;
         return {
           ...protocolData,
           createdAt: protocol.createdAt.toISOString(),
