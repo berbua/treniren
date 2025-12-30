@@ -193,10 +193,10 @@ function CalendarPageContent() {
       try {
         setLoading(true)
         const [workoutsResponse, eventsResponse, tagsResponse, exercisesResponse] = await Promise.all([
-          fetch('/api/workouts'),
-          fetch('/api/events'),
-          fetch('/api/tags'),
-          fetch('/api/exercises')
+          fetch('/api/workouts', { credentials: 'include' }),
+          fetch('/api/events', { credentials: 'include' }),
+          fetch('/api/tags', { credentials: 'include' }),
+          fetch('/api/exercises', { credentials: 'include' })
         ])
         
         if (workoutsResponse.ok) {
@@ -712,12 +712,15 @@ function CalendarPageContent() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(eventData),
       })
 
       if (response.ok) {
         // Refresh events
-        const eventsResponse = await fetch('/api/events')
+        const eventsResponse = await fetch('/api/events', {
+          credentials: 'include',
+        })
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json()
           setEvents(eventsData)
