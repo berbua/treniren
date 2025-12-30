@@ -13,6 +13,7 @@ export async function middleware(request: NextRequest) {
     '/auth/signin',
     '/auth/signup',
     '/auth/error',
+    '/api/auth', // All NextAuth routes are public
     '/api/auth/register',
     '/api/auth/forgot-password',
     '/api/auth/reset-password',
@@ -26,14 +27,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Protect API routes
+  // Protect API routes (but let the API route handle the error for better debugging)
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
+    // Don't block here - let the API route handle authentication
+    // This allows the API route to return more specific error messages
   }
 
   // Protect dashboard and other protected pages

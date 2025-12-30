@@ -18,8 +18,8 @@ export default function EventsPage() {
     const fetchData = async () => {
       try {
         const [eventsResponse, tagsResponse] = await Promise.all([
-          fetch('/api/events'),
-          fetch('/api/tags')
+          fetch('/api/events', { credentials: 'include' }),
+          fetch('/api/tags', { credentials: 'include' })
         ])
 
         if (eventsResponse.ok) {
@@ -49,6 +49,7 @@ export default function EventsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(eventData),
       })
 
