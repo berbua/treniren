@@ -51,22 +51,24 @@ interface EnhancedWorkoutFormProps {
   defaultDate?: string; // Optional default date to pre-fill
 }
 
-const workoutTypes: { value: WorkoutType; label: string; emoji: string; description: string }[] = [
-  { value: 'GYM', label: 'Gym', emoji: '🏋️', description: 'Strength training with weights' },
-  { value: 'BOULDERING', label: 'Bouldering', emoji: '🧗', description: 'Short, powerful climbs' },
-  { value: 'CIRCUITS', label: 'Circuits', emoji: '🔄', description: 'Endurance training circuits' },
-  { value: 'LEAD_ROCK', label: 'Lead Rock', emoji: '🏔️', description: 'Outdoor lead climbing' },
-  { value: 'LEAD_ARTIFICIAL', label: 'Lead Wall', emoji: '🧗‍♀️', description: 'Indoor lead climbing' },
-  { value: 'MENTAL_PRACTICE', label: 'Mental Practice', emoji: '🧘', description: 'Mindfulness & mental training' },
-  { value: 'FINGERBOARD', label: 'Fingerboard', emoji: '🖐️', description: 'Finger strength training' },
+// Workout types will be generated dynamically with translations
+const getWorkoutTypes = (t: (key: string) => string): { value: WorkoutType; label: string; emoji: string; description: string }[] => [
+  { value: 'GYM', label: t('workouts.workoutTypes.GYM') || 'Gym', emoji: '🏋️', description: t('workouts.workoutTypeDescriptions.GYM') || 'Strength training with weights' },
+  { value: 'BOULDERING', label: t('workouts.workoutTypes.BOULDERING') || 'Bouldering', emoji: '🧗', description: t('workouts.workoutTypeDescriptions.BOULDERING') || 'Short, powerful climbs' },
+  { value: 'CIRCUITS', label: t('workouts.workoutTypes.CIRCUITS') || 'Circuits', emoji: '🔄', description: t('workouts.workoutTypeDescriptions.CIRCUITS') || 'Endurance training circuits' },
+  { value: 'LEAD_ROCK', label: t('workouts.workoutTypes.LEAD_ROCK') || 'Lead Rock', emoji: '🏔️', description: t('workouts.workoutTypeDescriptions.LEAD_ROCK') || 'Outdoor lead climbing' },
+  { value: 'LEAD_ARTIFICIAL', label: t('workouts.workoutTypes.LEAD_ARTIFICIAL') || 'Lead Wall', emoji: '🧗‍♀️', description: t('workouts.workoutTypeDescriptions.LEAD_ARTIFICIAL') || 'Indoor lead climbing' },
+  { value: 'MENTAL_PRACTICE', label: t('workouts.workoutTypes.MENTAL_PRACTICE') || 'Mental Practice', emoji: '🧘', description: t('workouts.workoutTypeDescriptions.MENTAL_PRACTICE') || 'Mindfulness & mental training' },
+  { value: 'FINGERBOARD', label: t('workouts.workoutTypes.FINGERBOARD') || 'Fingerboard', emoji: '🖐️', description: t('workouts.workoutTypeDescriptions.FINGERBOARD') || 'Finger strength training' },
 ];
 
-const trainingVolumes: { value: TrainingVolume; label: string; description: string }[] = [
-  { value: 'TR1', label: 'TR1 - Very Light', description: 'Easy recovery session' },
-  { value: 'TR2', label: 'TR2 - Light', description: 'Low intensity training' },
-  { value: 'TR3', label: 'TR3 - Moderate', description: 'Medium intensity training' },
-  { value: 'TR4', label: 'TR4 - Hard', description: 'High intensity training' },
-  { value: 'TR5', label: 'TR5 - Very Hard', description: 'Maximum intensity training' },
+// Training volumes will be generated dynamically with translations
+const getTrainingVolumes = (t: (key: string) => string): { value: TrainingVolume; label: string; description: string }[] => [
+  { value: 'TR1', label: t('workouts.trainingVolumes.TR1') || 'TR1 - Very Light', description: t('workouts.trainingVolumeDescriptions.TR1') || 'Easy recovery session' },
+  { value: 'TR2', label: t('workouts.trainingVolumes.TR2') || 'TR2 - Light', description: t('workouts.trainingVolumeDescriptions.TR2') || 'Low intensity training' },
+  { value: 'TR3', label: t('workouts.trainingVolumes.TR3') || 'TR3 - Moderate', description: t('workouts.trainingVolumeDescriptions.TR3') || 'Medium intensity training' },
+  { value: 'TR4', label: t('workouts.trainingVolumes.TR4') || 'TR4 - Hard', description: t('workouts.trainingVolumeDescriptions.TR4') || 'High intensity training' },
+  { value: 'TR5', label: t('workouts.trainingVolumes.TR5') || 'TR5 - Very Hard', description: t('workouts.trainingVolumeDescriptions.TR5') || 'Maximum intensity training' },
 ];
 
 
@@ -87,6 +89,14 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   // Load exercises and fingerboard hangs from initialData
   useEffect(() => {
     if (initialData) {
+      // Load variation info from details if it exists
+      if (initialData.details && typeof initialData.details === 'object' && 'routineVariation' in initialData.details) {
+        const details = initialData.details as any
+        if (details.routineVariation) {
+          setFormData(prev => ({ ...prev, routineVariation: details.routineVariation }))
+        }
+      }
+
       // Load exercises
       if (initialData.workoutExercises && initialData.workoutExercises.length > 0) {
         const exercisesData: WorkoutExerciseData[] = initialData.workoutExercises.map((we: any) => ({
@@ -142,6 +152,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     fingerboardHangs: [] as FingerboardWorkoutHang[],
     gratitude: initialData?.gratitude || '',
     improvements: initialData?.improvements || '',
+    routineVariation: null as { routineName: string; variationName: string } | null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -159,15 +170,15 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     const newErrors: Record<string, string> = {};
 
     if (!formData.type) {
-      newErrors.type = 'Please select a workout type';
+      newErrors.type = t('workouts.errors.workoutTypeRequired') || 'Please select a workout type';
     }
 
     if (!formData.date) {
-      newErrors.date = 'Please select a date';
+      newErrors.date = t('workouts.errors.dateRequired') || 'Please select a date';
     }
 
     if (formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && formData.type !== 'FINGERBOARD' && !formData.trainingVolume) {
-      newErrors.trainingVolume = 'Please select training volume';
+      newErrors.trainingVolume = t('workouts.errors.trainingVolumeRequired') || 'Please select training volume';
     }
 
     setErrors(newErrors);
@@ -181,7 +192,20 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       return;
     }
 
-    const workoutData: WorkoutFormData = {
+    // Prepare details object - preserve existing details and merge with new data
+    let details: any = undefined
+    if (initialData?.details && typeof initialData.details === 'object') {
+      // Preserve existing details (e.g., quickLog flag)
+      details = { ...initialData.details }
+    }
+    
+    // Add/update variation info for gym workouts
+    if (formData.type === 'GYM' && formData.routineVariation) {
+      details = details || {}
+      details.routineVariation = formData.routineVariation
+    }
+
+    const workoutData: WorkoutFormData & { details?: any } = {
       type: formData.type,
       date: formData.date,
       trainingVolume: formData.trainingVolume,
@@ -196,12 +220,13 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       fingerboardHangs: formData.fingerboardHangs.length > 0 ? formData.fingerboardHangs : undefined,
       gratitude: formData.gratitude || undefined,
       improvements: formData.improvements || undefined,
+      details,
     };
 
     await onSubmit(workoutData);
   };
 
-  const updateFormData = (field: string, value: string | number | object) => {
+  const updateFormData = (field: string, value: string | number | object | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -216,7 +241,9 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-uc-purple/20">
           <h2 className="text-2xl font-bold text-uc-text-light">
-            {initialData ? '✏️ Edytuj Trening' : '➕ Dodaj Trening'}
+            {initialData 
+              ? `✏️ ${t('workouts.formEditTitle') || 'Edit Workout'}` 
+              : `➕ ${t('workouts.formTitle') || 'Add New Workout'}`}
           </h2>
           <button
             onClick={onCancel}
@@ -234,10 +261,10 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {/* Workout Type Selection */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                🏋️ Workout Type *
+                🏋️ {t('workouts.workoutTypeLabel') || 'Workout Type'} *
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {workoutTypes.map((type) => (
+                {getWorkoutTypes(t).map((type) => (
                   <button
                     key={type.value}
                     type="button"
@@ -277,7 +304,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {/* Date Selection */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                📅 Date *
+                📅 {t('workouts.date') || 'Date'} *
               </label>
               <input
                 type="date"
@@ -307,10 +334,10 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && formData.type !== 'FINGERBOARD' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                  📊 Training Volume *
+                  📊 {t('workouts.trainingVolumeLabel') || 'Training Volume'} *
                 </label>
                 <div className="flex space-x-2">
-                  {trainingVolumes.map((volume) => (
+                  {getTrainingVolumes(t).map((volume) => (
                     <label key={volume.value} className="flex-1 p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer text-center">
                       <input
                         type="radio"
@@ -412,13 +439,13 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {formData.type === 'MENTAL_PRACTICE' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                  🕐 Time of Day
+                  🕐 {t('workouts.timeOfDay') || 'Time of Day'}
                 </label>
                 <div className="flex space-x-4">
                   {[
-                    { value: 'MORNING', label: 'Morning', emoji: '🌅' },
-                    { value: 'MIDDAY', label: 'Midday', emoji: '☀️' },
-                    { value: 'EVENING', label: 'Evening', emoji: '🌙' }
+                    { value: 'MORNING', label: t('workouts.timeOfDayOptions.MORNING') || 'Morning', emoji: '🌅' },
+                    { value: 'MIDDAY', label: t('workouts.timeOfDayOptions.MIDDAY') || 'Midday', emoji: '☀️' },
+                    { value: 'EVENING', label: t('workouts.timeOfDayOptions.EVENING') || 'Evening', emoji: '🌙' }
                   ].map((time) => (
                     <label key={time.value} className="flex items-center space-x-2 cursor-pointer">
                       <input
@@ -450,6 +477,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                 onExercisesChange={(exercises) => updateFormData('exercises', exercises)}
                 availableExercises={availableExercises}
                 onCreateExercise={onCreateExercise}
+                onVariationChange={(variationInfo) => updateFormData('routineVariation', variationInfo)}
               />
             )}
 
@@ -469,7 +497,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               <textarea
                 value={formData.notes}
                 onChange={(e) => updateFormData('notes', e.target.value)}
-                placeholder="Add any notes about your workout, how you felt, what you learned..."
+                placeholder={t('workouts.notesPlaceholder') || 'Add any notes about your workout, how you felt, what you learned...'}
                 rows={4}
                 className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
               />
@@ -568,12 +596,14 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {isSubmitting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-uc-black"></div>
-                <span>{t('common.save')}...</span>
+                <span>{t('common.save') || 'Save'}...</span>
               </>
             ) : (
               <>
                 <span>💾</span>
-                <span>{initialData ? 'Aktualizuj' : t('common.save')} Trening</span>
+                <span>{initialData 
+                  ? t('workouts.updateWorkout') || 'Update Workout'
+                  : t('workouts.saveWorkout') || 'Save Workout'}</span>
               </>
             )}
           </button>

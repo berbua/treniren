@@ -55,6 +55,7 @@ export interface Workout {
   createdAt: string
   updatedAt: string
   tags?: Tag[] // Associated tags
+  details?: any // JSON field for type-specific data (e.g., routineVariation for gym workouts)
 }
 
 export interface Exercise {

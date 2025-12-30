@@ -37,12 +37,12 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
       <div className="text-sm text-slate-600 dark:text-slate-300 mb-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <span className="font-medium">Next period:</span>
+            <span className="font-medium">{t('common.nextPeriod') || 'Next period:'}</span>
             <br />
             {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][cycleInfo.nextPeriodDate.getMonth()]} {cycleInfo.nextPeriodDate.getDate()}
           </div>
           <div>
-            <span className="font-medium">Next ovulation:</span>
+            <span className="font-medium">{t('common.nextOvulation') || 'Next ovulation:'}</span>
             <br />
             {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][cycleInfo.nextOvulationDate.getMonth()]} {cycleInfo.nextOvulationDate.getDate()}
           </div>

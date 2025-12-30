@@ -106,7 +106,7 @@ export default function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseF
                   setErrors(prev => ({ ...prev, name: '' }))
                 }
               }}
-              placeholder="e.g., Pull-ups, Deadlift, Bench Press"
+              placeholder={t('workouts.placeholders.exerciseName') || 'e.g., Pull-ups, Deadlift, Bench Press'}
               className={`w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 ${
                 errors.name ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
               }`}
@@ -141,7 +141,7 @@ export default function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseF
               type="text"
               value={formData.category}
               onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-              placeholder="Or enter custom category"
+              placeholder={t('workouts.placeholders.customCategory') || 'Or enter custom category'}
               className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
             />
           </div>

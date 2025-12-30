@@ -85,11 +85,11 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
       if (response.ok) {
         // Success - settings saved
       } else {
-        alert('Failed to save test reminder settings');
+        alert(t('workouts.errors.saveTestReminderFailed') || 'Failed to save test reminder settings');
       }
     } catch (error) {
       console.error('Error saving test reminder settings:', error);
-      alert('Error saving test reminder settings');
+      alert(t('workouts.errors.saveTestReminderError') || 'Error saving test reminder settings');
     } finally {
       setIsSavingTestReminder(false);
     }
@@ -835,7 +835,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                     {/* Import Dummy Data to Database */}
                     <button
                       onClick={async () => {
-                        if (!confirm('This will import dummy data directly into your database. Continue?')) {
+                        if (!confirm(t('workouts.errors.importDummyDataConfirm') || 'This will import dummy data directly into your database. Continue?')) {
                           return;
                         }
                         

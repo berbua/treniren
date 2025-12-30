@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestResultFormData } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
 
 interface PerformTestModalProps {
@@ -17,6 +18,7 @@ export default function PerformTestModal({
   onClose,
   onProtocolUpdated,
 }: PerformTestModalProps) {
+  const { t } = useLanguage()
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [results, setResults] = useState<Record<string, any>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -173,7 +175,7 @@ export default function PerformTestModal({
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-uc-text-light">Perform Test: {protocolName}</h2>
+                  <h2 className="text-2xl font-bold text-uc-text-light">{t('workouts.labels.performTest') || 'Perform Test:'} {protocolName}</h2>
                   <button
                     type="button"
                     onClick={() => setIsEditingName(true)}
@@ -206,7 +208,7 @@ export default function PerformTestModal({
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-uc-text-light">Test Results</h3>
+            <h3 className="text-lg font-semibold text-uc-text-light">{t('workouts.labels.testResults') || 'Test Results'}</h3>
             {protocol.testHangs.map((hang, index) => {
               const hangId = hang.id || `hang-${hang.order}`
               const result = results[hangId] || {}
@@ -253,7 +255,7 @@ export default function PerformTestModal({
                         }
                       }}
                       className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                      placeholder="0"
+                      placeholder={t('workouts.placeholders.testLoad') || '0'}
                     />
                   </div>
 
@@ -269,7 +271,7 @@ export default function PerformTestModal({
                           handleResultChange(hangId, 'timeSeconds', e.target.value ? parseInt(e.target.value) : undefined)
                         }
                         className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                        placeholder="10"
+                        placeholder={t('workouts.placeholders.testUnload') || '10'}
                       />
                     </div>
                     <div>
@@ -303,7 +305,7 @@ export default function PerformTestModal({
                       onChange={(e) => handleResultChange(hangId, 'notes', e.target.value)}
                       rows={1}
                       className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple resize-none"
-                      placeholder="Any notes..."
+                      placeholder={t('workouts.placeholders.testNotes') || 'Any notes...'}
                     />
                   </div>
                 </div>

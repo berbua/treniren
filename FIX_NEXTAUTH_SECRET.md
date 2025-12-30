@@ -65,3 +65,4 @@ Without it, NextAuth cannot function in production mode.
 - [ ] Redeployed the application
 - [ ] Tested login - error is gone!
 
+

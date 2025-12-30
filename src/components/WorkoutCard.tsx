@@ -1,6 +1,7 @@
 'use client'
 
 import { WorkoutType, TrainingVolume, MentalState, Tag } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface WorkoutCardProps {
   workout: {
@@ -19,6 +20,7 @@ interface WorkoutCardProps {
     gratitude?: string
     improvements?: string
     tags?: Tag[]
+    details?: any
   }
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
@@ -71,15 +73,23 @@ const formatDate = (dateString: string) => {
 }
 
 export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardProps) {
+  const { t } = useLanguage()
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 border border-slate-200 dark:border-slate-700">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
           <div className={`w-3 h-3 rounded-full ${getTrainingTypeColor(workout.type)}`} />
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-50">
-              {getTrainingTypeLabel(workout.type)}
-            </h3>
+            <div className="flex items-center space-x-2">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-50">
+                {getTrainingTypeLabel(workout.type)}
+              </h3>
+              {workout.details && (workout.details as any)?.quickLog && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
+                  ⚡ {t('quickLog.quickLogBadge') || 'Quick'}
+                </span>
+              )}
+            </div>
             <p className="text-sm text-slate-600 dark:text-slate-300">
               {formatDate(workout.startTime)}
             </p>
@@ -131,6 +141,15 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
           </div>
         )}
 
+        {workout.type === 'GYM' && workout.details && (workout.details as any)?.routineVariation && (
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-medium text-slate-500">{t('workouts.labels.variation') || 'Variation:'}</span>
+            <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
+              📦 {(workout.details as any).routineVariation.routineName} - {(workout.details as any).routineVariation.variationName}
+            </span>
+          </div>
+        )}
+
         {workout.sector && (
           <div className="flex items-center space-x-2">
             <span className="text-xs font-medium text-slate-500">Sector:</span>
@@ -142,7 +161,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
 
         {workout.type === 'MENTAL_PRACTICE' && workout.mentalPracticeType && (
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">Practice type:</span>
+            <span className="text-xs font-medium text-slate-500">{t('common.practiceType') || 'Practice type:'}</span>
             <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
               🧘 {workout.mentalPracticeType}
             </span>
@@ -151,11 +170,15 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
 
         {workout.type === 'MENTAL_PRACTICE' && workout.timeOfDay && workout.timeOfDay.length > 0 && (
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">Time of day:</span>
+            <span className="text-xs font-medium text-slate-500">{t('common.timeOfDay') || 'Time of day:'}</span>
             <div className="flex space-x-1">
               {workout.timeOfDay.map((time, index) => {
                 const timeEmoji = time === 'MORNING' ? '🌅' : time === 'MIDDAY' ? '☀️' : '🌙';
-                const timeLabel = time === 'MORNING' ? 'Morning' : time === 'MIDDAY' ? 'Midday' : 'Evening';
+                const timeLabel = time === 'MORNING' 
+                  ? (t('workouts.timeOfDayOptions.MORNING') || 'Morning')
+                  : time === 'MIDDAY'
+                  ? (t('workouts.timeOfDayOptions.MIDDAY') || 'Midday')
+                  : (t('workouts.timeOfDayOptions.EVENING') || 'Evening');
                 return (
                   <span key={index} className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
                     {timeEmoji} {timeLabel}
@@ -186,7 +209,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
 
         {workout.type === 'MENTAL_PRACTICE' && workout.focusLevel && (
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">Focus level:</span>
+            <span className="text-xs font-medium text-slate-500">{t('common.focusLevel') || 'Focus level:'}</span>
             <div className="flex space-x-1">
               {[1, 2, 3, 4, 5].map((rating) => (
                 <div
@@ -204,7 +227,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
 
         {workout.type !== 'MENTAL_PRACTICE' && workout.dayAfterTiredness && (
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">Day after tiredness:</span>
+            <span className="text-xs font-medium text-slate-500">{t('common.dayAfterTiredness') || 'Day after tiredness:'}</span>
             <div className="flex space-x-1">
               {[1, 2, 3, 4, 5].map((rating) => (
                 <div

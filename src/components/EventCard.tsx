@@ -1,6 +1,7 @@
 'use client'
 
 import { EventType, Tag, TripClimbingType } from '@/types/event'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface EventCardProps {
   event: {
@@ -80,6 +81,7 @@ const formatTime = (timeString: string) => {
 }
 
 export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
+  const { t } = useLanguage()
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between">
@@ -152,7 +154,7 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
                 {/* Trip Dates */}
                 {(event.tripStartDate || event.tripEndDate) && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium text-slate-500">Trip Dates:</span>
+                    <span className="text-xs font-medium text-slate-500">{t('common.tripDates') || 'Trip Dates:'}</span>
                     <span className="text-sm text-slate-700 dark:text-slate-300">
                       {event.tripStartDate && formatDate(event.tripStartDate)}
                       {event.tripStartDate && event.tripEndDate && ' - '}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import AuthGuard from '@/components/AuthGuard'
 import { FingerboardTestingProtocol } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import FingerboardTestingProtocolForm from '@/components/FingerboardTestingProtocolForm'
 import Link from 'next/link'
@@ -16,6 +17,7 @@ export default function FingerboardTestingPage() {
 }
 
 function FingerboardTestingPageContent() {
+  const { t } = useLanguage()
   const [protocols, setProtocols] = useState<FingerboardTestingProtocol[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -51,7 +53,7 @@ function FingerboardTestingPageContent() {
   }
 
   const handleDeleteProtocol = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this testing protocol? All test results will also be deleted.')) {
+    if (!confirm(t('workouts.errors.deleteTestingProtocolConfirm') || 'Are you sure you want to delete this testing protocol? All test results will also be deleted.')) {
       return
     }
 
@@ -63,11 +65,11 @@ function FingerboardTestingPageContent() {
       if (response.ok) {
         await fetchProtocols()
       } else {
-        alert('Failed to delete protocol')
+        alert(t('workouts.errors.deleteTestingProtocolFailed') || 'Failed to delete protocol')
       }
     } catch (error) {
       console.error('Error deleting protocol:', error)
-      alert('Error deleting protocol')
+      alert(t('workouts.errors.deleteTestingProtocolError') || 'Error deleting protocol')
     }
   }
 

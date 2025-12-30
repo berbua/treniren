@@ -7,12 +7,14 @@ import { Workout, WorkoutFormData, Tag, Exercise } from '@/types/workout'
 import { Event, EventFormData } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
 import AuthGuard from '@/components/AuthGuard'
+import { QuickLogData } from '@/components/QuickLogModal'
 
 // Dynamically import components to avoid SSR issues
 const WorkoutCard = dynamic(() => import('@/components/WorkoutCard'), { ssr: false })
 const EnhancedWorkoutForm = dynamic(() => import('@/components/EnhancedWorkoutForm'), { ssr: false })
 const EventCard = dynamic(() => import('@/components/EventCard'), { ssr: false })
 const EventForm = dynamic(() => import('@/components/EventForm'), { ssr: false })
+const QuickLogModal = dynamic(() => import('@/components/QuickLogModal'), { ssr: false })
 
 export default function WorkoutsPage() {
   return (
@@ -36,6 +38,9 @@ function WorkoutsPageContent() {
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([])
   const [showInfo, setShowInfo] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showAddChoice, setShowAddChoice] = useState(false)
+  const [showQuickLog, setShowQuickLog] = useState(false)
+  const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
 
   // Fetch workouts
   const fetchWorkouts = async () => {
@@ -162,7 +167,7 @@ function WorkoutsPageContent() {
 
   // Delete workout
   const deleteWorkout = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this workout?')) return
+    if (!confirm(t('workouts.deleteConfirm') || 'Are you sure you want to delete this workout?')) return
 
     try {
       const response = await fetch(`/api/workouts/${id}`, {
@@ -198,6 +203,28 @@ function WorkoutsPageContent() {
   // Handle cancel
   const handleCancel = () => {
     setShowForm(false)
+    setEditingWorkout(null)
+    setEditingEvent(null)
+  }
+
+  // Handle add choice modal actions
+  const handleQuickLog = () => {
+    setShowAddChoice(false)
+    setShowQuickLog(true)
+  }
+
+  const handleAddWorkout = () => {
+    setShowAddChoice(false)
+    setActiveTab('workouts')
+    setShowForm(true)
+    setEditingWorkout(null)
+    setEditingEvent(null)
+  }
+
+  const handleAddEvent = () => {
+    setShowAddChoice(false)
+    setActiveTab('events')
+    setShowForm(true)
     setEditingWorkout(null)
     setEditingEvent(null)
   }
@@ -249,7 +276,7 @@ function WorkoutsPageContent() {
   }
 
   const deleteEvent = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this event?')) return
+    if (!confirm(t('events.deleteConfirm') || 'Are you sure you want to delete this event?')) return
 
     try {
       const response = await fetch(`/api/events/${id}`, {
@@ -331,14 +358,18 @@ function WorkoutsPageContent() {
             >
               <span className="text-lg">ℹ️</span>
               <span className="text-sm font-medium text-uc-text-light">
-                {showInfo ? t('common.close') : 'Pokaż Info'}
+                {showInfo ? t('common.close') : t('workouts.showInfo') || 'Show Info'}
               </span>
             </button>
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                setEditingWorkout(null)
+                setEditingEvent(null)
+                setShowAddChoice(true)
+              }}
               className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
             >
-              {activeTab === 'workouts' ? t('workouts.addNew') : t('events.addNew')}
+              ➕ {t('common.add') || 'Add'}
             </button>
           </div>
         </div>
@@ -351,7 +382,7 @@ function WorkoutsPageContent() {
               <div>
                 <h3 className="text-lg font-semibold text-uc-text-light mb-4 flex items-center space-x-2">
                   <span>🏋️</span>
-                  <span>Rodzaje Treningów do Śledzenia</span>
+                  <span>{t('events.trainingTypesTitle') || 'Training Types to Track'}</span>
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
@@ -403,35 +434,35 @@ function WorkoutsPageContent() {
               <div>
                 <h3 className="text-lg font-semibold text-uc-text-light mb-4 flex items-center space-x-2">
                   <span>📅</span>
-                  <span>Rodzaje Wydarzeń do Śledzenia</span>
+                  <span>{t('events.eventTypesTitle') || 'Event Types to Track'}</span>
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-3 bg-uc-alert/20 rounded-xl border border-uc-alert/30">
                     <span className="text-xl">🤕</span>
                     <div>
-                      <div className="font-medium text-uc-text-light">Kontuzja</div>
-                      <div className="text-sm text-uc-text-muted">Śledzenie kontuzji i powrotu do zdrowia</div>
+                      <div className="font-medium text-uc-text-light">{t('events.eventTypes.injury') || 'Injury'}</div>
+                      <div className="text-sm text-uc-text-muted">{t('events.eventTypes.injuryDescription') || 'Track injuries and recovery'}</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3 p-3 bg-blue-500/20 rounded-xl border border-blue-500/30">
                     <span className="text-xl">🏥</span>
                     <div>
-                      <div className="font-medium text-uc-text-light">Wizyta Fizjoterapeuty</div>
-                      <div className="text-sm text-uc-text-muted">Wizyty rehabilitacyjne</div>
+                      <div className="font-medium text-uc-text-light">{t('events.eventTypes.physio') || 'Physio Visit'}</div>
+                      <div className="text-sm text-uc-text-muted">{t('events.eventTypes.physioDescription') || 'Rehabilitation visits'}</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3 p-3 bg-yellow-500/20 rounded-xl border border-yellow-500/30">
                     <span className="text-xl">🏆</span>
                     <div>
-                      <div className="font-medium text-uc-text-light">Zawody</div>
-                      <div className="text-sm text-uc-text-muted">Zawody wspinaczkowe</div>
+                      <div className="font-medium text-uc-text-light">{t('events.eventTypes.competition') || 'Competition'}</div>
+                      <div className="text-sm text-uc-text-muted">{t('events.eventTypes.competitionDescription') || 'Climbing competitions'}</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3 p-3 bg-uc-purple/20 rounded-xl border border-uc-purple/30">
                     <span className="text-xl">📅</span>
                     <div>
-                      <div className="font-medium text-uc-text-light">Inne</div>
-                      <div className="text-sm text-uc-text-muted">Inne ważne wydarzenia</div>
+                      <div className="font-medium text-uc-text-light">{t('events.eventTypes.other') || 'Other'}</div>
+                      <div className="text-sm text-uc-text-muted">{t('events.eventTypes.otherDescription') || 'Other important events'}</div>
                     </div>
                   </div>
                 </div>
@@ -440,7 +471,7 @@ function WorkoutsPageContent() {
             
             <div className="mt-6 p-4 bg-uc-purple/20 rounded-xl border border-uc-purple/30">
               <p className="text-sm text-uc-text-light">
-                💡 <strong>Wskazówka:</strong> Śledź zarówno swoje sesje treningowe, jak i ważne wydarzenia, aby zrozumieć wzorce w swojej wydajności i regeneracji.
+                {t('events.tip') || '💡 Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.'}
               </p>
             </div>
           </div>
@@ -482,10 +513,14 @@ function WorkoutsPageContent() {
                 {t('workouts.noWorkoutsDescription')}
               </p>
               <button
-                onClick={() => setShowForm(true)}
+                onClick={() => {
+                  setEditingWorkout(null)
+                  setEditingEvent(null)
+                  setShowAddChoice(true)
+                }}
                 className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
               >
-                {t('workouts.addFirst')}
+                ➕ {t('common.add') || 'Add'}
               </button>
             </div>
           ) : (
@@ -511,10 +546,14 @@ function WorkoutsPageContent() {
                 {t('events.noEventsDescription')}
               </p>
               <button
-                onClick={() => setShowForm(true)}
+                onClick={() => {
+                  setEditingWorkout(null)
+                  setEditingEvent(null)
+                  setShowAddChoice(true)
+                }}
                 className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
               >
-                {t('events.addFirst')}
+                ➕ {t('common.add') || 'Add'}
               </button>
             </div>
           ) : (
@@ -553,6 +592,101 @@ function WorkoutsPageContent() {
             availableTags={availableTags}
             onCreateTag={handleCreateTag}
             isSubmitting={isSubmitting}
+          />
+        )}
+
+        {/* Add Choice Modal */}
+        {showAddChoice && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-uc-dark-bg rounded-2xl shadow-xl w-full max-w-md border border-uc-purple/20">
+              <div className="p-6 border-b border-uc-purple/20">
+                <h2 className="text-2xl font-bold text-uc-text-light mb-2">
+                  {t('common.add') || 'Add'}
+                </h2>
+                <p className="text-sm text-uc-text-muted">
+                  {t('workouts.addChoiceDescription') || 'What would you like to add?'}
+                </p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={handleQuickLog}
+                    className="flex flex-col items-center p-6 bg-gradient-to-br from-uc-purple/30 to-uc-mustard/30 rounded-xl border-2 border-uc-purple/40 hover:border-uc-purple/60 hover:from-uc-purple/40 hover:to-uc-mustard/40 transition-all"
+                  >
+                    <span className="text-4xl mb-3">⚡</span>
+                    <span className="font-medium text-uc-text-light">{t('quickLog.button') || 'Quick Log'}</span>
+                  </button>
+                  <button
+                    onClick={handleAddWorkout}
+                    className="flex flex-col items-center p-6 bg-uc-black/50 rounded-xl border-2 border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black transition-all"
+                  >
+                    <span className="text-4xl mb-3">🏋️</span>
+                    <span className="font-medium text-uc-text-light">{t('workouts.addNew') || 'Add Workout'}</span>
+                  </button>
+                  <button
+                    onClick={handleAddEvent}
+                    className="flex flex-col items-center p-6 bg-uc-black/50 rounded-xl border-2 border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black transition-all"
+                  >
+                    <span className="text-4xl mb-3">📅</span>
+                    <span className="font-medium text-uc-text-light">{t('events.addNew') || 'Add Event'}</span>
+                  </button>
+                </div>
+              </div>
+              <div className="p-6 border-t border-uc-purple/20 flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowAddChoice(false)
+                  }}
+                  className="px-4 py-2 text-uc-text-muted hover:text-uc-text-light transition-colors bg-uc-dark-bg/50 hover:bg-uc-dark-bg rounded-xl border border-uc-purple/20"
+                >
+                  {t('common.cancel') || 'Cancel'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Log Modal */}
+        {showQuickLog && (
+          <QuickLogModal
+            isOpen={showQuickLog}
+            onClose={() => setShowQuickLog(false)}
+            onSubmit={async (data: QuickLogData) => {
+              setIsSubmittingQuickLog(true)
+              try {
+                const response = await fetch('/api/workouts', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    type: data.type,
+                    date: data.date,
+                    trainingVolume: data.trainingVolume,
+                    mentalPracticeType: data.mentalPracticeType,
+                    timeOfDay: data.timeOfDay,
+                    notes: '',
+                    details: { 
+                      quickLog: true,
+                      ...(data.protocolId && { protocolId: data.protocolId })
+                    },
+                  }),
+                })
+
+                if (response.ok) {
+                  setShowQuickLog(false)
+                  await fetchWorkouts()
+                } else {
+                  const error = await response.json()
+                  alert(error.error || t('quickLog.errors.saveFailed') || 'Failed to save quick log')
+                }
+              } catch (error) {
+                console.error('Error saving quick log:', error)
+                alert(t('quickLog.errors.saveError') || 'Error saving quick log')
+              } finally {
+                setIsSubmittingQuickLog(false)
+              }
+            }}
+            isSubmitting={isSubmittingQuickLog}
           />
         )}
       </div>

@@ -72,6 +72,9 @@ export async function POST(request: NextRequest) {
       fingerboardHangs,
     } = body
 
+    // Merge details if provided (e.g., for variation info)
+    const workoutDetails = details || null
+
     const user = await requireAuth(request)
 
     if (!user) {
@@ -88,7 +91,7 @@ export async function POST(request: NextRequest) {
         type,
         startTime: new Date(date),
         trainingVolume: trainingVolume || null,
-        details,
+        details: workoutDetails,
         preSessionFeel,
         dayAfterTiredness,
         focusLevel,

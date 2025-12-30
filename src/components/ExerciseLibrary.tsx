@@ -140,7 +140,7 @@ export function ExerciseLibrary({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="🔍 Search exercises..."
+              placeholder={t('workouts.placeholders.searchExercises') || '🔍 Search exercises...'}
               className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
             />
           </div>
@@ -222,7 +222,7 @@ export function ExerciseLibrary({
               ))}
           </div>
           {commonExercises.filter(ex => !exercises.some(e => e.name.toLowerCase() === ex.name.toLowerCase())).length === 0 && (
-            <p className="text-uc-text-muted text-center py-4">All common exercises have been added!</p>
+            <p className="text-uc-text-muted text-center py-4">{t('workouts.labels.allCommonExercisesAdded') || 'All common exercises have been added!'}</p>
           )}
         </div>
       )}
@@ -238,7 +238,7 @@ export function ExerciseLibrary({
       {exercises.length === 0 ? (
         <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
           <div className="text-6xl mb-4">💪</div>
-          <h3 className="text-xl font-semibold text-uc-text-light mb-2">No exercises found</h3>
+          <h3 className="text-xl font-semibold text-uc-text-light mb-2">{t('workouts.labels.noExercisesFound') || 'No exercises found'}</h3>
           <p className="text-uc-text-muted mb-6">
             {searchQuery || selectedCategory !== 'all'
               ? 'Try adjusting your search or filters'
@@ -295,6 +295,7 @@ function ExerciseCard({
   getCategoryColor: (category: string) => string
   quickStats?: ExerciseQuickStats
 }) {
+  const { t } = useLanguage()
   const stats = quickStats || exercise.stats
 
   return (
@@ -347,12 +348,12 @@ function ExerciseCard({
         {stats && (
           <>
             <div className="flex items-center justify-between text-uc-text-muted">
-              <span>Times Used:</span>
+              <span>{t('common.timesUsed') || 'Times Used:'}</span>
               <span className="text-uc-text-light font-medium">{stats.timesUsed}</span>
             </div>
             {stats.lastUsed && (
               <div className="flex items-center justify-between text-uc-text-muted">
-                <span>Last Used:</span>
+                <span>{t('common.lastUsed') || 'Last Used:'}</span>
                 <span className="text-uc-text-light font-medium">{formatDate(stats.lastUsed)}</span>
               </div>
             )}

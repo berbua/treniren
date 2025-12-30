@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestResult } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { LoadingSpinner } from './LoadingSpinner'
 import FingerboardTestingProtocolForm from './FingerboardTestingProtocolForm'
 import PerformTestModal from './PerformTestModal'
@@ -15,6 +16,7 @@ interface FingerboardTestModalProps {
 type ModalStep = 'select' | 'create' | 'perform' | 'results'
 
 export default function FingerboardTestModal({ onClose }: FingerboardTestModalProps) {
+  const { t } = useLanguage()
   const [step, setStep] = useState<ModalStep>('select')
   const [testingProtocols, setTestingProtocols] = useState<FingerboardTestingProtocol[]>([])
   const [selectedProtocol, setSelectedProtocol] = useState<FingerboardTestingProtocol | null>(null)
@@ -235,7 +237,7 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
               {testingProtocols.length === 0 ? (
                 <div className="bg-uc-black/50 rounded-xl p-12 text-center border border-uc-purple/20">
                   <div className="text-4xl mb-4">📊</div>
-                  <p className="text-uc-text-muted mb-4">No testing protocols yet</p>
+                  <p className="text-uc-text-muted mb-4">{t('workouts.labels.noTestingProtocols') || 'No testing protocols yet'}</p>
                   <button
                     onClick={handleCreateProtocol}
                     className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors"
@@ -322,7 +324,7 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
                 </div>
                 {testResults.length === 0 ? (
                   <div className="p-12 text-center">
-                    <p className="text-uc-text-muted">No test results yet</p>
+                    <p className="text-uc-text-muted">{t('workouts.labels.noTestResults') || 'No test results yet'}</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">

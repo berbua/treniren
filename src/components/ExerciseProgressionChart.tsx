@@ -51,6 +51,12 @@ interface ProgressionDataPoint {
   totalVolume: number
   estimated1RM: number
   averageReps: number
+  sets: number
+  bestSet: {
+    weight: number
+    reps: number
+    rir?: number
+  }
 }
 
 interface ProgressionData {
@@ -143,6 +149,8 @@ export function ExerciseProgressionChart({
       fullDate: point.date,
       value: Math.round(value * 10) / 10,
       workoutId: point.workoutId,
+      reps: point.bestSet?.reps || point.averageReps || 0,
+      sets: point.sets || 0,
     }
   })
 
@@ -155,7 +163,7 @@ export function ExerciseProgressionChart({
           Chart library not installed
         </p>
         <p className="text-sm text-uc-text-muted">
-          Please run: <code className="bg-uc-black px-2 py-1 rounded">npm install recharts</code>
+          {t('workouts.labels.installRecharts') || 'Please run: npm install recharts'}
         </p>
         {/* Fallback: Show data as table */}
         <div className="mt-6 overflow-x-auto">
@@ -260,13 +268,68 @@ export function ExerciseProgressionChart({
             }}
           />
           <Tooltip 
-            contentStyle={{ 
-              backgroundColor: '#1F2937', 
-              border: '1px solid #4B5563',
-              borderRadius: '8px',
+            content={({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload: { reps: number; sets: number } }>; label?: string }) => {
+              if (active && payload && payload.length) {
+                const data = payload[0].payload
+                const repsLabel = t('workouts.labels.reps') || t('workouts.placeholders.reps') || 'Reps'
+                const setsLabel = t('workouts.labels.sets') || t('workouts.placeholders.sets') || 'Sets'
+                
+                // Format the date label
+                const point = chartData.find(d => d.date === label)
+                const formattedDate = point 
+                  ? new Date(point.fullDate).toLocaleDateString('en-US', { 
+                      year: 'numeric',
+                      month: 'long', 
+                      day: 'numeric' 
+                    })
+                  : label
+                
+                return (
+                  <div style={{
+                    backgroundColor: '#1F2937',
+                    border: '1px solid #4B5563',
+                    borderRadius: '8px',
+                    padding: '12px',
+                  }}>
+                    <p style={{ 
+                      color: '#F3F4F6', 
+                      marginBottom: '8px', 
+                      fontWeight: 'bold',
+                      fontSize: '14px'
+                    }}>
+                      {formattedDate}
+                    </p>
+                    <p style={{ 
+                      color: '#FCD34D', 
+                      marginBottom: '4px',
+                      fontWeight: '600',
+                      fontSize: '14px'
+                    }}>
+                      {payload[0].value} {getUnit()}
+                    </p>
+                    {data.reps > 0 && (
+                      <p style={{ 
+                        color: '#D1D5DB', 
+                        marginBottom: '2px',
+                        fontSize: '12px'
+                      }}>
+                        {repsLabel}: {data.reps}
+                      </p>
+                    )}
+                    {data.sets > 0 && (
+                      <p style={{ 
+                        color: '#D1D5DB', 
+                        marginBottom: '0',
+                        fontSize: '12px'
+                      }}>
+                        {setsLabel}: {data.sets}
+                      </p>
+                    )}
+                  </div>
+                )
+              }
+              return null
             }}
-            labelStyle={{ color: '#F3F4F6', marginBottom: '4px' }}
-            formatter={(value: number) => [`${value} ${getUnit()}`, getMetricLabel()]}
           />
           <Legend />
           <DataComponent 

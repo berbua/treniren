@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestingProtocolFormData, FingerboardTestHang, HandType, GripType, FingerboardProtocol } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, getHandTypeLabel, getHandTypeEmoji, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
 
 interface FingerboardTestingProtocolFormProps {
@@ -17,6 +18,7 @@ export default function FingerboardTestingProtocolForm({
   onCancel,
   isSubmitting = false,
 }: FingerboardTestingProtocolFormProps) {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState<FingerboardTestingProtocolFormData>({
     name: '',
     description: '',
@@ -82,7 +84,7 @@ export default function FingerboardTestingProtocolForm({
 
   const handleSelectProtocol = (protocol: FingerboardProtocol) => {
     if (!protocol.hangs || protocol.hangs.length === 0) {
-      alert('This protocol has no hangs')
+      alert(t('workouts.errors.protocolNoHangs') || 'This protocol has no hangs')
       return
     }
 
@@ -174,7 +176,7 @@ export default function FingerboardTestingProtocolForm({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder="e.g., Max Strength Test"
+              placeholder={t('workouts.placeholders.testingProtocolName') || 'e.g., Max Strength Test'}
             />
             {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
           </div>
@@ -188,7 +190,7 @@ export default function FingerboardTestingProtocolForm({
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               rows={2}
-              placeholder="Brief description of this testing protocol"
+              placeholder={t('workouts.placeholders.testingProtocolDescription') || 'Brief description of this testing protocol'}
             />
           </div>
 
@@ -310,14 +312,14 @@ export default function FingerboardTestingProtocolForm({
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
             <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-md">
               <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-uc-text-light">Load from Protocol</h3>
+                <h3 className="text-lg font-semibold text-uc-text-light">{t('workouts.labels.loadProtocol') || 'Load from Protocol'}</h3>
                 <button onClick={() => setShowProtocolSelector(false)} className="text-uc-text-muted hover:text-uc-text-light">
                   ✕
                 </button>
               </div>
               <div className="p-4 max-h-[70vh] overflow-y-auto">
                 {existingProtocols.length === 0 ? (
-                  <p className="text-uc-text-muted text-center">No protocols available. Create one first!</p>
+                  <p className="text-uc-text-muted text-center">{t('workouts.labels.noProtocolsAvailableCreate') || 'No protocols available. Create one first!'}</p>
                 ) : (
                   <ul className="space-y-2">
                     {existingProtocols.map((protocol) => (
@@ -357,6 +359,7 @@ function TestHangForm({
   onSave: (hang: FingerboardTestHang) => void
   onCancel: () => void
 }) {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState<FingerboardTestHang>({
     order: hang?.order || 0,
     handType: hang?.handType || 'BOTH_HANDS',
@@ -371,15 +374,15 @@ function TestHangForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.handType) {
-      alert('Hand type is required')
+      alert(t('workouts.errors.handTypeRequired') || 'Hand type is required')
       return
     }
     if (!formData.gripType) {
-      alert('Grip type is required')
+      alert(t('workouts.errors.gripTypeRequired') || 'Grip type is required')
       return
     }
     if (formData.gripType === 'CRIMP' && !formData.crimpSize) {
-      alert('Crimp size is required when grip type is Crimp')
+      alert(t('workouts.errors.crimpSizeRequired') || 'Crimp size is required when grip type is Crimp')
       return
     }
     onSave(formData)
@@ -453,7 +456,7 @@ function TestHangForm({
                 }
                 className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               >
-                <option value="">Select size...</option>
+                <option value="">{t('common.selectSize') || 'Select size...'}</option>
                 {CRIMP_SIZE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.emoji} {opt.label}
@@ -472,7 +475,7 @@ function TestHangForm({
               value={formData.customDescription || ''}
               onChange={(e) => setFormData({ ...formData, customDescription: e.target.value })}
               className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder="e.g., 3-finger drag, half crimp"
+              placeholder={t('workouts.placeholders.customDescription') || 'e.g., 3-finger drag, half crimp'}
             />
           </div>
 
@@ -492,9 +495,9 @@ function TestHangForm({
                   })
                 }
                 className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder="0"
+                placeholder={t('workouts.placeholders.testLoad') || '0'}
               />
-              <p className="text-xs text-uc-text-muted mt-1">Optional target</p>
+              <p className="text-xs text-uc-text-muted mt-1">{t('workouts.labels.optionalTarget') || 'Optional target'}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-uc-text-light mb-2">
@@ -510,9 +513,9 @@ function TestHangForm({
                   })
                 }
                 className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder="10"
+                placeholder={t('workouts.placeholders.testUnload') || '10'}
               />
-              <p className="text-xs text-uc-text-muted mt-1">Optional target</p>
+              <p className="text-xs text-uc-text-muted mt-1">{t('workouts.labels.optionalTarget') || 'Optional target'}</p>
             </div>
           </div>
 

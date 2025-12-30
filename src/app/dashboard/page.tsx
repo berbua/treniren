@@ -12,6 +12,7 @@ import { MessagesPanel } from '@/components/MessagesPanel'
 import { Event } from '@/types/event'
 import { Workout } from '@/types/workout'
 import AuthGuard from '@/components/AuthGuard'
+import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 
 export default function Dashboard() {
   return (
@@ -41,6 +42,8 @@ function DashboardContent() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [showPWAStatus, setShowPWAStatus] = useState(false)
+  const [showQuickLog, setShowQuickLog] = useState(false)
+  const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
   
   // Show PWA status by default if there are issues (offline or unsynced workouts)
   useEffect(() => {
@@ -183,6 +186,13 @@ function DashboardContent() {
         <div className="mb-8">
           {/* Row 1: Most Used */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+            <button
+              onClick={() => setShowQuickLog(true)}
+              className="flex flex-col items-center p-3 bg-gradient-to-br from-uc-purple/30 to-uc-mustard/30 rounded-lg shadow-md border-2 border-uc-purple/40 hover:shadow-lg hover:border-uc-purple/60 transition-all relative"
+            >
+              <span className="text-xl mb-1.5">⚡</span>
+              <span className="text-sm font-medium text-uc-text-light">{t('quickLog.button') || 'Quick Log'}</span>
+            </button>
             <Link
               href="/workouts"
               className="flex flex-col items-center p-3 bg-uc-dark-bg rounded-lg shadow-md border border-uc-purple/20 hover:shadow-lg hover:border-uc-purple/40 transition-all relative"
@@ -595,6 +605,48 @@ function DashboardContent() {
       {showOfflineForm && (
         <OfflineWorkoutForm onClose={() => setShowOfflineForm(false)} />
       )}
+
+      <QuickLogModal
+        isOpen={showQuickLog}
+        onClose={() => setShowQuickLog(false)}
+        onSubmit={async (data: QuickLogData) => {
+          setIsSubmittingQuickLog(true)
+          try {
+            const response = await fetch('/api/workouts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                type: data.type,
+                date: data.date,
+                trainingVolume: data.trainingVolume,
+                mentalPracticeType: data.mentalPracticeType,
+                timeOfDay: data.timeOfDay,
+                notes: '',
+                details: { 
+                  quickLog: true,
+                  ...(data.protocolId && { protocolId: data.protocolId })
+                },
+              }),
+            })
+
+            if (response.ok) {
+              setShowQuickLog(false)
+              // Refresh dashboard data
+              window.location.reload()
+            } else {
+              const error = await response.json()
+              alert(error.error || t('quickLog.errors.saveFailed') || 'Failed to save quick log')
+            }
+          } catch (error) {
+            console.error('Error saving quick log:', error)
+            alert(t('quickLog.errors.saveError') || 'Error saving quick log')
+          } finally {
+            setIsSubmittingQuickLog(false)
+          }
+        }}
+        isSubmitting={isSubmittingQuickLog}
+      />
 
       <MessagesPanel
         isOpen={isMessagesPanelOpen}

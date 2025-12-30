@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { WorkoutType, TrainingVolume, WorkoutFormData, Workout } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { useCycle } from '@/contexts/CycleContext'
 import { calculateCycleInfo } from '@/lib/cycle-utils'
 import CycleInfoComponent from './CycleInfo'
@@ -29,6 +30,7 @@ const trainingVolumes: { value: TrainingVolume; label: string }[] = [
 ]
 
 export default function WorkoutForm({ onSubmit, onCancel, initialData }: WorkoutFormProps) {
+  const { t } = useLanguage()
   const { cycleSettings, isCycleTrackingEnabled } = useCycle()
   
   const [formData, setFormData] = useState({
@@ -183,7 +185,7 @@ export default function WorkoutForm({ onSubmit, onCancel, initialData }: Workout
                 onChange={(e) => handleChange('notes', e.target.value)}
                 rows={3}
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
-                placeholder="Add any notes about your workout..."
+                placeholder={t('workouts.placeholders.workoutNotes') || 'Add any notes about your workout...'}
               />
             </div>
 

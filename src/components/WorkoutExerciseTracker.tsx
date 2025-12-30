@@ -10,6 +10,7 @@ interface WorkoutExerciseTrackerProps {
   onExercisesChange: (exercises: WorkoutExerciseData[]) => void
   availableExercises: Exercise[]
   onCreateExercise?: (name: string, category?: string, defaultUnit?: string) => Promise<Exercise>
+  onVariationChange?: (variationInfo: { routineName: string; variationName: string } | null) => void
 }
 
 interface ExerciseQuickStats {
@@ -23,6 +24,7 @@ export default function WorkoutExerciseTracker({
   onExercisesChange,
   availableExercises,
   onCreateExercise,
+  onVariationChange,
 }: WorkoutExerciseTrackerProps) {
   const { t } = useLanguage()
   const [showExerciseSelector, setShowExerciseSelector] = useState(false)
@@ -93,13 +95,13 @@ export default function WorkoutExerciseTracker({
       handleAddExercise(newExercise)
     } catch (error) {
       console.error('Error creating exercise:', error)
-      alert('Failed to create exercise')
+      alert(t('workouts.errors.createExerciseFailed') || 'Failed to create exercise')
     }
   }
 
   const handleLoadRoutine = (routine: Routine, variationIndex?: number) => {
     if (!routine.routineExercises || routine.routineExercises.length === 0) {
-      alert('This routine has no exercises')
+      alert(t('workouts.errors.routineNoExercises') || 'This routine has no exercises')
       return
     }
 
@@ -138,6 +140,18 @@ export default function WorkoutExerciseTracker({
     onExercisesChange(mergedExercises)
     setShowRoutineSelector(false)
     setSelectedRoutine(null)
+
+    // Notify parent about variation info
+    if (onVariationChange) {
+      if (variation) {
+        onVariationChange({
+          routineName: routine.name,
+          variationName: variation.name,
+        })
+      } else {
+        onVariationChange(null)
+      }
+    }
 
     // Fetch stats for new exercises
     newExercises.forEach((ex) => {
@@ -229,7 +243,7 @@ export default function WorkoutExerciseTracker({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="🔍 Search exercises..."
+              placeholder={t('workouts.placeholders.searchExercises') || '🔍 Search exercises...'}
               className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
               autoFocus
             />
@@ -287,7 +301,7 @@ export default function WorkoutExerciseTracker({
       {exercises.length === 0 ? (
         <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
           <div className="text-4xl mb-2">💪</div>
-          <p className="text-uc-text-muted">No exercises added yet</p>
+          <p className="text-uc-text-muted">{t('workouts.labels.noExercisesAdded') || 'No exercises added yet'}</p>
           <p className="text-sm text-uc-text-muted mt-1">Click &quot;Add Exercise&quot; to start tracking</p>
         </div>
       ) : (
@@ -344,7 +358,7 @@ export default function WorkoutExerciseTracker({
                         onChange={(e) =>
                           handleSetChange(exerciseIndex, setIndex, 'reps', parseInt(e.target.value) || 0)
                         }
-                        placeholder="Reps"
+                        placeholder={t('workouts.placeholders.reps') || 'Reps'}
                         min="1"
                         className="w-20 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
                       />
@@ -355,7 +369,7 @@ export default function WorkoutExerciseTracker({
                         onChange={(e) =>
                           handleSetChange(exerciseIndex, setIndex, 'weight', parseFloat(e.target.value) || 0)
                         }
-                        placeholder="Weight"
+                        placeholder={t('workouts.placeholders.weight') || 'Weight'}
                         step="0.5"
                         min="0"
                         className="w-20 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
@@ -372,7 +386,7 @@ export default function WorkoutExerciseTracker({
                             e.target.value ? parseInt(e.target.value) : 0
                           )
                         }
-                        placeholder="RIR"
+                        placeholder={t('workouts.placeholders.rir') || 'RIR'}
                         min="0"
                         max="5"
                         className="w-16 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
@@ -407,7 +421,7 @@ export default function WorkoutExerciseTracker({
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
           <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
             <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between sticky top-0 bg-uc-dark-bg">
-              <h3 className="text-lg font-semibold text-uc-text-light">Load Routine</h3>
+              <h3 className="text-lg font-semibold text-uc-text-light">{t('workouts.labels.loadRoutine') || 'Load Routine'}</h3>
               <button
                 onClick={() => {
                   setShowRoutineSelector(false)
@@ -421,7 +435,7 @@ export default function WorkoutExerciseTracker({
             <div className="p-4">
               {routines.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-uc-text-muted mb-4">No routines available</p>
+                  <p className="text-uc-text-muted mb-4">{t('workouts.labels.noRoutinesAvailable') || 'No routines available'}</p>
                   <Link
                     href="/routines"
                     className="text-uc-mustard hover:text-uc-mustard/80 transition-colors"
@@ -450,7 +464,7 @@ export default function WorkoutExerciseTracker({
 
                       {routine.variations.length > 0 ? (
                         <div className="space-y-2">
-                          <div className="text-sm text-uc-text-muted mb-2">Select variation:</div>
+                          <div className="text-sm text-uc-text-muted mb-2">{t('common.selectVariation') || 'Select variation:'}</div>
                           {routine.variations.map((variation, vIndex) => (
                             <button
                               key={vIndex}

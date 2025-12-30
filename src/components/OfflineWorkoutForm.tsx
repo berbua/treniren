@@ -269,9 +269,9 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                 </label>
                 <div className="flex space-x-4">
                   {[
-                    { value: 'MORNING', label: 'Morning', emoji: '🌅' },
-                    { value: 'MIDDAY', label: 'Midday', emoji: '☀️' },
-                    { value: 'EVENING', label: 'Evening', emoji: '🌙' }
+                    { value: 'MORNING', label: t('workouts.timeOfDayOptions.MORNING') || 'Morning', emoji: '🌅' },
+                    { value: 'MIDDAY', label: t('workouts.timeOfDayOptions.MIDDAY') || 'Midday', emoji: '☀️' },
+                    { value: 'EVENING', label: t('workouts.timeOfDayOptions.EVENING') || 'Evening', emoji: '🌙' }
                   ].map((time) => (
                     <label key={time.value} className="flex items-center space-x-2 cursor-pointer">
                       <input
@@ -306,7 +306,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                   type="text"
                   value={formData.sector}
                   onChange={(e) => updateFormData('sector', e.target.value)}
-                  placeholder="Enter the climbing sector or area..."
+                  placeholder={t('workouts.placeholders.sector') || 'Enter the climbing sector or area...'}
                   className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
                 />
               </div>
@@ -343,10 +343,11 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                 ))}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                {formData.preSessionFeel === 1 ? 'Very poor' : 
+                {t(`workouts.ratingLabels.preSessionFeel.${formData.preSessionFeel}`) || 
+                 (formData.preSessionFeel === 1 ? 'Very poor' : 
                  formData.preSessionFeel === 2 ? 'Poor' : 
                  formData.preSessionFeel === 3 ? 'Average' : 
-                 formData.preSessionFeel === 4 ? 'Good' : 'Excellent'}
+                 formData.preSessionFeel === 4 ? 'Good' : 'Excellent')}
               </div>
             </div>
 
@@ -381,10 +382,11 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                 ))}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                {formData.dayAfterTiredness === 1 ? 'Very fresh' : 
+                {t(`workouts.ratingLabels.dayAfterTiredness.${formData.dayAfterTiredness}`) || 
+                 (formData.dayAfterTiredness === 1 ? 'Very fresh' : 
                  formData.dayAfterTiredness === 2 ? 'Fresh' : 
                  formData.dayAfterTiredness === 3 ? 'Normal' : 
-                 formData.dayAfterTiredness === 4 ? 'Tired' : 'Very tired'}
+                 formData.dayAfterTiredness === 4 ? 'Tired' : 'Very tired')}
               </div>
             </div>
 
@@ -419,10 +421,11 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                 ))}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                {formData.focusLevel === 1 ? 'Very distracted' : 
+                {t(`workouts.ratingLabels.focusLevel.${formData.focusLevel}`) || 
+                 (formData.focusLevel === 1 ? 'Very distracted' : 
                  formData.focusLevel === 2 ? 'Distracted' : 
                  formData.focusLevel === 3 ? 'Average' : 
-                 formData.focusLevel === 4 ? 'Focused' : 'Very focused'}
+                 formData.focusLevel === 4 ? 'Focused' : 'Very focused')}
               </div>
             </div>
 
@@ -475,7 +478,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
               <textarea
                 value={formData.notes}
                 onChange={(e) => updateFormData('notes', e.target.value)}
-                placeholder="Add any additional notes about your workout..."
+                placeholder={t('workouts.placeholders.workoutNotes') || 'Add any additional notes about your workout...'}
                 rows={3}
                 className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 resize-none"
               />

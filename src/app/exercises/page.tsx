@@ -57,7 +57,7 @@ function ExercisesPageContent() {
   }
 
   const handleDeleteExercise = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this exercise? This will also remove it from all workouts.')) {
+    if (!confirm(t('workouts.errors.deleteExerciseConfirm') || 'Are you sure you want to delete this exercise? This will also remove it from all workouts.')) {
       return
     }
 
@@ -74,7 +74,7 @@ function ExercisesPageContent() {
       }
     } catch (error) {
       console.error('Error deleting exercise:', error)
-      alert('Failed to delete exercise')
+      alert(t('workouts.errors.deleteExerciseFailed') || 'Failed to delete exercise')
     }
   }
 

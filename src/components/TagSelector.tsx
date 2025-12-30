@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Tag } from '@/types/workout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TagSelectorProps {
   selectedTagIds: string[];
@@ -29,6 +30,7 @@ export default function TagSelector({
   availableTags, 
   onCreateTag 
 }: TagSelectorProps) {
+  const { t } = useLanguage()
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(predefinedColors[0]);
@@ -119,7 +121,7 @@ export default function TagSelector({
                 type="text"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
-                placeholder="Tag name"
+                placeholder={t('workouts.placeholders.tagName') || 'Tag name'}
                 className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
                 autoFocus
               />

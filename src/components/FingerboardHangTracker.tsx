@@ -39,7 +39,7 @@ export default function FingerboardHangTracker({
 
   const handleLoadProtocol = (protocol: FingerboardProtocol) => {
     if (!protocol.hangs || protocol.hangs.length === 0) {
-      alert('This protocol has no hangs')
+      alert(t('workouts.errors.protocolNoHangs') || 'This protocol has no hangs')
       return
     }
 
@@ -144,7 +144,7 @@ export default function FingerboardHangTracker({
       {hangs.length === 0 ? (
         <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
           <div className="text-4xl mb-2">🖐️</div>
-          <p className="text-uc-text-muted">No hangs added yet</p>
+          <p className="text-uc-text-muted">{t('workouts.labels.noHangsAdded') || 'No hangs added yet'}</p>
           <p className="text-sm text-uc-text-muted mt-1">Click &quot;Add Hang&quot; or &quot;Load Protocol&quot; to start</p>
         </div>
       ) : (
@@ -197,7 +197,7 @@ export default function FingerboardHangTracker({
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">Hand Type</label>
+                    <label className="block text-xs text-uc-text-muted mb-1">{t('workouts.labels.handType') || 'Hand Type'}</label>
                     <select
                       value={hang.handType}
                       onChange={(e) => handleHangChange(index, 'handType', e.target.value as HandType)}
@@ -212,7 +212,7 @@ export default function FingerboardHangTracker({
                   </div>
 
                   <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">Grip Type</label>
+                    <label className="block text-xs text-uc-text-muted mb-1">{t('workouts.labels.gripType') || 'Grip Type'}</label>
                     <select
                       value={hang.gripType}
                       onChange={(e) => {
@@ -250,7 +250,7 @@ export default function FingerboardHangTracker({
                       }
                       className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
                     >
-                      <option value="">Select size...</option>
+                      <option value="">{t('common.selectSize') || 'Select size...'}</option>
                       {CRIMP_SIZE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.emoji} {opt.label}
@@ -261,12 +261,12 @@ export default function FingerboardHangTracker({
                 )}
 
                 <div>
-                  <label className="block text-xs text-uc-text-muted mb-1">Custom Description (optional)</label>
+                  <label className="block text-xs text-uc-text-muted mb-1">{t('workouts.labels.customDescription') || 'Custom Description (optional)'}</label>
                   <input
                     type="text"
                     value={hang.customDescription || ''}
                     onChange={(e) => handleHangChange(index, 'customDescription', e.target.value)}
-                    placeholder="e.g., 3-finger drag, half crimp"
+                    placeholder={t('workouts.placeholders.customDescription') || 'e.g., 3-finger drag, half crimp'}
                     className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
                   />
                 </div>
@@ -292,7 +292,7 @@ export default function FingerboardHangTracker({
                           handleHangChange(index, 'unload', undefined)
                         }
                       }}
-                      placeholder="0"
+                      placeholder={t('workouts.placeholders.load') || '0'}
                       className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
                     />
                   </div>
@@ -308,7 +308,7 @@ export default function FingerboardHangTracker({
                           e.target.value ? parseInt(e.target.value) : undefined
                         )
                       }
-                      placeholder="5"
+                      placeholder={t('workouts.placeholders.unload') || '5'}
                       className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
                     />
                   </div>
@@ -324,7 +324,7 @@ export default function FingerboardHangTracker({
                           e.target.value ? parseInt(e.target.value) : undefined
                         )
                       }
-                      placeholder="10"
+                      placeholder={t('workouts.placeholders.timeSeconds') || '10'}
                       className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
                     />
                   </div>
@@ -335,7 +335,7 @@ export default function FingerboardHangTracker({
                   <textarea
                     value={hang.notes || ''}
                     onChange={(e) => handleHangChange(index, 'notes', e.target.value)}
-                    placeholder="Optional notes..."
+                    placeholder={t('workouts.placeholders.notes') || 'Optional notes...'}
                     rows={2}
                     className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple resize-none"
                   />
@@ -351,7 +351,7 @@ export default function FingerboardHangTracker({
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
           <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
             <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between sticky top-0 bg-uc-dark-bg">
-              <h3 className="text-lg font-semibold text-uc-text-light">Load Protocol</h3>
+              <h3 className="text-lg font-semibold text-uc-text-light">{t('workouts.labels.loadProtocol') || 'Load Protocol'}</h3>
               <button
                 onClick={() => setShowProtocolSelector(false)}
                 className="text-uc-text-muted hover:text-uc-text-light"
@@ -362,7 +362,7 @@ export default function FingerboardHangTracker({
             <div className="p-4">
               {protocols.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-uc-text-muted mb-4">No protocols available</p>
+                  <p className="text-uc-text-muted mb-4">{t('workouts.labels.noProtocolsAvailable') || 'No protocols available'}</p>
                   <Link
                     href="/fingerboard-protocols"
                     className="text-uc-mustard hover:text-uc-mustard/80 transition-colors"

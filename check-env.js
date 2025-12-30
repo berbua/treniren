@@ -71,3 +71,4 @@ if (googleClientIdMatch) {
 console.log('\n💡 Remember to restart your dev server after changing .env.local!');
 console.log('   npm run dev\n');
 
+

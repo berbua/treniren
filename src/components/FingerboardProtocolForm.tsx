@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { FingerboardProtocol, FingerboardProtocolFormData, FingerboardProtocolHang, HandType, GripType } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, getHandTypeLabel, getHandTypeEmoji, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
 
 interface FingerboardProtocolFormProps {
@@ -17,6 +18,7 @@ export default function FingerboardProtocolForm({
   onCancel,
   isSubmitting = false,
 }: FingerboardProtocolFormProps) {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState<FingerboardProtocolFormData>({
     name: '',
     description: '',
@@ -133,7 +135,7 @@ export default function FingerboardProtocolForm({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder="e.g., Max Strength Protocol"
+              placeholder={t('workouts.placeholders.protocolName') || 'e.g., Max Strength Protocol'}
             />
             {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
           </div>
@@ -147,7 +149,7 @@ export default function FingerboardProtocolForm({
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               rows={2}
-              placeholder="Brief description of this protocol"
+              placeholder={t('workouts.placeholders.protocolDescription') || 'Brief description of this protocol'}
             />
           </div>
 
@@ -275,6 +277,7 @@ function HangForm({
   onSave: (hang: FingerboardProtocolHang) => void
   onCancel: () => void
 }) {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState<FingerboardProtocolHang>({
     order: hang?.order || 0,
     handType: hang?.handType || 'BOTH_HANDS',
@@ -291,16 +294,16 @@ function HangForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.handType) {
-      alert('Hand type is required')
+      alert(t('workouts.errors.handTypeRequired') || 'Hand type is required')
       return
     }
     if (!formData.gripType) {
-      alert('Grip type is required')
+      alert(t('workouts.errors.gripTypeRequired') || 'Grip type is required')
       return
     }
     // Validate crimp size if grip type is CRIMP (required for crimp)
     if (formData.gripType === 'CRIMP' && !formData.crimpSize) {
-      alert('Crimp size is required when grip type is Crimp')
+      alert(t('workouts.errors.crimpSizeRequired') || 'Crimp size is required when grip type is Crimp')
       return
     }
     // Clear crimp size if grip type is SLOPER
@@ -379,7 +382,7 @@ function HangForm({
                 }
                 className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               >
-                <option value="">Select size...</option>
+                <option value="">{t('common.selectSize') || 'Select size...'}</option>
                 {CRIMP_SIZE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.emoji} {opt.label}
@@ -403,7 +406,7 @@ function HangForm({
               value={formData.customDescription || ''}
               onChange={(e) => setFormData({ ...formData, customDescription: e.target.value })}
               className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder="e.g., 3-finger drag, half crimp"
+              placeholder={t('workouts.placeholders.customDescription') || 'e.g., 3-finger drag, half crimp'}
             />
           </div>
 
@@ -434,7 +437,7 @@ function HangForm({
                 }
               }}
               className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder="0"
+              placeholder={t('workouts.placeholders.load') || '0'}
             />
           </div>
 
@@ -453,7 +456,7 @@ function HangForm({
                   })
                 }
                 className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder="5"
+                placeholder={t('workouts.placeholders.unload') || '5'}
               />
             </div>
             <div>
@@ -470,7 +473,7 @@ function HangForm({
                   })
                 }
                 className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder="10"
+                placeholder={t('workouts.placeholders.timeSeconds') || '10'}
               />
             </div>
           </div>

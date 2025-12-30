@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { Event, EventFormData, Tag } from '@/types/event'
+import { useLanguage } from '@/contexts/LanguageContext'
 import EventForm from '@/components/EventForm'
 import EventCard from '@/components/EventCard'
 
 export default function EventsPage() {
+  const { t } = useLanguage()
   const [events, setEvents] = useState<Event[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -97,7 +99,7 @@ export default function EventsPage() {
   }
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (!confirm('Are you sure you want to delete this event?')) return
+    if (!confirm(t('events.deleteConfirm') || 'Are you sure you want to delete this event?')) return
 
     try {
       const response = await fetch(`/api/events/${eventId}`, {

@@ -63,6 +63,7 @@ export default function RoutineForm({
   const [showVariationForm, setShowVariationForm] = useState(false)
   const [editingVariationIndex, setEditingVariationIndex] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedExerciseIds, setSelectedExerciseIds] = useState<Set<string>>(new Set())
 
   // Save draft to localStorage on every change (only for new routines)
   useEffect(() => {
@@ -141,7 +142,50 @@ export default function RoutineForm({
     })
     setShowExerciseSelector(false)
     setSearchQuery('')
+    setSelectedExerciseIds(new Set())
   }
+
+  const handleToggleExerciseSelection = (exerciseId: string) => {
+    const newSelected = new Set(selectedExerciseIds)
+    if (newSelected.has(exerciseId)) {
+      newSelected.delete(exerciseId)
+    } else {
+      newSelected.add(exerciseId)
+    }
+    setSelectedExerciseIds(newSelected)
+  }
+
+  const handleSelectAll = () => {
+    const allIds = new Set(filteredExercises.map(ex => ex.id))
+    setSelectedExerciseIds(allIds)
+  }
+
+  const handleDeselectAll = () => {
+    setSelectedExerciseIds(new Set())
+  }
+
+  const handleAddSelectedExercises = () => {
+    const selectedExercises = filteredExercises.filter(ex => selectedExerciseIds.has(ex.id))
+    const newExercises: RoutineExercise[] = selectedExercises.map((exercise) => ({
+      exerciseId: exercise.id,
+      order: formData.exercises.length + selectedExercises.indexOf(exercise),
+      exercise,
+    }))
+    setFormData({
+      ...formData,
+      exercises: [...formData.exercises, ...newExercises],
+    })
+    setShowExerciseSelector(false)
+    setSearchQuery('')
+    setSelectedExerciseIds(new Set())
+  }
+
+  // Reset selected exercises when modal opens/closes or search changes
+  useEffect(() => {
+    if (!showExerciseSelector) {
+      setSelectedExerciseIds(new Set())
+    }
+  }, [showExerciseSelector])
 
   const handleRemoveExercise = (index: number) => {
     const newExercises = formData.exercises.filter((_, i) => i !== index)
@@ -437,11 +481,19 @@ export default function RoutineForm({
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
             <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-md">
               <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-uc-text-light">{t('routines.form.selectExercise') || 'Select Exercise'}</h3>
+                <h3 className="text-lg font-semibold text-uc-text-light">
+                  {t('routines.form.selectExercises') || 'Select Exercises'}
+                  {selectedExerciseIds.size > 0 && (
+                    <span className="ml-2 text-sm text-uc-mustard">
+                      ({selectedExerciseIds.size} {t('routines.form.selected') || 'selected'})
+                    </span>
+                  )}
+                </h3>
                 <button
                   onClick={() => {
                     setShowExerciseSelector(false)
                     setSearchQuery('')
+                    setSelectedExerciseIds(new Set())
                   }}
                   className="text-uc-text-muted hover:text-uc-text-light"
                 >
@@ -456,7 +508,25 @@ export default function RoutineForm({
                   placeholder={t('routines.form.searchExercises') || 'Search exercises...'}
                   className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple mb-4"
                 />
-                <div className="max-h-64 overflow-y-auto space-y-2">
+                {filteredExercises.length > 0 && (
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      type="button"
+                      onClick={handleSelectAll}
+                      className="text-xs bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-3 py-1 rounded-lg transition-colors"
+                    >
+                      {t('routines.form.selectAll') || 'Select All'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeselectAll}
+                      className="text-xs bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-3 py-1 rounded-lg transition-colors"
+                    >
+                      {t('routines.form.deselectAll') || 'Deselect All'}
+                    </button>
+                  </div>
+                )}
+                <div className="max-h-64 overflow-y-auto space-y-2 mb-4">
                   {filteredExercises.length === 0 ? (
                     <div className="text-center py-6 space-y-4">
                       <p className="text-uc-text-muted">
@@ -483,21 +553,65 @@ export default function RoutineForm({
                       )}
                     </div>
                   ) : (
-                    filteredExercises.map((exercise) => (
-                      <button
-                        key={exercise.id}
-                        type="button"
-                        onClick={() => handleAddExercise(exercise)}
-                        className="w-full text-left bg-uc-black/50 hover:bg-uc-black rounded-lg p-3 border border-uc-purple/20 hover:border-uc-purple/40 transition-all"
-                      >
-                        <div className="font-medium text-uc-text-light">{exercise.name}</div>
-                        {exercise.category && (
-                          <div className="text-sm text-uc-text-muted">{exercise.category}</div>
-                        )}
-                      </button>
-                    ))
+                    filteredExercises.map((exercise) => {
+                      const isSelected = selectedExerciseIds.has(exercise.id)
+                      const isAlreadyAdded = formData.exercises.some(ex => ex.exerciseId === exercise.id)
+                      return (
+                        <label
+                          key={exercise.id}
+                          className={`flex items-center gap-3 w-full text-left bg-uc-black/50 hover:bg-uc-black rounded-lg p-3 border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-uc-mustard bg-uc-mustard/10'
+                              : 'border-uc-purple/20 hover:border-uc-purple/40'
+                          } ${isAlreadyAdded ? 'opacity-50' : ''}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleExerciseSelection(exercise.id)}
+                            disabled={isAlreadyAdded}
+                            className="w-4 h-4 text-uc-mustard bg-uc-black border-uc-purple/30 rounded focus:ring-uc-mustard focus:ring-2"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-uc-text-light">
+                              {exercise.name}
+                              {isAlreadyAdded && (
+                                <span className="ml-2 text-xs text-uc-text-muted">
+                                  ({t('routines.form.alreadyAdded') || 'already added'})
+                                </span>
+                              )}
+                            </div>
+                            {exercise.category && (
+                              <div className="text-sm text-uc-text-muted">{exercise.category}</div>
+                            )}
+                          </div>
+                        </label>
+                      )
+                    })
                   )}
                 </div>
+                {selectedExerciseIds.size > 0 && (
+                  <div className="flex gap-2 pt-4 border-t border-uc-purple/20">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExerciseSelector(false)
+                        setSearchQuery('')
+                        setSelectedExerciseIds(new Set())
+                      }}
+                      className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      {t('common.cancel') || 'Cancel'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddSelectedExercises}
+                      className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      {t('routines.form.addSelected') || `Add Selected (${selectedExerciseIds.size})`}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -600,7 +714,7 @@ function VariationForm({
                   })
                 }
                 className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder="12"
+                placeholder={t('workouts.placeholders.minReps') || '12'}
               />
             </div>
             <div>
@@ -617,7 +731,7 @@ function VariationForm({
                   })
                 }
                 className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder="15"
+                placeholder={t('workouts.placeholders.maxReps') || '15'}
               />
             </div>
           </div>
@@ -635,7 +749,7 @@ function VariationForm({
                 })
               }
               className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder="3"
+              placeholder={t('workouts.placeholders.defaultSets') || '3'}
             />
           </div>
           <div className="flex gap-4 pt-4">

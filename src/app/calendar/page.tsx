@@ -11,6 +11,7 @@ import TrainingTypeFilter from '@/components/TrainingTypeFilter'
 import AuthGuard from '@/components/AuthGuard'
 import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
 import EventForm from '@/components/EventForm'
+import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 
 type ViewMode = 'week' | 'month'
 type FilterType = 'workouts' | 'events'
@@ -186,6 +187,8 @@ function CalendarPageContent() {
     customDays: 7,
     duplicateDate: new Date().toISOString().slice(0, 10),
   })
+  const [showQuickLog, setShowQuickLog] = useState(false)
+  const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
 
   // Fetch workouts, events, tags, and exercises
   useEffect(() => {
@@ -361,6 +364,11 @@ function CalendarPageContent() {
     setShowEventForm(true)
   }
 
+  const handleQuickLog = () => {
+    setShowAddChoice(false)
+    setShowQuickLog(true)
+  }
+
   const handleWorkoutClick = async (workout: Workout, e: React.MouseEvent) => {
     e.stopPropagation()
     // Open workout form for editing - fetch full workout data including exercises and hangs
@@ -386,11 +394,11 @@ function CalendarPageContent() {
         setSelectedDate(new Date(workout.startTime))
         setShowWorkoutForm(true)
       } else {
-        alert('Failed to load workout details')
+        alert(t('workouts.errors.loadWorkoutDetailsFailed') || 'Failed to load workout details')
       }
     } catch (error) {
       console.error('Error fetching workout:', error)
-      alert('Error loading workout details')
+      alert(t('workouts.errors.loadWorkoutDetailsError') || 'Error loading workout details')
     }
   }
 
@@ -405,11 +413,11 @@ function CalendarPageContent() {
         setSelectedDate(new Date(workout.startTime))
         setShowWorkoutForm(true)
       } else {
-        alert('Failed to load workout details')
+        alert(t('workouts.errors.loadWorkoutDetailsFailed') || 'Failed to load workout details')
       }
     } catch (error) {
       console.error('Error fetching workout:', error)
-      alert('Error loading workout details')
+      alert(t('workouts.errors.loadWorkoutDetailsError') || 'Error loading workout details')
     }
   }
 
@@ -433,7 +441,7 @@ function CalendarPageContent() {
     if (recurringFormData.mode === 'duplicate') {
       // Duplicate to single date
       if (!recurringFormData.duplicateDate) {
-        alert('Please select a date')
+        alert(t('workouts.errors.selectDate') || 'Please select a date')
         return
       }
 
@@ -486,7 +494,7 @@ function CalendarPageContent() {
         })
 
         if (response.ok) {
-          alert('Workout duplicated successfully!')
+          alert(t('workouts.errors.duplicateWorkoutSuccess') || 'Workout duplicated successfully!')
           // Refresh workouts
           const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' })
           if (workoutsResponse.ok) {
@@ -508,12 +516,12 @@ function CalendarPageContent() {
     } else {
       // Recurring workouts
       if (!recurringFormData.startDate || !recurringFormData.endDate) {
-        alert('Please select both start and end dates')
+        alert(t('workouts.errors.selectStartEndDates') || 'Please select both start and end dates')
         return
       }
 
       if (recurringFormData.frequency === 'custom' && (!recurringFormData.customDays || recurringFormData.customDays < 1)) {
-        alert('Please enter a valid number of days (at least 1)')
+        alert(t('workouts.errors.validNumberOfDays') || 'Please enter a valid number of days (at least 1)')
         return
       }
 
@@ -773,9 +781,12 @@ function CalendarPageContent() {
         <div className="mb-8">
           {/* Title - separate row */}
           <div className="mb-4">
-            <h1 className="text-3xl font-bold text-uc-text-light">
+            <h1 className="text-3xl font-bold text-uc-text-light mb-2">
               📅 {t('calendar.title')}
             </h1>
+            <p className="text-sm text-uc-text-muted">
+              {t('calendar.clickDateHint') || '💡 Click on any date to add a workout, event, or quick log'}
+            </p>
           </div>
 
           {/* Buttons and filters - separate row with wrapping */}
@@ -783,8 +794,10 @@ function CalendarPageContent() {
             <button
               onClick={() => {
                 setSelectedDate(new Date())
+                setEditingWorkout(null)
                 setEditingEvent(null)
-                setShowEventForm(true)
+                setDuplicatingWorkout(null)
+                setShowAddChoice(true)
               }}
               className="px-4 py-2 rounded-xl font-medium transition-colors bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light border border-uc-purple/20 whitespace-nowrap"
             >
@@ -1028,8 +1041,13 @@ function CalendarPageContent() {
                         title={`${getTrainingTypeEmoji(workout.type)} ${workout.type} - ${workout.notes || 'No notes'}`}
                       >
                         <div className="flex items-center justify-between gap-1">
-                          <span className="flex-1 truncate">
+                          <span className="flex-1 truncate flex items-center gap-1">
                             {getTrainingTypeEmoji(workout.type)} {getTrainingTypeLabel(workout.type, t)}
+                            {workout.details && (workout.details as any)?.quickLog && (
+                              <span className="text-xs bg-yellow-500/30 text-yellow-200 px-1 rounded" title={t('quickLog.quickLogBadge') || 'Quick'}>
+                                ⚡
+                              </span>
+                            )}
                           </span>
                           <div className="flex gap-1 flex-shrink-0">
                             <button
@@ -1054,10 +1072,19 @@ function CalendarPageContent() {
                             </button>
                           </div>
                         </div>
-                        {viewMode === 'week' && workout.notes && (
-                          <div className="text-xs opacity-90 mt-1 truncate">
-                            {workout.notes}
-                          </div>
+                        {viewMode === 'week' && (
+                          <>
+                            {workout.type === 'GYM' && workout.details && (workout.details as any)?.routineVariation && (
+                              <div className="text-xs opacity-90 mt-1 truncate">
+                                📦 {(workout.details as any).routineVariation.routineName} - {(workout.details as any).routineVariation.variationName}
+                              </div>
+                            )}
+                            {workout.notes && (
+                              <div className="text-xs opacity-90 mt-1 truncate">
+                                {workout.notes}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     ))}
@@ -1223,18 +1250,25 @@ function CalendarPageContent() {
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-4">
                   <button
+                    onClick={handleQuickLog}
+                    className="flex flex-col items-center p-6 bg-gradient-to-br from-uc-purple/30 to-uc-mustard/30 rounded-xl border-2 border-uc-purple/40 hover:border-uc-purple/60 hover:from-uc-purple/40 hover:to-uc-mustard/40 transition-all"
+                  >
+                    <span className="text-4xl mb-3">⚡</span>
+                    <span className="font-medium text-uc-text-light">{t('quickLog.button') || 'Quick Log'}</span>
+                  </button>
+                  <button
                     onClick={handleAddWorkout}
                     className="flex flex-col items-center p-6 bg-uc-black/50 rounded-xl border-2 border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black transition-all"
                   >
                     <span className="text-4xl mb-3">🏋️</span>
-                    <span className="font-medium text-uc-text-light">Add Workout</span>
+                    <span className="font-medium text-uc-text-light">{t('workouts.addNew') || 'Add Workout'}</span>
                   </button>
                   <button
                     onClick={handleAddEvent}
                     className="flex flex-col items-center p-6 bg-uc-black/50 rounded-xl border-2 border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black transition-all"
                   >
                     <span className="text-4xl mb-3">📅</span>
-                    <span className="font-medium text-uc-text-light">Add Event</span>
+                    <span className="font-medium text-uc-text-light">{t('events.addNew') || 'Add Event'}</span>
                   </button>
                 </div>
               </div>
@@ -1280,6 +1314,54 @@ function CalendarPageContent() {
             defaultDate={!editingEvent && selectedDate ? selectedDate.toISOString().slice(0, 10) : undefined}
           />
         )}
+
+        {/* Quick Log Modal */}
+        <QuickLogModal
+          isOpen={showQuickLog}
+          onClose={() => setShowQuickLog(false)}
+          onSubmit={async (data: QuickLogData) => {
+            setIsSubmittingQuickLog(true)
+            try {
+              const response = await fetch('/api/workouts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  type: data.type,
+                  date: data.date,
+                  trainingVolume: data.trainingVolume,
+                  mentalPracticeType: data.mentalPracticeType,
+                  timeOfDay: data.timeOfDay,
+                  notes: '',
+                  details: { 
+                    quickLog: true,
+                    ...(data.protocolId && { protocolId: data.protocolId })
+                  },
+                }),
+              })
+
+              if (response.ok) {
+                setShowQuickLog(false)
+                // Refresh calendar data
+                const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' })
+                if (workoutsResponse.ok) {
+                  const updatedWorkouts = await workoutsResponse.json()
+                  setWorkouts(updatedWorkouts)
+                }
+              } else {
+                const error = await response.json()
+                alert(error.error || t('quickLog.errors.saveFailed') || 'Failed to save quick log')
+              }
+            } catch (error) {
+              console.error('Error saving quick log:', error)
+              alert(t('quickLog.errors.saveError') || 'Error saving quick log')
+            } finally {
+              setIsSubmittingQuickLog(false)
+            }
+          }}
+          defaultDate={selectedDate || undefined}
+          isSubmitting={isSubmittingQuickLog}
+        />
 
         {/* Recurring/Duplicate Workout Modal */}
         {showRecurringModal && (

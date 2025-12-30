@@ -47,7 +47,7 @@ export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgress
   if (isLoading) {
     return (
       <div className="mt-2 p-2 bg-uc-black/20 rounded-lg">
-        <div className="text-xs text-uc-text-muted">Loading progress...</div>
+        <div className="text-xs text-uc-text-muted">{t('common.loadingProgress') || 'Loading progress...'}</div>
       </div>
     );
   }

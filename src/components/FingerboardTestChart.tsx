@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestResult } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { LoadingSpinner } from './LoadingSpinner'
 
 // Dynamic import for Recharts
@@ -33,6 +34,7 @@ interface FingerboardTestChartProps {
 }
 
 export default function FingerboardTestChart({ testResults, protocol }: FingerboardTestChartProps) {
+  const { t } = useLanguage()
   const [metric, setMetric] = useState<'time' | 'load'>('time')
   const [selectedHangId, setSelectedHangId] = useState<string | null>(null)
 
@@ -118,13 +120,13 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
           </select>
         </div>
         <div>
-          <label className="block text-xs text-uc-text-muted mb-1">Filter by Hang</label>
+          <label className="block text-xs text-uc-text-muted mb-1">{t('workouts.labels.filterByHang') || 'Filter by Hang'}</label>
           <select
             value={selectedHangId || ''}
             onChange={(e) => setSelectedHangId(e.target.value || null)}
             className="bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
           >
-            <option value="">All Hangs</option>
+            <option value="">{t('common.allHangs') || 'All Hangs'}</option>
             {availableHangs.map((hang) => {
               const hangId = hang.id || `hang-${hang.order}`
               return (
