@@ -223,14 +223,14 @@ export default function WorkoutExerciseTracker({
             onClick={() => setShowRoutineSelector(true)}
             className="px-4 py-2 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black rounded-lg text-sm font-medium transition-colors"
           >
-            👯 Load Routine
+            👯 {t('workouts.labels.loadRoutine') || 'Load Routine'}
           </button>
           <button
             type="button"
             onClick={() => setShowExerciseSelector(!showExerciseSelector)}
             className="px-4 py-2 bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light rounded-lg text-sm font-medium transition-colors"
           >
-            + Add Exercise
+            + {t('workouts.labels.addExercise') || t('exercises.addExercise') || 'Add Exercise'}
           </button>
         </div>
       </div>
@@ -302,7 +302,7 @@ export default function WorkoutExerciseTracker({
         <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
           <div className="text-4xl mb-2">💪</div>
           <p className="text-uc-text-muted">{t('workouts.labels.noExercisesAdded') || 'No exercises added yet'}</p>
-          <p className="text-sm text-uc-text-muted mt-1">Click &quot;Add Exercise&quot; to start tracking</p>
+          <p className="text-sm text-uc-text-muted mt-1">{t('workouts.labels.clickAddExerciseToStart') || `Click "${t('exercises.addExercise') || 'Add Exercise'}" to start tracking`}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -457,7 +457,7 @@ export default function WorkoutExerciseTracker({
                             <p className="text-sm text-uc-text-muted mt-1">{routine.description}</p>
                           )}
                           <div className="text-xs text-uc-text-muted mt-2">
-                            {routine.routineExercises.length} {routine.routineExercises.length === 1 ? 'exercise' : 'exercises'}
+                            {routine.routineExercises.length} {routine.routineExercises.length === 1 ? (t('exercises.exercise') || 'exercise') : (t('exercises.exercises') || 'exercises')}
                           </div>
                         </div>
                       </div>
@@ -488,7 +488,7 @@ export default function WorkoutExerciseTracker({
                           onClick={() => handleLoadRoutine(routine)}
                           className="w-full bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
                         >
-                          Load Routine
+                          {t('workouts.labels.loadRoutine') || 'Load Routine'}
                         </button>
                       )}
                     </div>

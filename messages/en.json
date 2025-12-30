@@ -330,6 +330,8 @@
     "labels": {
       "noExercisesAdded": "No exercises added yet",
       "loadRoutine": "Load Routine",
+      "addExercise": "Add Exercise",
+      "clickAddExerciseToStart": "Click \"Add Exercise\" to start tracking",
       "noRoutinesAvailable": "No routines available",
       "noHangsAdded": "No hangs added yet",
       "handType": "Hand Type",

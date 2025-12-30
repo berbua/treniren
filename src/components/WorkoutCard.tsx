@@ -45,23 +45,20 @@ const getTrainingTypeColor = (type: WorkoutType) => {
   }
 }
 
-const getTrainingTypeLabel = (type: WorkoutType) => {
-  switch (type) {
-    case 'GYM':
-      return '🏋️ Gym'
-    case 'BOULDERING':
-      return '🧗 Bouldering'
-    case 'CIRCUITS':
-      return '🔄 Circuits'
-    case 'LEAD_ROCK':
-      return '🏔️ Lead Rock'
-    case 'LEAD_ARTIFICIAL':
-      return '🧗‍♀️ Lead Wall'
-    case 'MENTAL_PRACTICE':
-      return '🧘 Mental Practice'
-    default:
-      return type
+const getTrainingTypeLabel = (type: WorkoutType, t: (key: string) => string) => {
+  const emojiMap: { [key in WorkoutType]: string } = {
+    'GYM': '🏋️',
+    'BOULDERING': '🧗',
+    'CIRCUITS': '🔄',
+    'LEAD_ROCK': '🏔️',
+    'LEAD_ARTIFICIAL': '🧗‍♀️',
+    'MENTAL_PRACTICE': '🧘',
+    'FINGERBOARD': '🖐️',
   }
+  
+  const emoji = emojiMap[type] || ''
+  const label = t(`workouts.workoutTypes.${type}`) || t(`workoutTypes.${type.toLowerCase()}`) || type
+  return `${emoji} ${label}`
 }
 
 const formatDate = (dateString: string) => {
@@ -76,13 +73,13 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
   const { t } = useLanguage()
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 border border-slate-200 dark:border-slate-700">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-3">
-          <div className={`w-3 h-3 rounded-full ${getTrainingTypeColor(workout.type)}`} />
-          <div>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="mb-1 relative">
+            <div className={`absolute -left-1 top-1.5 w-3 h-3 rounded-full ${getTrainingTypeColor(workout.type)}`} />
             <div className="flex items-center space-x-2">
               <h3 className="font-semibold text-slate-900 dark:text-slate-50">
-                {getTrainingTypeLabel(workout.type)}
+                {getTrainingTypeLabel(workout.type, t)}
               </h3>
               {workout.details && (workout.details as any)?.quickLog && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
@@ -90,26 +87,26 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
                 </span>
               )}
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              {formatDate(workout.startTime)}
-            </p>
-            {workout.tags && workout.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {workout.tags.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                    style={{ backgroundColor: tag.color }}
-                  >
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {formatDate(workout.startTime)}
+          </p>
+          {workout.tags && workout.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {workout.tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                  style={{ backgroundColor: tag.color }}
+                >
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 ml-4">
           {onEdit && (
             <button
               onClick={() => onEdit(workout.id)}

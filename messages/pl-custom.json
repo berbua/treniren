@@ -1,7 +1,7 @@
 {
     "nav": {
-        "routines": "Sety ćwiczeń",
-        "fingerboardProtocols": "Chwytka",
+        "routines": "Zestawy ćwiczeń",
+        "fingerboardProtocols": "Chwytotablica",
         "dashboard": "Start"
     },
     "workouts": {
@@ -22,6 +22,19 @@
             "STRETCH1": "Stretch 1",
             "STRETCH2": "Stretch 2",
             "PANIC": "Panika"
+        },
+        "workoutTypes": {
+            "BOULDERING": "Buldering",
+            "FINGERBOARD": "Chwytotablica"
+        },
+        "trainingVolumeDescriptions": {
+            "TR1": "Deload"
+        },
+        "placeholders": {
+            "customDescription": "np. trójka wyciągana"
+        },
+        "labels": {
+            "handType": "Ręka czy dwie"
         }
     },
     "events": {
@@ -35,10 +48,10 @@
     },
     "stats": {
         "mentalSessions": "Mental",
-        "fallsTracking": "Śledzenie lotek",
-        "totalFalls": "Łącznie lotek",
-        "fallsPerSession": "Lotki/sesja",
-        "daysSinceLastFall": "Dni od ostatniej lotki"
+        "fallsTracking": "Śledzenie lotów",
+        "totalFalls": "Łącznie lotów",
+        "fallsPerSession": "Loty/sesja",
+        "daysSinceLastFall": "Dni od ostatniego lotu"
     },
     "dashboard": {
        "hi": "Siemka"
@@ -55,6 +68,7 @@
     "training": {
         "types": {
             "gym": "Siłka",
+            "bouldering": "Buldering",
             "leadRock": "Prowadzenie - Skałka",
             "leadArtificial": "Prowadzenie - Ścianka"
         },
@@ -136,7 +150,7 @@
         "injuryCorrelationInsights": "Wglądy w Korelację Kontuzji"
     },
     "fingerboard": {
-        "title": "Protokoły Chwytotablicy",
+        "title": "Treningi na Chwytotablicy",
         "subtitle": "Twórz wielokrotnego użytku protokoły treningowe na chwytkę",
         "loading": "Ładowanie protokołów...",
         "testYourself": "Przetestuj się",

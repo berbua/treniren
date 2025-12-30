@@ -330,6 +330,8 @@
     "labels": {
       "noExercisesAdded": "Brak dodanych ćwiczeń",
       "loadRoutine": "Załaduj Rutynę",
+      "addExercise": "Dodaj Ćwiczenie",
+      "clickAddExerciseToStart": "Kliknij \"Dodaj Ćwiczenie\", aby rozpocząć śledzenie",
       "noRoutinesAvailable": "Brak dostępnych rutyn",
       "noHangsAdded": "Brak dodanych wiszeń",
       "handType": "Typ Dłoni",
