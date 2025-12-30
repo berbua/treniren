@@ -23,7 +23,7 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
     const loadUserData = async () => {
       try {
         // Load user data (nickname)
-        const userResponse = await fetch('/api/user')
+        const userResponse = await fetch('/api/user', { credentials: 'include' })
         if (userResponse.ok) {
           const user = await userResponse.json()
           // Only set nickname if it exists, otherwise keep the Google name fallback
@@ -33,7 +33,7 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
         }
         
         // Load profile data (photo)
-        const profileResponse = await fetch('/api/user-profile')
+        const profileResponse = await fetch('/api/user-profile', { credentials: 'include' })
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
           setUserPhotoUrl(profile?.photoUrl || null)

@@ -481,13 +481,14 @@ function CalendarPageContent() {
         const response = await fetch('/api/workouts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(workoutData),
         })
 
         if (response.ok) {
           alert('Workout duplicated successfully!')
           // Refresh workouts
-          const workoutsResponse = await fetch('/api/workouts')
+          const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' })
           if (workoutsResponse.ok) {
             const workoutsData = await workoutsResponse.json()
             setWorkouts(workoutsData)
@@ -596,6 +597,7 @@ function CalendarPageContent() {
         const response = await fetch('/api/workouts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(workoutData),
         })
 

@@ -96,7 +96,7 @@ function StrongMindPageContent() {
     // Fetch workouts with gratitude data
     const fetchGratitudeWorkouts = async () => {
       try {
-        const response = await fetch('/api/workouts')
+        const response = await fetch('/api/workouts', { credentials: 'include' })
         if (response.ok) {
           const workouts = await response.json()
           // Filter workouts that have gratitude or improvements, sort by date descending

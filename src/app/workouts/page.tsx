@@ -40,7 +40,7 @@ function WorkoutsPageContent() {
   // Fetch workouts
   const fetchWorkouts = async () => {
     try {
-      const response = await fetch('/api/workouts')
+      const response = await fetch('/api/workouts', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setWorkouts(data)
@@ -116,6 +116,7 @@ function WorkoutsPageContent() {
       const response = await fetch('/api/workouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(workoutData),
       })
 

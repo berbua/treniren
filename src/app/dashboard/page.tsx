@@ -56,14 +56,14 @@ function DashboardContent() {
         let allEvents: Event[] = []
         
         // Fetch user data (nickname)
-        const userResponse = await fetch('/api/user')
+        const userResponse = await fetch('/api/user', { credentials: 'include' })
         if (userResponse.ok) {
           const user = await userResponse.json()
           setUserNickname(user.nickname)
         }
         
         // Fetch trips
-        const tripsResponse = await fetch('/api/events')
+        const tripsResponse = await fetch('/api/events', { credentials: 'include' })
         if (tripsResponse.ok) {
           allEvents = await tripsResponse.json()
           const trips = allEvents.filter(event =>
@@ -77,7 +77,7 @@ function DashboardContent() {
         }
 
         // Fetch workouts
-        const workoutsResponse = await fetch('/api/workouts')
+        const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' })
         if (workoutsResponse.ok) {
           const workouts: Workout[] = await workoutsResponse.json()
           setRecentWorkouts(workouts.slice(0, 3))

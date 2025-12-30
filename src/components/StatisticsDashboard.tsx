@@ -26,7 +26,7 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
         setLoading(true);
         
         // Load workouts
-        const workoutsResponse = await fetch('/api/workouts');
+        const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' });
         if (workoutsResponse.ok) {
           const workoutsData = await workoutsResponse.json();
           setWorkouts(workoutsData);

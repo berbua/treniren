@@ -27,7 +27,7 @@ export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgress
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const response = await fetch('/api/workouts');
+        const response = await fetch('/api/workouts', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setWorkouts(data);

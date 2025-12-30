@@ -33,7 +33,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const response = await fetch('/api/user-profile')
+        const response = await fetch('/api/user-profile', { credentials: 'include' })
         if (response.ok) {
           const profile = await response.json()
           if (profile && profile.lastPeriodDate) {
@@ -113,6 +113,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
       await fetch('/api/user-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           cycleAvgLengthDays: 28,
           lastPeriodDate: null,

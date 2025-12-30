@@ -100,7 +100,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
     const loadProfileData = async () => {
       try {
         // Load user profile data
-        const profileResponse = await fetch('/api/user-profile')
+        const profileResponse = await fetch('/api/user-profile', { credentials: 'include' })
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
           if (profile) {
@@ -114,7 +114,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
         }
         
         // Load user data (Google name and display name)
-        const userResponse = await fetch('/api/user')
+        const userResponse = await fetch('/api/user', { credentials: 'include' })
         if (userResponse.ok) {
           const user = await userResponse.json()
           if (user) {
@@ -156,6 +156,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
           await fetch('/api/user-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({
               photoUrl,
               cycleAvgLengthDays: cycleData.cycleLength,

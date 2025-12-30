@@ -68,7 +68,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const loadWorkouts = async () => {
       try {
-        const response = await fetch('/api/workouts');
+        const response = await fetch('/api/workouts', { credentials: 'include' });
         if (response.ok) {
           const workouts = await response.json();
           if (workouts.length > 0) {
@@ -152,7 +152,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const loadWorkoutsForScheduling = async () => {
       try {
-        const response = await fetch('/api/workouts');
+        const response = await fetch('/api/workouts', { credentials: 'include' });
         if (response.ok) {
           const workouts = await response.json();
           if (workouts.length > 0) {

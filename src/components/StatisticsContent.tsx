@@ -27,7 +27,7 @@ export const StatisticsContent = () => {
         setLoading(true);
         
         // Load workouts
-        const workoutsResponse = await fetch('/api/workouts');
+        const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' });
         if (workoutsResponse.ok) {
           const workoutsData = await workoutsResponse.json();
           setWorkouts(workoutsData);
@@ -36,7 +36,7 @@ export const StatisticsContent = () => {
         }
         
         // Load events
-        const eventsResponse = await fetch('/api/events');
+        const eventsResponse = await fetch('/api/events', { credentials: 'include' });
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json();
           setEvents(eventsData);
@@ -45,7 +45,7 @@ export const StatisticsContent = () => {
         }
         
         // Load tags
-        const tagsResponse = await fetch('/api/tags');
+        const tagsResponse = await fetch('/api/tags', { credentials: 'include' });
         if (tagsResponse.ok) {
           const tagsData = await tagsResponse.json();
           setTags(tagsData);
