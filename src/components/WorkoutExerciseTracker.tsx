@@ -265,7 +265,7 @@ export default function WorkoutExerciseTracker({
               onClick={handleCreateNewExercise}
               className="w-full px-4 py-2 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black rounded-lg text-sm font-medium transition-colors"
             >
-              + Create "{searchQuery}"
+              + Create &quot;{searchQuery}&quot;
             </button>
           )}
 
@@ -287,7 +287,7 @@ export default function WorkoutExerciseTracker({
         <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
           <div className="text-4xl mb-2">💪</div>
           <p className="text-uc-text-muted">No exercises added yet</p>
-          <p className="text-sm text-uc-text-muted mt-1">Click "Add Exercise" to start tracking</p>
+          <p className="text-sm text-uc-text-muted mt-1">Click &quot;Add Exercise&quot; to start tracking</p>
         </div>
       ) : (
         <div className="space-y-4">

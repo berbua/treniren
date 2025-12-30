@@ -5,11 +5,13 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { LoadingSpinner } from './LoadingSpinner'
 
 // Dynamic import for Recharts to avoid SSR issues
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let RechartsComponents: any = null
 
 if (typeof window !== 'undefined') {
   try {
     // Try to import recharts - will fail if not installed
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const recharts = require('recharts')
     RechartsComponents = {
       LineChart: recharts.LineChart,

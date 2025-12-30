@@ -145,7 +145,7 @@ export default function FingerboardHangTracker({
         <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
           <div className="text-4xl mb-2">🖐️</div>
           <p className="text-uc-text-muted">No hangs added yet</p>
-          <p className="text-sm text-uc-text-muted mt-1">Click "Add Hang" or "Load Protocol" to start</p>
+          <p className="text-sm text-uc-text-muted mt-1">Click &quot;Add Hang&quot; or &quot;Load Protocol&quot; to start</p>
         </div>
       ) : (
         <div className="space-y-4">

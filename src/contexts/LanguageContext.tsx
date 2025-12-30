@@ -18,7 +18,7 @@ import plTranslations from '../../messages/pl.json'
 
 // Import custom Polish translations (user-only file)
 // Using static import - Next.js will bundle this at build time
-// @ts-ignore - File exists and is valid JSON
+// @ts-expect-error - File exists and is valid JSON, but TypeScript doesn't know about JSON imports
 import plCustomTranslationsRaw from '../../messages/pl-custom.json'
 
 // Type assertion for custom translations

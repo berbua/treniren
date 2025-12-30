@@ -406,7 +406,7 @@ function ExerciseDetailPageContent() {
             <div className="text-center py-8">
               <div className="text-6xl mb-4">🏋️</div>
               <p className="text-uc-text-muted mb-4">
-                This exercise hasn't been used in any workouts yet
+                This exercise hasn&apos;t been used in any workouts yet
               </p>
               <Link
                 href="/workouts"

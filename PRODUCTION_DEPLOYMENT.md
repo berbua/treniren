@@ -2,9 +2,11 @@
 
 ## Environment Variables Setup
 
-Your `.env.production` file currently has:
-- ✅ `DATABASE_URL` (configured by Vercel)
-- ✅ `VERCEL_OIDC_TOKEN` (configured by Vercel)
+**Important:** Add these in Vercel Dashboard → Project Settings → Environment Variables
+
+Vercel automatically provides:
+- ✅ `DATABASE_URL` (if using Vercel Postgres)
+- ✅ `VERCEL_OIDC_TOKEN` (automatically set)
 
 ### Required Environment Variables to Add
 
@@ -55,16 +57,67 @@ openssl rand -base64 32
 - Update EMAIL_FROM to match your domain
 
 ### 4. Database Setup
-- Run Prisma migrations on production database:
+
+#### For Vercel Deployment:
+Vercel will automatically run `prisma generate` during build (via `postinstall` script).
+
+**IMPORTANT:** You need to run database migrations manually before first deployment:
+
 ```bash
-npx prisma db push
-npx prisma generate
+# Connect to your production database
+DATABASE_URL="your-production-database-url" npx prisma migrate deploy
+
+# Or if using db push (for initial setup):
+DATABASE_URL="your-production-database-url" npx prisma db push
 ```
 
+**Alternative:** Add a build script to run migrations automatically:
+```json
+"scripts": {
+  "build": "prisma migrate deploy && next build",
+  "postinstall": "prisma generate"
+}
+```
+
+**Note:** Since we added new fields (`testReminderEnabled`, `testReminderInterval`, `testReminderUnit`), you MUST run migrations before deploying.
+
 ### 5. Vercel Deployment
+
+**Note:** Your `package.json` uses `--turbopack` flag in the build script. Vercel will handle Next.js builds automatically, but if you encounter build issues, you may need to remove the `--turbopack` flag for production builds.
+
+#### Option A: Automatic Deployment (Recommended)
+If your repository is already connected to Vercel:
+1. Push your code to GitHub (already done ✅)
+2. Vercel will automatically detect the push and deploy
+3. Monitor deployment in Vercel dashboard
+
+#### Option B: Manual Deployment via CLI
 ```bash
+# Install Vercel CLI (if not installed)
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Link project (if not already linked)
+vercel link
+
+# Deploy to production
 vercel --prod
 ```
+
+#### Option C: First-Time Setup via Dashboard
+1. Go to [vercel.com](https://vercel.com)
+2. Click "Add New Project"
+3. Import your GitHub repository (`berbua/treniren`)
+4. Configure:
+   - **Framework Preset**: Next.js (auto-detected)
+   - **Root Directory**: `./` (default)
+   - **Build Command**: `npm run build` (or leave default)
+   - **Output Directory**: `.next` (default)
+   - **Install Command**: `npm install` (default)
+5. Add environment variables (see below)
+6. Click "Deploy"
 
 ## 🎯 Key Features to Test
 
@@ -128,10 +181,47 @@ vercel --prod
 - Reinstall dependencies
 - Check TypeScript errors
 
+## 📋 Step-by-Step Deployment Checklist
+
+### Pre-Deployment
+- [ ] Code committed and pushed to GitHub
+- [ ] Version tagged (v1.0.0 ✅)
+- [ ] All environment variables prepared
+- [ ] Production database created and accessible
+- [ ] Database migrations run on production database
+- [ ] Google OAuth configured with production domain
+
+### Vercel Dashboard Setup
+1. [ ] Go to [vercel.com/dashboard](https://vercel.com/dashboard)
+2. [ ] Import project from GitHub (if not already imported)
+3. [ ] Go to Project Settings → Environment Variables
+4. [ ] Add all required environment variables:
+   - [ ] `NEXTAUTH_SECRET`
+   - [ ] `NEXTAUTH_URL` (your Vercel domain)
+   - [ ] `GOOGLE_CLIENT_ID`
+   - [ ] `GOOGLE_CLIENT_SECRET`
+   - [ ] `DATABASE_URL` (if not using Vercel Postgres)
+   - [ ] `EMAIL_SERVER_HOST`, `EMAIL_SERVER_PORT`, `EMAIL_SERVER_USER`, `EMAIL_SERVER_PASSWORD`, `EMAIL_FROM`
+   - [ ] `NODE_ENV=production`
+5. [ ] Save environment variables
+6. [ ] Go to Deployments tab
+7. [ ] Trigger new deployment (or wait for auto-deploy from git push)
+
+### Post-Deployment
+- [ ] Check deployment logs for errors
+- [ ] Test authentication (Google OAuth)
+- [ ] Test database connection
+- [ ] Verify all pages load correctly
+- [ ] Test core functionality (workouts, events, calendar)
+- [ ] Check mobile responsiveness
+- [ ] Test PWA installation
+
 ## 📞 Support
 
 If issues arise:
 1. Check Vercel deployment logs
 2. Check browser console for errors
-3. Verify all environment variables
+3. Verify all environment variables are set correctly
 4. Test locally with production settings
+5. Check Prisma migration status: `npx prisma migrate status`
+6. Verify database connection string format

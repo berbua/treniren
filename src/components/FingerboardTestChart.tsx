@@ -5,10 +5,12 @@ import { FingerboardTestingProtocol, FingerboardTestResult } from '@/types/worko
 import { LoadingSpinner } from './LoadingSpinner'
 
 // Dynamic import for Recharts
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let RechartsComponents: any = null
 
 if (typeof window !== 'undefined') {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const recharts = require('recharts')
     RechartsComponents = {
       LineChart: recharts.LineChart,
@@ -36,6 +38,7 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
 
   // Group results by date and hang
   const chartData = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const grouped: Record<string, any> = {}
 
     testResults.forEach((result) => {
@@ -61,6 +64,7 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
       }
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date))
   }, [testResults, metric, selectedHangId, protocol])
 
@@ -88,6 +92,7 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
     RechartsComponents
 
   const uniqueHangLabels = new Set<string>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chartData.forEach((point: any) => {
     Object.keys(point).forEach((key) => {
       if (key !== 'date') {
