@@ -1,11 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import AuthGuard from '@/components/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { GoalProgressDisplay } from '@/components/GoalProgressDisplay'
 import { statisticsService, StatisticsData, TimeFrame } from '@/lib/statistics-service'
 import { Workout } from '@/types/workout'
+
+// Lazy load StatisticsContent for better performance
+const StatisticsContent = dynamic(() => import('@/components/StatisticsContent').then(mod => ({ default: mod.StatisticsContent })), {
+  loading: () => <div className="text-center py-8 text-uc-text-muted">Loading statistics...</div>,
+  ssr: false
+})
 
 export default function StrongMindPage() {
   return (
@@ -107,9 +114,12 @@ function StrongMindPageContent() {
     // Fetch workouts with gratitude data
     const fetchGratitudeWorkouts = async () => {
       try {
-        const response = await fetch('/api/workouts', { credentials: 'include' })
+        // Fetch all workouts for gratitude (use large limit)
+        const response = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' })
         if (response.ok) {
-          const workouts = await response.json()
+          const data = await response.json()
+          // Handle both new paginated format and old format
+          const workouts = Array.isArray(data) ? data : (data.workouts || [])
           // Filter workouts that have gratitude or improvements, sort by date descending
           const workoutsWithGratitude = workouts
             .filter((w: any) => w.gratitude || w.improvements)
@@ -125,9 +135,12 @@ function StrongMindPageContent() {
     // Fetch workouts for statistics
     const fetchWorkouts = async () => {
       try {
-        const response = await fetch('/api/workouts', { credentials: 'include' })
+        // Fetch all workouts for statistics (use large limit)
+        const response = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' })
         if (response.ok) {
-          const workoutsData = await response.json()
+          const data = await response.json()
+          // Handle both new paginated format and old format
+          const workoutsData = Array.isArray(data) ? data : (data.workouts || [])
           setWorkouts(workoutsData)
         }
       } catch (error) {
@@ -790,10 +803,20 @@ function StrongMindPageContent() {
                   {t('strongMind.gratefulFor') || '3 things I am grateful for'}
                 </h3>
                 {gratitudeWorkouts.filter(w => w.gratitude).length === 0 ? (
-                  <div className="bg-uc-black/30 p-6 rounded-xl border border-uc-purple/10 text-center">
-                    <p className="text-uc-text-muted text-sm">
-                      No gratitude entries yet. Add gratitude to your workouts to see them here!
+                  <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
+                    <div className="text-6xl mb-4">🙏</div>
+                    <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+                      {t('strongMind.noGratitude') || 'No gratitude entries yet'}
+                    </h3>
+                    <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+                      {t('strongMind.noGratitudeDescription') || 'Start adding gratitude notes to your workouts to reflect on what you\'re thankful for in your training journey.'}
                     </p>
+                    <a
+                      href="/workouts"
+                      className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+                    >
+                      ➕ {t('strongMind.addGratitude') || 'Add Gratitude to Workout'}
+                    </a>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -845,10 +868,20 @@ function StrongMindPageContent() {
                   {t('strongMind.improvements') || '3 things to do better next time'}
                 </h3>
                 {gratitudeWorkouts.filter(w => w.improvements).length === 0 ? (
-                  <div className="bg-uc-black/30 p-6 rounded-xl border border-uc-purple/10 text-center">
-                    <p className="text-uc-text-muted text-sm">
-                      No improvement entries yet. Add improvements to your workouts to see them here!
+                  <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
+                    <div className="text-6xl mb-4">📈</div>
+                    <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+                      {t('strongMind.noImprovements') || 'No improvement notes yet'}
+                    </h3>
+                    <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+                      {t('strongMind.noImprovementsDescription') || 'Track what you\'re working on improving in your workouts. Add improvement notes to see your progress over time.'}
                     </p>
+                    <a
+                      href="/workouts"
+                      className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+                    >
+                      ➕ {t('strongMind.addImprovements') || 'Add Improvements to Workout'}
+                    </a>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

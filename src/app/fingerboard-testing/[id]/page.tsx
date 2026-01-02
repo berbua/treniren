@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import FingerboardTestChart from '@/components/FingerboardTestChart'
 import PerformTestModal from '@/components/PerformTestModal'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function FingerboardTestResultsPage() {
   return (
@@ -18,6 +19,7 @@ export default function FingerboardTestResultsPage() {
 }
 
 function FingerboardTestResultsPageContent() {
+  const { t } = useLanguage()
   const params = useParams()
   const protocolId = params.id as string
 
@@ -140,16 +142,18 @@ function FingerboardTestResultsPageContent() {
           </div>
           {filteredResults.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="text-4xl mb-4">📊</div>
-              <p className="text-uc-text-muted">No test results yet</p>
-              <p className="text-sm text-uc-text-muted mt-2">
-                Perform a test to start tracking your progress
+              <div className="text-6xl mb-4">📊</div>
+              <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+                {t('fingerboard.noTestResults') || 'No test results yet'}
+              </h3>
+              <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+                {t('fingerboard.noTestResultsDescription') || 'Perform your first test to start tracking your fingerboard progress over time. Regular testing helps you see improvements and adjust your training.'}
               </p>
               <button
                 onClick={() => setShowPerformTest(true)}
-                className="mt-4 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors"
+                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
               >
-                Perform First Test
+                ➕ {t('fingerboard.performTest') || 'Perform Your First Test'}
               </button>
             </div>
           ) : (

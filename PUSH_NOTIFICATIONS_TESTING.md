@@ -174,3 +174,5 @@ Lub poczekaj na automatyczne powiadomienie (np. przypomnienie o cyklu).
 - **HTTPS wymagany**: W produkcji musi być `https://`
 - **Service Worker**: Musi być zarejestrowany (sprawdź w DevTools)
 
+
+

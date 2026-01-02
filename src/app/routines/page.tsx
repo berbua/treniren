@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react'
 import AuthGuard from '@/components/AuthGuard'
 import { Routine, Exercise } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useApiError } from '@/hooks/useApiError'
+import { useConfirmation } from '@/hooks/useConfirmation'
+import { extractApiError } from '@/lib/errors'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import RoutineForm from '@/components/RoutineForm'
 import Link from 'next/link'
 
@@ -18,12 +22,15 @@ export default function RoutinesPage() {
 
 function RoutinesPageContent() {
   const { t } = useLanguage()
+  const { handleError, showSuccess } = useApiError()
+  const confirmation = useConfirmation()
   const [routines, setRoutines] = useState<Routine[]>([])
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingRoutineId, setDeletingRoutineId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchRoutines()
@@ -67,24 +74,33 @@ function RoutinesPageContent() {
   }
 
   const handleDeleteRoutine = async (id: string) => {
-    if (!confirm(t('routines.deleteConfirm') || 'Are you sure you want to delete this routine?')) {
-      return
-    }
+    confirmation.showConfirmation(
+      {
+        title: t('routines.deleteConfirmTitle') || 'Delete Routine',
+        message: t('routines.deleteConfirm') || 'Are you sure you want to delete this routine? This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        try {
+          setDeletingRoutineId(id)
+          const response = await fetch(`/api/routines/${id}`, {
+            method: 'DELETE',
+          })
 
-    try {
-      const response = await fetch(`/api/routines/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        await fetchRoutines()
-      } else {
-        alert(t('routines.deleteError') || 'Failed to delete routine')
+          if (response.ok) {
+            showSuccess('Routine deleted successfully')
+            await fetchRoutines()
+          } else {
+            const error = await extractApiError(response)
+            handleError(error, t('routines.deleteError') || 'Failed to delete routine')
+          }
+        } catch (error) {
+          handleError(error, t('routines.deleteErrorGeneric') || 'Error deleting routine')
+        } finally {
+          setDeletingRoutineId(null)
+        }
       }
-    } catch (error) {
-      console.error('Error deleting routine:', error)
-      alert(t('routines.deleteErrorGeneric') || 'Error deleting routine')
-    }
+    )
   }
 
   const handleSubmitRoutine = async (routineData: any) => {
@@ -100,19 +116,20 @@ function RoutinesPageContent() {
       })
 
       if (response.ok) {
+        showSuccess(editingRoutine ? 'Routine updated successfully' : 'Routine created successfully')
         await fetchRoutines()
         setShowForm(false)
         setEditingRoutine(null)
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        const error = await extractApiError(response)
         const errorMsg = editingRoutine 
           ? t('routines.updateError') || 'Failed to update routine'
           : t('routines.createError') || 'Failed to create routine'
-        alert(`${errorMsg}: ${errorData.error || 'Unknown error'}`)
+        handleError(error, errorMsg)
       }
     } catch (error) {
-      console.error(`Error ${editingRoutine ? 'updating' : 'creating'} routine:`, error)
-      alert(`Error: ${error instanceof Error ? error.message : (t('routines.saveError') || 'Failed to save routine')}`)
+      const errorMsg = t('routines.saveError') || 'Failed to save routine'
+      handleError(error, errorMsg)
     } finally {
       setIsSubmitting(false)
     }
@@ -280,6 +297,19 @@ function RoutinesPageContent() {
             onRefreshExercises={fetchExercises}
           />
         )}
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          confirmText={confirmation.confirmText}
+          cancelText={confirmation.cancelText}
+          variant={confirmation.variant}
+          isLoading={deletingRoutineId !== null}
+        />
       </div>
     </div>
   )

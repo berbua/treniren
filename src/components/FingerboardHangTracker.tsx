@@ -142,10 +142,30 @@ export default function FingerboardHangTracker({
 
       {/* Hangs List */}
       {hangs.length === 0 ? (
-        <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
-          <div className="text-4xl mb-2">🖐️</div>
-          <p className="text-uc-text-muted">{t('workouts.labels.noHangsAdded') || 'No hangs added yet'}</p>
-          <p className="text-sm text-uc-text-muted mt-1">Click &quot;Add Hang&quot; or &quot;Load Protocol&quot; to start</p>
+        <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
+          <div className="text-6xl mb-4">🖐️</div>
+          <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+            {t('workouts.labels.noHangsAdded') || 'No hangs added yet'}
+          </h3>
+          <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+            {t('workouts.labels.noHangsDescription') || 'Add individual hangs or load a saved protocol to quickly set up your fingerboard training session.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <button
+              type="button"
+              onClick={handleAddHang}
+              className="bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+            >
+              ➕ {t('workouts.labels.addHang') || 'Add Hang'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowProtocolSelector(true)}
+              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+            >
+              📦 {t('workouts.labels.loadProtocol') || 'Load Protocol'}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">

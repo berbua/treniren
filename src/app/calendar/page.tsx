@@ -3,8 +3,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useCycle } from '@/contexts/CycleContext'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useApiError } from '@/hooks/useApiError'
+import { useConfirmation } from '@/hooks/useConfirmation'
+import { extractApiError } from '@/lib/errors'
 import { calculateCycleInfo } from '@/lib/cycle-utils'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { Tooltip } from '@/components/Tooltip'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
+import { statisticsService } from '@/lib/statistics-service'
 import { WorkoutType, Workout, WorkoutFormData, Tag, Exercise } from '@/types/workout'
 import { EventType, Event, EventFormData } from '@/types/event'
 import TrainingTypeFilter from '@/components/TrainingTypeFilter'
@@ -152,6 +158,8 @@ export default function CalendarPage() {
 function CalendarPageContent() {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle()
   const { t } = useLanguage()
+  const { handleError, showSuccess } = useApiError()
+  const confirmation = useConfirmation()
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('week')
@@ -195,21 +203,24 @@ function CalendarPageContent() {
     const fetchData = async () => {
       try {
         setLoading(true)
+        // Calendar needs all data, so use a large limit
         const [workoutsResponse, eventsResponse, tagsResponse, exercisesResponse] = await Promise.all([
-          fetch('/api/workouts', { credentials: 'include' }),
-          fetch('/api/events', { credentials: 'include' }),
+          fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' }),
+          fetch('/api/events?page=1&limit=1000', { credentials: 'include' }),
           fetch('/api/tags', { credentials: 'include' }),
           fetch('/api/exercises', { credentials: 'include' })
         ])
         
         if (workoutsResponse.ok) {
           const workoutsData = await workoutsResponse.json()
-          setWorkouts(workoutsData)
+          // Handle both new paginated format and old format
+          setWorkouts(workoutsData.workouts || workoutsData)
         }
         
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json()
-          setEvents(eventsData)
+          // Handle both new paginated format and old format
+          setEvents(eventsData.events || eventsData)
         }
 
         if (tagsResponse.ok) {
@@ -320,6 +331,18 @@ function CalendarPageContent() {
     if (!isCycleTrackingEnabled || !cycleSettings) return null
     return calculateCycleInfo(cycleSettings, date)
   }
+
+  // Calculate injury statistics by phase (all injuries from the beginning, no time filtering)
+  const injuryStats = useMemo(() => {
+    if (!isCycleTrackingEnabled || !cycleSettings || events.length === 0) return null
+    
+    // Filter all INJURY events (no time filtering - count from the beginning)
+    const injuryEvents = events.filter(e => e.type === 'INJURY')
+    if (injuryEvents.length === 0) return null
+
+    // Calculate stats for all injuries
+    return statisticsService.calculateInjuryCycleStats(injuryEvents, cycleSettings)
+  }, [events, cycleSettings, isCycleTrackingEnabled])
 
   // Navigation functions
   const navigatePrevious = () => {
@@ -676,10 +699,12 @@ function CalendarPageContent() {
       })
 
       if (response.ok) {
+        showSuccess(isEditing ? 'Workout updated successfully' : 'Workout created successfully')
         // Refresh workouts
-        const workoutsResponse = await fetch('/api/workouts')
+        const workoutsResponse = await fetch('/api/workouts?page=1&limit=1000')
         if (workoutsResponse.ok) {
-          const workoutsData = await workoutsResponse.json()
+          const data = await workoutsResponse.json()
+          const workoutsData = Array.isArray(data) ? data : (data.workouts || [])
           setWorkouts(workoutsData)
         }
         setShowWorkoutForm(false)
@@ -687,12 +712,11 @@ function CalendarPageContent() {
         setDuplicatingWorkout(null)
         setSelectedDate(null)
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        alert(`Failed to ${isEditing ? 'update' : 'create'} workout: ${errorData.error || 'Unknown error'}`)
+        const error = await extractApiError(response)
+        handleError(error, `Failed to ${isEditing ? 'update' : 'create'} workout`)
       }
     } catch (error) {
-      console.error(`Error ${editingWorkout ? 'updating' : 'creating'} workout:`, error)
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to save workout'}`)
+      handleError(error, 'Failed to save workout')
     } finally {
       setIsSubmitting(false)
     }
@@ -727,24 +751,25 @@ function CalendarPageContent() {
       })
 
       if (response.ok) {
+        showSuccess(isEditing ? 'Event updated successfully' : 'Event created successfully')
         // Refresh events
-        const eventsResponse = await fetch('/api/events', {
+        const eventsResponse = await fetch('/api/events?page=1&limit=1000', {
           credentials: 'include',
         })
         if (eventsResponse.ok) {
-          const eventsData = await eventsResponse.json()
+          const data = await eventsResponse.json()
+          const eventsData = Array.isArray(data) ? data : (data.events || [])
           setEvents(eventsData)
         }
         setShowEventForm(false)
         setEditingEvent(null)
         setSelectedDate(null)
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        alert(`Failed to ${isEditing ? 'update' : 'create'} event: ${errorData.error || 'Unknown error'}`)
+        const error = await extractApiError(response)
+        handleError(error, `Failed to ${isEditing ? 'update' : 'create'} event`)
       }
     } catch (error) {
-      console.error(`Error ${editingEvent ? 'updating' : 'creating'} event:`, error)
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to save event'}`)
+      handleError(error, 'Failed to save event')
     } finally {
       setIsSubmitting(false)
     }
@@ -1023,13 +1048,23 @@ function CalendarPageContent() {
                       )}
                     </div>
                     
-                    {/* Cycle indicator */}
-                    {cycleInfo && (
-                      <div
-                        className={`w-2 h-2 rounded-full ${getCyclePhaseColor(cycleInfo.phase)}`}
-                        title={`Cycle Day ${cycleInfo.currentDay} - ${cycleInfo.phaseDescription}`}
-                      />
-                    )}
+                    <div className="flex items-center space-x-1">
+                      {/* Cycle indicator */}
+                      {cycleInfo && (
+                        <div
+                          className={`w-2 h-2 rounded-full ${getCyclePhaseColor(cycleInfo.phase)}`}
+                          title={`Cycle Day ${cycleInfo.currentDay} - ${cycleInfo.phaseDescription}`}
+                        />
+                      )}
+                      {/* Warning triangle for most injuries phase */}
+                      {injuryStats?.phaseWithMostInjuries && cycleInfo && cycleInfo.phase === injuryStats.phaseWithMostInjuries && (
+                        <Tooltip content={t('workouts.tooltips.injuryPhaseWarning') || 'This phase has the highest number of injuries in your history. Be extra cautious and consider adjusting training intensity during this phase.'} position="top">
+                          <div className="text-yellow-500 opacity-70 text-xs cursor-help">
+                            ⚠️
+                          </div>
+                        </Tooltip>
+                      )}
+                    </div>
                   </div>
 
                   {/* Workouts */}
@@ -1536,6 +1571,18 @@ function CalendarPageContent() {
             </div>
           </div>
         )}
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          confirmText={confirmation.confirmText}
+          cancelText={confirmation.cancelText}
+          variant={confirmation.variant}
+        />
       </div>
     </div>
   )

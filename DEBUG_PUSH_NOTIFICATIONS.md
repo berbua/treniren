@@ -152,3 +152,5 @@ Lub:
 3. **Powiadomienia są zablokowane** → Odblokuj w ustawieniach przeglądarki
 4. **Service Worker nie działa** → Sprawdź czy `/sw.js` jest dostępny
 
+
+

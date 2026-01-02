@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Exercise, WorkoutExerciseData, WorkoutSet, Routine } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
+import { Tooltip } from './Tooltip'
 
 interface WorkoutExerciseTrackerProps {
   exercises: WorkoutExerciseData[]
@@ -299,10 +300,17 @@ export default function WorkoutExerciseTracker({
 
       {/* Exercises List */}
       {exercises.length === 0 ? (
-        <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
-          <div className="text-4xl mb-2">💪</div>
-          <p className="text-uc-text-muted">{t('workouts.labels.noExercisesAdded') || 'No exercises added yet'}</p>
-          <p className="text-sm text-uc-text-muted mt-1">{t('workouts.labels.clickAddExerciseToStart') || `Click "${t('exercises.addExercise') || 'Add Exercise'}" to start tracking`}</p>
+        <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
+          <div className="text-6xl mb-4">💪</div>
+          <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+            {t('workouts.labels.noExercisesAdded') || 'No exercises added yet'}
+          </h3>
+          <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+            {t('workouts.labels.noExercisesDescription') || 'Add exercises to track your sets, reps, and weights. Click "Add Exercise" above to get started.'}
+          </p>
+          <p className="text-sm text-uc-text-muted">
+            {t('workouts.labels.clickAddExerciseToStart') || `Click "${t('exercises.addExercise') || 'Add Exercise'}" to start tracking`}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -375,23 +383,24 @@ export default function WorkoutExerciseTracker({
                         className="w-20 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
                       />
                       <span className="text-xs text-uc-text-muted">kg</span>
-                      <input
-                        type="number"
-                        value={set.rir || ''}
-                        onChange={(e) =>
-                          handleSetChange(
-                            exerciseIndex,
-                            setIndex,
-                            'rir',
-                            e.target.value ? parseInt(e.target.value) : 0
-                          )
-                        }
-                        placeholder={t('workouts.placeholders.rir') || 'RIR'}
-                        min="0"
-                        max="5"
-                        className="w-16 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
-                        title="Reps in Reserve"
-                      />
+                      <Tooltip content={t('workouts.tooltips.RIR') || 'Reps in Reserve (RIR) is how many more reps you could have done. RIR 0 = maximum effort, RIR 3 = you could do 3 more reps. Helps track training intensity.'}>
+                        <input
+                          type="number"
+                          value={set.rir || ''}
+                          onChange={(e) =>
+                            handleSetChange(
+                              exerciseIndex,
+                              setIndex,
+                              'rir',
+                              e.target.value ? parseInt(e.target.value) : 0
+                            )
+                          }
+                          placeholder={t('workouts.placeholders.rir') || 'RIR'}
+                          min="0"
+                          max="5"
+                          className="w-16 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
+                        />
+                      </Tooltip>
                       <button
                         type="button"
                         onClick={() => handleRemoveSet(exerciseIndex, setIndex)}

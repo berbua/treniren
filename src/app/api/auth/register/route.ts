@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, validatePassword, validateEmail } from '@/lib/auth-utils'
-import { randomBytes } from 'crypto'
+import { applySecurity } from '@/lib/api-security'
+import { sanitizeEmail, sanitizeString } from '@/lib/sanitize'
 
 // POST /api/auth/register - Register a new user
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json()
+    // Apply security middleware (strict rate limit for auth)
+    const securityResponse = await applySecurity(request, { rateLimit: 'auth', csrf: false, requireAuth: false })
+    if (securityResponse) return securityResponse
+
+    const body = await request.json()
+    
+    // Sanitize inputs
+    const email = sanitizeEmail(body.email)
+    const password = body.password // Don't sanitize password, but validate
+    const name = sanitizeString(body.name, 100)
 
     // Validate input
     if (!email || !password) {

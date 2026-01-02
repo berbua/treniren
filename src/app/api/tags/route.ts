@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth-helpers';
+import { CreateTagSchema, formatValidationError } from '@/lib/validation';
+import { applySecurity } from '@/lib/api-security';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,16 +31,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, color } = body;
-    
-    if (!name || !color) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-    
     const user = await requireAuth(request)
     
     if (!user) {
@@ -47,6 +39,22 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+
+    const body = await request.json();
+    
+    // Validate input
+    const validationResult = CreateTagSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: formatValidationError(validationResult.error),
+        },
+        { status: 400 }
+      );
+    }
+    
+    const { name, color } = validationResult.data;
     
     const newTag = await prisma.tag.create({
       data: {

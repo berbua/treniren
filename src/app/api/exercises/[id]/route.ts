@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth-helpers'
+import { UpdateExerciseSchema, formatValidationError } from '@/lib/validation'
 
 // GET /api/exercises/[id] - Get a specific exercise with usage stats
 export async function GET(
@@ -79,8 +80,6 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const body = await request.json()
-    const { name, category, defaultUnit } = body
     const user = await requireAuth(request)
     const { id } = await params
 
@@ -106,12 +105,28 @@ export async function PUT(
       )
     }
 
+    const body = await request.json()
+    
+    // Validate input
+    const validationResult = UpdateExerciseSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: formatValidationError(validationResult.error),
+        },
+        { status: 400 }
+      )
+    }
+
+    const { name, category, defaultUnit } = validationResult.data
+
     const exercise = await prisma.exercise.update({
       where: { id },
       data: {
-        name,
-        category,
-        defaultUnit: defaultUnit || 'kg',
+        ...(name && { name }),
+        ...(category !== undefined && { category: category || null }),
+        ...(defaultUnit && { defaultUnit }),
       },
     })
 

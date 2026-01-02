@@ -33,6 +33,7 @@ interface EventCardProps {
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
   onCycleDayUpdate?: (eventId: string, cycleDay: number | null, manuallySet: boolean) => Promise<void>
+  isDeleting?: boolean
 }
 
 const getEventTypeColor = (type: EventType) => {
@@ -87,7 +88,7 @@ const formatTime = (timeString: string) => {
   })
 }
 
-export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate }: EventCardProps) {
+export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, isDeleting = false }: EventCardProps) {
   const { t } = useLanguage()
   const [isEditingCycleDay, setIsEditingCycleDay] = useState(false)
   const [cycleDayValue, setCycleDayValue] = useState<string>('')
@@ -369,10 +370,15 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate }:
           {onDelete && (
             <button
               onClick={() => onDelete(event.id)}
-              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              title="Delete event"
+              disabled={isDeleting}
+              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isDeleting ? "Deleting..." : "Delete event"}
             >
-              🗑️
+              {isDeleting ? (
+                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                '🗑️'
+              )}
             </button>
           )}
         </div>

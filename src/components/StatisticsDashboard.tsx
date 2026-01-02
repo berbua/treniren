@@ -25,10 +25,12 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
       try {
         setLoading(true);
         
-        // Load workouts
-        const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' });
+        // Load workouts - statistics needs all data, so use a large limit
+        const workoutsResponse = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' });
         if (workoutsResponse.ok) {
-          const workoutsData = await workoutsResponse.json();
+          const data = await workoutsResponse.json();
+          // Handle both new paginated format and old format
+          const workoutsData = Array.isArray(data) ? data : (data.workouts || []);
           setWorkouts(workoutsData);
         } else if (workoutsResponse.status === 401) {
           // User is not authenticated, this is expected for protected components

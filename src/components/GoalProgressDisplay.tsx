@@ -27,10 +27,13 @@ export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgress
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const response = await fetch('/api/workouts', { credentials: 'include' });
+        // Fetch all workouts for goal progress (use large limit)
+        const response = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
-          setWorkouts(data);
+          // Handle both new paginated format and old format
+          const workoutsData = Array.isArray(data) ? data : (data.workouts || []);
+          setWorkouts(workoutsData);
         } else if (response.status === 401) {
           // User is not authenticated, this is expected for protected components
         }

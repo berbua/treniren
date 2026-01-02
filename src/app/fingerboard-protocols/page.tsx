@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import AuthGuard from '@/components/AuthGuard'
 import { FingerboardProtocol } from '@/types/workout'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { useConfirmation } from '@/hooks/useConfirmation'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import FingerboardProtocolForm from '@/components/FingerboardProtocolForm'
 import FingerboardTestModal from '@/components/FingerboardTestModal'
-import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
 
 export default function FingerboardProtocolsPage() {
@@ -19,12 +21,14 @@ export default function FingerboardProtocolsPage() {
 
 function FingerboardProtocolsPageContent() {
   const { t } = useLanguage()
+  const confirmation = useConfirmation()
   const [protocols, setProtocols] = useState<FingerboardProtocol[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [showTestModal, setShowTestModal] = useState(false)
   const [editingProtocol, setEditingProtocol] = useState<FingerboardProtocol | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingProtocolId, setDeletingProtocolId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchProtocols()
@@ -55,24 +59,32 @@ function FingerboardProtocolsPageContent() {
   }
 
   const handleDeleteProtocol = async (id: string) => {
-    if (!confirm(t('fingerboard.deleteConfirm') || 'Are you sure you want to delete this protocol?')) {
-      return
-    }
+    confirmation.showConfirmation(
+      {
+        title: t('fingerboard.deleteConfirmTitle') || 'Delete Protocol',
+        message: t('fingerboard.deleteConfirm') || 'Are you sure you want to delete this protocol? This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        try {
+          setDeletingProtocolId(id)
+          const response = await fetch(`/api/fingerboard-protocols/${id}`, {
+            method: 'DELETE',
+          })
 
-    try {
-      const response = await fetch(`/api/fingerboard-protocols/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        await fetchProtocols()
-      } else {
-        alert(t('fingerboard.deleteError') || 'Failed to delete protocol')
+          if (response.ok) {
+            await fetchProtocols()
+          } else {
+            alert(t('fingerboard.deleteError') || 'Failed to delete protocol')
+          }
+        } catch (error) {
+          console.error('Error deleting protocol:', error)
+          alert(t('fingerboard.deleteErrorGeneric') || 'Error deleting protocol')
+        } finally {
+          setDeletingProtocolId(null)
+        }
       }
-    } catch (error) {
-      console.error('Error deleting protocol:', error)
-      alert(t('fingerboard.deleteErrorGeneric') || 'Error deleting protocol')
-    }
+    )
   }
 
   const handleSubmitProtocol = async (protocolData: any) => {
@@ -157,15 +169,20 @@ function FingerboardProtocolsPageContent() {
             <h2 className="text-xl font-semibold text-uc-text-light mb-2">
               {t('fingerboard.noProtocols') || 'No protocols yet'}
             </h2>
-            <p className="text-uc-text-muted mb-6">
-              {t('fingerboard.noProtocolsDescription') || 'Create your first fingerboard protocol to quickly add hangs to workouts'}
+            <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+              {t('fingerboard.noProtocolsDescription') || 'Create reusable fingerboard training protocols to quickly add hangs to your workouts. Save time by defining your favorite hang combinations once.'}
             </p>
-            <button
-              onClick={handleCreateProtocol}
-              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-            >
-              {t('fingerboard.createFirstProtocol') || 'Create Your First Protocol'}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <button
+                onClick={handleCreateProtocol}
+                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+              >
+                ➕ {t('fingerboard.createFirstProtocol') || 'Create Your First Protocol'}
+              </button>
+              <p className="text-sm text-uc-text-muted">
+                {t('fingerboard.tip') || 'Tip: Create protocols for different training phases'}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -229,6 +246,19 @@ function FingerboardProtocolsPageContent() {
         {showTestModal && (
           <FingerboardTestModal onClose={() => setShowTestModal(false)} />
         )}
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          confirmText={confirmation.confirmText}
+          cancelText={confirmation.cancelText}
+          variant={confirmation.variant}
+          isLoading={deletingProtocolId !== null}
+        />
       </div>
     </div>
   )

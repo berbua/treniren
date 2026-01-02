@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { CycleProvider } from "@/contexts/CycleContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ServiceWorkerProvider } from "@/components/ServiceWorkerProvider";
@@ -42,9 +43,11 @@ export default function Providers({ children }: ProvidersProps) {
         <ServiceWorkerProvider />
         <LanguageProvider>
           <CycleProvider>
-            <NotificationProvider>
-              <AppContent>{children}</AppContent>
-            </NotificationProvider>
+            <ToastProvider>
+              <NotificationProvider>
+                <AppContent>{children}</AppContent>
+              </NotificationProvider>
+            </ToastProvider>
           </CycleProvider>
         </LanguageProvider>
       </SessionProvider>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { EventType } from '@prisma/client'
 import { requireAuth } from '@/lib/auth-helpers'
+import { UpdateEventSchema, UpdateCycleDaySchema, formatValidationError } from '@/lib/validation'
 
 // GET /api/events/[id] - Get a specific event
 export async function GET(
@@ -56,7 +57,42 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await requireAuth(request)
+    const { id } = await params
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // Verify event exists and belongs to user
+    const existingEvent = await prisma.event.findFirst({
+      where: { id, userId: user.id },
+    })
+
+    if (!existingEvent) {
+      return NextResponse.json(
+        { error: 'Event not found' },
+        { status: 404 }
+      )
+    }
+
     const body = await request.json()
+    
+    // Validate input
+    const validationResult = UpdateEventSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: formatValidationError(validationResult.error),
+        },
+        { status: 400 }
+      )
+    }
+
     const {
       type,
       title,
@@ -78,81 +114,78 @@ export async function PUT(
       // Cycle tracking for injuries
       cycleDay,
       cycleDayManuallySet,
-    } = body
+    } = validationResult.data
 
-    const user = await requireAuth(request)
-    const { id } = await params
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    // First, delete existing tags
-    await prisma.eventTag.deleteMany({
-      where: { eventId: id }
-    })
-
-    const event = await prisma.event.updateMany({
-      where: { 
-        id,
-        userId: user.id 
-      },
-      data: {
-        type: type === 'TRIP' ? 'TRIP' : type as EventType,
-        title,
-        date: new Date(date),
-        startTime: startTime ? new Date(startTime) : null,
-        endTime: endTime ? new Date(endTime) : null,
-        description,
-        location,
-        severity,
-        status,
-        notes,
-        // Trip-specific fields
-        tripStartDate: tripStartDate ? new Date(tripStartDate) : null,
-        tripEndDate: tripEndDate ? new Date(tripEndDate) : null,
-        destination,
-        climbingType,
-        showCountdown: showCountdown || false,
-        // Cycle tracking for injuries
-        cycleDay: cycleDay !== undefined ? cycleDay : null,
-        cycleDayManuallySet: cycleDayManuallySet || false,
-      },
-    })
-
-    if (event.count === 0) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      )
-    }
-
-    // Add new tags if provided
+    // Validate tagIds if provided
     if (tagIds && tagIds.length > 0) {
-      await prisma.eventTag.createMany({
-        data: tagIds.map((tagId: string) => ({
-          eventId: id,
-          tagId,
-        }))
+      const existingTags = await prisma.tag.findMany({
+        where: {
+          id: { in: tagIds },
+          userId: user.id,
+        },
       })
+      if (existingTags.length !== tagIds.length) {
+        return NextResponse.json(
+          { error: 'One or more tags not found or do not belong to user' },
+          { status: 400 }
+        )
+      }
     }
 
-    // Fetch and return the updated event
-    const updatedEvent = await prisma.event.findFirst({
-      where: { 
-        id,
-        userId: user.id 
-      },
-      include: {
-        eventTags: {
-          include: {
-            tag: true,
+    // Update event using transaction
+    const updatedEvent = await prisma.$transaction(async (tx) => {
+      // Delete existing tags
+      await tx.eventTag.deleteMany({
+        where: { eventId: id }
+      })
+
+      // Update event
+      await tx.event.update({
+        where: { id },
+        data: {
+          ...(type && { type: type === 'TRIP' ? 'TRIP' : type as EventType }),
+          ...(title && { title }),
+          ...(date && { date: new Date(date) }),
+          ...(startTime !== undefined && { startTime: startTime ? new Date(startTime) : null }),
+          ...(endTime !== undefined && { endTime: endTime ? new Date(endTime) : null }),
+          ...(description !== undefined && { description }),
+          ...(location !== undefined && { location }),
+          ...(severity !== undefined && { severity }),
+          ...(status !== undefined && { status }),
+          ...(notes !== undefined && { notes }),
+          // Trip-specific fields
+          ...(tripStartDate !== undefined && { tripStartDate: tripStartDate ? new Date(tripStartDate) : null }),
+          ...(tripEndDate !== undefined && { tripEndDate: tripEndDate ? new Date(tripEndDate) : null }),
+          ...(destination !== undefined && { destination }),
+          ...(climbingType !== undefined && { climbingType }),
+          ...(showCountdown !== undefined && { showCountdown }),
+          // Cycle tracking for injuries
+          ...(cycleDay !== undefined && { cycleDay }),
+          ...(cycleDayManuallySet !== undefined && { cycleDayManuallySet }),
+        },
+      })
+
+      // Add new tags if provided
+      if (tagIds && tagIds.length > 0) {
+        await tx.eventTag.createMany({
+          data: tagIds.map((tagId: string) => ({
+            eventId: id,
+            tagId,
+          }))
+        })
+      }
+
+      // Return updated event with relations
+      return await tx.event.findUnique({
+        where: { id },
+        include: {
+          eventTags: {
+            include: {
+              tag: true,
+            },
           },
         },
-      },
+      })
     })
 
     return NextResponse.json(updatedEvent)
@@ -171,9 +204,6 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const body = await request.json()
-    const { cycleDay, cycleDayManuallySet } = body
-
     const user = await requireAuth(request)
     const { id } = await params
 
@@ -184,31 +214,47 @@ export async function PATCH(
       )
     }
 
-    // Prepare update data - only include fields that are provided
-    const updateData: any = {}
-    if (cycleDay !== undefined) {
-      updateData.cycleDay = cycleDay === null || cycleDay === undefined ? null : Number(cycleDay)
-    }
-    if (cycleDayManuallySet !== undefined) {
-      updateData.cycleDayManuallySet = Boolean(cycleDayManuallySet)
-    }
-
-    console.log('PATCH /api/events/[id] - Updating cycle day:', { id, updateData })
-
-    const event = await prisma.event.updateMany({
-      where: { 
-        id,
-        userId: user.id 
-      },
-      data: updateData,
+    // Verify event exists and belongs to user
+    const existingEvent = await prisma.event.findFirst({
+      where: { id, userId: user.id },
     })
 
-    if (event.count === 0) {
+    if (!existingEvent) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
       )
     }
+
+    const body = await request.json()
+    
+    // Validate input
+    const validationResult = UpdateCycleDaySchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: formatValidationError(validationResult.error),
+        },
+        { status: 400 }
+      )
+    }
+
+    const { cycleDay, cycleDayManuallySet } = validationResult.data
+
+    // Prepare update data - only include fields that are provided
+    const updateData: { cycleDay?: number | null; cycleDayManuallySet?: boolean } = {}
+    if (cycleDay !== undefined) {
+      updateData.cycleDay = cycleDay
+    }
+    if (cycleDayManuallySet !== undefined) {
+      updateData.cycleDayManuallySet = cycleDayManuallySet
+    }
+
+    const event = await prisma.event.update({
+      where: { id },
+      data: updateData,
+    })
 
     // Fetch and return the updated event
     const updatedEvent = await prisma.event.findFirst({

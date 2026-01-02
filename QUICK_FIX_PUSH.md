@@ -103,3 +103,5 @@ Po kliknięciu "Enable" powinieneś zobaczyć logi. Jeśli widzisz:
 - [ ] Sprawdziłem `/api/push/public-key` - zwraca public key
 - [ ] Kliknąłem "Enable" i sprawdziłem konsolę
 
+
+

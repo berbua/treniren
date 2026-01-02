@@ -39,6 +39,7 @@ export const NavigationHeader = () => {
     { name: t('nav.fingerboardProtocols') || 'Fingerboard', href: '/fingerboard-protocols', icon: '🖐️' },
     { name: t('nav.statistics') || 'Statistics', href: '/statistics', icon: '📈' },
     { name: t('strongMind.title') || 'Strong Mind', href: '/strong-mind', icon: '🧠' },
+    { name: t('nav.cycle') || 'Cycle', href: '/cycle', icon: '🔴' },
   ] : [];
 
   // All navigation items (for mobile menu)

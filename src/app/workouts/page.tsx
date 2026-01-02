@@ -6,7 +6,11 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Workout, WorkoutFormData, Tag, Exercise } from '@/types/workout'
 import { Event, EventFormData } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useApiError } from '@/hooks/useApiError'
+import { useConfirmation } from '@/hooks/useConfirmation'
+import { extractApiError } from '@/lib/errors'
 import AuthGuard from '@/components/AuthGuard'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import { QuickLogData } from '@/components/QuickLogModal'
 
 // Dynamically import components to avoid SSR issues
@@ -26,6 +30,8 @@ export default function WorkoutsPage() {
 
 function WorkoutsPageContent() {
   const { t } = useLanguage()
+  const { handleError, showSuccess } = useApiError()
+  const confirmation = useConfirmation()
   
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [events, setEvents] = useState<Event[]>([])
@@ -41,27 +47,56 @@ function WorkoutsPageContent() {
   const [showAddChoice, setShowAddChoice] = useState(false)
   const [showQuickLog, setShowQuickLog] = useState(false)
   const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
+  const [deletingWorkoutId, setDeletingWorkoutId] = useState<string | null>(null)
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
+  
+  // Pagination state
+  const [workoutsPage, setWorkoutsPage] = useState(1)
+  const [eventsPage, setEventsPage] = useState(1)
+  const [workoutsPagination, setWorkoutsPagination] = useState({ total: 0, totalPages: 1, hasMore: false })
+  const [eventsPagination, setEventsPagination] = useState({ total: 0, totalPages: 1, hasMore: false })
+  const ITEMS_PER_PAGE = 20
 
-  // Fetch workouts
-  const fetchWorkouts = async () => {
+  // Fetch workouts with pagination
+  const fetchWorkouts = async (page: number = workoutsPage, append: boolean = false) => {
     try {
-      const response = await fetch('/api/workouts', { credentials: 'include' })
+      const response = await fetch(`/api/workouts?page=${page}&limit=${ITEMS_PER_PAGE}`, { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
-        setWorkouts(data)
+        if (data.workouts && data.pagination) {
+          if (append) {
+            setWorkouts(prev => [...prev, ...data.workouts])
+          } else {
+            setWorkouts(data.workouts)
+          }
+          setWorkoutsPagination(data.pagination)
+        } else {
+          // Fallback for old API format
+          setWorkouts(Array.isArray(data) ? data : [])
+        }
       }
     } catch (error) {
       console.error('Error fetching workouts:', error)
     }
   }
 
-  // Fetch events
-  const fetchEvents = async () => {
+  // Fetch events with pagination
+  const fetchEvents = async (page: number = eventsPage, append: boolean = false) => {
     try {
-      const response = await fetch('/api/events')
+      const response = await fetch(`/api/events?page=${page}&limit=${ITEMS_PER_PAGE}`)
       if (response.ok) {
         const data = await response.json()
-        setEvents(data)
+        if (data.events && data.pagination) {
+          if (append) {
+            setEvents(prev => [...prev, ...data.events])
+          } else {
+            setEvents(data.events)
+          }
+          setEventsPagination(data.pagination)
+        } else {
+          // Fallback for old API format
+          setEvents(Array.isArray(data) ? data : [])
+        }
       }
     } catch (error) {
       console.error('Error fetching events:', error)
@@ -126,16 +161,15 @@ function WorkoutsPageContent() {
       })
 
       if (response.ok) {
-        await fetchWorkouts()
+        showSuccess(t('workouts.created') || 'Workout created successfully')
+        await fetchWorkouts(1, false) // Reset to first page
         setShowForm(false)
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('Error creating workout:', errorData)
-        alert(`Failed to create workout: ${errorData.error || 'Unknown error'}`)
+        const error = await extractApiError(response)
+        handleError(error, 'Failed to create workout')
       }
     } catch (error) {
-      console.error('Error creating workout:', error)
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to create workout'}`)
+      handleError(error, 'Failed to create workout')
     } finally {
       setIsSubmitting(false)
     }
@@ -154,12 +188,16 @@ function WorkoutsPageContent() {
       })
 
       if (response.ok) {
-        await fetchWorkouts()
+        showSuccess(t('workouts.updated') || 'Workout updated successfully')
+        await fetchWorkouts(workoutsPage, false) // Refresh current page
         setShowForm(false)
         setEditingWorkout(null)
+      } else {
+        const error = await extractApiError(response)
+        handleError(error, 'Failed to update workout')
       }
     } catch (error) {
-      console.error('Error updating workout:', error)
+      handleError(error, 'Failed to update workout')
     } finally {
       setIsSubmitting(false)
     }
@@ -167,21 +205,35 @@ function WorkoutsPageContent() {
 
   // Delete workout
   const deleteWorkout = async (id: string) => {
-    if (!confirm(t('workouts.deleteConfirm') || 'Are you sure you want to delete this workout?')) return
+    confirmation.showConfirmation(
+      {
+        title: t('workouts.deleteConfirmTitle') || 'Delete Workout',
+        message: t('workouts.deleteConfirm') || 'Are you sure you want to delete this workout? This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        try {
+          setDeletingWorkoutId(id)
+          const response = await fetch(`/api/workouts/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          })
 
-    try {
-      const response = await fetch(`/api/workouts/${id}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      })
-
-      if (response.ok) {
-        await fetchWorkouts()
+          if (response.ok) {
+            showSuccess(t('workouts.deleted') || 'Workout deleted successfully')
+            await fetchWorkouts(workoutsPage, false) // Refresh current page
+          } else {
+            const error = await extractApiError(response)
+            handleError(error, 'Failed to delete workout')
+          }
+        } catch (error) {
+          handleError(error, 'Failed to delete workout')
+        } finally {
+          setDeletingWorkoutId(null)
+        }
       }
-    } catch (error) {
-      console.error('Error deleting workout:', error)
-    }
+    )
   }
 
   // Handle form submission
@@ -242,7 +294,7 @@ function WorkoutsPageContent() {
       })
 
       if (response.ok) {
-        await fetchEvents()
+        await fetchEvents(1, false) // Reset to first page
         setShowForm(false)
       }
     } catch (error) {
@@ -264,7 +316,7 @@ function WorkoutsPageContent() {
       })
 
       if (response.ok) {
-        await fetchEvents()
+        await fetchEvents(eventsPage, false) // Refresh current page
         setShowForm(false)
         setEditingEvent(null)
       }
@@ -276,19 +328,33 @@ function WorkoutsPageContent() {
   }
 
   const deleteEvent = async (id: string) => {
-    if (!confirm(t('events.deleteConfirm') || 'Are you sure you want to delete this event?')) return
+    confirmation.showConfirmation(
+      {
+        title: t('events.deleteConfirmTitle') || 'Delete Event',
+        message: t('events.deleteConfirm') || 'Are you sure you want to delete this event? This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        try {
+          setDeletingEventId(id)
+          const response = await fetch(`/api/events/${id}`, {
+            method: 'DELETE',
+          })
 
-    try {
-      const response = await fetch(`/api/events/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        await fetchEvents()
+          if (response.ok) {
+            showSuccess(t('workouts.eventDeleted') || 'Event deleted successfully')
+            await fetchEvents(eventsPage, false) // Refresh current page
+          } else {
+            const error = await extractApiError(response)
+            handleError(error, 'Failed to delete event')
+          }
+        } catch (error) {
+          handleError(error, 'Failed to delete event')
+        } finally {
+          setDeletingEventId(null)
+        }
       }
-    } catch (error) {
-      console.error('Error deleting event:', error)
-    }
+    )
   }
 
   const handleEventSubmit = async (eventData: EventFormData) => {
@@ -354,7 +420,7 @@ function WorkoutsPageContent() {
 
   useEffect(() => {
     const fetchAllData = async () => {
-      await Promise.all([fetchWorkouts(), fetchEvents(), fetchTags(), fetchExercises()])
+      await Promise.all([fetchWorkouts(1, false), fetchEvents(1, false), fetchTags(), fetchExercises()])
       setLoading(false)
     }
     fetchAllData()
@@ -529,70 +595,146 @@ function WorkoutsPageContent() {
         {/* Content based on active tab */}
         {activeTab === 'workouts' ? (
           workouts.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
               <div className="text-6xl mb-4">🏋️‍♀️</div>
               <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-                {t('workouts.noWorkouts')}
+                {t('workouts.noWorkouts') || 'No workouts yet'}
               </h2>
-              <p className="text-uc-text-muted mb-6">
-                {t('workouts.noWorkoutsDescription')}
+              <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+                {t('workouts.noWorkoutsDescription') || 'Start tracking your training sessions! Log your workouts to monitor progress, track exercises, and analyze your performance over time.'}
               </p>
-              <button
-                onClick={() => {
-                  setEditingWorkout(null)
-                  setEditingEvent(null)
-                  setShowAddChoice(true)
-                }}
-                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-              >
-                ➕ {t('common.add') || 'Add'}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <button
+                  onClick={() => {
+                    setEditingWorkout(null)
+                    setEditingEvent(null)
+                    setShowAddChoice(true)
+                  }}
+                  className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+                >
+                  ➕ {t('workouts.addFirstWorkout') || 'Add Your First Workout'}
+                </button>
+                <p className="text-sm text-uc-text-muted">
+                  {t('workouts.useQuickLog') || 'or use Quick Log for fast entry'}
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {workouts.map((workout) => (
-                <WorkoutCard
-                  key={workout.id}
-                  workout={workout}
-                  onEdit={handleEdit}
-                  onDelete={deleteWorkout}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {workouts.map((workout) => (
+                  <WorkoutCard
+                    key={workout.id}
+                    workout={workout}
+                    onEdit={handleEdit}
+                    onDelete={deleteWorkout}
+                    isDeleting={deletingWorkoutId === workout.id}
+                  />
+                ))}
+              </div>
+              {/* Pagination controls */}
+              {workoutsPagination.totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center space-x-4">
+                  <button
+                    onClick={() => {
+                      const newPage = workoutsPage - 1
+                      setWorkoutsPage(newPage)
+                      fetchWorkouts(newPage, false)
+                    }}
+                    disabled={workoutsPage === 1}
+                    className="px-4 py-2 rounded-xl bg-uc-dark-bg text-uc-text-light border border-uc-purple/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-uc-purple/20 transition-colors"
+                  >
+                    ← Previous
+                  </button>
+                  <span className="text-uc-text-muted">
+                    Page {workoutsPage} of {workoutsPagination.totalPages} ({workoutsPagination.total} total)
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newPage = workoutsPage + 1
+                      setWorkoutsPage(newPage)
+                      fetchWorkouts(newPage, false)
+                    }}
+                    disabled={!workoutsPagination.hasMore}
+                    className="px-4 py-2 rounded-xl bg-uc-dark-bg text-uc-text-light border border-uc-purple/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-uc-purple/20 transition-colors"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
           )
         ) : (
           events.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
               <div className="text-6xl mb-4">📅</div>
               <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-                {t('events.noEvents')}
+                {t('events.noEvents') || 'No events yet'}
               </h2>
-              <p className="text-uc-text-muted mb-6">
-                {t('events.noEventsDescription')}
+              <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+                {t('events.noEventsDescription') || 'Start tracking your injuries, physio visits, competitions, and climbing trips. This helps you understand patterns and plan better.'}
               </p>
-              <button
-                onClick={() => {
-                  setEditingWorkout(null)
-                  setEditingEvent(null)
-                  setShowAddChoice(true)
-                }}
-                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-              >
-                ➕ {t('common.add') || 'Add'}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <button
+                  onClick={() => {
+                    setEditingWorkout(null)
+                    setEditingEvent(null)
+                    setShowAddChoice(true)
+                  }}
+                  className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+                >
+                  ➕ {t('events.addFirstEvent') || 'Add Your First Event'}
+                </button>
+                <p className="text-sm text-uc-text-muted">
+                  {t('events.trackInjuries') || 'Track injuries to see patterns with your cycle'}
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onEdit={handleEventEdit}
-                  onDelete={deleteEvent}
-                  onCycleDayUpdate={handleCycleDayUpdate}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {events.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onEdit={handleEventEdit}
+                    onDelete={deleteEvent}
+                    onCycleDayUpdate={handleCycleDayUpdate}
+                    isDeleting={deletingEventId === event.id}
+                  />
+                ))}
+              </div>
+              {/* Pagination controls */}
+              {eventsPagination.totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center space-x-4">
+                  <button
+                    onClick={() => {
+                      const newPage = eventsPage - 1
+                      setEventsPage(newPage)
+                      fetchEvents(newPage, false)
+                    }}
+                    disabled={eventsPage === 1}
+                    className="px-4 py-2 rounded-xl bg-uc-dark-bg text-uc-text-light border border-uc-purple/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-uc-purple/20 transition-colors"
+                  >
+                    ← Previous
+                  </button>
+                  <span className="text-uc-text-muted">
+                    Page {eventsPage} of {eventsPagination.totalPages} ({eventsPagination.total} total)
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newPage = eventsPage + 1
+                      setEventsPage(newPage)
+                      fetchEvents(newPage, false)
+                    }}
+                    disabled={!eventsPagination.hasMore}
+                    className="px-4 py-2 rounded-xl bg-uc-dark-bg text-uc-text-light border border-uc-purple/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-uc-purple/20 transition-colors"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
           )
         )}
 
@@ -700,7 +842,7 @@ function WorkoutsPageContent() {
 
                 if (response.ok) {
                   setShowQuickLog(false)
-                  await fetchWorkouts()
+                  await fetchWorkouts(1, false) // Reset to first page
                 } else {
                   const error = await response.json()
                   alert(error.error || t('quickLog.errors.saveFailed') || 'Failed to save quick log')
@@ -715,6 +857,19 @@ function WorkoutsPageContent() {
             isSubmitting={isSubmittingQuickLog}
           />
         )}
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          confirmText={confirmation.confirmText}
+          cancelText={confirmation.cancelText}
+          variant={confirmation.variant}
+          isLoading={deletingWorkoutId !== null || deletingEventId !== null}
+        />
       </div>
     </div>
   )

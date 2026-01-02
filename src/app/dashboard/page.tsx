@@ -65,11 +65,13 @@ function DashboardContent() {
           setUserNickname(user.nickname)
         }
         
-        // Fetch trips
-        const tripsResponse = await fetch('/api/events', { credentials: 'include' })
+        // Fetch trips - only get first page, we only need trips
+        const tripsResponse = await fetch('/api/events?page=1&limit=50', { credentials: 'include' })
         if (tripsResponse.ok) {
-          allEvents = await tripsResponse.json()
-          const trips = allEvents.filter(event =>
+          const tripsData = await tripsResponse.json()
+          // Handle both new paginated format and old format
+          allEvents = tripsData.events || tripsData
+          const trips = allEvents.filter((event: Event) =>
             event.type === 'TRIP' &&
             event.tripStartDate &&
             event.showCountdown === true &&
@@ -79,10 +81,12 @@ function DashboardContent() {
           setRecentEvents(allEvents.slice(0, 3))
         }
 
-        // Fetch workouts
-        const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' })
+        // Fetch workouts - only get first page for recent workouts and stats
+        const workoutsResponse = await fetch('/api/workouts?page=1&limit=100', { credentials: 'include' })
         if (workoutsResponse.ok) {
-          const workouts: Workout[] = await workoutsResponse.json()
+          const workoutsData = await workoutsResponse.json()
+          // Handle both new paginated format and old format
+          const workouts: Workout[] = workoutsData.workouts || workoutsData
           setRecentWorkouts(workouts.slice(0, 3))
           
           // Calculate stats
@@ -419,9 +423,14 @@ function DashboardContent() {
                   </Link>
                 ))
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-3">🏋️</div>
-                  <p className="text-uc-text-muted mb-4">{t('dashboard.noWorkouts') || 'No workouts yet'}</p>
+                <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
+                  <div className="text-6xl mb-4">🏋️</div>
+                  <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+                    {t('dashboard.noWorkouts') || 'No workouts yet'}
+                  </h3>
+                  <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+                    {t('dashboard.noWorkoutsDescription') || 'Start tracking your training sessions to see your progress and statistics here.'}
+                  </p>
                   <Link 
                     href="/workouts"
                     className="inline-flex items-center space-x-2 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"

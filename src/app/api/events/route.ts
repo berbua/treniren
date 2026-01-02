@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { EventType } from '@prisma/client'
 import { requireAuth } from '@/lib/auth-helpers'
+import { CreateEventSchema, formatValidationError } from '@/lib/validation'
+import { applySecurity } from '@/lib/api-security'
 
-// GET /api/events - Get all events for a user
+// GET /api/events - Get all events for a user (with pagination support)
 export async function GET(request: NextRequest) {
   try {
+    // Apply security middleware
+    const securityResponse = await applySecurity(request, { csrf: false })
+    if (securityResponse) return securityResponse
+
     const user = await requireAuth(request)
     
     if (!user) {
@@ -14,6 +20,17 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       )
     }
+    
+    // Parse pagination parameters from query string
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const skip = (page - 1) * limit
+    
+    // Get total count for pagination metadata
+    const totalCount = await prisma.event.count({
+      where: { userId: user.id },
+    })
     
     const events = await prisma.event.findMany({
       where: { userId: user.id },
@@ -25,9 +42,20 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { date: 'desc' },
+      skip,
+      take: limit,
     })
 
-    return NextResponse.json(events)
+    return NextResponse.json({
+      events,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasMore: skip + events.length < totalCount,
+      },
+    })
   } catch (error) {
     console.error('Error fetching events:', error)
     return NextResponse.json(
@@ -40,7 +68,33 @@ export async function GET(request: NextRequest) {
 // POST /api/events - Create a new event
 export async function POST(request: NextRequest) {
   try {
+    // Apply security middleware
+    const securityResponse = await applySecurity(request, { rateLimit: 'normal', csrf: true })
+    if (securityResponse) return securityResponse
+
+    const user = await requireAuth(request)
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
+    
+    // Validate input
+    const validationResult = CreateEventSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: formatValidationError(validationResult.error),
+        },
+        { status: 400 }
+      )
+    }
+
     const {
       type,
       title,
@@ -62,15 +116,22 @@ export async function POST(request: NextRequest) {
       // Cycle tracking for injuries
       cycleDay,
       cycleDayManuallySet,
-    } = body
+    } = validationResult.data
 
-    const user = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+    // Validate tagIds exist and belong to user
+    if (tagIds && tagIds.length > 0) {
+      const existingTags = await prisma.tag.findMany({
+        where: {
+          id: { in: tagIds },
+          userId: user.id,
+        },
+      })
+      if (existingTags.length !== tagIds.length) {
+        return NextResponse.json(
+          { error: 'One or more tags not found or do not belong to user' },
+          { status: 400 }
+        )
+      }
     }
 
     const event = await prisma.event.create({

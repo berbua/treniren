@@ -88,9 +88,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const loadWorkouts = async () => {
       try {
-        const response = await fetch('/api/workouts', { credentials: 'include' });
+        // Fetch all workouts for notifications (use large limit)
+        const response = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' });
         if (response.ok) {
-          const workouts = await response.json();
+          const data = await response.json();
+          // Handle both new paginated format and old format
+          const workouts = Array.isArray(data) ? data : (data.workouts || []);
           if (workouts.length > 0) {
             // Process activity notifications
             const activityNotifications = processActivityNotifications(workouts);
@@ -212,9 +215,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const loadWorkoutsForScheduling = async () => {
       try {
-        const response = await fetch('/api/workouts', { credentials: 'include' });
+        // Fetch all workouts for scheduling (use large limit)
+        const response = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' });
         if (response.ok) {
-          const workouts = await response.json();
+          const data = await response.json();
+          // Handle both new paginated format and old format
+          const workouts = Array.isArray(data) ? data : (data.workouts || []);
           if (workouts.length > 0) {
             const activityCleanup = scheduleDailyActivityCheck(workouts);
             const inactivityCleanup = scheduleDailyWorkoutInactivityCheck(workouts, {

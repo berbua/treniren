@@ -22,6 +22,8 @@ interface ExerciseLibraryProps {
   onCategoryChange: (category: string) => void
   categories: string[]
   onQuickAdd: (data: { name: string; category?: string; defaultUnit: string }) => void
+  deletingExerciseId?: string | null
+  onCreateExercise?: () => void
 }
 
 // Common exercises for quick-add
@@ -74,11 +76,14 @@ export function ExerciseLibrary({
   onCategoryChange,
   categories,
   onQuickAdd,
+  deletingExerciseId = null,
+  onCreateExercise,
 }: ExerciseLibraryProps) {
   const { t } = useLanguage()
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [quickStats, setQuickStats] = useState<Record<string, ExerciseQuickStats>>({})
+  const [loadingStats, setLoadingStats] = useState<Set<string>>(new Set())
 
   // Fetch quick stats for all exercises
   useEffect(() => {
@@ -91,6 +96,7 @@ export function ExerciseLibrary({
 
   const fetchQuickStats = async (exerciseId: string) => {
     try {
+      setLoadingStats(prev => new Set(prev).add(exerciseId))
       const response = await fetch(`/api/exercises/${exerciseId}/quick-stats`)
       if (response.ok) {
         const stats = await response.json()
@@ -98,6 +104,12 @@ export function ExerciseLibrary({
       }
     } catch (error) {
       console.error('Error fetching quick stats:', error)
+    } finally {
+      setLoadingStats(prev => {
+        const next = new Set(prev)
+        next.delete(exerciseId)
+        return next
+      })
     }
   }
 
@@ -238,12 +250,29 @@ export function ExerciseLibrary({
       {exercises.length === 0 ? (
         <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
           <div className="text-6xl mb-4">💪</div>
-          <h3 className="text-xl font-semibold text-uc-text-light mb-2">{t('workouts.labels.noExercisesFound') || 'No exercises found'}</h3>
-          <p className="text-uc-text-muted mb-6">
+          <h3 className="text-xl font-semibold text-uc-text-light mb-2">
             {searchQuery || selectedCategory !== 'all'
-              ? 'Try adjusting your search or filters'
-              : 'Start by adding your first exercise!'}
+              ? (t('exercises.noExercisesFound') || 'No exercises found')
+              : (t('exercises.noExercises') || 'No exercises yet')}
+          </h3>
+          <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+            {searchQuery || selectedCategory !== 'all'
+              ? (t('exercises.noExercisesFoundDescription') || 'Try adjusting your search or filters to find what you\'re looking for.')
+              : (t('exercises.noExercisesDescription') || 'Create your exercise library to track your progress. Add exercises you use in your workouts, and we\'ll help you monitor your strength gains over time.')}
           </p>
+          {!(searchQuery || selectedCategory !== 'all') && onCreateExercise && (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <button
+                onClick={onCreateExercise}
+                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+              >
+                ➕ {t('exercises.addFirstExercise') || 'Add Your First Exercise'}
+              </button>
+              <p className="text-sm text-uc-text-muted">
+                {t('exercises.orUseQuickAdd') || 'or use Quick Add above for common exercises'}
+              </p>
+            </div>
+          )}
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -256,6 +285,7 @@ export function ExerciseLibrary({
               formatDate={formatDate}
               getCategoryColor={getCategoryColor}
               quickStats={quickStats[exercise.id]}
+              isDeleting={deletingExerciseId === exercise.id}
             />
           ))}
         </div>
@@ -271,6 +301,7 @@ export function ExerciseLibrary({
                 formatDate={formatDate}
                 getCategoryColor={getCategoryColor}
                 quickStats={quickStats[exercise.id]}
+                isDeleting={deletingExerciseId === exercise.id}
               />
             ))}
           </div>
@@ -287,6 +318,7 @@ function ExerciseCard({
   formatDate,
   getCategoryColor,
   quickStats,
+  isDeleting = false,
 }: {
   exercise: Exercise
   onEdit: (exercise: Exercise) => void
@@ -294,6 +326,7 @@ function ExerciseCard({
   formatDate: (date: string | null) => string
   getCategoryColor: (category: string) => string
   quickStats?: ExerciseQuickStats
+  isDeleting?: boolean
 }) {
   const { t } = useLanguage()
   const stats = quickStats || exercise.stats
@@ -387,6 +420,7 @@ function ExerciseListItem({
   formatDate,
   getCategoryColor,
   quickStats,
+  isDeleting = false,
 }: {
   exercise: Exercise
   onEdit: (exercise: Exercise) => void
@@ -394,6 +428,7 @@ function ExerciseListItem({
   formatDate: (date: string | null) => string
   getCategoryColor: (category: string) => string
   quickStats?: ExerciseQuickStats
+  isDeleting?: boolean
 }) {
   const stats = quickStats || exercise.stats
 
@@ -451,10 +486,15 @@ function ExerciseListItem({
           </button>
           <button
             onClick={() => onDelete(exercise.id)}
-            className="p-2 text-uc-text-muted hover:text-red-500 transition-colors"
-            title="Delete"
+            disabled={isDeleting}
+            className="p-2 text-uc-text-muted hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={isDeleting ? "Deleting..." : "Delete"}
           >
-            🗑️
+            {isDeleting ? (
+              <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              '🗑️'
+            )}
           </button>
         </div>
       </div>

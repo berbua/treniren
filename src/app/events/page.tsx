@@ -3,17 +3,21 @@
 import { useState, useEffect } from 'react'
 import { Event, EventFormData, Tag } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useConfirmation } from '@/hooks/useConfirmation'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import EventForm from '@/components/EventForm'
 import EventCard from '@/components/EventCard'
 
 export default function EventsPage() {
   const { t } = useLanguage()
+  const confirmation = useConfirmation()
   const [events, setEvents] = useState<Event[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
 
   // Fetch events and tags
   useEffect(() => {
@@ -99,21 +103,31 @@ export default function EventsPage() {
   }
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (!confirm(t('events.deleteConfirm') || 'Are you sure you want to delete this event?')) return
+    confirmation.showConfirmation(
+      {
+        title: t('events.deleteConfirmTitle') || 'Delete Event',
+        message: t('events.deleteConfirm') || 'Are you sure you want to delete this event? This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        try {
+          setDeletingEventId(eventId)
+          const response = await fetch(`/api/events/${eventId}`, {
+            method: 'DELETE',
+          })
 
-    try {
-      const response = await fetch(`/api/events/${eventId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        setEvents(prev => prev.filter(event => event.id !== eventId))
-      } else {
-        console.error('Failed to delete event')
+          if (response.ok) {
+            setEvents(prev => prev.filter(event => event.id !== eventId))
+          } else {
+            console.error('Failed to delete event')
+          }
+        } catch (error) {
+          console.error('Error deleting event:', error)
+        } finally {
+          setDeletingEventId(null)
+        }
       }
-    } catch (error) {
-      console.error('Error deleting event:', error)
-    }
+    )
   }
 
   const handleCycleDayUpdate = async (eventId: string, cycleDay: number | null, manuallySet: boolean) => {
@@ -212,20 +226,25 @@ export default function EventsPage() {
 
         {/* Events Grid */}
         {events.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
             <div className="text-6xl mb-4">📅</div>
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-2">
-              No events yet
+            <h3 className="text-xl font-semibold text-uc-text-light mb-2">
+              {t('events.noEvents') || 'No events yet'}
             </h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              Start tracking your injuries, physio visits, and competitions
+            <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+              {t('events.noEventsDescription') || 'Start tracking your injuries, physio visits, competitions, and climbing trips. This helps you understand patterns and plan better.'}
             </p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Add Your First Event
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+              >
+                ➕ {t('events.addFirstEvent') || 'Add Your First Event'}
+              </button>
+              <p className="text-sm text-uc-text-muted">
+                {t('events.trackInjuries') || 'Track injuries to see patterns with your cycle'}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -236,6 +255,7 @@ export default function EventsPage() {
                 onEdit={handleEditEvent}
                 onDelete={handleDeleteEvent}
                 onCycleDayUpdate={handleCycleDayUpdate}
+                isDeleting={deletingEventId === event.id}
               />
             ))}
           </div>
@@ -255,6 +275,19 @@ export default function EventsPage() {
             isSubmitting={isSubmitting}
           />
         )}
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          confirmText={confirmation.confirmText}
+          cancelText={confirmation.cancelText}
+          variant={confirmation.variant}
+          isLoading={deletingEventId !== null}
+        />
       </div>
     </div>
   )

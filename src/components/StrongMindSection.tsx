@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { MentalState, ClimbSection, FocusState, ComfortZone } from '@/types/workout';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tooltip } from './Tooltip';
 
 interface StrongMindSectionProps {
   mentalState: MentalState;
@@ -166,8 +167,11 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   <div className="space-y-4">
                     {/* Focus State */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                         {t('workouts.focusState') || 'Focus State'}
+                        <Tooltip content={t('workouts.tooltips.focusState') || 'Your mental state during climbing: Choke (panic), Distraction (unfocused), Present (aware), Focused (concentrated), Clutch (performing under pressure), Flow (optimal state).'}>
+                          <span className="text-gray-500 dark:text-gray-400 cursor-help">ℹ️</span>
+                        </Tooltip>
                       </label>
                       <div className="grid grid-cols-3 gap-2">
                         {Object.entries(focusStateLabels).map(([key, { label, color }]) => (
@@ -222,8 +226,11 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                     
                     {/* Comfort Zone */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                         {t('workouts.comfortZone') || 'Comfort Zone'}
+                        <Tooltip content={t('workouts.tooltips.comfortZone') || 'How comfortable you felt on the climb: Comfort (easy), Stretch 1 (slightly challenging), Stretch 2 (very challenging), Panic (too hard).'}>
+                          <span className="text-gray-500 dark:text-gray-400 cursor-help">ℹ️</span>
+                        </Tooltip>
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {Object.entries(comfortZoneLabels).map(([key, { label, color }]) => (

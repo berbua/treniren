@@ -101,3 +101,5 @@ Service Worker został zaktualizowany, aby używać prostszego powiadomienia bez
 3. **Przełącz się na inną aplikację** przed wysłaniem powiadomienia
 4. **Sprawdź Centrum Powiadomień** - może być tam, ale nie jako popup
 
+
+

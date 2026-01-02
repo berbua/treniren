@@ -71,7 +71,7 @@ function ExerciseDetailPageContent() {
       const [exerciseResponse, statsResponse, workoutsResponse] = await Promise.all([
         fetch(`/api/exercises/${exerciseId}`),
         fetch(`/api/exercises/${exerciseId}/quick-stats`),
-        fetch(`/api/workouts`),
+        fetch(`/api/workouts?page=1&limit=1000`), // Fetch all workouts for exercise history
       ])
 
       if (exerciseResponse.ok) {
@@ -85,7 +85,9 @@ function ExerciseDetailPageContent() {
       }
 
       if (workoutsResponse.ok) {
-        const allWorkouts = await workoutsResponse.json()
+        const data = await workoutsResponse.json()
+        // Handle both new paginated format and old format
+        const allWorkouts = Array.isArray(data) ? data : (data.workouts || [])
         // Filter workouts that contain this exercise
         const workoutsWithExercise = allWorkouts.filter((workout: any) =>
           workout.workoutExercises?.some((we: any) => we.exerciseId === exerciseId)
@@ -340,16 +342,20 @@ function ExerciseDetailPageContent() {
             )}
           </div>
         ) : (
-          <div className="bg-uc-dark-bg rounded-xl p-6 border border-uc-purple/20 mb-8">
-            <div className="text-center py-8">
-              <div className="text-6xl mb-4">💪</div>
-              <p className="text-uc-text-muted mb-2">
-                No workout data yet
-              </p>
-              <p className="text-sm text-uc-text-muted">
-                Add this exercise to a workout to start tracking progress
-              </p>
-            </div>
+          <div className="bg-uc-dark-bg rounded-xl p-12 border border-uc-purple/20 mb-8 text-center">
+            <div className="text-6xl mb-4">💪</div>
+            <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+              {t('exercises.noWorkoutData') || 'No workout data yet'}
+            </h3>
+            <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+              {t('exercises.noWorkoutDataDescription') || 'Start logging workouts with this exercise to see your progression over time. Track your sets, reps, and weights to visualize your strength gains.'}
+            </p>
+            <Link
+              href="/workouts"
+              className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+            >
+              ➕ {t('exercises.logWorkout') || 'Log Your First Workout'}
+            </Link>
           </div>
         )}
 

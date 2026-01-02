@@ -117,3 +117,5 @@ curl http://localhost:2137/sw.js
 - **VAPID keys muszą być w `.env.local`** - nie w `.env`
 - **Zrestartuj serwer** po dodaniu VAPID keys
 
+
+

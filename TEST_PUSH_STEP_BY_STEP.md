@@ -160,3 +160,5 @@ Failed to get public key. Status: 500
 2. Cały output z konsoli po kliknięciu "Enable"
 3. Czy service worker jest zarejestrowany? (DevTools → Application → Service Workers)
 
+
+

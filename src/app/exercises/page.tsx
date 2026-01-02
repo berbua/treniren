@@ -5,7 +5,9 @@ import Link from 'next/link'
 import AuthGuard from '@/components/AuthGuard'
 import { Exercise } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useConfirmation } from '@/hooks/useConfirmation'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import ExerciseForm from '@/components/ExerciseForm'
 import { ExerciseLibrary } from '@/components/ExerciseLibrary'
 
@@ -19,12 +21,15 @@ export default function ExercisesPage() {
 
 function ExercisesPageContent() {
   const { t } = useLanguage()
+  const confirmation = useConfirmation()
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch exercises
   useEffect(() => {
@@ -57,28 +62,37 @@ function ExercisesPageContent() {
   }
 
   const handleDeleteExercise = async (id: string) => {
-    if (!confirm(t('workouts.errors.deleteExerciseConfirm') || 'Are you sure you want to delete this exercise? This will also remove it from all workouts.')) {
-      return
-    }
+    confirmation.showConfirmation(
+      {
+        title: t('exercises.deleteConfirmTitle') || 'Delete Exercise',
+        message: t('workouts.errors.deleteExerciseConfirm') || 'Are you sure you want to delete this exercise? This will also remove it from all workouts. This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        try {
+          setDeletingExerciseId(id)
+          const response = await fetch(`/api/exercises/${id}`, {
+            method: 'DELETE',
+          })
 
-    try {
-      const response = await fetch(`/api/exercises/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        await fetchExercises()
-      } else {
-        const error = await response.json()
-        alert(`Failed to delete exercise: ${error.error}`)
+          if (response.ok) {
+            await fetchExercises()
+          } else {
+            const error = await response.json()
+            alert(`Failed to delete exercise: ${error.error}`)
+          }
+        } catch (error) {
+          console.error('Error deleting exercise:', error)
+          alert(t('workouts.errors.deleteExerciseFailed') || 'Failed to delete exercise')
+        } finally {
+          setDeletingExerciseId(null)
+        }
       }
-    } catch (error) {
-      console.error('Error deleting exercise:', error)
-      alert(t('workouts.errors.deleteExerciseFailed') || 'Failed to delete exercise')
-    }
+    )
   }
 
   const handleFormSubmit = async (exerciseData: { name: string; category?: string; defaultUnit: string }) => {
+    setIsSubmitting(true)
     try {
       const url = editingExercise ? `/api/exercises/${editingExercise.id}` : '/api/exercises'
       const method = editingExercise ? 'PUT' : 'POST'
@@ -100,6 +114,8 @@ function ExercisesPageContent() {
     } catch (error) {
       console.error('Error saving exercise:', error)
       alert(`Failed to ${editingExercise ? 'update' : 'create'} exercise`)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -159,6 +175,8 @@ function ExercisesPageContent() {
           onCategoryChange={setSelectedCategory}
           categories={categories}
           onQuickAdd={handleFormSubmit}
+          deletingExerciseId={deletingExerciseId}
+          onCreateExercise={handleCreateExercise}
         />
 
         {/* Exercise Form Modal */}
@@ -170,8 +188,22 @@ function ExercisesPageContent() {
               setShowForm(false)
               setEditingExercise(null)
             }}
+            isSubmitting={isSubmitting}
           />
         )}
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          confirmText={confirmation.confirmText}
+          cancelText={confirmation.cancelText}
+          variant={confirmation.variant}
+          isLoading={deletingExerciseId !== null}
+        />
       </div>
     </div>
   )

@@ -1,8 +1,14 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import AuthGuard from '@/components/AuthGuard'
-import { StatisticsContent } from '@/components/StatisticsContent'
 import { useLanguage } from '@/contexts/LanguageContext'
+
+// Lazy load StatisticsContent for better performance
+const StatisticsContent = dynamic(() => import('@/components/StatisticsContent').then(mod => ({ default: mod.StatisticsContent })), {
+  loading: () => <div className="text-center py-8 text-uc-text-muted">Loading statistics...</div>,
+  ssr: false
+})
 
 export default function StatisticsPage() {
   return (

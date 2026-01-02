@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react'
 import AuthGuard from '@/components/AuthGuard'
 import { FingerboardTestingProtocol } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useConfirmation } from '@/hooks/useConfirmation'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import FingerboardTestingProtocolForm from '@/components/FingerboardTestingProtocolForm'
 import Link from 'next/link'
 
@@ -18,11 +20,13 @@ export default function FingerboardTestingPage() {
 
 function FingerboardTestingPageContent() {
   const { t } = useLanguage()
+  const confirmation = useConfirmation()
   const [protocols, setProtocols] = useState<FingerboardTestingProtocol[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingProtocol, setEditingProtocol] = useState<FingerboardTestingProtocol | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingProtocolId, setDeletingProtocolId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchProtocols()
@@ -53,24 +57,32 @@ function FingerboardTestingPageContent() {
   }
 
   const handleDeleteProtocol = async (id: string) => {
-    if (!confirm(t('workouts.errors.deleteTestingProtocolConfirm') || 'Are you sure you want to delete this testing protocol? All test results will also be deleted.')) {
-      return
-    }
+    confirmation.showConfirmation(
+      {
+        title: t('fingerboard.deleteTestingProtocolConfirmTitle') || 'Delete Testing Protocol',
+        message: t('workouts.errors.deleteTestingProtocolConfirm') || 'Are you sure you want to delete this testing protocol? All test results will also be deleted. This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        try {
+          setDeletingProtocolId(id)
+          const response = await fetch(`/api/fingerboard-testing-protocols/${id}`, {
+            method: 'DELETE',
+          })
 
-    try {
-      const response = await fetch(`/api/fingerboard-testing-protocols/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        await fetchProtocols()
-      } else {
-        alert(t('workouts.errors.deleteTestingProtocolFailed') || 'Failed to delete protocol')
+          if (response.ok) {
+            await fetchProtocols()
+          } else {
+            alert(t('workouts.errors.deleteTestingProtocolFailed') || 'Failed to delete protocol')
+          }
+        } catch (error) {
+          console.error('Error deleting protocol:', error)
+          alert(t('workouts.errors.deleteTestingProtocolError') || 'Error deleting protocol')
+        } finally {
+          setDeletingProtocolId(null)
+        }
       }
-    } catch (error) {
-      console.error('Error deleting protocol:', error)
-      alert(t('workouts.errors.deleteTestingProtocolError') || 'Error deleting protocol')
-    }
+    )
   }
 
   const handleSubmitProtocol = async (protocolData: any) => {
@@ -216,6 +228,19 @@ function FingerboardTestingPageContent() {
             isSubmitting={isSubmitting}
           />
         )}
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
+          message={confirmation.message}
+          confirmText={confirmation.confirmText}
+          cancelText={confirmation.cancelText}
+          variant={confirmation.variant}
+          isLoading={deletingProtocolId !== null}
+        />
       </div>
     </div>
   )

@@ -8,6 +8,7 @@ interface ExerciseFormProps {
   exercise?: Exercise | null
   onSubmit: (data: { name: string; category?: string; defaultUnit: string }) => void
   onCancel: () => void
+  isSubmitting?: boolean
 }
 
 const commonCategories = [
@@ -28,7 +29,7 @@ const commonCategories = [
 
 const units = ['kg', 'lbs', 'reps', 'time', 'distance']
 
-export default function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps) {
+export default function ExerciseForm({ exercise, onSubmit, onCancel, isSubmitting = false }: ExerciseFormProps) {
   const { t } = useLanguage()
   const [formData, setFormData] = useState({
     name: exercise?.name || '',
@@ -173,10 +174,20 @@ export default function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseF
             </button>
             <button
               type="submit"
+              disabled={isSubmitting}
               className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-lg"
             >
-              <span>💾</span>
-              <span>{exercise ? 'Update' : 'Create'} Exercise</span>
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-uc-black border-t-transparent rounded-full animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <span>💾</span>
+                  <span>{exercise ? 'Update' : 'Create'} Exercise</span>
+                </>
+              )}
             </button>
           </div>
         </form>

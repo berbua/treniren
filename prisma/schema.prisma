@@ -131,6 +131,7 @@ model User {
   fingerboardTestingProtocols FingerboardTestingProtocol[]
   fingerboardTestResults FingerboardTestResult[]
   pushSubscriptions PushSubscription[]
+  periods       Period[]
 
   @@map("users")
 }
@@ -281,6 +282,23 @@ model Event {
   eventTags   EventTag[]
 
   @@map("events")
+}
+
+model Period {
+  id                String   @id @default(cuid())
+  userId            String
+  startDate         DateTime
+  endDate           DateTime? // Optional, defaults to startDate if single day
+  notes             String?
+  cycleDay          Int? // Calculated cycle day when period started
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startDate])
+  @@map("periods")
 }
 
 model Exercise {

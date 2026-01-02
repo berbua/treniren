@@ -10,6 +10,7 @@ import { StrongMindSection } from './StrongMindSection';
 import TagSelector from './TagSelector';
 import WorkoutExerciseTracker from './WorkoutExerciseTracker';
 import FingerboardHangTracker from './FingerboardHangTracker';
+import { Tooltip } from './Tooltip';
 
 // Extended Workout type that includes relations from API
 type WorkoutWithRelations = Workout & {
@@ -568,8 +569,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {/* Training Volume (for non-gym, non-mental practice, and non-fingerboard workouts) */}
             {formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && formData.type !== 'FINGERBOARD' && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                   📊 {t('workouts.trainingVolumeLabel') || 'Training Volume'} *
+                  <Tooltip content={t('workouts.tooltips.trainingVolume') || 'Training Volume (TR) indicates the intensity of your workout. TR1 is very light recovery, TR5 is maximum intensity. Choose based on how hard you trained.'}>
+                    <span className="text-slate-500 dark:text-slate-400 cursor-help">ℹ️</span>
+                  </Tooltip>
                 </label>
                 <div className="flex space-x-2">
                   {getTrainingVolumes(t).map((volume) => (
@@ -601,8 +605,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {/* Focus Level - Only for Mental Practice */}
             {formData.type === 'MENTAL_PRACTICE' && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                   🧘 {t('workouts.focusLevel') || 'Focus Level (1-5)'}
+                  <Tooltip content={t('workouts.tooltips.focusLevel') || 'Rate your focus during the workout (1 = very distracted, 5 = very focused). Helps identify what affects your concentration.'}>
+                    <span className="text-slate-500 dark:text-slate-400 cursor-help">ℹ️</span>
+                  </Tooltip>
                 </label>
                 <div className="flex space-x-2">
                   {[1, 2, 3, 4, 5].map((rating) => {
@@ -639,8 +646,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {/* Sector Field - For Lead Rock, Lead Wall, Bouldering, and Circuits */}
             {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING' || formData.type === 'CIRCUITS') && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                   🏔️ {t('workouts.sector') || 'Sector'}
+                  <Tooltip content={t('workouts.tooltips.sector') || 'The climbing area or location where you trained (e.g., \'Fontainebleau - Bas Cuvier\'). Useful for tracking where you climb.'}>
+                    <span className="text-slate-500 dark:text-slate-400 cursor-help">ℹ️</span>
+                  </Tooltip>
                 </label>
                 <input
                   type="text"
@@ -655,8 +665,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {/* Mental Practice Type - Only for Mental Practice */}
             {formData.type === 'MENTAL_PRACTICE' && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                   🧘 {t('workouts.mentalPracticeType') || 'Practice Type'}
+                  <Tooltip content={t('workouts.tooltips.mentalPracticeType') || 'Type of mental practice: Meditation (mindfulness), Reflecting (self-reflection), Other (custom practice).'}>
+                    <span className="text-slate-500 dark:text-slate-400 cursor-help">ℹ️</span>
+                  </Tooltip>
                 </label>
                 <select
                   value={formData.mentalPracticeType}
@@ -673,8 +686,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             {/* Time of Day - Only for Mental Practice */}
             {formData.type === 'MENTAL_PRACTICE' && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                   🕐 {t('workouts.timeOfDay') || 'Time of Day'}
+                  <Tooltip content={t('workouts.tooltips.timeOfDay') || 'When you did the mental practice: Morning (🌅), Midday (☀️), Evening (🌙). Track patterns in your practice timing.'}>
+                    <span className="text-slate-500 dark:text-slate-400 cursor-help">ℹ️</span>
+                  </Tooltip>
                 </label>
                 <div className="flex space-x-4">
                   {[
@@ -786,8 +802,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
 
                   {/* 3 things to do better next time */}
                   <div>
-                    <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-2">
+                    <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-2 flex items-center gap-2">
                       {t('workouts.improvements') || '3 things to do better next time'}
+                      <Tooltip content={t('workouts.tooltips.improvements') || 'Note 3 things you want to improve or do better next time. This helps you learn and grow from each session.'}>
+                        <span className="text-yellow-600 dark:text-yellow-400 cursor-help">ℹ️</span>
+                      </Tooltip>
                     </label>
                     <textarea
                       value={formData.improvements}

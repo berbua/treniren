@@ -132,3 +132,5 @@ Wyślij mi:
 - Status service workera
 - Czy przycisk zmienił się na "Disable"?
 
+
+

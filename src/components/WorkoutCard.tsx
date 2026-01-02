@@ -24,6 +24,7 @@ interface WorkoutCardProps {
   }
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
+  isDeleting?: boolean
 }
 
 const getTrainingTypeColor = (type: WorkoutType) => {
@@ -69,7 +70,7 @@ const formatDate = (dateString: string) => {
   return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
 }
 
-export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardProps) {
+export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = false }: WorkoutCardProps) {
   const { t } = useLanguage()
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 border border-slate-200 dark:border-slate-700">
@@ -119,10 +120,15 @@ export default function WorkoutCard({ workout, onEdit, onDelete }: WorkoutCardPr
           {onDelete && (
             <button
               onClick={() => onDelete(workout.id)}
-              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              title="Delete workout"
+              disabled={isDeleting}
+              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isDeleting ? "Deleting..." : "Delete workout"}
             >
-              🗑️
+              {isDeleting ? (
+                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                '🗑️'
+              )}
             </button>
           )}
         </div>

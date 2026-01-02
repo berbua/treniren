@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useCycle } from '@/contexts/CycleContext';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import TagSelector from './TagSelector';
+import { Tooltip } from './Tooltip';
 
 interface EventFormProps {
   onSubmit: (event: EventFormData) => void;
@@ -237,8 +238,11 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             {/* Cycle Day - Only for injury events */}
             {formData.type === 'INJURY' && (
               <div className="p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl border border-pink-200 dark:border-pink-800">
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
+                <label className="block text-sm font-medium text-uc-text-light mb-2 flex items-center gap-2">
                   🌸 {t('events.cycleDay') || 'Cycle Day'}
+                  <Tooltip content={t('workouts.tooltips.cycleDay') || 'The day of your menstrual cycle (1-28+). Day 1 is the first day of your period. This helps correlate injuries and performance with your cycle phase.'}>
+                    <span className="text-pink-500 dark:text-pink-400 cursor-help">ℹ️</span>
+                  </Tooltip>
                 </label>
                 {calculatedCycleDay !== undefined && !formData.cycleDayManuallySet && (
                   <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
@@ -459,8 +463,11 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                       onChange={(e) => updateFormData('showCountdown', e.target.checked)}
                       className="w-4 h-4 text-uc-purple bg-uc-black border-uc-purple/20 rounded focus:ring-uc-purple focus:ring-2"
                     />
-                    <span className="text-sm font-medium text-uc-text-light">
+                    <span className="text-sm font-medium text-uc-text-light flex items-center gap-2">
                       📅 {t('events.showCountdown') || 'Show countdown on homepage'}: &quot;{t('dashboard.daysToGo') || 'days to go'} {formData.destination || (t('events.destination') || 'destination')}: XX {t('dashboard.daysToGo') || 'days'}&quot;
+                      <Tooltip content={t('workouts.tooltips.showCountdown') || 'Enable this to show a countdown timer for this trip on the homepage. Great for building excitement before a climbing trip!'}>
+                        <span className="text-uc-purple cursor-help">ℹ️</span>
+                      </Tooltip>
                     </span>
                   </label>
                   <p className="text-xs text-uc-text-muted mt-2">

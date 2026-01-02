@@ -82,20 +82,22 @@ export const StatisticsContent = () => {
       try {
         setLoading(true);
         
-        // Load workouts
-        const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' });
+        // Load workouts - statistics needs all data, so use a large limit
+        const workoutsResponse = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' });
         if (workoutsResponse.ok) {
           const workoutsData = await workoutsResponse.json();
-          setWorkouts(workoutsData);
+          // Handle both new paginated format and old format
+          setWorkouts(workoutsData.workouts || workoutsData);
         } else if (workoutsResponse.status === 401) {
           // User is not authenticated, this is expected for protected components
         }
         
-        // Load events
-        const eventsResponse = await fetch('/api/events', { credentials: 'include' });
+        // Load events - statistics needs all data, so use a large limit
+        const eventsResponse = await fetch('/api/events?page=1&limit=1000', { credentials: 'include' });
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json();
-          setEvents(eventsData);
+          // Handle both new paginated format and old format
+          setEvents(eventsData.events || eventsData);
         } else if (eventsResponse.status === 401) {
           // User is not authenticated, this is expected for protected components
         }
@@ -241,6 +243,22 @@ export const StatisticsContent = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-uc-mustard mx-auto mb-4"></div>
               <p className="text-uc-text-muted">{t('common.loadingStatistics') || 'Loading statistics...'}</p>
             </div>
+          </div>
+        ) : statsData.overall.totalWorkouts === 0 ? (
+          <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
+            <div className="text-6xl mb-4">📊</div>
+            <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+              {t('stats.noData') || 'No statistics available yet'}
+            </h3>
+            <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+              {t('stats.noDataDescription') || 'Start logging workouts to see detailed statistics about your training progress, volume, and performance over time.'}
+            </p>
+            <a
+              href="/workouts"
+              className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+            >
+              ➕ {t('stats.logFirstWorkout') || 'Log Your First Workout'}
+            </a>
           </div>
         ) : (
           <div className="space-y-8">
@@ -678,9 +696,13 @@ export const StatisticsContent = () => {
                       ✨ {t('strongMind.gratefulFor') || 'Gratitude Thoughts'}
                     </h4>
                     {filteredGratitudeWorkouts.filter(w => w.gratitude).length === 0 ? (
-                      <div className="bg-uc-black/30 p-6 rounded-xl border border-uc-purple/10 text-center">
-                        <p className="text-uc-text-muted text-sm">
-                          {t('strongMind.noGratitudeEntries') || 'No gratitude entries in this timeframe.'}
+                      <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
+                        <div className="text-6xl mb-4">🙏</div>
+                        <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+                          {t('strongMind.noGratitude') || 'No gratitude entries yet'}
+                        </h3>
+                        <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+                          {t('strongMind.noGratitudeDescription') || 'Start adding gratitude notes to your workouts to reflect on what you\'re thankful for in your training journey.'}
                         </p>
                       </div>
                     ) : (
@@ -731,9 +753,13 @@ export const StatisticsContent = () => {
                       📈 {t('strongMind.improvements') || 'Improvements for Next Time'}
                     </h4>
                     {filteredGratitudeWorkouts.filter(w => w.improvements).length === 0 ? (
-                      <div className="bg-uc-black/30 p-6 rounded-xl border border-uc-purple/10 text-center">
-                        <p className="text-uc-text-muted text-sm">
-                          {t('strongMind.noImprovementsEntries') || 'No improvement entries in this timeframe.'}
+                      <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
+                        <div className="text-6xl mb-4">📈</div>
+                        <h3 className="text-lg font-semibold text-uc-text-light mb-2">
+                          {t('strongMind.noImprovements') || 'No improvement notes yet'}
+                        </h3>
+                        <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+                          {t('strongMind.noImprovementsDescription') || 'Track what you\'re working on improving in your workouts. Add improvement notes to see your progress over time.'}
                         </p>
                       </div>
                     ) : (

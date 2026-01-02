@@ -10,3 +10,5 @@ console.log('VAPID_PUBLIC_KEY=' + vapidKeys.publicKey);
 console.log('VAPID_PRIVATE_KEY=' + vapidKeys.privateKey);
 console.log('\nVAPID_SUBJECT should be a mailto: URL (e.g., mailto:your-email@example.com)');
 
+
+
