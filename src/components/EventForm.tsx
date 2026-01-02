@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { EventType, EventFormData, Event, Tag, TripClimbingType } from '@/types/event';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCycle } from '@/contexts/CycleContext';
+import { calculateCycleInfo } from '@/lib/cycle-utils';
 import TagSelector from './TagSelector';
 
 interface EventFormProps {
@@ -35,6 +37,9 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
     bodyPart: initialData?.location || '', // For injuries, this will store body part instead of location
     location: initialData?.location || '', // Keep for non-injury events
     tagIds: initialData?.tags?.map(tag => tag.id) || [],
+    // Cycle tracking for injuries
+    cycleDay: initialData?.cycleDay || undefined,
+    cycleDayManuallySet: initialData?.cycleDayManuallySet || false,
     // Trip-specific fields
     tripStartDate: initialData?.tripStartDate 
       ? new Date(initialData.tripStartDate).toISOString().slice(0, 10)
@@ -46,6 +51,30 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
     climbingType: initialData?.climbingType || 'BOULDERING',
     showCountdown: initialData?.showCountdown || false,
   });
+
+  // Get cycle context for calculating cycle day
+  let cycleSettings = null
+  let isCycleTrackingEnabled = false
+  try {
+    const cycleContext = useCycle()
+    cycleSettings = cycleContext.cycleSettings
+    isCycleTrackingEnabled = cycleContext.isCycleTrackingEnabled
+  } catch (error) {
+    // Cycle context not available, that's okay
+  }
+
+  // Calculate cycle day if cycle tracking is enabled and date is set
+  const calculatedCycleDay = useMemo(() => {
+    if (formData.type === 'INJURY' && isCycleTrackingEnabled && cycleSettings && formData.date) {
+      try {
+        const cycleInfo = calculateCycleInfo(cycleSettings, new Date(formData.date))
+        return cycleInfo.currentDay
+      } catch (error) {
+        return undefined
+      }
+    }
+    return undefined
+  }, [formData.type, formData.date, isCycleTrackingEnabled, cycleSettings])
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -109,6 +138,9 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                 formData.type === 'INJURY' ? formData.bodyPart : formData.location,
       notes: '', // We're consolidating into description field
       tagIds: formData.tagIds,
+      // Cycle tracking for injuries
+      cycleDay: formData.type === 'INJURY' ? formData.cycleDay : undefined,
+      cycleDayManuallySet: formData.type === 'INJURY' ? formData.cycleDayManuallySet : false,
       // Trip-specific fields
       tripStartDate: formData.type === 'TRIP' ? formData.tripStartDate : undefined,
       tripEndDate: formData.type === 'TRIP' ? formData.tripEndDate : undefined,
@@ -126,7 +158,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
     }
   };
 
-  const updateFormData = (field: string, value: string | number | boolean) => {
+  const updateFormData = (field: string, value: string | number | boolean | null | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -199,6 +231,59 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                   placeholder={t('events.bodyPartPlaceholder') || 'e.g. left wrist, right shoulder, lower back...'}
                   className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
                 />
+              </div>
+            )}
+
+            {/* Cycle Day - Only for injury events */}
+            {formData.type === 'INJURY' && (
+              <div className="p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl border border-pink-200 dark:border-pink-800">
+                <label className="block text-sm font-medium text-uc-text-light mb-2">
+                  🌸 {t('events.cycleDay') || 'Cycle Day'}
+                </label>
+                {calculatedCycleDay !== undefined && !formData.cycleDayManuallySet && (
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
+                    {(t('events.calculatedCycleDay') || `Based on cycle calculation ({cycleLength} days), this is cycle day {day}.`)
+                      .replace('{cycleLength}', (cycleSettings?.cycleLength || 28).toString())
+                      .replace('{day}', calculatedCycleDay.toString())}
+                    {' '}
+                    {t('events.cycleDayHint') || 'If you use a cycle tracking app, you can set this manually for better accuracy.'}
+                  </p>
+                )}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={formData.cycleDay || ''}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? undefined : parseInt(e.target.value, 10)
+                      updateFormData('cycleDay', value || '')
+                      if (value !== undefined) {
+                        updateFormData('cycleDayManuallySet', true)
+                      }
+                    }}
+                    placeholder={calculatedCycleDay?.toString() || t('events.cycleDayPlaceholder') || 'Enter cycle day...'}
+                    className="w-24 border border-pink-300 dark:border-pink-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 focus:border-pink-500 focus:outline-none"
+                  />
+                  {formData.cycleDay && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateFormData('cycleDay', undefined)
+                        updateFormData('cycleDayManuallySet', false)
+                      }}
+                      className="text-xs text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200"
+                      title={t('events.clearCycleDay') || 'Clear and use calculated value'}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {formData.cycleDayManuallySet && formData.cycleDay && (
+                  <p className="text-xs text-pink-600 dark:text-pink-400 mt-2">
+                    ✏️ {t('events.cycleDayManuallySet') || 'Manually set - will not be overwritten by calculations'}
+                  </p>
+                )}
               </div>
             )}
 

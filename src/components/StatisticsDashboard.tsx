@@ -124,6 +124,7 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
               <option value="3months">{t('stats.3months') || '3 Months'}</option>
               <option value="6months">{t('stats.6months') || '6 Months'}</option>
               <option value="1year">{t('stats.1year') || '1 Year'}</option>
+              <option value="all">{t('stats.allTime') || 'All Time'}</option>
             </select>
           </div>
           
@@ -210,7 +211,7 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-600 dark:text-slate-400">{t('stats.frequency') || 'Frequency'}:</span>
-                          <span className="font-medium">{statisticsService.formatFrequency(typeStats.frequency)}</span>
+                          <span className="font-medium">{statisticsService.formatFrequency(typeStats.frequency, 'week')}/{t('stats.frequencyPeriod.week') || 'week'}</span>
                         </div>
                       </div>
                     </div>
@@ -248,7 +249,7 @@ export const StatisticsDashboard = ({ isOpen, onClose }: StatisticsDashboardProp
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-600 dark:text-slate-400">{t('stats.frequency') || 'Frequency'}:</span>
-                            <span className="font-medium">{statisticsService.formatFrequency(tagStats.frequency)}</span>
+                            <span className="font-medium">{statisticsService.formatFrequency(tagStats.frequency, 'week')}/{t('stats.frequencyPeriod.week') || 'week'}</span>
                           </div>
                         </div>
                       </div>

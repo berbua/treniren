@@ -35,7 +35,9 @@ export function calculateCycleInfo(settings: CycleSettings, targetDate?: Date): 
   )
   
   // Calculate current cycle day (1-based)
-  const currentDay = (daysSinceLastPeriod % cycleLength) + 1
+  // Handle negative days (date before last period) by using proper modulo
+  // This ensures the result is always in range 1-cycleLength
+  const currentDay = ((daysSinceLastPeriod % cycleLength) + cycleLength) % cycleLength + 1
   
   // Calculate next period date
   const nextPeriodDate = new Date(lastPeriodDate)
@@ -134,6 +136,75 @@ function getPhaseInfo(cycleDay: number) {
       'cycle.recommendations.lateLuteal.4',
       'cycle.recommendations.lateLuteal.5'
     ]
+  }
+}
+
+/**
+ * Get the first day of a cycle phase
+ */
+export function getPhaseStartDay(phase: CyclePhase): number {
+  switch (phase) {
+    case 'menstrual':
+      return 1
+    case 'follicular':
+      return 8
+    case 'ovulation':
+      return 13
+    case 'early-luteal':
+      return 17
+    case 'late-luteal':
+      return 21
+    default:
+      return 1
+  }
+}
+
+/**
+ * Get the last day of a cycle phase
+ */
+export function getPhaseEndDay(phase: CyclePhase, cycleLength: number = 28): number {
+  switch (phase) {
+    case 'menstrual':
+      return 7
+    case 'follicular':
+      return 12
+    case 'ovulation':
+      return 16
+    case 'early-luteal':
+      return 20
+    case 'late-luteal':
+      return cycleLength // Late luteal goes to the end of the cycle
+    default:
+      return 7
+  }
+}
+
+/**
+ * Get phase day range as string (e.g., "1-7", "17-20")
+ */
+export function getPhaseDayRange(phase: CyclePhase, cycleLength: number = 28): string {
+  const start = getPhaseStartDay(phase)
+  const end = getPhaseEndDay(phase, cycleLength)
+  return `${start}-${end}`
+}
+
+/**
+ * Get phase name from phase key (for display)
+ */
+export function getPhaseDisplayName(phaseKey: 'menstrual' | 'follicular' | 'ovulation' | 'earlyLuteal' | 'lateLuteal'): CyclePhase {
+  switch (phaseKey) {
+    case 'menstrual':
+      return 'menstrual'
+    case 'follicular':
+      return 'follicular'
+    case 'ovulation':
+      return 'ovulation'
+    case 'earlyLuteal':
+      return 'early-luteal'
+    case 'lateLuteal':
+      return 'late-luteal'
+    default:
+      return 'menstrual'
   }
 }
 

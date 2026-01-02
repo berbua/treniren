@@ -6,12 +6,15 @@ import { statisticsService, StatisticsData, TimeFrame } from '@/lib/statistics-s
 import { Workout, Tag, WorkoutType } from '@/types/workout';
 import { Event } from '@/types/event';
 import { useCycle } from '@/contexts/CycleContext';
-import { calculateCycleInfo } from '@/lib/cycle-utils';
+import { calculateCycleInfo, getPhaseStartDay, getPhaseDisplayName, getPhaseDayRange } from '@/lib/cycle-utils';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export const StatisticsContent = () => {
   const { t } = useLanguage();
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
+  const { settings: notificationSettings, updateSettings } = useNotifications();
   const [timeframe, setTimeframe] = useState<TimeFrame>('1month');
+  const [isEnablingNotification, setIsEnablingNotification] = useState(false);
   const [statsData, setStatsData] = useState<StatisticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -19,6 +22,59 @@ export const StatisticsContent = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [gratitudeFilter, setGratitudeFilter] = useState<'all' | 'gratitude' | 'improvements'>('all');
+  const [variationFrequencyPeriod, setVariationFrequencyPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
+  
+  // Calculate variation frequency for GYM workouts
+  const gymVariationFrequency = useMemo(() => {
+    const gymWorkouts = workouts.filter(w => w.type === 'GYM' && w.details?.routineVariation);
+    if (gymWorkouts.length === 0) return null;
+    
+    // Group by variation
+    const variationCounts = new Map<string, number>();
+    gymWorkouts.forEach(workout => {
+      const variation = workout.details?.routineVariation;
+      if (variation?.variationName) {
+        const key = `${variation.routineName || 'Unknown'} - ${variation.variationName}`;
+        variationCounts.set(key, (variationCounts.get(key) || 0) + 1);
+      }
+    });
+    
+    // Get time range for the selected period
+    const now = new Date();
+    const periodStart = new Date(now);
+    switch (variationFrequencyPeriod) {
+      case 'week':
+        periodStart.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        periodStart.setMonth(now.getMonth() - 1);
+        break;
+      case 'quarter':
+        periodStart.setMonth(now.getMonth() - 3);
+        break;
+      case 'year':
+        periodStart.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+    
+    // Filter workouts within period
+    const periodWorkouts = gymWorkouts.filter(w => new Date(w.startTime) >= periodStart);
+    const periodDays = Math.max(1, (now.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000));
+    
+    // Calculate frequency per period
+    const variationFreq: Array<{ name: string; frequency: number }> = [];
+    variationCounts.forEach((count, name) => {
+      const periodCount = periodWorkouts.filter(w => {
+        const v = w.details?.routineVariation;
+        return v?.variationName && `${v.routineName || 'Unknown'} - ${v.variationName}` === name;
+      }).length;
+      // Calculate frequency: count per period, normalized to the period unit
+      const frequency = (periodCount / periodDays) * (variationFrequencyPeriod === 'week' ? 7 : variationFrequencyPeriod === 'month' ? 30 : variationFrequencyPeriod === 'quarter' ? 90 : 365);
+      variationFreq.push({ name, frequency });
+    });
+    
+    return variationFreq.sort((a, b) => b.frequency - a.frequency);
+  }, [workouts, variationFrequencyPeriod]);
 
   // Load data
   useEffect(() => {
@@ -172,6 +228,7 @@ export const StatisticsContent = () => {
             <option value="3months">{t('stats.3months') || '3 Months'}</option>
             <option value="6months">{t('stats.6months') || '6 Months'}</option>
             <option value="1year">{t('stats.1year') || '1 Year'}</option>
+            <option value="all">{t('stats.allTime') || 'All Time'}</option>
           </select>
         </div>
       </div>
@@ -225,9 +282,21 @@ export const StatisticsContent = () => {
 
             {/* Workout Types */}
             <div>
-              <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                🏋️ {t('stats.workoutTypes')}
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-uc-text-light">
+                  🏋️ {t('stats.workoutTypes')}
+                </h3>
+                <select
+                  value={variationFrequencyPeriod}
+                  onChange={(e) => setVariationFrequencyPeriod(e.target.value as 'week' | 'month' | 'quarter' | 'year')}
+                  className="px-3 py-1.5 bg-uc-black/50 border border-uc-purple/20 rounded-lg text-sm text-uc-text-light focus:outline-none focus:ring-2 focus:ring-uc-purple/50"
+                >
+                  <option value="week">{t('stats.frequencyPeriod.week') || 'Per Week'}</option>
+                  <option value="month">{t('stats.frequencyPeriod.month') || 'Per Month'}</option>
+                  <option value="quarter">{t('stats.frequencyPeriod.quarter') || 'Per Quarter'}</option>
+                  <option value="year">{t('stats.frequencyPeriod.year') || 'Per Year'}</option>
+                </select>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {statsData.workoutTypes.map((typeStats) => (
                   <div key={typeStats.type} className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
@@ -249,8 +318,28 @@ export const StatisticsContent = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-uc-text-muted">{t('stats.frequency')}:</span>
-                        <span className="font-medium text-uc-text-light">{statisticsService.formatFrequency(typeStats.frequency)}</span>
+                        <span className="font-medium text-uc-text-light">
+                          {statisticsService.formatFrequency(typeStats.frequency, variationFrequencyPeriod)}/{t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod}
+                        </span>
                       </div>
+                      {/* Variation frequency for GYM workouts */}
+                      {typeStats.type === 'GYM' && gymVariationFrequency && gymVariationFrequency.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-uc-purple/20">
+                          <div className="text-xs text-uc-text-muted mb-2">
+                            {t('stats.variationFrequency') || 'Variation Frequency'} ({t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod}):
+                          </div>
+                          <div className="space-y-1">
+                            {gymVariationFrequency.slice(0, 3).map((vf, idx) => (
+                              <div key={idx} className="flex justify-between text-xs">
+                                <span className="text-uc-text-muted truncate mr-2">{vf.name}</span>
+                                <span className="font-medium text-uc-text-light whitespace-nowrap">
+                                  {vf.frequency.toFixed(1)}/{t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -287,7 +376,9 @@ export const StatisticsContent = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-uc-text-muted">{t('stats.frequency')}:</span>
-                          <span className="font-medium text-uc-text-light">{statisticsService.formatFrequency(tagStats.frequency)}</span>
+                          <span className="font-medium text-uc-text-light">
+                            {statisticsService.formatFrequency(tagStats.frequency, variationFrequencyPeriod)}/{t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -320,110 +411,21 @@ export const StatisticsContent = () => {
               </div>
             )}
 
-            {/* Mental Sessions */}
-            <div>
-              <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                🧘 {t('stats.mentalSessions')}
-              </h3>
-              <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-uc-text-light">
-                      {statsData.mentalSessions.totalSessions}
-                    </div>
-                    <div className="text-sm text-uc-text-muted">
-                      {t('stats.totalSessions')}
-                    </div>
-                  </div>
-                  {statsData.mentalSessions.totalSessions > 0 && (
-                    <>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-uc-text-light">
-                          {statsData.mentalSessions.averageFocusLevel}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {t('stats.avgFocusLevel')}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-uc-text-light">
-                          {statsData.mentalSessions.daysSinceLastSession}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {t('stats.daysSinceLast')}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-uc-text-light">
-                          {statsData.mentalSessions.practiceTypes.meditation}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {t('stats.meditation')}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  {statsData.mentalSessions.totalSessions === 0 && (
-                    <div className="col-span-3 flex items-center justify-center">
-                      <p className="text-uc-text-muted text-sm">
-                        Brak sesji mentalnych w tym okresie
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Falls Tracking */}
-            <div>
-              <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                🧗‍♀️ {t('stats.fallsTracking')}
-              </h3>
-              <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-uc-text-light">
-                      {statsData.falls.totalFalls}
-                    </div>
-                    <div className="text-sm text-uc-text-muted">
-                      {t('stats.totalFalls')}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-uc-text-light">
-                      {statsData.falls.totalClimbingSessions}
-                    </div>
-                    <div className="text-sm text-uc-text-muted">
-                      {t('stats.climbingSessions')}
-                    </div>
-                  </div>
-                  {statsData.falls.totalFalls > 0 && (
-                    <>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-uc-text-light">
-                          {statsData.falls.fallsPerSession}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {t('stats.fallsPerSession')}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-uc-text-light">
-                          {statsData.falls.daysSinceLastFall}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {t('stats.daysSinceLastFall')}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  {statsData.falls.totalFalls === 0 && (
-                    <div className="col-span-2 flex items-center justify-center">
-                      <p className="text-uc-text-muted text-sm">
-                        Brak upadków w tym okresie
-                      </p>
-                    </div>
-                  )}
+            {/* Mental & Falls Statistics Info */}
+            <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">📊</div>
+                <div className="flex-1">
+                  <p className="text-sm text-uc-text-muted">
+                    {t('stats.mentalFallsStatsInfo') || 'Mental practice statistics and falls tracking are available in the Strong Mind section.'}
+                    {' '}
+                    <a 
+                      href="/strong-mind" 
+                      className="text-uc-purple hover:text-uc-purple/80 underline font-medium"
+                    >
+                      {t('stats.goToStrongMind') || 'Go to Strong Mind →'}
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>
@@ -545,8 +547,80 @@ export const StatisticsContent = () => {
                         </div>
                       </div>
                       <div className="mt-4 text-xs text-uc-text-muted text-center">
-                        Każda faza pokazuje liczbę kontuzji w określonym zakresie dni cyklu
+                        {t('stats.injuryPhaseDescription') || 'Each phase shows the number of injuries in the specified cycle day range'}
                       </div>
+
+                      {/* Most injuries phase notification */}
+                      {statsData.injuryCycle.phaseWithMostInjuries && 
+                       statsData.injuryCycle.maxInjuriesInPhase > 0 && (
+                        <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-500/30">
+                          <div className="flex items-start space-x-3">
+                            <div className="text-2xl">⚠️</div>
+                            <div className="flex-1">
+                              <h5 className="font-medium text-uc-text-light mb-2">
+                                {t('stats.mostInjuriesPhaseTitle') || 'Most injuries in a phase'}
+                              </h5>
+                              <p className="text-sm text-uc-text-muted mb-3">
+                                {(() => {
+                                  const phaseKey = statsData.injuryCycle.phaseWithMostInjuries;
+                                  const phase = getPhaseDisplayName(phaseKey);
+                                  const cycleLength = cycleSettings?.cycleLength || 28;
+                                  const dayRange = getPhaseDayRange(phase, cycleLength);
+                                  const count = statsData.injuryCycle.maxInjuriesInPhase;
+                                  const messageTemplate = t('stats.mostInjuriesPhaseMessage') || 'Most injuries ({count}) occurred during cycle days {dayRange}.';
+                                  return messageTemplate
+                                    .replace('{count}', count.toString())
+                                    .replace('{dayRange}', dayRange);
+                                })()}
+                              </p>
+                              <p className="text-sm text-uc-text-muted mb-4">
+                                {t('stats.injuryPhaseNotificationHint') || 'Would you like to receive a push notification 1 day before this phase starts to be aware of the increased injury risk?'}
+                              </p>
+                              <button
+                                onClick={async () => {
+                                  setIsEnablingNotification(true);
+                                  try {
+                                    // Enable injury phase notification
+                                    if (!statsData.injuryCycle.phaseWithMostInjuries) {
+                                      throw new Error('No phase with most injuries found');
+                                    }
+                                    const phase = getPhaseDisplayName(statsData.injuryCycle.phaseWithMostInjuries);
+                                    const phaseStartDay = getPhaseStartDay(phase);
+                                    
+                                    // Save notification preference
+                                    const currentSettings = notificationSettings || {};
+                                    updateSettings({
+                                      ...currentSettings,
+                                      injuryPhaseNotificationEnabled: true,
+                                      injuryPhaseNotificationPhase: statsData.injuryCycle.phaseWithMostInjuries,
+                                    });
+
+                                    // Show success message
+                                    alert(t('stats.injuryPhaseNotificationEnabled') || 'Notification enabled! You will receive a reminder 1 day before this phase starts.');
+                                  } catch (error) {
+                                    console.error('Error enabling notification:', error);
+                                    alert(t('stats.injuryPhaseNotificationError') || 'Failed to enable notification. Please try again.');
+                                  } finally {
+                                    setIsEnablingNotification(false);
+                                  }
+                                }}
+                                disabled={isEnablingNotification || (notificationSettings?.injuryPhaseNotificationEnabled === true)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  notificationSettings?.injuryPhaseNotificationEnabled === true
+                                    ? 'bg-green-500 text-white cursor-not-allowed'
+                                    : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                                } disabled:opacity-50`}
+                              >
+                                {isEnablingNotification
+                                  ? (t('common.loading') || 'Loading...')
+                                  : notificationSettings?.injuryPhaseNotificationEnabled === true
+                                  ? (t('stats.injuryPhaseNotificationAlreadyEnabled') || '✓ Notification already enabled')
+                                  : (t('stats.enableInjuryPhaseNotification') || '🔔 Enable notification')}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

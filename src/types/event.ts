@@ -22,6 +22,9 @@ export interface Event {
   destination?: string
   climbingType?: TripClimbingType
   showCountdown?: boolean
+  // Cycle tracking for injuries
+  cycleDay?: number // Manually set cycle day for injury events
+  cycleDayManuallySet?: boolean // Flag to indicate if cycle day was manually set
   userId: string
   createdAt: string
   updatedAt: string
@@ -45,6 +48,9 @@ export interface EventFormData {
   destination?: string
   climbingType?: TripClimbingType
   showCountdown?: boolean
+  // Cycle tracking for injuries
+  cycleDay?: number
+  cycleDayManuallySet?: boolean
   tagIds?: string[] // Array of tag IDs
 }
 

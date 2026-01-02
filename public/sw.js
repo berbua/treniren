@@ -229,35 +229,105 @@ async function syncOfflineWorkouts() {
   }
 }
 
-// Push notification handling (for future use)
+// Push notification handling
 self.addEventListener('push', (event) => {
-  console.log('Service Worker: Push event received');
-  
-  const options = {
-    body: event.data ? event.data.text() : 'New notification',
+  let notificationData = {
+    title: 'Treniren',
+    body: 'You have a new notification',
     icon: '/icon-192.svg',
     badge: '/icon-192.svg',
-    vibrate: [200, 100, 200],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    },
-    actions: [
-      {
-        action: 'explore',
-        title: 'Open App',
-        icon: '/icon-192.svg'
-      },
-      {
-        action: 'close',
-        title: 'Close',
-        icon: '/icon-192.svg'
-      }
-    ]
+    tag: 'default',
+    data: {}
   };
-  
+
+  // Parse push payload - handle both Promise and direct value
+  const parsePayload = () => {
+    if (!event.data) {
+      return Promise.resolve(notificationData);
+    }
+
+    try {
+      const jsonResult = event.data.json();
+      
+      if (jsonResult && typeof jsonResult.then === 'function') {
+        // It's a Promise
+        return jsonResult.then((payload) => {
+          return processPayload(payload);
+        }).catch(() => {
+          return parseAsText();
+        });
+      } else {
+        // It's a direct value
+        return Promise.resolve(processPayload(jsonResult));
+      }
+    } catch (e) {
+      return parseAsText();
+    }
+  };
+
+  const parseAsText = () => {
+    try {
+      const textResult = event.data.text();
+      if (textResult && typeof textResult.then === 'function') {
+        return textResult.then((textData) => {
+          notificationData.body = textData || notificationData.body;
+          return notificationData;
+        });
+      } else {
+        notificationData.body = textResult || notificationData.body;
+        return Promise.resolve(notificationData);
+      }
+    } catch (textError) {
+      return Promise.resolve(notificationData);
+    }
+  };
+
+  const processPayload = (payload) => {
+    notificationData = {
+      title: payload.title || notificationData.title,
+      body: payload.body || payload.message || notificationData.body,
+      icon: payload.icon || notificationData.icon,
+      badge: payload.badge || notificationData.badge,
+      tag: payload.tag || notificationData.tag,
+      data: payload.data || notificationData.data
+    };
+    return notificationData;
+  };
+
+  const promiseChain = parsePayload();
+
   event.waitUntil(
-    self.registration.showNotification('Treniren', options)
+    promiseChain.then((finalNotificationData) => {
+      const options = {
+        body: finalNotificationData.body,
+        icon: finalNotificationData.icon,
+        badge: finalNotificationData.badge,
+        tag: finalNotificationData.tag,
+        vibrate: [200, 100, 200],
+        data: {
+          ...finalNotificationData.data,
+          dateOfArrival: Date.now()
+        },
+        actions: [
+          {
+            action: 'explore',
+            title: 'Open App',
+            icon: '/icon-192.svg'
+          },
+          {
+            action: 'close',
+            title: 'Close',
+            icon: '/icon-192.svg'
+          }
+        ]
+      };
+      
+      if (Notification.permission !== 'granted') {
+        return Promise.reject(new Error('Notification permission not granted'));
+      }
+      
+      return self.registration.showNotification(finalNotificationData.title, options);
+    })
   );
 });
 

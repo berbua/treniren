@@ -130,6 +130,7 @@ model User {
   fingerboardProtocols FingerboardProtocol[]
   fingerboardTestingProtocols FingerboardTestingProtocol[]
   fingerboardTestResults FingerboardTestResult[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -269,6 +270,9 @@ model Event {
   destination       String? // For trip events
   climbingType       TripClimbingType? // For trip events
   showCountdown     Boolean @default(false) // For trip events - show countdown on landing page
+  // Cycle tracking for injuries
+  cycleDay          Int? // Manually set cycle day for injury events
+  cycleDayManuallySet Boolean @default(false) // Flag to indicate if cycle day was manually set
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -545,4 +549,19 @@ model FingerboardTestResult {
   user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("fingerboard_test_results")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String   // Public key for encryption
+  auth      String   // Authentication secret
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }

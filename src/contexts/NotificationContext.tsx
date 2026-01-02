@@ -58,7 +58,27 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Send push notifications for new messages if enabled
       if (settings.pushNotificationsEnabled) {
         newNotifications.forEach(notification => {
-          notificationService.sendPushNotification(notification);
+          // Send via server API for true push notifications
+          fetch('/api/push/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              title: notification.title,
+              message: notification.message,
+              icon: '/icon-192.svg',
+              badge: '/icon-192.svg',
+              tag: notification.id,
+              data: {
+                notificationId: notification.id,
+                type: notification.type,
+                action: notification.actionButton?.action,
+                actionData: notification.actionButton?.data
+              }
+            })
+          }).catch(error => {
+            console.error('Failed to send push notification:', error);
+          });
         });
       }
     }
@@ -87,7 +107,27 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             // Send push notifications for new messages if enabled
             if (settings.pushNotificationsEnabled) {
               allNotifications.forEach(notification => {
-                notificationService.sendPushNotification(notification);
+                // Send via server API for true push notifications
+                fetch('/api/push/send', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    title: notification.title,
+                    message: notification.message,
+                    icon: '/icon-192.svg',
+                    badge: '/icon-192.svg',
+                    tag: notification.id,
+                    data: {
+                      notificationId: notification.id,
+                      type: notification.type,
+                      action: notification.actionButton?.action,
+                      actionData: notification.actionButton?.data
+                    }
+                  })
+                }).catch(error => {
+                  console.error('Failed to send push notification:', error);
+                });
               });
             }
           }
@@ -125,7 +165,27 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 // Send push notifications for new messages if enabled
                 if (settings.pushNotificationsEnabled) {
                   testNotifications.forEach(notification => {
-                    notificationService.sendPushNotification(notification);
+                    // Send via server API for true push notifications
+                    fetch('/api/push/send', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        title: notification.title,
+                        message: notification.message,
+                        icon: '/icon-192.svg',
+                        badge: '/icon-192.svg',
+                        tag: notification.id,
+                        data: {
+                          notificationId: notification.id,
+                          type: notification.type,
+                          action: notification.actionButton?.action,
+                          actionData: notification.actionButton?.data
+                        }
+                      })
+                    }).catch(error => {
+                      console.error('Failed to send push notification:', error);
+                    });
                   });
                 }
               }

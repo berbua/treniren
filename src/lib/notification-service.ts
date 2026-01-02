@@ -24,6 +24,9 @@ export interface NotificationSettings {
   workoutRemindersEnabled: boolean;
   workoutInactivityEnabled: boolean;
   workoutInactivityDays: number;
+  // Injury phase notification
+  injuryPhaseNotificationEnabled?: boolean;
+  injuryPhaseNotificationPhase?: 'menstrual' | 'follicular' | 'ovulation' | 'earlyLuteal' | 'lateLuteal';
 }
 
 class NotificationService {
@@ -40,29 +43,61 @@ class NotificationService {
   private async initializeServiceWorker() {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       try {
+        console.log('Registering service worker at /sw.js...');
         this.serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js');
+        console.log('✅ Service worker registered successfully');
+        console.log('   Scope:', this.serviceWorkerRegistration.scope);
+        console.log('   Active:', this.serviceWorkerRegistration.active?.state);
+        console.log('   Installing:', this.serviceWorkerRegistration.installing?.state);
+        console.log('   Waiting:', this.serviceWorkerRegistration.waiting?.state);
+        
+        // Wait for service worker to be ready
+        if (this.serviceWorkerRegistration.installing) {
+          console.log('   Service worker is installing, waiting...');
+          await new Promise((resolve) => {
+            this.serviceWorkerRegistration!.installing!.addEventListener('statechange', () => {
+              if (this.serviceWorkerRegistration!.installing?.state === 'installed') {
+                resolve(undefined);
+              }
+            });
+          });
+        }
+        
       } catch (error) {
-        console.error('Service worker registration failed:', error);
+        console.error('❌ Service worker registration failed:', error);
+        console.error('   Error details:', error);
       }
+    } else {
+      console.error('❌ Service workers not supported in this browser');
     }
   }
 
   // Request notification permission
   async requestPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
+      console.error('Notifications not supported in this browser');
       return false;
     }
 
-    if (Notification.permission === 'granted') {
+    const currentPermission = Notification.permission;
+
+    if (currentPermission === 'granted') {
       return true;
     }
 
-    if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
+    if (currentPermission === 'denied') {
+      console.error('Notification permission was denied. User must enable it in browser settings.');
+      return false;
     }
 
-    return false;
+    // Permission is 'default' - ask user
+    try {
+      const permission = await Notification.requestPermission();
+      return permission === 'granted';
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      return false;
+    }
   }
 
   // Send push notification
@@ -211,7 +246,9 @@ class NotificationService {
       latePeriodNotificationsEnabled: true,
       workoutRemindersEnabled: false,
       workoutInactivityEnabled: false,
-      workoutInactivityDays: 3
+      workoutInactivityDays: 3,
+      injuryPhaseNotificationEnabled: false,
+      injuryPhaseNotificationPhase: undefined,
     };
   }
 
@@ -239,6 +276,167 @@ class NotificationService {
         console.error('Failed to save notification settings:', error);
       }
     }
+  }
+
+  // Get VAPID public key from server
+  async getPublicKey(): Promise<string | null> {
+    try {
+      const response = await fetch('/api/push/public-key', { credentials: 'include' });
+      console.log('Response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Received public key:', data.publicKey ? 'Yes (length: ' + data.publicKey.length + ')' : 'No');
+        return data.publicKey || null;
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to get public key. Status:', response.status, 'Error:', errorData);
+      }
+    } catch (error) {
+      console.error('Failed to get public key (network error):', error);
+    }
+    return null;
+  }
+
+  // Subscribe to push notifications
+  async subscribeToPush(): Promise<boolean> {
+    if (!this.serviceWorkerRegistration) {
+      await this.initializeServiceWorker();
+      if (!this.serviceWorkerRegistration) {
+        console.error('Service worker not available');
+        return false;
+      }
+    }
+
+    // Request permission first
+    const hasPermission = await this.requestPermission();
+    if (!hasPermission) {
+      if (Notification.permission === 'denied') {
+        console.error('Notifications are blocked. User must enable in browser settings.');
+      }
+      return false;
+    }
+
+    try {
+      // Get public key
+      const publicKey = await this.getPublicKey();
+      if (!publicKey) {
+        console.error('Failed to get public key - check if VAPID_PUBLIC_KEY is set in .env.local');
+        return false;
+      }
+
+      // Subscribe to push
+      if (!this.serviceWorkerRegistration?.pushManager) {
+        console.error('PushManager not available! Service worker might not be ready.');
+        return false;
+      }
+      
+      const subscription = await this.serviceWorkerRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: this.urlBase64ToUint8Array(publicKey) as BufferSource
+      });
+
+      // Send subscription to server
+      const response = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: this.arrayBufferToBase64(subscription.getKey('p256dh')!),
+            auth: this.arrayBufferToBase64(subscription.getKey('auth')!)
+          }
+        })
+      });
+
+      if (response.ok) {
+        return true;
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to save subscription to server:', errorData);
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to subscribe to push notifications:', error);
+      return false;
+    }
+  }
+
+  // Unsubscribe from push notifications
+  async unsubscribeFromPush(): Promise<boolean> {
+    if (!this.serviceWorkerRegistration) {
+      return false;
+    }
+
+    try {
+      const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
+      if (subscription) {
+        // Unsubscribe from push service
+        await subscription.unsubscribe();
+
+        // Remove from server
+        const response = await fetch('/api/push/subscribe', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            endpoint: subscription.endpoint
+          })
+        });
+
+        return response.ok;
+      }
+      return true;
+    } catch (error) {
+      console.error('Failed to unsubscribe from push notifications:', error);
+      return false;
+    }
+  }
+
+  // Check if user is subscribed to push
+  async isSubscribedToPush(): Promise<boolean> {
+    if (!this.serviceWorkerRegistration) {
+      return false;
+    }
+
+    try {
+      const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
+      return subscription !== null;
+    } catch (error) {
+      console.error('Failed to check push subscription:', error);
+      return false;
+    }
+  }
+
+  // Helper: Convert base64 URL to Uint8Array
+  private urlBase64ToUint8Array(base64String: string): Uint8Array {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  // Helper: Convert ArrayBuffer to base64
+  private arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
   }
 }
 

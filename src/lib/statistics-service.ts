@@ -3,7 +3,7 @@ import { Workout, WorkoutType, TrainingVolume, Tag } from '@/types/workout';
 import { Event } from '@/types/event';
 import { calculateCycleInfo, CycleSettings } from '@/lib/cycle-utils';
 
-export type TimeFrame = '1week' | '1month' | '3months' | '6months' | '1year' | 'custom';
+export type TimeFrame = '1week' | '1month' | '3months' | '6months' | '1year' | 'all' | 'custom';
 
 export interface TimeRange {
   start: Date;
@@ -70,6 +70,8 @@ export interface InjuryCycleStats {
   }>;
   lastInjury?: Date;
   daysSinceLastInjury: number;
+  phaseWithMostInjuries?: 'menstrual' | 'follicular' | 'ovulation' | 'earlyLuteal' | 'lateLuteal';
+  maxInjuriesInPhase: number;
 }
 
 export interface OverallStats {
@@ -98,7 +100,7 @@ class StatisticsService {
   /**
    * Calculate time range based on timeframe
    */
-  getTimeRange(timeframe: TimeFrame, customRange?: TimeRange): TimeRange {
+  getTimeRange(timeframe: TimeFrame, customRange?: TimeRange, workouts?: Workout[], events?: Event[]): TimeRange {
     const now = new Date();
     const end = new Date(now);
     end.setHours(23, 59, 59, 999);
@@ -125,6 +127,23 @@ class StatisticsService {
       case '1year':
         start = new Date(now);
         start.setFullYear(start.getFullYear() - 1);
+        break;
+      case 'all':
+        // Find the earliest date from workouts or events
+        const allDates: Date[] = [];
+        if (Array.isArray(workouts) && workouts.length > 0) {
+          allDates.push(...workouts.map(w => new Date(w.startTime)));
+        }
+        if (Array.isArray(events) && events.length > 0) {
+          allDates.push(...events.map(e => new Date(e.date)));
+        }
+        if (allDates.length > 0) {
+          start = new Date(Math.min(...allDates.map(d => d.getTime())));
+        } else {
+          // Fallback to 1 year ago if no data
+          start = new Date(now);
+          start.setFullYear(start.getFullYear() - 1);
+        }
         break;
       case 'custom':
         return customRange || { start: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), end };
@@ -373,6 +392,8 @@ class StatisticsService {
         },
         injuriesByCycleDay: [],
         daysSinceLastInjury: Infinity,
+        phaseWithMostInjuries: undefined,
+        maxInjuriesInPhase: 0,
       };
     }
 
@@ -435,12 +456,21 @@ class StatisticsService {
 
     const daysSinceLastInjury = lastInjury ? Math.floor((Date.now() - lastInjury.getTime()) / (1000 * 60 * 60 * 24)) : Infinity;
 
+    // Find phase with most injuries
+    const phaseEntries = Object.entries(injuriesByPhase) as Array<[keyof typeof injuriesByPhase, number]>;
+    const maxInjuries = Math.max(...phaseEntries.map(([, count]) => count));
+    const phaseWithMostInjuries = maxInjuries > 0 
+      ? phaseEntries.find(([, count]) => count === maxInjuries)?.[0] 
+      : undefined;
+
     return {
       totalInjuries: injuryEvents.length,
       injuriesByPhase,
       injuriesByCycleDay,
       lastInjury,
       daysSinceLastInjury,
+      phaseWithMostInjuries, // Phase with the highest number of injuries
+      maxInjuriesInPhase: maxInjuries, // Number of injuries in that phase
     };
   }
 
@@ -510,9 +540,9 @@ class StatisticsService {
     events?: Event[],
     cycleSettings?: CycleSettings
   ): StatisticsData {
-    const timeRange = this.getTimeRange(timeframe, customRange);
+    const timeRange = this.getTimeRange(timeframe, customRange, workouts, events);
     const filteredWorkouts = this.filterWorkoutsByTimeRange(workouts, timeRange);
-    const filteredEvents = events ? events.filter(event => {
+    const filteredEvents = Array.isArray(events) ? events.filter(event => {
       const eventDate = new Date(event.date);
       return eventDate >= timeRange.start && eventDate <= timeRange.end;
     }) : [];
@@ -592,12 +622,24 @@ class StatisticsService {
 
   /**
    * Format frequency for display
+   * @param frequency - Frequency per week
+   * @param period - Period to display (week, month, quarter, year)
    */
-  formatFrequency(frequency: number): string {
-    if (frequency < 1) {
-      return `${Math.round(frequency * 10) / 10}/week`;
+  formatFrequency(frequency: number, period: 'week' | 'month' | 'quarter' | 'year' = 'week'): string {
+    // Convert from per week to per period
+    const periodMultipliers = {
+      week: 1,
+      month: 4.33, // Average weeks per month
+      quarter: 13, // Average weeks per quarter
+      year: 52.14 // Average weeks per year
+    };
+    
+    const periodFrequency = frequency * periodMultipliers[period];
+    
+    if (periodFrequency < 1) {
+      return `${Math.round(periodFrequency * 10) / 10}`;
     }
-    return `${Math.round(frequency)}/week`;
+    return `${Math.round(periodFrequency)}`;
   }
 }
 

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import AuthGuard from '@/components/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { GoalProgressDisplay } from '@/components/GoalProgressDisplay'
+import { statisticsService, StatisticsData, TimeFrame } from '@/lib/statistics-service'
+import { Workout } from '@/types/workout'
 
 export default function StrongMindPage() {
   return (
@@ -15,7 +17,8 @@ export default function StrongMindPage() {
 
 function StrongMindPageContent() {
   const { t } = useLanguage()
-  const [activeTab, setActiveTab] = useState<'process' | 'project' | 'gratitude'>('process')
+  const [activeTab, setActiveTab] = useState<'goals' | 'gratitude' | 'statistics'>('goals')
+  const [goalsSubTab, setGoalsSubTab] = useState<'process' | 'project'>('process')
   const [gratitudeFilter, setGratitudeFilter] = useState<'all' | 'gratitude' | 'improvements'>('all')
   const [gratitudeWorkouts, setGratitudeWorkouts] = useState<Array<{
     id: string
@@ -64,6 +67,12 @@ function StrongMindPageContent() {
   // Client-side only state to prevent hydration issues
   const [isClient, setIsClient] = useState(false)
   const [idCounter, setIdCounter] = useState(0)
+  
+  // Statistics state
+  const [workouts, setWorkouts] = useState<Workout[]>([])
+  const [statsData, setStatsData] = useState<StatisticsData | null>(null)
+  const [statsTimeframe, setStatsTimeframe] = useState<TimeFrame>('1month')
+  const [statsLoading, setStatsLoading] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
@@ -112,7 +121,40 @@ function StrongMindPageContent() {
       }
     }
     fetchGratitudeWorkouts()
+    
+    // Fetch workouts for statistics
+    const fetchWorkouts = async () => {
+      try {
+        const response = await fetch('/api/workouts', { credentials: 'include' })
+        if (response.ok) {
+          const workoutsData = await response.json()
+          setWorkouts(workoutsData)
+        }
+      } catch (error) {
+        console.error('Error fetching workouts:', error)
+      }
+    }
+    fetchWorkouts()
   }, [])
+  
+  // Calculate statistics when workouts or timeframe changes
+  useEffect(() => {
+    if (workouts.length === 0) return
+    
+    const calculateStats = async () => {
+      setStatsLoading(true)
+      try {
+        const stats = statisticsService.calculateStatistics(workouts, [], statsTimeframe, undefined, [], undefined)
+        setStatsData(stats)
+      } catch (error) {
+        console.error('Error calculating statistics:', error)
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+    
+    calculateStats()
+  }, [workouts, statsTimeframe])
 
   // Helper function to determine if timeframe is long-term
   const isLongTerm = (value: string, unit: string): boolean => {
@@ -361,27 +403,17 @@ function StrongMindPageContent() {
           </p>
         </div>
 
-        {/* Goal Types Navigation */}
+        {/* Main Navigation */}
         <div className="flex space-x-1 mb-8 bg-uc-dark-bg rounded-xl p-1 border border-uc-purple/20">
           <button 
-            onClick={() => setActiveTab('process')}
+            onClick={() => setActiveTab('goals')}
             className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-              activeTab === 'process'
+              activeTab === 'goals'
                 ? 'bg-uc-mustard text-uc-black shadow-lg'
                 : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
             }`}
           >
-            🎯 {t('strongMind.processGoals') || 'Process Goals'}
-          </button>
-          <button 
-            onClick={() => setActiveTab('project')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-              activeTab === 'project'
-                ? 'bg-uc-mustard text-uc-black shadow-lg'
-                : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
-            }`}
-          >
-            🏔️ {t('strongMind.projectGoals') || 'Project Goals'}
+            🎯 {t('strongMind.goals') || 'Goals'}
           </button>
           <button 
             onClick={() => setActiveTab('gratitude')}
@@ -393,14 +425,54 @@ function StrongMindPageContent() {
           >
             🙏 {t('strongMind.gratitude') || 'Gratitude'} & {t('strongMind.improvements') || 'Improvements'}
           </button>
+          <button 
+            onClick={() => setActiveTab('statistics')}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+              activeTab === 'statistics'
+                ? 'bg-uc-mustard text-uc-black shadow-lg'
+                : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
+            }`}
+          >
+            📊 {t('strongMind.statistics') || 'Statistics'}
+          </button>
         </div>
 
-        {/* Process Goals Content */}
-        {activeTab === 'process' && (
+        {/* Goals Content */}
+        {activeTab === 'goals' && (
+          <div>
+            {/* Goals Sub-navigation */}
+            <div className="flex space-x-1 mb-6 bg-uc-black/50 rounded-xl p-1 border border-uc-purple/20">
+              <button 
+                onClick={() => setGoalsSubTab('process')}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                  goalsSubTab === 'process'
+                    ? 'bg-uc-purple text-uc-text-light shadow-lg'
+                    : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black'
+                }`}
+              >
+                🎯 {t('strongMind.processGoals') || 'Process Goals'}
+              </button>
+              <button 
+                onClick={() => setGoalsSubTab('project')}
+                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                  goalsSubTab === 'project'
+                    ? 'bg-uc-purple text-uc-text-light shadow-lg'
+                    : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black'
+                }`}
+              >
+                🏔️ {t('strongMind.projectGoals') || 'Project Goals'}
+              </button>
+            </div>
+
+            {/* Process Goals Content */}
+            {goalsSubTab === 'process' && (
         <div className="bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
-          <h2 className="text-xl font-semibold text-uc-text-light mb-6">
+          <h2 className="text-xl font-semibold text-uc-text-light mb-2">
             🎯 {t('strongMind.processGoals') || 'Process Goals'}
           </h2>
+          <p className="text-sm text-uc-text-muted mb-6">
+            {t('strongMind.processGoalsDescription') || 'Goals that support your climbing development'}
+          </p>
           
           {/* Goal Creation Form */}
           <div className="bg-uc-black/50 p-6 rounded-xl border border-uc-purple/20 mb-6">
@@ -658,6 +730,8 @@ function StrongMindPageContent() {
             </div>
           </div>
         </div>
+            )}
+          </div>
         )}
 
         {/* Gratitude & Improvements Content */}
@@ -820,14 +894,14 @@ function StrongMindPageContent() {
           </div>
         )}
 
-        {/* Project Goals Content */}
-        {activeTab === 'project' && (
+            {/* Project Goals Content */}
+            {goalsSubTab === 'project' && (
         <div className="bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
-          <h2 className="text-xl font-semibold text-uc-text-light mb-6">
-            🧗 {t('strongMind.projectGoals') || 'Project Goals'}
+          <h2 className="text-xl font-semibold text-uc-text-light mb-2">
+            🏔️ {t('strongMind.projectGoals') || 'Project Goals'}
           </h2>
-          <p className="text-uc-text-muted mb-6">
-            {t('strongMind.projectGoalsDescription') || 'Set specific climbing routes you want to complete and link them to your process goals'}
+          <p className="text-sm text-uc-text-muted mb-6">
+            {t('strongMind.projectGoalsSubtitle') || 'Specific routes or boulders that support achieving your process goals'}
           </p>
           
           {/* Project Goal Creation Form */}
@@ -1068,6 +1142,147 @@ function StrongMindPageContent() {
             )}
           </div>
         </div>
+            )}
+
+        {/* Statistics Content */}
+        {activeTab === 'statistics' && (
+          <div className="bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-uc-text-light mb-4">
+                📊 {t('strongMind.statistics') || 'Statistics'}
+              </h2>
+              
+              {/* Timeframe selector */}
+              <select
+                value={statsTimeframe}
+                onChange={(e) => setStatsTimeframe(e.target.value as TimeFrame)}
+                className="px-4 py-2 bg-uc-black/50 border border-uc-purple/20 rounded-lg text-sm text-uc-text-light focus:outline-none focus:ring-2 focus:ring-uc-purple/50"
+              >
+                <option value="1week">{t('stats.1week') || '1 Week'}</option>
+                <option value="1month">{t('stats.1month') || '1 Month'}</option>
+                <option value="3months">{t('stats.3months') || '3 Months'}</option>
+                <option value="6months">{t('stats.6months') || '6 Months'}</option>
+                <option value="1year">{t('stats.1year') || '1 Year'}</option>
+                <option value="all">{t('stats.allTime') || 'All Time'}</option>
+              </select>
+            </div>
+
+            {statsLoading ? (
+              <div className="text-center py-12">
+                <div className="text-uc-text-muted">{t('common.loading') || 'Loading...'}</div>
+              </div>
+            ) : statsData ? (
+              <div className="space-y-6">
+                {/* Mental Sessions */}
+                <div>
+                  <h3 className="text-lg font-semibold text-uc-text-light mb-4">
+                    🧘 {t('stats.mentalSessions')}
+                  </h3>
+                  <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-uc-text-light">
+                          {statsData.mentalSessions.totalSessions}
+                        </div>
+                        <div className="text-sm text-uc-text-muted">
+                          {t('stats.totalSessions')}
+                        </div>
+                      </div>
+                      {statsData.mentalSessions.totalSessions > 0 && (
+                        <>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-uc-text-light">
+                              {statsData.mentalSessions.averageFocusLevel}
+                            </div>
+                            <div className="text-sm text-uc-text-muted">
+                              {t('stats.avgFocusLevel')}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-uc-text-light">
+                              {statsData.mentalSessions.daysSinceLastSession}
+                            </div>
+                            <div className="text-sm text-uc-text-muted">
+                              {t('stats.daysSinceLast')}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-uc-text-light">
+                              {statsData.mentalSessions.practiceTypes.meditation}
+                            </div>
+                            <div className="text-sm text-uc-text-muted">
+                              {t('stats.meditation')}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {statsData.mentalSessions.totalSessions === 0 && (
+                        <div className="col-span-3 flex items-center justify-center">
+                          <p className="text-uc-text-muted text-sm">
+                            {t('strongMind.noMentalSessions') || 'No mental practice sessions in this period'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Falls Tracking */}
+                <div>
+                  <h3 className="text-lg font-semibold text-uc-text-light mb-4">
+                    🧗‍♀️ {t('stats.fallsTracking')}
+                  </h3>
+                  <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-uc-text-light">
+                          {statsData.falls.totalFalls}
+                        </div>
+                        <div className="text-sm text-uc-text-muted">
+                          {t('stats.totalFalls')}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-uc-text-light">
+                          {statsData.falls.totalClimbingSessions}
+                        </div>
+                        <div className="text-sm text-uc-text-muted">
+                          {t('stats.climbingSessions')}
+                        </div>
+                      </div>
+                      {statsData.falls.totalFalls > 0 && (
+                        <>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-uc-text-light">
+                              {statsData.falls.fallsPerSession}
+                            </div>
+                            <div className="text-sm text-uc-text-muted">
+                              {t('stats.fallsPerSession')}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-uc-text-light">
+                              {statsData.falls.daysSinceLastFall}
+                            </div>
+                            <div className="text-sm text-uc-text-muted">
+                              {t('stats.daysSinceLastFall')}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {statsData.falls.totalFalls === 0 && (
+                        <div className="col-span-2 flex items-center justify-center">
+                          <p className="text-uc-text-muted text-sm">
+                            {t('strongMind.noFalls') || 'No falls in this period'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
         )}
       </div>
     </div>

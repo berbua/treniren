@@ -1,7 +1,10 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { EventType, Tag, TripClimbingType } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useCycle } from '@/contexts/CycleContext'
+import { calculateCycleInfo } from '@/lib/cycle-utils'
 
 interface EventCardProps {
   event: {
@@ -23,9 +26,13 @@ interface EventCardProps {
     destination?: string
     climbingType?: TripClimbingType
     showCountdown?: boolean
+    // Cycle tracking for injuries
+    cycleDay?: number
+    cycleDayManuallySet?: boolean
   }
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
+  onCycleDayUpdate?: (eventId: string, cycleDay: number | null, manuallySet: boolean) => Promise<void>
 }
 
 const getEventTypeColor = (type: EventType) => {
@@ -80,8 +87,64 @@ const formatTime = (timeString: string) => {
   })
 }
 
-export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
+export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate }: EventCardProps) {
   const { t } = useLanguage()
+  const [isEditingCycleDay, setIsEditingCycleDay] = useState(false)
+  const [cycleDayValue, setCycleDayValue] = useState<string>('')
+  const [isUpdating, setIsUpdating] = useState(false)
+  
+  // Try to get cycle context, but handle case where it might not be available
+  let cycleSettings = null
+  let isCycleTrackingEnabled = false
+  try {
+    const cycleContext = useCycle()
+    cycleSettings = cycleContext.cycleSettings
+    isCycleTrackingEnabled = cycleContext.isCycleTrackingEnabled
+  } catch (error) {
+    // Cycle context not available, that's okay
+  }
+  
+  // Calculate cycle info for injury events if cycle tracking is enabled
+  const calculatedCycleInfo = event.type === 'INJURY' && isCycleTrackingEnabled && cycleSettings
+    ? calculateCycleInfo(cycleSettings, new Date(event.date))
+    : null
+  
+  // Use manually set cycle day if available, otherwise use calculated
+  const displayCycleDay = event.cycleDayManuallySet && event.cycleDay !== undefined
+    ? event.cycleDay
+    : calculatedCycleInfo?.currentDay
+  
+  // Initialize cycle day value when entering edit mode
+  useEffect(() => {
+    if (isEditingCycleDay) {
+      setCycleDayValue(displayCycleDay?.toString() || '')
+    }
+  }, [isEditingCycleDay, displayCycleDay])
+  
+  const handleSaveCycleDay = async () => {
+    if (!onCycleDayUpdate) return
+    
+    setIsUpdating(true)
+    try {
+      const cycleDay = cycleDayValue.trim() === '' ? null : parseInt(cycleDayValue, 10)
+      const isValid = cycleDay === null || (cycleDay >= 1 && cycleDay <= 50) // Reasonable range
+      
+      if (!isValid && cycleDay !== null) {
+        alert(t('events.invalidCycleDay') || 'Cycle day must be between 1 and 50')
+        setIsUpdating(false)
+        return
+      }
+      
+      await onCycleDayUpdate(event.id, cycleDay, cycleDay !== null)
+      setIsEditingCycleDay(false)
+    } catch (error) {
+      console.error('Error updating cycle day:', error)
+      alert(t('events.cycleDayUpdateError') || 'Failed to update cycle day')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between">
@@ -214,6 +277,66 @@ export default function EventCard({ event, onEdit, onDelete }: EventCardProps) {
                 <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
                   {event.status}
                 </span>
+              </div>
+            )}
+
+            {/* Cycle Day (for injuries, if cycle tracking is enabled) */}
+            {event.type === 'INJURY' && (displayCycleDay !== undefined || isCycleTrackingEnabled) && (
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-medium text-slate-500">🌸 {t('cycle.day') || 'Cycle Day'}:</span>
+                {isEditingCycleDay ? (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={cycleDayValue}
+                      onChange={(e) => setCycleDayValue(e.target.value)}
+                      className="w-16 px-2 py-1 text-xs border border-pink-300 dark:border-pink-700 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                      disabled={isUpdating}
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleSaveCycleDay}
+                      disabled={isUpdating}
+                      className="px-2 py-1 text-xs bg-pink-500 hover:bg-pink-600 text-white rounded disabled:opacity-50"
+                      title={t('common.save') || 'Save'}
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingCycleDay(false)
+                        setCycleDayValue('')
+                      }}
+                      disabled={isUpdating}
+                      className="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded disabled:opacity-50"
+                      title={t('common.cancel') || 'Cancel'}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 text-xs rounded ${
+                      event.cycleDayManuallySet
+                        ? 'bg-pink-200 dark:bg-pink-800 text-pink-900 dark:text-pink-100 border border-pink-400 dark:border-pink-600'
+                        : 'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200'
+                    }`}>
+                      {displayCycleDay || '?'}
+                      {event.cycleDayManuallySet && ' ✏️'}
+                    </span>
+                    {onCycleDayUpdate && (
+                      <button
+                        onClick={() => setIsEditingCycleDay(true)}
+                        className="text-xs text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200"
+                        title={t('events.editCycleDay') || 'Edit cycle day'}
+                      >
+                        ✏️
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

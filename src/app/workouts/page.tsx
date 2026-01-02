@@ -299,6 +299,31 @@ function WorkoutsPageContent() {
     }
   }
 
+  const handleCycleDayUpdate = async (eventId: string, cycleDay: number | null, manuallySet: boolean) => {
+    try {
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          cycleDay,
+          cycleDayManuallySet: manuallySet,
+        }),
+      })
+
+      if (response.ok) {
+        await fetchEvents()
+      } else {
+        throw new Error('Failed to update cycle day')
+      }
+    } catch (error) {
+      console.error('Error updating cycle day:', error)
+      throw error
+    }
+  }
+
   const handleEventEdit = (id: string) => {
     const event = events.find(e => e.id === id)
     setEditingEvent(event || null)
@@ -564,6 +589,7 @@ function WorkoutsPageContent() {
                   event={event}
                   onEdit={handleEventEdit}
                   onDelete={deleteEvent}
+                  onCycleDayUpdate={handleCycleDayUpdate}
                 />
               ))}
             </div>

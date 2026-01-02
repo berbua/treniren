@@ -116,6 +116,41 @@ export default function EventsPage() {
     }
   }
 
+  const handleCycleDayUpdate = async (eventId: string, cycleDay: number | null, manuallySet: boolean) => {
+    try {
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          cycleDay,
+          cycleDayManuallySet: manuallySet,
+        }),
+      })
+
+      if (response.ok) {
+        const updatedEvent = await response.json()
+        // Update local state
+        setEvents(prevEvents =>
+          prevEvents.map(event =>
+            event.id === eventId
+              ? { ...event, cycleDay: cycleDay ?? undefined, cycleDayManuallySet: manuallySet }
+              : event
+          )
+        )
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to update cycle day:', errorData)
+        throw new Error(errorData.error || 'Failed to update cycle day')
+      }
+    } catch (error) {
+      console.error('Error updating cycle day:', error)
+      throw error
+    }
+  }
+
   const handleEditEvent = (eventId: string) => {
     const event = events.find(e => e.id === eventId)
     if (event) {
@@ -200,6 +235,7 @@ export default function EventsPage() {
                 event={event}
                 onEdit={handleEditEvent}
                 onDelete={handleDeleteEvent}
+                onCycleDayUpdate={handleCycleDayUpdate}
               />
             ))}
           </div>

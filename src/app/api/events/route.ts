@@ -59,6 +59,9 @@ export async function POST(request: NextRequest) {
       destination,
       climbingType,
       showCountdown,
+      // Cycle tracking for injuries
+      cycleDay,
+      cycleDayManuallySet,
     } = body
 
     const user = await requireAuth(request)
@@ -89,6 +92,9 @@ export async function POST(request: NextRequest) {
         destination,
         climbingType,
         showCountdown: showCountdown || false,
+        // Cycle tracking for injuries
+        cycleDay: cycleDay !== undefined ? cycleDay : null,
+        cycleDayManuallySet: cycleDayManuallySet || false,
         eventTags: tagIds ? {
           create: tagIds.map((tagId: string) => ({
             tagId,

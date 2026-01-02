@@ -75,6 +75,9 @@ export async function PUT(
       destination,
       climbingType,
       showCountdown,
+      // Cycle tracking for injuries
+      cycleDay,
+      cycleDayManuallySet,
     } = body
 
     const user = await requireAuth(request)
@@ -114,6 +117,9 @@ export async function PUT(
         destination,
         climbingType,
         showCountdown: showCountdown || false,
+        // Cycle tracking for injuries
+        cycleDay: cycleDay !== undefined ? cycleDay : null,
+        cycleDayManuallySet: cycleDayManuallySet || false,
       },
     })
 
@@ -154,6 +160,77 @@ export async function PUT(
     console.error('Error updating event:', error)
     return NextResponse.json(
       { error: 'Failed to update event' },
+      { status: 500 }
+    )
+  }
+}
+
+// PATCH /api/events/[id] - Partially update an event (e.g., just cycleDay)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const body = await request.json()
+    const { cycleDay, cycleDayManuallySet } = body
+
+    const user = await requireAuth(request)
+    const { id } = await params
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // Prepare update data - only include fields that are provided
+    const updateData: any = {}
+    if (cycleDay !== undefined) {
+      updateData.cycleDay = cycleDay === null || cycleDay === undefined ? null : Number(cycleDay)
+    }
+    if (cycleDayManuallySet !== undefined) {
+      updateData.cycleDayManuallySet = Boolean(cycleDayManuallySet)
+    }
+
+    console.log('PATCH /api/events/[id] - Updating cycle day:', { id, updateData })
+
+    const event = await prisma.event.updateMany({
+      where: { 
+        id,
+        userId: user.id 
+      },
+      data: updateData,
+    })
+
+    if (event.count === 0) {
+      return NextResponse.json(
+        { error: 'Event not found' },
+        { status: 404 }
+      )
+    }
+
+    // Fetch and return the updated event
+    const updatedEvent = await prisma.event.findFirst({
+      where: { 
+        id,
+        userId: user.id 
+      },
+      include: {
+        eventTags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+    })
+
+    return NextResponse.json(updatedEvent)
+  } catch (error: any) {
+    console.error('Error updating event cycle day:', error)
+    console.error('Error details:', error.message, error.stack)
+    return NextResponse.json(
+      { error: 'Failed to update event', details: error.message },
       { status: 500 }
     )
   }

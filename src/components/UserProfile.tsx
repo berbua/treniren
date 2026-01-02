@@ -6,6 +6,7 @@ import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useOffline } from '@/hooks/useOffline';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { notificationService } from '@/lib/notification-service';
 import { exportAllData } from '@/lib/export-utils';
 import { generateDummyData } from '@/lib/generate-dummy-data';
 
@@ -43,6 +44,8 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   const [testReminderUnit, setTestReminderUnit] = useState<'days' | 'weeks' | 'months'>('weeks');
   const [isLoadingTestReminder, setIsLoadingTestReminder] = useState(true);
   const [isSavingTestReminder, setIsSavingTestReminder] = useState(false);
+  const [isPushSubscribed, setIsPushSubscribed] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
   
   // Check if we're in development mode
   const isDevelopment = typeof window !== 'undefined' && 
@@ -69,6 +72,79 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
     };
     loadTestReminderSettings();
   }, []);
+
+  // Check push subscription status
+  useEffect(() => {
+    const checkPushSubscription = async () => {
+      try {
+        const subscribed = await notificationService.isSubscribedToPush();
+        setIsPushSubscribed(subscribed);
+      } catch (error) {
+        console.error('Error checking push subscription:', error);
+      }
+    };
+    checkPushSubscription();
+  }, []);
+
+  const handleTogglePushNotifications = async () => {
+    setIsSubscribing(true);
+    try {
+      if (isPushSubscribed) {
+        // Unsubscribe
+        const success = await notificationService.unsubscribeFromPush();
+        if (success) {
+          setIsPushSubscribed(false);
+          updateSettings({
+            ...notificationSettings,
+            pushNotificationsEnabled: false
+          });
+        }
+      } else {
+        // Subscribe
+        // Check current permission status
+        if ('Notification' in window) {
+          const currentPermission = Notification.permission;
+          
+          if (currentPermission === 'denied') {
+            alert(
+              t('profile.pushNotificationsDenied') || 
+              'Push notifications are blocked in your browser. Please enable them in browser settings:\n\n' +
+              'Chrome: Click 🔒 icon → Notifications → Allow\n' +
+              'Firefox: Click 🔒 icon → Notifications → Allow'
+            );
+            setIsSubscribing(false);
+            return;
+          }
+        } else {
+          alert('Notifications are not supported in this browser');
+          setIsSubscribing(false);
+          return;
+        }
+        
+        if (typeof notificationService.subscribeToPush !== 'function') {
+          alert('Error: subscribeToPush is not available. This might be a cache issue. Please restart the dev server.');
+          setIsSubscribing(false);
+          return;
+        }
+        
+        const success = await notificationService.subscribeToPush();
+        if (success) {
+          setIsPushSubscribed(true);
+          updateSettings({
+            ...notificationSettings,
+            pushNotificationsEnabled: true
+          });
+        } else {
+          alert(t('profile.pushSubscriptionFailed') || 'Failed to enable push notifications. Please check your browser settings and console for errors.');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling push notifications:', error);
+      alert(t('profile.pushSubscriptionError') || 'Error enabling push notifications. Check console for details.');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   const handleSaveTestReminder = async () => {
     setIsSavingTestReminder(true);
@@ -562,6 +638,56 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                         </button>
                       )}
                     </div>
+                  </div>
+
+                  {/* Push Notifications */}
+                  <div className="p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="font-medium text-uc-text-light">
+                          {t('profile.pushNotifications') || 'Push Notifications'}
+                        </p>
+                        <p className="text-sm text-uc-text-muted">
+                          {t('profile.pushNotificationsDesc') || 'Receive notifications even when the app is closed'}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {(() => {
+                          const hasServiceWorker = 'serviceWorker' in navigator;
+                          // Note: PushManager is not in window, it's in serviceWorkerRegistration.pushManager
+                          // So we only check for serviceWorker support
+                          const isDisabled = isSubscribing || !hasServiceWorker;
+                          
+                          return (
+                            <>
+                              <button
+                                onClick={handleTogglePushNotifications}
+                                disabled={isDisabled}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  isPushSubscribed
+                                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                                    : 'bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light'
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                              >
+                                {isSubscribing
+                                  ? (t('profile.loading') || 'Loading...')
+                                  : isPushSubscribed
+                                  ? (t('profile.disable') || 'Disable')
+                                  : (t('profile.enable') || 'Enable')}
+                              </button>
+                              <span className={isPushSubscribed ? 'text-uc-success' : 'text-uc-text-muted'}>
+                                {isPushSubscribed ? '✅' : '❌'}
+                              </span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    {!('serviceWorker' in navigator) && (
+                      <p className="text-xs text-uc-text-muted mt-2">
+                        {t('profile.pushNotSupported') || 'Push notifications are not supported in this browser'}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
