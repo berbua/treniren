@@ -10,6 +10,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import ExerciseForm from '@/components/ExerciseForm'
 import { ExerciseLibrary } from '@/components/ExerciseLibrary'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
 
 export default function ExercisesPage() {
   return (
@@ -22,6 +23,7 @@ export default function ExercisesPage() {
 function ExercisesPageContent() {
   const { t } = useLanguage()
   const confirmation = useConfirmation()
+  const { getToken } = useCsrfToken()
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -71,8 +73,12 @@ function ExercisesPageContent() {
       async () => {
         try {
           setDeletingExerciseId(id)
+          const token = await getToken()
           const response = await fetch(`/api/exercises/${id}`, {
             method: 'DELETE',
+            headers: {
+              'x-csrf-token': token,
+            },
           })
 
           if (response.ok) {
@@ -97,9 +103,13 @@ function ExercisesPageContent() {
       const url = editingExercise ? `/api/exercises/${editingExercise.id}` : '/api/exercises'
       const method = editingExercise ? 'PUT' : 'POST'
 
+      const token = await getToken()
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': token,
+        },
         body: JSON.stringify(exerciseData),
       })
 

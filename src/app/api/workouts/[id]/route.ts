@@ -155,7 +155,7 @@ export async function PUT(
 
     // Validate exercises if provided
     if (exercises && exercises.length > 0) {
-      const exerciseIds = exercises.map((e) => e.exerciseId)
+      const exerciseIds = exercises.map((e: { exerciseId: string }) => e.exerciseId)
       const existingExercises = await prisma.exercise.findMany({
         where: {
           id: { in: exerciseIds },
@@ -204,7 +204,7 @@ export async function PUT(
         await tx.workoutTag.deleteMany({ where: { workoutId: id } })
         if (tagIds.length > 0) {
           await tx.workoutTag.createMany({
-            data: tagIds.map((tagId) => ({ workoutId: id, tagId })),
+            data: tagIds.map((tagId: string) => ({ workoutId: id, tagId })),
           })
         }
       }
@@ -223,7 +223,7 @@ export async function PUT(
             })
             if (exerciseData.sets && exerciseData.sets.length > 0) {
               await tx.set.createMany({
-                data: exerciseData.sets.map((set, setIndex) => ({
+                data: exerciseData.sets.map((set: { reps?: number | null; weight?: number | null; rir?: number | null; notes?: string | null }, setIndex: number) => ({
                   workoutExerciseId: workoutExercise.id,
                   setNumber: setIndex + 1,
                   reps: set.reps ?? null,
@@ -242,11 +242,11 @@ export async function PUT(
         await tx.fingerboardWorkoutHang.deleteMany({ where: { workoutId: id } })
         if (fingerboardHangs.length > 0) {
           await tx.fingerboardWorkoutHang.createMany({
-            data: fingerboardHangs.map((hang) => ({
+            data: fingerboardHangs.map((hang: { order?: number; handType: string; gripType: string; crimpSize?: number | null; customDescription?: string | null; load?: number | null; unload?: number | null; reps?: number | null; timeSeconds?: number | null; notes?: string | null }) => ({
               workoutId: id,
               order: hang.order ?? 0,
-              handType: hang.handType,
-              gripType: hang.gripType,
+              handType: hang.handType as 'ONE_HAND' | 'BOTH_HANDS',
+              gripType: hang.gripType as 'OPEN_HAND' | 'CRIMP' | 'SLOPER',
               crimpSize: hang.crimpSize ?? null,
               customDescription: hang.customDescription ?? null,
               load: hang.load ?? null,

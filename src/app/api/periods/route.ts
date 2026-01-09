@@ -16,7 +16,7 @@ const UpdatePeriodSchema = CreatePeriodSchema.partial()
 export async function GET(request: NextRequest) {
   try {
     // Apply security middleware
-    const securityResponse = await applySecurity(request, { csrf: false })
+    const securityResponse = await applySecurity(request, { csrf: false, rateLimit: false })
     if (securityResponse) return securityResponse
 
     const user = await requireAuth(request)

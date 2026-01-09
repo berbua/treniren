@@ -32,7 +32,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nickname, cycleAvgLengthDays, lastPeriodDate, timezone, photoUrl, googleSheetsUrl, latePeriodNotificationsEnabled } = body
+    const { 
+      nickname, 
+      cycleAvgLengthDays, 
+      lastPeriodDate, 
+      timezone, 
+      photoUrl, 
+      googleSheetsUrl, 
+      latePeriodNotificationsEnabled,
+      weeklyWorkoutGoal,
+      monthlyWorkoutGoal,
+      useAutoMonthlyGoal,
+      workoutTypeGoals
+    } = body
     const user = await requireAuth(request)
     
     if (!user) {
@@ -50,24 +62,35 @@ export async function POST(request: NextRequest) {
       })
     }
     
+    // Prepare update data - only include fields that are provided
+    const updateData: any = {}
+    if (cycleAvgLengthDays !== undefined) updateData.cycleAvgLengthDays = cycleAvgLengthDays
+    if (lastPeriodDate !== undefined) updateData.lastPeriodDate = lastPeriodDate ? new Date(lastPeriodDate) : null
+    if (timezone !== undefined) updateData.timezone = timezone
+    if (photoUrl !== undefined) updateData.photoUrl = photoUrl
+    if (googleSheetsUrl !== undefined || latePeriodNotificationsEnabled !== undefined) {
+      updateData.googleSheetsUrl = googleSheetsUrl || (latePeriodNotificationsEnabled !== undefined ? JSON.stringify({ latePeriodNotificationsEnabled }) : null)
+    }
+    // Training goals
+    if (weeklyWorkoutGoal !== undefined) updateData.weeklyWorkoutGoal = weeklyWorkoutGoal
+    if (monthlyWorkoutGoal !== undefined) updateData.monthlyWorkoutGoal = monthlyWorkoutGoal
+    if (useAutoMonthlyGoal !== undefined) updateData.useAutoMonthlyGoal = useAutoMonthlyGoal
+    if (workoutTypeGoals !== undefined) updateData.workoutTypeGoals = workoutTypeGoals
+    
     const profile = await prisma.userProfile.upsert({
       where: { userId: user.id },
-      update: {
-        cycleAvgLengthDays,
-        lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
-        timezone,
-        photoUrl,
-        // Store late period notification preference in googleSheetsUrl field for now
-        // In a real app, you'd add a proper column to the schema
-        googleSheetsUrl: googleSheetsUrl || (latePeriodNotificationsEnabled !== undefined ? JSON.stringify({ latePeriodNotificationsEnabled }) : null),
-      },
+      update: updateData,
       create: {
         userId: user.id,
-        cycleAvgLengthDays,
+        cycleAvgLengthDays: cycleAvgLengthDays || 28,
         lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
-        timezone,
+        timezone: timezone || 'Europe/Warsaw',
         photoUrl,
         googleSheetsUrl: googleSheetsUrl || (latePeriodNotificationsEnabled !== undefined ? JSON.stringify({ latePeriodNotificationsEnabled }) : null),
+        weeklyWorkoutGoal: weeklyWorkoutGoal || 3,
+        monthlyWorkoutGoal,
+        useAutoMonthlyGoal: useAutoMonthlyGoal !== undefined ? useAutoMonthlyGoal : true,
+        workoutTypeGoals: workoutTypeGoals || null,
       },
     })
     

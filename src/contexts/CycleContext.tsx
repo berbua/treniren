@@ -11,6 +11,7 @@ interface CycleContextType {
   isLoading: boolean
   setCycleSettings: (settings: CycleSettings, latePeriodNotifications?: boolean) => Promise<void>
   disableCycleTracking: () => Promise<void>
+  refreshCycleSettings: () => Promise<void>
 }
 
 const CycleContext = createContext<CycleContextType | undefined>(undefined)
@@ -130,6 +131,26 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const refreshCycleSettings = async () => {
+    try {
+      const response = await fetch('/api/user-profile', { credentials: 'include' })
+      if (response.ok) {
+        const profile = await response.json()
+        if (profile && profile.lastPeriodDate) {
+          const settings = {
+            cycleLength: profile.cycleAvgLengthDays || 28,
+            lastPeriodDate: new Date(profile.lastPeriodDate),
+            timezone: profile.timezone || 'Europe/Warsaw'
+          }
+          setCycleSettingsState(settings)
+          setIsCycleTrackingEnabled(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing cycle settings:', error)
+    }
+  }
+
   return (
     <CycleContext.Provider
       value={{
@@ -139,6 +160,7 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         setCycleSettings,
         disableCycleTracking,
+        refreshCycleSettings,
       }}
     >
       {children}

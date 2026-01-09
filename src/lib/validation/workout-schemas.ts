@@ -17,8 +17,8 @@ export const TrainingVolumeSchema = z.enum(['TR1', 'TR2', 'TR3', 'TR4', 'TR5']).
 // Mental practice type enum
 export const MentalPracticeTypeSchema = z.enum(['MEDITATION', 'REFLECTING', 'OTHER']).nullable().optional()
 
-// Time of day enum
-export const TimeOfDaySchema = z.enum(['MORNING', 'MIDDAY', 'EVENING']).nullable().optional()
+// Time of day enum - can be array for multiple selections (only for mental practice)
+export const TimeOfDaySchema = z.array(z.enum(['MORNING', 'MIDDAY', 'EVENING'])).nullable().optional()
 
 // Hand type enum
 export const HandTypeSchema = z.enum(['ONE_HAND', 'BOTH_HANDS'])
@@ -28,8 +28,8 @@ export const GripTypeSchema = z.enum(['OPEN_HAND', 'CRIMP', 'SLOPER'])
 
 // Set schema
 export const SetSchema = z.object({
-  reps: z.number().int().positive().nullable().optional(),
-  weight: z.number().positive().nullable().optional(),
+  reps: z.number().int().min(0).nullable().optional(),
+  weight: z.number().min(0).nullable().optional(),
   rir: z.number().int().min(0).max(10).nullable().optional(),
   notes: z.string().max(1000).trim().nullable().optional(),
 })
@@ -72,8 +72,8 @@ export const WorkoutDetailsSchema = z
   .nullable()
   .optional()
 
-// Main workout schema
-export const CreateWorkoutSchema = z.object({
+// Base workout schema without refine
+const BaseWorkoutSchema = z.object({
   type: WorkoutTypeSchema,
   date: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)), // ISO date or YYYY-MM-DD
   trainingVolume: TrainingVolumeSchema,
@@ -87,16 +87,38 @@ export const CreateWorkoutSchema = z.object({
   timeOfDay: TimeOfDaySchema,
   gratitude: z.string().max(2000).trim().nullable().optional(),
   improvements: z.string().max(2000).trim().nullable().optional(),
-  mentalState: z.string().max(500).trim().nullable().optional(),
+  mentalState: z.union([
+    z.string().max(500).trim(),
+    z.object({}).passthrough(), // Allow JSON objects
+  ]).nullable().optional(),
   planId: z.string().nullable().optional(),
   tagIds: z.array(z.string().min(1)).optional(),
   exercises: z.array(ExerciseDataSchema).optional(),
   fingerboardHangs: z.array(FingerboardHangSchema).optional(),
 })
 
-// Update workout schema (all fields optional except type)
-export const UpdateWorkoutSchema = CreateWorkoutSchema.partial().extend({
-  type: WorkoutTypeSchema.optional(),
+// Main workout schema with validation
+export const CreateWorkoutSchema = BaseWorkoutSchema.refine((data) => {
+  // timeOfDay should only be provided for MENTAL_PRACTICE workouts
+  if (data.timeOfDay && Array.isArray(data.timeOfDay) && data.timeOfDay.length > 0 && data.type !== 'MENTAL_PRACTICE') {
+    return false
+  }
+  return true
+}, {
+  message: 'timeOfDay can only be set for mental practice workouts',
+  path: ['timeOfDay'],
+})
+
+// Update workout schema (all fields optional)
+export const UpdateWorkoutSchema = BaseWorkoutSchema.partial().refine((data) => {
+  // timeOfDay should only be provided for MENTAL_PRACTICE workouts
+  if (data.timeOfDay && Array.isArray(data.timeOfDay) && data.timeOfDay.length > 0 && data.type && data.type !== 'MENTAL_PRACTICE') {
+    return false
+  }
+  return true
+}, {
+  message: 'timeOfDay can only be set for mental practice workouts',
+  path: ['timeOfDay'],
 })
 
 // Sanitize string inputs

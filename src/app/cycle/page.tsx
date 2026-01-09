@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useCycle } from '@/contexts/CycleContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useApiError } from '@/hooks/useApiError'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { extractApiError } from '@/lib/errors'
 import { calculateCycleInfo, getPhaseColor, CyclePhase, getPhaseDayRange, getPhaseDisplayName, getPhaseStartDay, getPhaseEndDay } from '@/lib/cycle-utils'
 import { Period, PeriodFormData } from '@/types/period'
@@ -24,8 +25,9 @@ export default function CyclePage() {
 
 function CyclePageContent() {
   const { t } = useLanguage()
-  const { cycleSettings, isCycleTrackingEnabled, cycleInfo } = useCycle()
+  const { cycleSettings, isCycleTrackingEnabled, cycleInfo, refreshCycleSettings } = useCycle()
   const { handleError, showSuccess } = useApiError()
+  const { getToken } = useCsrfToken()
   
   const [periods, setPeriods] = useState<Period[]>([])
   const [workouts, setWorkouts] = useState<Workout[]>([])
@@ -215,19 +217,27 @@ function CyclePageContent() {
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-red-200 mb-2">
                   {(() => {
-                    const phaseName = injuryStats.phaseWithMostInjuries === 'menstrual' ? 'Menstrual' :
-                      injuryStats.phaseWithMostInjuries === 'follicular' ? 'Follicular' :
-                      injuryStats.phaseWithMostInjuries === 'ovulation' ? 'Ovulation' :
-                      injuryStats.phaseWithMostInjuries === 'earlyLuteal' ? 'Early Luteal' :
-                      'Late Luteal'
-                    return `Most Injuries in ${phaseName} Phase`
+                    const phaseKey = injuryStats.phaseWithMostInjuries === 'earlyLuteal' ? 'earlyLuteal' :
+                      injuryStats.phaseWithMostInjuries === 'lateLuteal' ? 'lateLuteal' :
+                      injuryStats.phaseWithMostInjuries
+                    const phaseName = t(`cycle.phases.${phaseKey}`) || 
+                      (injuryStats.phaseWithMostInjuries === 'menstrual' ? 'Menstrual' :
+                       injuryStats.phaseWithMostInjuries === 'follicular' ? 'Follicular' :
+                       injuryStats.phaseWithMostInjuries === 'ovulation' ? 'Ovulation' :
+                       injuryStats.phaseWithMostInjuries === 'earlyLuteal' ? 'Early Luteal' :
+                       'Late Luteal')
+                    return t('cycle.tracking.mostInjuriesInPhase', { phase: phaseName }) || `Most Injuries in ${phaseName} Phase`
                   })()}
                 </h3>
                 <p className="text-red-100">
                   {(() => {
                     const phase = getPhaseDisplayName(injuryStats.phaseWithMostInjuries)
                     const days = getPhaseDayRange(phase, cycleSettings.cycleLength)
-                    return `${injuryStats.maxInjuriesInPhase} out of ${injuryStats.totalInjuries} injuries occurred during cycle days ${days}.`
+                    return t('cycle.tracking.injuriesOccurredDuringDays', {
+                      count: injuryStats.maxInjuriesInPhase,
+                      total: injuryStats.totalInjuries,
+                      days: days
+                    }) || `${injuryStats.maxInjuriesInPhase} out of ${injuryStats.totalInjuries} injuries occurred during cycle days ${days}.`
                   })()}
                 </p>
                 <p className="text-red-100 mt-2 text-sm">
@@ -259,9 +269,13 @@ function CyclePageContent() {
                 const url = editingPeriod ? `/api/periods/${editingPeriod.id}` : '/api/periods'
                 const method = editingPeriod ? 'PUT' : 'POST'
 
+                const csrfToken = await getToken()
                 const response = await fetch(url, {
                   method,
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'x-csrf-token': csrfToken,
+                  },
                   credentials: 'include',
                   body: JSON.stringify(periodData),
                 })
@@ -274,6 +288,8 @@ function CyclePageContent() {
                     const periodsData = await periodsRes.json()
                     setPeriods(periodsData)
                   }
+                  // Refresh cycle settings to update lastPeriodDate in calendar
+                  await refreshCycleSettings()
                   setShowPeriodForm(false)
                   setEditingPeriod(null)
                 } else {
@@ -433,11 +449,11 @@ function CycleCalendar({
       <div className="mt-4 flex flex-wrap gap-3 text-xs">
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 rounded-full bg-red-500/40 border border-red-500/60" />
-          <span className="text-uc-text-muted">{t('cycle.tracking.period') || 'Period'}</span>
+          <span className="text-uc-text-muted">{t('cycle.tracking.confirmedPeriod') || 'Confirmed Period'}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 rounded-full bg-red-500/20 border border-red-500/40"></div>
-          <span className="text-uc-text-muted">{t('cycle.phases.menstrual') || 'Menstrual'}</span>
+          <span className="text-uc-text-muted">{t('cycle.tracking.predictedMenstrual') || 'Menstrual Phase (predicted)'}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 rounded-full bg-yellow-500/20 border border-yellow-500/40"></div>
@@ -468,79 +484,36 @@ function TrainingCycleInsights({
   injuryStats: any
 }) {
   const { t } = useLanguage()
-  const phaseInfo = [
-    {
-      key: 'menstrual',
-      name: 'Menstrual',
-      days: '1-7',
-      physiology: 'Low estrogen and progesterone levels',
-      impact: 'Drop in energy, increased fatigue, worse concentration',
-      goal: 'Maintain activity while reducing intensity. Work on technique and mobility',
-      tips: [
-        'Low energy or cramps don\'t mean skipping training, but rest is justified',
-        'Adjust intensity and training load, shorten session length',
-        'Reduce volume (fewer attempts/reps) and increase rest',
-        'Focus on technique and mobility',
-        'Sub-maximal strength training (70-90% max) if feeling good',
-      ],
-    },
-    {
-      key: 'follicular',
-      name: 'Follicular',
-      days: '8-12',
-      physiology: 'Rising estrogen, low progesterone',
-      impact: 'High energy, better recovery, greater tolerance for pain and load. Faster learning',
-      goal: 'Optimal time for intense training',
-      tips: [
-        'Increase training intensity and/or volume',
-        'Work on difficult projects and test your limits',
-        'Focus on maximum strength, hard bouldering, tough routes, power training',
-        'Monitor well-being: rising estrogen = more energy and motivation',
-      ],
-    },
-    {
-      key: 'ovulation',
-      name: 'Ovulation',
-      days: '13-16',
-      physiology: 'Peak estrogen, possible short-term increase in testosterone',
-      impact: 'Peak form possible, better dynamics and coordination. Increased ligament susceptibility',
-      goal: 'Maximize power while taking care of joints and ligaments',
-      tips: [
-        'If feeling strong, reach peak intensity',
-        'If not, choose higher volume with lower overload risk',
-        'Tackle difficult projects and dynamic moves',
-        'Long warm-up and caution, don\'t force joints',
-      ],
-    },
-    {
-      key: 'early-luteal',
-      name: 'Early Luteal',
-      days: '17-20',
-      physiology: 'High progesterone, moderate estrogen. Body temperature may be higher',
-      impact: 'Possible slight drop in power and recovery rate',
-      goal: 'Continue training by adjusting intensity. Good time for technique, strength endurance, movement control',
-      tips: [
-        'Days 17-20: High intensity, low volume. Train intensely with fewer repetitions',
-        'Days 21-24: Low intensity, high volume',
-        'Listen to your body and adjust pace',
-        'Focus on strength endurance, longer routes, technique',
-      ],
-    },
-    {
-      key: 'late-luteal',
-      name: 'Late Luteal (PMS)',
-      days: '21-28',
-      physiology: 'High progesterone, dropping estrogen',
-      impact: 'Mood swings, water retention, worse coordination and concentration',
-      goal: 'Maintain training consistency without pressure. Good time for deload, calmer climbing, repeats',
-      tips: [
-        'Stick to simple, technical movements without unnecessary tension',
-        'Reduce strength load',
-        'Focus on technique, execution, or tactics',
-        'Deep thoughts come naturally - take time to know the route',
-      ],
-    },
-  ]
+  
+  // Get phase info from translations
+  const getPhaseInfo = (key: string) => {
+    // Map phase key for translation lookup (early-luteal -> earlyLuteal, late-luteal -> lateLuteal)
+    const translationKey = key === 'early-luteal' ? 'earlyLuteal' : key === 'late-luteal' ? 'lateLuteal' : key
+    const phaseData = t(`cycle.phaseDetails.${translationKey}`)
+    
+    // If translation exists as object, parse it; otherwise use defaults
+    if (typeof phaseData === 'string') {
+      // Translation not found, use defaults
+      return null
+    }
+    return phaseData
+  }
+  
+  const phaseKeys = ['menstrual', 'follicular', 'ovulation', 'early-luteal', 'late-luteal']
+  const phaseInfo = phaseKeys.map(key => {
+    const translationKey = key === 'early-luteal' ? 'earlyLuteal' : key === 'late-luteal' ? 'lateLuteal' : key
+    return {
+      key,
+      name: t(`cycle.phaseDetails.${translationKey}.name`) || key,
+      days: t(`cycle.phaseDetails.${translationKey}.days`) || '',
+      physiology: t(`cycle.phaseDetails.${translationKey}.physiology`) || '',
+      impact: t(`cycle.phaseDetails.${translationKey}.impact`) || '',
+      goal: t(`cycle.phaseDetails.${translationKey}.goal`) || '',
+      tips: Array.isArray((t(`cycle.phaseDetails.${translationKey}.tips`) as any)) 
+        ? (t(`cycle.phaseDetails.${translationKey}.tips`) as any)
+        : []
+    }
+  })
 
   return (
     <div className="bg-uc-dark-bg rounded-2xl p-6 border border-uc-purple/20">
@@ -593,7 +566,7 @@ function TrainingCycleInsights({
                 <div>
                   <div className="text-xs font-medium text-uc-text-muted mb-1">{t('cycle.tracking.tips') || 'Tips:'}</div>
                   <ul className="list-disc list-inside space-y-1 text-uc-text-light">
-                    {phase.tips.map((tip, idx) => (
+                    {phase.tips.map((tip: string, idx: number) => (
                       <li key={idx} className="text-xs">{tip}</li>
                     ))}
                   </ul>

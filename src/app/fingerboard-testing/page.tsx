@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import FingerboardTestingProtocolForm from '@/components/FingerboardTestingProtocolForm'
 import Link from 'next/link'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
 
 export default function FingerboardTestingPage() {
   return (
@@ -21,6 +22,7 @@ export default function FingerboardTestingPage() {
 function FingerboardTestingPageContent() {
   const { t } = useLanguage()
   const confirmation = useConfirmation()
+  const { getToken } = useCsrfToken()
   const [protocols, setProtocols] = useState<FingerboardTestingProtocol[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -66,8 +68,12 @@ function FingerboardTestingPageContent() {
       async () => {
         try {
           setDeletingProtocolId(id)
+          const token = await getToken()
           const response = await fetch(`/api/fingerboard-testing-protocols/${id}`, {
             method: 'DELETE',
+            headers: {
+              'x-csrf-token': token,
+            },
           })
 
           if (response.ok) {

@@ -11,6 +11,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import RoutineForm from '@/components/RoutineForm'
 import Link from 'next/link'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
 
 export default function RoutinesPage() {
   return (
@@ -24,6 +25,7 @@ function RoutinesPageContent() {
   const { t } = useLanguage()
   const { handleError, showSuccess } = useApiError()
   const confirmation = useConfirmation()
+  const { getToken } = useCsrfToken()
   const [routines, setRoutines] = useState<Routine[]>([])
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
@@ -83,8 +85,12 @@ function RoutinesPageContent() {
       async () => {
         try {
           setDeletingRoutineId(id)
+          const token = await getToken()
           const response = await fetch(`/api/routines/${id}`, {
             method: 'DELETE',
+            headers: {
+              'x-csrf-token': token,
+            },
           })
 
           if (response.ok) {

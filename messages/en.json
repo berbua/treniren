@@ -20,6 +20,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
+    "hide": "Hide",
+    "showDetails": "Show Details",
     "today": "Today",
     "week": "Week",
     "month": "Month",
@@ -35,7 +37,6 @@
     "language": "Language",
     "confirm": "Confirm",
     "continue": "Continue",
-    "delete": "Delete",
     "select": "Select",
     "optional": "Optional",
     "required": "Required",
@@ -97,7 +98,13 @@
     "empty": "No messages yet",
     "emptyDesc": "You'll receive cycle reminders and other notifications here.",
     "clearAllConfirm": "Are you sure you want to clear all messages?",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "markAllRead": "Mark all read",
+    "clearAll": "Clear all",
+    "markRead": "Mark read",
+    "message": "message",
+    "messages_plural": "messages",
+    "unread": "unread"
   },
   "nav": {
     "home": "Home",
@@ -220,6 +227,22 @@
     "createSuccess": "Workout created successfully",
     "updateSuccess": "Workout updated successfully",
     "deleteSuccess": "Workout deleted successfully",
+    "duplicate": "Duplicate",
+    "duplicateSuccess": "Workout duplicated successfully",
+    "duplicating": "Duplicating...",
+    "duplicateDescription": "Copy this workout to a specific date",
+    "recurringTitle": "Create Recurring Workouts",
+    "recurringDescription": "Create multiple copies of this workout at regular intervals",
+    "enableRecurring": "Make this workout recurring",
+    "recurringStartDate": "Start Date",
+    "recurringEndDate": "End Date",
+    "recurringFrequency": "Frequency",
+    "frequencyDaily": "Daily",
+    "frequencyWeekly": "Weekly",
+    "frequencyEvery": "Every",
+    "frequencyDays": "days",
+    "recurringPreview": "This will create {{count}} workout",
+    "recurringPreview_plural": "This will create {{count}} workouts",
     "deleteConfirm": "Are you sure you want to delete this workout? This action cannot be undone.",
     "deleteConfirmTitle": "Delete Workout",
     "showInfo": "Show Info",
@@ -267,6 +290,7 @@
     "improvementsPlaceholder": "What could you do better? What did you learn? How can you improve?",
     "formTitle": "Add New Workout",
     "formEditTitle": "Edit Workout",
+    "formDuplicateTitle": "Duplicate Workout",
     "workoutTypeLabel": "Workout Type",
     "workoutTypes": {
       "GYM": "Gym",
@@ -327,6 +351,14 @@
     },
     "saveWorkout": "Save Workout",
     "updateWorkout": "Update Workout",
+    "incompleteData": {
+      "title": "Incomplete Data",
+      "message": "Some exercises have missing weights or reps. Do you want to save the workout with incomplete data?",
+      "incompleteItems": "Incomplete items:",
+      "andMore": "...and {{count}} more",
+      "goBack": "Go Back & Fill",
+      "saveAnyway": "Save Anyway"
+    },
     "errors": {
       "workoutTypeRequired": "Please select a workout type",
       "dateRequired": "Please select a date",
@@ -350,6 +382,8 @@
       "duplicateWorkoutSuccess": "Workout duplicated successfully!",
       "selectStartEndDates": "Please select both start and end dates",
       "validNumberOfDays": "Please enter a valid number of days (at least 1)",
+      "recurringEndBeforeStart": "End date must be after start date",
+      "recurringNoDates": "No dates generated. Please check your settings.",
       "importDummyDataConfirm": "This will import dummy data directly into your database. Continue?"
     },
     "placeholders": {
@@ -581,15 +615,17 @@
       "title": "Cycle Tracking",
       "addPeriod": "+ Add Period",
       "period": "Period",
+      "confirmedPeriod": "Confirmed Period",
+      "predictedMenstrual": "Menstrual Phase (predicted)",
       "forecast": "Forecast",
-      "dayOf": "Day {{day}} of {{length}} - {{phase}}",
       "mostInjuriesInPhase": "Most Injuries in {{phase}} Phase",
-      "injuriesCount": "{{max}} out of {{total}} injuries occurred during cycle days {{days}}.",
+      "injuriesOccurredDuringDays": "{{count}} out of {{total}} injuries occurred during cycle days {{days}}.",
+      "dayOf": "Day {{day}} of {{length}} - {{phase}}",
       "beCautious": "Be extra cautious during this phase and consider adjusting your training intensity.",
       "notEnabled": "Cycle Tracking Not Enabled",
       "notEnabledDesc": "Please enable cycle tracking in your profile settings to use this feature.",
       "loading": "Loading cycle data...",
-      "trainingInsights": "Training vs Cycle Insights",
+      "trainingInsights": "Training & Cycle Analysis",
       "physiology": "Physiology:",
       "impact": "Impact:",
       "goal": "Goal:",
@@ -608,6 +644,74 @@
       "saving": "Saving...",
       "periodUpdated": "Period updated",
       "periodAdded": "Period added"
+    },
+    "phaseDetails": {
+      "menstrual": {
+        "name": "Menstrual",
+        "days": "1-7",
+        "physiology": "Low estrogen and progesterone levels",
+        "impact": "Drop in energy, increased fatigue, worse concentration",
+        "goal": "Maintain activity while reducing intensity. Work on technique and mobility",
+        "tips": [
+          "Low energy or cramps don't mean skipping training, but rest is justified",
+          "Adjust intensity and training load, shorten session length",
+          "Reduce volume (fewer attempts/reps) and increase rest",
+          "Focus on technique and mobility",
+          "Sub-maximal strength training (70-90% max) if feeling good"
+        ]
+      },
+      "follicular": {
+        "name": "Follicular",
+        "days": "8-12",
+        "physiology": "Rising estrogen, low progesterone",
+        "impact": "High energy, better recovery, greater tolerance for pain and load. Faster learning",
+        "goal": "Optimal time for intense training",
+        "tips": [
+          "Increase training intensity and/or volume",
+          "Work on difficult projects and test your limits",
+          "Focus on maximum strength, hard bouldering, tough routes, power training",
+          "Monitor well-being: rising estrogen = more energy and motivation"
+        ]
+      },
+      "ovulation": {
+        "name": "Ovulation",
+        "days": "13-16",
+        "physiology": "Peak estrogen, possible short-term increase in testosterone",
+        "impact": "Peak form possible, better dynamics and coordination. Increased ligament susceptibility",
+        "goal": "Maximize power while taking care of joints and ligaments",
+        "tips": [
+          "If feeling strong, reach peak intensity",
+          "If not, choose higher volume with lower overload risk",
+          "Tackle difficult projects and dynamic moves",
+          "Long warm-up and caution, don't force joints"
+        ]
+      },
+      "earlyLuteal": {
+        "name": "Early Luteal",
+        "days": "17-20",
+        "physiology": "High progesterone, moderate estrogen. Body temperature may be higher",
+        "impact": "Possible slight drop in power and recovery rate",
+        "goal": "Continue training by adjusting intensity. Good time for technique, strength endurance, movement control",
+        "tips": [
+          "Days 17-20: High intensity, low volume. Train intensely with fewer repetitions",
+          "Days 21-24: Low intensity, high volume",
+          "Listen to your body and adjust pace",
+          "Focus on strength endurance, longer routes, technique"
+        ]
+      },
+      "lateLuteal": {
+        "name": "Late Luteal (PMS)",
+        "days": "21-28",
+        "physiology": "High progesterone, dropping estrogen",
+        "impact": "Mood swings, water retention, worse coordination and concentration",
+        "goal": "Maintain training consistency without pressure. Good time for deload, calmer climbing, repeats",
+        "tips": [
+          "Stick to simple, technical movements without unnecessary tension",
+          "Reduce strength load",
+          "Focus on technique, execution, or tactics",
+          "Deep thoughts come naturally - take time to know the route"
+        ]
+      }
     },
     "recommendations": {
       "menstrual": {
@@ -763,6 +867,8 @@
   "workoutTypes": {
     "gym": "Gym Training",
     "gymDescription": "Strength & conditioning",
+    "fingerboard": "Fingerboard",
+    "fingerboardDescription": "Finger strength training",
     "bouldering": "Bouldering",
     "boulderingDescription": "Power & technique",
     "circuits": "Circuits",
@@ -854,25 +960,67 @@
     "hi": "Hi",
     "there": "there",
     "subtitle": "Track your climbing journey and stay motivated",
+    "categories": {
+      "training": "Training",
+      "library": "Library",
+      "analysis": "Analysis"
+    },
     "upcomingTrips": "Upcoming Trips",
     "dayToGo": "day to go",
     "daysToGo": "days to go",
+    "dayStreak": "day streak",
+    "daysStreak": "days streak",
     "totalWorkouts": "Total Workouts",
     "thisWeek": "This Week",
     "thisMonth": "This Month",
+    "goal": "Goal",
+    "weeklyGoal": "Weekly Goal",
+    "monthlyGoal": "Monthly Goal",
     "streak": "Day Streak",
     "events": "Events",
+    "exercises": "exercises",
+    "quickLog": "Quick log",
     "recentWorkouts": "Recent Workouts",
     "recentEvents": "Recent Events",
     "viewAll": "View All",
     "noWorkouts": "No workouts yet",
+    "noWorkoutsDescription": "Start tracking your training sessions to see your progress and statistics.",
     "noEvents": "No events yet",
     "addFirst": "Add your first",
     "appStatus": "App Status",
+    "offlineMode": "Offline Mode",
+    "offlineModeDesc": "You are working offline. Changes will sync when you reconnect.",
+    "unsyncedData": "Unsynced Data",
+    "workoutsWaitingSync": "workouts waiting to sync",
+    "greatStreak": "Great streak!",
+    "keepGoing": "Keep going! Don't break your streak!",
+    "timeToTrain": "Time to train!",
+    "noWorkoutsThisWeek": "You haven't trained this week yet. Add a quick log!",
     "loadingTrips": "Loading trips...",
     "noUpcomingTrips": "No upcoming trips with countdown",
-    "noUpcomingTripsDescription": "Create a trip event and enable the \"Show countdown on homepage\" option",
+    "noUpcomingTripsDescription": "Create a trip event and enable the 'Show countdown on homepage' option",
     "addTrip": "Add Trip"
+  },
+  "goals": {
+    "title": "Training Goals",
+    "button": "Goals",
+    "description": "Set your weekly and monthly training goals",
+    "weeklyGoal": "Weekly Goal",
+    "monthlyGoal": "Monthly Goal",
+    "weeklyGoalDesc": "Goal: {{count}} workouts per week",
+    "monthlyGoalDesc": "Goal: {{count}} workouts per month",
+    "autoCalculateMonthly": "Auto-calculate monthly goal",
+    "autoCalculateMonthlyDesc": "Monthly goal = weekly goal × 4 ({{count}} workouts)",
+    "detailedGoals": "Detailed Goals (optional)",
+    "detailedGoalsDesc": "Set goals for specific workout types",
+    "detailedGoalsHint": "Detailed goals total: {{total}} (general goal: {{general}})",
+    "detailedBreakdown": "Detailed breakdown",
+    "addWorkoutType": "Add workout type",
+    "preview": "Goals Preview:",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "saveSuccess": "Goals saved successfully!",
+    "saveFailed": "Failed to save goals"
   },
   "events": {
     "title": "Events",

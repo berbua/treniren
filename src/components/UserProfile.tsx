@@ -9,6 +9,7 @@ import { useNotifications } from '@/contexts/NotificationContext';
 import { notificationService } from '@/lib/notification-service';
 import { exportAllData } from '@/lib/export-utils';
 import { generateDummyData } from '@/lib/generate-dummy-data';
+import { useCsrfToken } from '@/hooks/useCsrfToken';
 
 interface UserProfileProps {
   onClose: () => void;
@@ -21,6 +22,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   const { cycleSettings, isCycleTrackingEnabled, setCycleSettings, disableCycleTracking } = useCycle();
   const { isOnline, storageSize } = useOffline();
   const { settings: notificationSettings, updateSettings } = useNotifications();
+  const { getToken } = useCsrfToken();
   const [activeTab, setActiveTab] = useState<'profile' | 'cycle' | 'settings' | 'export'>('profile');
   const [profileData, setProfileData] = useState({
     googleName: session?.user?.name || 'Training User',
@@ -149,9 +151,13 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   const handleSaveTestReminder = async () => {
     setIsSavingTestReminder(true);
     try {
+      const token = await getToken();
       const response = await fetch('/api/test-reminder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': token,
+        },
         body: JSON.stringify({
           enabled: testReminderEnabled,
           interval: testReminderEnabled ? testReminderInterval : null,
@@ -229,9 +235,13 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
         
         // Save to database
         try {
+          const token = await getToken();
           await fetch('/api/user-profile', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-csrf-token': token,
+            },
             credentials: 'include',
             body: JSON.stringify({
               photoUrl,
@@ -1010,7 +1020,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                         {isImporting ? '⏳' : '🚀'} Import Dummy Data to DB
                       </div>
                       <div className="text-sm text-uc-text-muted">
-                        {isImporting ? 'Importing...' : 'Import generated data directly to database (one-time)'}
+                        {isImporting ? 'Importing...' : 'Import data directly to database (one-time)'}
                       </div>
                     </button>
                     

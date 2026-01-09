@@ -7,7 +7,7 @@ type Language = 'en' | 'pl'
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, string | number>) => string
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
@@ -109,12 +109,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const t = (key: string): string => {
-    const result = getNestedTranslation(translations[language], key)
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    let result = getNestedTranslation(translations[language], key)
+    
     // Debug log for translation issues (development only)
     if (process.env.NODE_ENV === 'development' && result === key && key.startsWith('strongMind.')) {
       console.log(`Translation missing for key: ${key}, language: ${language}`)
     }
+    
+    // Interpolate parameters if provided
+    if (params && typeof result === 'string') {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        result = result.replace(new RegExp(`{{${paramKey}}}`, 'g'), String(paramValue))
+      })
+    }
+    
     return result
   }
 

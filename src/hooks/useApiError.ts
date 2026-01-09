@@ -21,9 +21,13 @@ export function useApiError() {
         // Single error - show the specific message
         return error.details[0].displayMessage || error.details[0].message
       } else {
-        // Multiple errors - show summary
-        const firstError = error.details[0].displayMessage || error.details[0].message
-        return `${t('common.errors.validationFailed') || 'Please check the form and fix the errors'}: ${firstError}${error.details.length > 1 ? ` (+${error.details.length - 1} more)` : ''}`
+        // Multiple errors - show all errors in a more readable format
+        const errorMessages = error.details
+          .slice(0, 3) // Show first 3 errors
+          .map(d => d.displayMessage || d.message)
+          .join('; ')
+        const remaining = error.details.length - 3
+        return `${t('common.errors.validationFailed') || 'Please fix the following errors'}: ${errorMessages}${remaining > 0 ? ` (and ${remaining} more)` : ''}`
       }
     }
 
@@ -48,12 +52,33 @@ export function useApiError() {
     (error: unknown, customMessage?: string) => {
       const appError = parseApiError(error)
       
+      // For validation errors with details, don't override with custom message
+      // Let the validation details show through
+      if (appError instanceof ValidationError && appError.details && appError.details.length > 0) {
+        const message = formatErrorMessage(appError)
+        showError(message)
+        // Log all validation errors for debugging with full details
+        console.error('Validation Errors:', {
+          message: appError.message,
+          details: appError.details.map(d => ({
+            field: d.field,
+            message: d.message,
+            displayMessage: d.displayMessage
+          }))
+        })
+      } else {
       // Show user-friendly error message
       const message = customMessage || formatErrorMessage(appError)
       showError(message)
-      
       // Log error for debugging
-      console.error('API Error:', appError)
+        console.error('API Error:', {
+          name: appError.name,
+          code: appError.code,
+          message: appError.message,
+          userMessage: appError.userMessage,
+          statusCode: appError.statusCode
+        })
+      }
     },
     [showError, formatErrorMessage]
   )

@@ -20,6 +20,8 @@
     "delete": "Usuń",
     "edit": "Edytuj",
     "add": "Dodaj",
+    "hide": "Ukryj",
+    "showDetails": "Pokaż szczegóły",
     "today": "Dzisiaj",
     "week": "Tydzień",
     "month": "Miesiąc",
@@ -96,7 +98,13 @@
     "empty": "Brak wiadomości",
     "emptyDesc": "Tutaj otrzymasz przypomnienia o cyklu i inne powiadomienia.",
     "clearAllConfirm": "Czy na pewno chcesz usunąć wszystkie wiadomości?",
-    "lastUpdated": "Ostatnia aktualizacja"
+    "lastUpdated": "Ostatnia aktualizacja",
+    "markAllRead": "Oznacz wszystkie jako przeczytane",
+    "clearAll": "Usuń wszystkie",
+    "markRead": "Oznacz jako przeczytane",
+    "message": "wiadomość",
+    "messages_plural": "wiadomości",
+    "unread": "nieprzeczytanych"
   },
   "nav": {
     "home": "Strona główna",
@@ -219,6 +227,22 @@
     "createSuccess": "Utworzyłaś trening",
     "updateSuccess": "Zaktualizowałaś trening",
     "deleteSuccess": "Usunęłaś trening",
+    "duplicate": "Duplikuj",
+    "duplicateSuccess": "Trening został zduplikowany",
+    "duplicating": "Duplikowanie...",
+    "duplicateDescription": "Skopiuj ten trening do konkretnej daty",
+    "recurringTitle": "Utwórz powtarzające się treningi",
+    "recurringDescription": "Utwórz wiele kopii tego treningu w regularnych odstępach",
+    "enableRecurring": "Uczyń ten trening powtarzającym się",
+    "recurringStartDate": "Data rozpoczęcia",
+    "recurringEndDate": "Data zakończenia",
+    "recurringFrequency": "Częstotliwość",
+    "frequencyDaily": "Codziennie",
+    "frequencyWeekly": "Co tydzień",
+    "frequencyEvery": "Co",
+    "frequencyDays": "dni",
+    "recurringPreview": "To utworzy {{count}} trening",
+    "recurringPreview_plural": "To utworzy {{count}} treningów",
     "deleteConfirm": "Czy na pewno chcesz usunąć ten trening? Tej operacji nie można cofnąć.",
     "deleteConfirmTitle": "Usuń Trening",
     "showInfo": "Pokaż Info",
@@ -266,6 +290,7 @@
     "improvementsPlaceholder": "Co możesz zrobić lepiej? Czego się nauczyłaś? Jak możesz się poprawić?",
     "formTitle": "Dodaj Nowy Trening",
     "formEditTitle": "Edytuj Trening",
+    "formDuplicateTitle": "Duplikuj Trening",
     "workoutTypeLabel": "Rodzaj Treningu",
     "workoutTypes": {
       "GYM": "Siłownia",
@@ -326,6 +351,14 @@
     },
     "saveWorkout": "Zapisz Trening",
     "updateWorkout": "Aktualizuj Trening",
+    "incompleteData": {
+      "title": "Niekompletne Dane",
+      "message": "Niektóre ćwiczenia mają niewypełnione wagi lub powtórzenia. Czy chcesz zapisać trening z niekompletnymi danymi?",
+      "incompleteItems": "Niekompletne pozycje:",
+      "andMore": "...i jeszcze {{count}}",
+      "goBack": "Wróć i Uzupełnij",
+      "saveAnyway": "Zapisz Mimo To"
+    },
     "errors": {
       "workoutTypeRequired": "Proszę wybrać rodzaj treningu",
       "dateRequired": "Proszę wybrać datę",
@@ -349,6 +382,8 @@
       "duplicateWorkoutSuccess": "Zduplikowałaś trening pomyślnie!",
       "selectStartEndDates": "Proszę wybrać datę rozpoczęcia i zakończenia",
       "validNumberOfDays": "Proszę wprowadzić prawidłową liczbę dni (co najmniej 1)",
+      "recurringEndBeforeStart": "Data zakończenia musi być po dacie rozpoczęcia",
+      "recurringNoDates": "Nie wygenerowano dat. Proszę sprawdzić ustawienia.",
       "importDummyDataConfirm": "To zaimportuje dane testowe bezpośrednio do Twojej bazy danych. Kontynuować?"
     },
     "placeholders": {
@@ -579,15 +614,17 @@
       "title": "Śledzenie Cyklu",
       "addPeriod": "+ Dodaj Miesiączkę",
       "period": "Miesiączka",
+      "confirmedPeriod": "Potwierdzona Miesiączka",
+      "predictedMenstrual": "Faza Menstruacyjna (prognoza)",
       "forecast": "Prognoza",
-      "dayOf": "Dzień {{day}} z {{length}} - {{phase}}",
       "mostInjuriesInPhase": "Najwięcej Kontuzji w Fazie {{phase}}",
-      "injuriesCount": "{{max}} z {{total}} kontuzji wystąpiło w dniach cyklu {{days}}.",
+      "injuriesOccurredDuringDays": "{{count}} z {{total}} kontuzji wystąpiło w dniach cyklu {{days}}.",
+      "dayOf": "Dzień {{day}} z {{length}} - {{phase}}",
       "beCautious": "Bądź szczególnie ostrożna w tej fazie i rozważ dostosowanie intensywności treningu.",
       "notEnabled": "Śledzenie Cyklu Nie Jest Włączone",
       "notEnabledDesc": "Włącz śledzenie cyklu w ustawieniach profilu, aby korzystać z tej funkcji.",
       "loading": "Ładowanie danych cyklu...",
-      "trainingInsights": "Trening vs Cykl - Wglądy",
+      "trainingInsights": "Trening a Cykl - Analiza",
       "physiology": "Fizjologia:",
       "impact": "Wpływ:",
       "goal": "Cel:",
@@ -606,6 +643,74 @@
       "saving": "Zapisywanie...",
       "periodUpdated": "Miesiączka zaktualizowana",
       "periodAdded": "Miesiączka dodana"
+    },
+    "phaseDetails": {
+      "menstrual": {
+        "name": "Miesiączka",
+        "days": "1-7",
+        "physiology": "Niski poziom estrogenu i progesteronu",
+        "impact": "Spadek energii, zwiększone zmęczenie, gorsza koncentracja",
+        "goal": "Utrzymuj aktywność przy zmniejszonej intensywności. Pracuj nad techniką i mobilnością",
+        "tips": [
+          "Niska energia lub skurcze nie oznaczają rezygnacji z treningu, ale odpoczynek jest uzasadniony",
+          "Dostosuj intensywność i obciążenie treningowe, skróć długość sesji",
+          "Zmniejsz objętość (mniej prób/powtórzeń) i zwiększ odpoczynek",
+          "Skup się na technice i mobilności",
+          "Trening siłowy pod-maksymalny (70-90% max) jeśli czujesz się dobrze"
+        ]
+      },
+      "follicular": {
+        "name": "Folikularna",
+        "days": "8-12",
+        "physiology": "Rosnący estrogen, niski progesteron",
+        "impact": "Wysoka energia, lepsza regeneracja, większa tolerancja na ból i obciążenie. Szybsze uczenie się",
+        "goal": "Optymalny czas na intensywny trening",
+        "tips": [
+          "Zwiększ intensywność i/lub objętość treningu",
+          "Pracuj nad trudnymi projektami i testuj swoje granice",
+          "Skup się na maksymalnej sile, trudnym bulderowaniu, wymagających drogach, treningu mocy",
+          "Monitoruj samopoczucie: rosnący estrogen = więcej energii i motywacji"
+        ]
+      },
+      "ovulation": {
+        "name": "Owulacja",
+        "days": "13-16",
+        "physiology": "Szczytowy estrogen, możliwy krótkotrwały wzrost testosteronu",
+        "impact": "Możliwa szczytowa forma, lepsza dynamika i koordynacja. Zwiększona podatność więzadeł",
+        "goal": "Maksymalizuj moc dbając o stawy i więzadła",
+        "tips": [
+          "Jeśli czujesz się silna, osiągnij szczytową intensywność",
+          "Jeśli nie, wybierz wyższą objętość z niższym ryzykiem przeciążenia",
+          "Podejmuj trudne projekty i dynamiczne ruchy",
+          "Długa rozgrzewka i ostrożność, nie forsuj stawów"
+        ]
+      },
+      "earlyLuteal": {
+        "name": "Wczesna Lutealna",
+        "days": "17-20",
+        "physiology": "Wysoki progesteron, umiarkowany estrogen. Temperatura ciała może być wyższa",
+        "impact": "Możliwy lekki spadek mocy i tempa regeneracji",
+        "goal": "Kontynuuj trening dostosowując intensywność. Dobry czas na technikę, wytrzymałość siłową, kontrolę ruchu",
+        "tips": [
+          "Dni 17-20: Wysoka intensywność, niska objętość. Trenuj intensywnie z mniejszą liczbą powtórzeń",
+          "Dni 21-24: Niska intensywność, wysoka objętość",
+          "Słuchaj swojego ciała i dostosuj tempo",
+          "Skup się na wytrzymałości siłowej, dłuższych drogach, technice"
+        ]
+      },
+      "lateLuteal": {
+        "name": "Późna Lutealna (PMS)",
+        "days": "21-28",
+        "physiology": "Wysoki progesteron, spadający estrogen",
+        "impact": "Wahania nastroju, zatrzymywanie wody, gorsza koordynacja i koncentracja",
+        "goal": "Utrzymuj spójność treningową bez presji. Dobry czas na odciążenie, spokojniejsze wspinanie, powtórki",
+        "tips": [
+          "Trzymaj się prostych, technicznych ruchów bez niepotrzebnego napięcia",
+          "Zmniejsz obciążenie siłowe",
+          "Skup się na technice, wykonaniu lub taktyce",
+          "Głębokie przemyślenia przychodzą naturalnie - poświęć czas na poznanie drogi"
+        ]
+      }
     },
     "recommendations": {
       "menstrual": {
@@ -761,6 +866,8 @@
   "workoutTypes": {
     "gym": "Trening siłowy",
     "gymDescription": "Siła i kondycja",
+    "fingerboard": "Chwytotablica",
+    "fingerboardDescription": "Trening siły palców",
     "bouldering": "Boulder",
     "boulderingDescription": "Moc i technika",
     "circuits": "Obwody",
@@ -852,25 +959,67 @@
     "hi": "Cześć",
     "there": "tam",
     "subtitle": "Śledź swoją wspinaczkową podróż i zachowaj motywację",
+    "categories": {
+      "training": "Trening",
+      "library": "Biblioteka",
+      "analysis": "Analiza"
+    },
     "upcomingTrips": "Nadchodzące wyjazdy",
     "dayToGo": "dzień do wyjazdu",
     "daysToGo": "dni do wyjazdu",
+    "dayStreak": "dzień z rzędu",
+    "daysStreak": "dni z rzędu",
     "totalWorkouts": "Łącznie treningów",
     "thisWeek": "Ten tydzień",
     "thisMonth": "Ten miesiąc",
+    "goal": "Cel",
+    "weeklyGoal": "Cel tygodniowy",
+    "monthlyGoal": "Cel miesięczny",
     "streak": "Dniowa seria",
     "events": "Wydarzenia",
+    "exercises": "ćwiczeń",
+    "quickLog": "Szybki wpis",
     "recentWorkouts": "Ostatnie treningi",
     "recentEvents": "Ostatnie wydarzenia",
     "viewAll": "Zobacz wszystkie",
     "noWorkouts": "Brak treningów",
+    "noWorkoutsDescription": "Zacznij śledzić swoje sesje treningowe, aby zobaczyć postępy i statystyki.",
     "noEvents": "Brak wydarzeń",
     "addFirst": "Dodaj pierwszy",
     "appStatus": "Status aplikacji",
+    "offlineMode": "Tryb offline",
+    "offlineModeDesc": "Pracujesz offline. Zmiany zsynchronizują się po ponownym połączeniu.",
+    "unsyncedData": "Niezsynchronizowane dane",
+    "workoutsWaitingSync": "treningów oczekuje na synchronizację",
+    "greatStreak": "Świetna passa!",
+    "keepGoing": "Nie przerywaj swojego streaku!",
+    "timeToTrain": "Czas na trening!",
+    "noWorkoutsThisWeek": "Nie miałaś jeszcze treningu w tym tygodniu. Dodaj szybki wpis!",
     "loadingTrips": "Ładowanie wyjazdów...",
     "noUpcomingTrips": "Brak nadchodzących wyjazdów z odliczaniem",
     "noUpcomingTripsDescription": "Utwórz wydarzenie wyjazdu i włącz opcję \"Pokaż odliczanie na stronie głównej\"",
     "addTrip": "Dodaj Wyjazd"
+  },
+  "goals": {
+    "title": "Cele Treningowe",
+    "button": "Cele",
+    "description": "Ustaw swoje cele tygodniowe i miesięczne",
+    "weeklyGoal": "Cel tygodniowy",
+    "monthlyGoal": "Cel miesięczny",
+    "weeklyGoalDesc": "Cel: {{count}} treningi tygodniowo",
+    "monthlyGoalDesc": "Cel: {{count}} treningi miesięcznie",
+    "autoCalculateMonthly": "Automatycznie przelicz cel miesięczny",
+    "autoCalculateMonthlyDesc": "Cel miesięczny = cel tygodniowy × 4 ({{count}} treningów)",
+    "detailedGoals": "Cele szczegółowe (opcjonalne)",
+    "detailedGoalsDesc": "Ustaw cele dla konkretnych typów treningów",
+    "detailedGoalsHint": "Suma celów szczegółowych: {{total}} (cel ogólny: {{general}})",
+    "detailedBreakdown": "Rozkład szczegółowy",
+    "addWorkoutType": "Dodaj typ treningu",
+    "preview": "Podgląd celów:",
+    "weekly": "Tygodniowy",
+    "monthly": "Miesięczny",
+    "saveSuccess": "Cele zostały zapisane!",
+    "saveFailed": "Nie udało się zapisać celów"
   },
   "events": {
     "title": "Wydarzenia",

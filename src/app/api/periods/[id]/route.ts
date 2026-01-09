@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const securityResponse = await applySecurity(request, { csrf: false })
+    const securityResponse = await applySecurity(request, { csrf: false, rateLimit: false })
     if (securityResponse) return securityResponse
 
     const user = await requireAuth(request)

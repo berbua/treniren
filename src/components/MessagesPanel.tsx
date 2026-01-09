@@ -169,7 +169,7 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
                 onClick={handleMarkAllAsRead}
                 className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
               >
-                Mark all read
+                {t('messages.markAllRead') || 'Mark all read'}
               </button>
             )}
             {messages.length > 0 && (
@@ -177,7 +177,7 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
                 onClick={handleClearAll}
                 className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
               >
-                Clear all
+                {t('messages.clearAll') || 'Clear all'}
               </button>
             )}
             <button
@@ -228,7 +228,7 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
                               onClick={() => handleMarkAsRead(message.id)}
                               className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400"
                             >
-                              Mark read
+                              {t('messages.markRead') || 'Mark read'}
                             </button>
                           )}
                         </div>
@@ -256,8 +256,8 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
         <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700">
           <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
             <span>
-              {messages.length} {messages.length === 1 ? 'message' : 'messages'}
-              {unreadCount > 0 && ` • ${unreadCount} unread`}
+              {messages.length} {messages.length === 1 ? t('messages.message') || 'message' : t('messages.messages_plural') || 'messages'}
+              {unreadCount > 0 && ` • ${unreadCount} ${t('messages.unread') || 'unread'}`}
             </span>
             <span>
               {t('messages.lastUpdated') || 'Last updated'}: {new Date().toLocaleTimeString()}

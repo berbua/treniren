@@ -50,6 +50,7 @@ interface EnhancedWorkoutFormProps {
   availableExercises?: Exercise[];
   onCreateExercise?: (name: string, category?: string, defaultUnit?: string) => Promise<Exercise>;
   defaultDate?: string; // Optional default date to pre-fill
+  isDuplicating?: boolean; // Indicates if this is a duplication (not editing)
 }
 
 // Workout types will be generated dynamically with translations
@@ -73,17 +74,27 @@ const getTrainingVolumes = (t: (key: string) => string): { value: TrainingVolume
 ];
 
 
-export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate }: EnhancedWorkoutFormProps) {
+export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate, isDuplicating = false }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t } = useLanguage();
 
   // Set current date on client side to prevent hydration mismatch
+  // Also handle duplication: when defaultDate is provided, use it even if initialData exists
   useEffect(() => {
-    if (typeof window !== 'undefined' && !initialData?.startTime) {
+    if (typeof window !== 'undefined') {
+      if (defaultDate) {
+        // When duplicating, always use defaultDate
       setFormData(prev => ({
         ...prev,
-        date: defaultDate || new Date().toISOString().slice(0, 10)
+          date: defaultDate
+        }))
+      } else if (!initialData?.startTime) {
+        // When creating new workout, use today's date
+        setFormData(prev => ({
+          ...prev,
+          date: new Date().toISOString().slice(0, 10)
       }))
+      }
     }
   }, [initialData?.startTime, defaultDate])
 
@@ -178,9 +189,10 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   
   const [formData, setFormData] = useState({
     type: initialData?.type || 'GYM',
-    date: initialData?.startTime 
+    // When duplicating (defaultDate provided), use defaultDate instead of initialData date
+    date: defaultDate || (initialData?.startTime 
       ? new Date(initialData.startTime).toISOString().slice(0, 10)
-      : defaultDate || '2024-01-15', // Use defaultDate if provided, otherwise use default
+      : '2024-01-15'), // Use defaultDate if provided (for duplication), otherwise use initialData date or default
     trainingVolume: initialData?.trainingVolume || 'TR3',
     focusLevel: initialData?.focusLevel || 3,
     notes: initialData?.notes || '',
@@ -200,6 +212,14 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   const [isGratitudeExpanded, setIsGratitudeExpanded] = useState(false);
   const [isCycleExpanded, setIsCycleExpanded] = useState(false);
   const [isGoalsExpanded, setIsGoalsExpanded] = useState(false);
+  const [isRecurringExpanded, setIsRecurringExpanded] = useState(false);
+  const [recurringSettings, setRecurringSettings] = useState({
+    enabled: false,
+    startDate: '',
+    endDate: '',
+    frequency: 'weekly' as 'daily' | 'weekly' | 'custom',
+    customDays: 7,
+  });
   const [processGoals, setProcessGoals] = useState<Array<{
     id: string
     timeframeValue: string
@@ -220,6 +240,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   }>>([]);
   const [selectedProcessGoalIds, setSelectedProcessGoalIds] = useState<Set<string>>(new Set());
   const [selectedProjectGoalIds, setSelectedProjectGoalIds] = useState<Set<string>>(new Set());
+  const [showIncompleteDataModal, setShowIncompleteDataModal] = useState(false);
+  const [incompleteExercises, setIncompleteExercises] = useState<string[]>([]);
 
   // Calculate cycle info for the selected date
   const cycleInfoForSelectedDate = useMemo(() => {
@@ -228,6 +250,50 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     const selectedDate = new Date(formData.date);
     return calculateCycleInfo(cycleSettings, selectedDate);
   }, [formData.date, cycleSettings, isCycleTrackingEnabled]);
+
+  // Check for incomplete data (missing weights/reps in exercises)
+  const checkIncompleteData = (): { hasIncomplete: boolean; incompleteList: string[] } => {
+    const incomplete: string[] = [];
+    
+    // Check gym exercises
+    if (formData.exercises && formData.exercises.length > 0) {
+      formData.exercises.forEach((exercise, exIdx) => {
+        if (exercise.sets && exercise.sets.length > 0) {
+          exercise.sets.forEach((set, setIdx) => {
+            const hasWeight = set.weight !== null && set.weight !== undefined && set.weight > 0;
+            const hasReps = set.reps !== null && set.reps !== undefined && set.reps > 0;
+            
+            // If neither weight nor reps are filled, consider it incomplete
+            if (!hasWeight && !hasReps) {
+              const exerciseName = exercise.exerciseName || `Exercise ${exIdx + 1}`;
+              const entry = `${exerciseName} (Set ${setIdx + 1})`;
+              if (!incomplete.includes(entry)) {
+                incomplete.push(entry);
+              }
+            }
+          });
+        }
+      });
+    }
+    
+    // Check fingerboard hangs
+    if (formData.fingerboardHangs && formData.fingerboardHangs.length > 0) {
+      formData.fingerboardHangs.forEach((hang, hangIdx) => {
+        const hasTime = hang.timeSeconds !== null && hang.timeSeconds !== undefined && hang.timeSeconds > 0;
+        const hasReps = hang.reps !== null && hang.reps !== undefined && hang.reps > 0;
+        
+        // If neither time nor reps are filled, consider it incomplete
+        if (!hasTime && !hasReps) {
+          incomplete.push(`Hang ${hangIdx + 1}`);
+        }
+      });
+    }
+    
+    return {
+      hasIncomplete: incomplete.length > 0,
+      incompleteList: incomplete
+    };
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -253,6 +319,15 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     
     if (!validateForm() || isSubmitting) {
       return;
+    }
+
+    // Check for incomplete data (before submitting)
+    const { hasIncomplete, incompleteList } = checkIncompleteData();
+    if (hasIncomplete && !showIncompleteDataModal) {
+      // Show modal to confirm
+      setIncompleteExercises(incompleteList);
+      setShowIncompleteDataModal(true);
+      return; // Stop here and wait for user decision
     }
 
     // Prepare details object - preserve existing details and merge with new data
@@ -290,7 +365,10 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       mentalState,
       sector: formData.sector,
       mentalPracticeType: formData.mentalPracticeType,
-      timeOfDay: formData.timeOfDay,
+      // Only include timeOfDay for MENTAL_PRACTICE workouts and if it has values
+      timeOfDay: formData.type === 'MENTAL_PRACTICE' && formData.timeOfDay && formData.timeOfDay.length > 0 
+        ? formData.timeOfDay 
+        : undefined,
       tagIds: formData.tagIds,
       exercises: formData.exercises.length > 0 ? formData.exercises : undefined,
       fingerboardHangs: formData.fingerboardHangs.length > 0 ? formData.fingerboardHangs : undefined,
@@ -299,11 +377,107 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       details,
     };
 
-    await onSubmit(workoutData);
+    // Handle recurring workouts if enabled (only for new workouts, not editing)
+    if (!initialData && recurringSettings.enabled && recurringSettings.startDate && recurringSettings.endDate) {
+      // Validate recurring settings
+      if (new Date(recurringSettings.startDate) > new Date(recurringSettings.endDate)) {
+        setErrors({ ...errors, recurring: t('workouts.errors.recurringEndBeforeStart') || 'End date must be after start date' })
+        return
+      }
+
+      const dates = calculateRecurringDates(
+        recurringSettings.startDate,
+        recurringSettings.endDate,
+        recurringSettings.frequency,
+        recurringSettings.customDays
+      )
+
+      if (dates.length === 0) {
+        setErrors({ ...errors, recurring: t('workouts.errors.recurringNoDates') || 'No dates generated. Please check your settings.' })
+        return
+      }
+      
+      // Create workouts for each date
+      for (const date of dates) {
+        await onSubmit({ ...workoutData, date })
+      }
+    } else {
+      await onSubmit(workoutData)
+    }
   };
 
+  // Calculate recurring dates
+  const calculateRecurringDates = (startDateStr: string, endDateStr: string, frequency: string, customDays: number): string[] => {
+    const startDate = new Date(startDateStr)
+    const endDate = new Date(endDateStr)
+    const dates: string[] = []
+
+    if (frequency === 'daily') {
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        dates.push(d.toISOString().slice(0, 10))
+      }
+    } else if (frequency === 'weekly') {
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
+        dates.push(d.toISOString().slice(0, 10))
+      }
+    } else {
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + customDays)) {
+        dates.push(d.toISOString().slice(0, 10))
+      }
+    }
+
+    return dates
+  }
+
+  // Calculate preview count for recurring workouts
+  const recurringPreviewCount = useMemo(() => {
+    if (!recurringSettings.enabled || !recurringSettings.startDate || !recurringSettings.endDate) {
+      return 0
+    }
+    return calculateRecurringDates(
+      recurringSettings.startDate,
+      recurringSettings.endDate,
+      recurringSettings.frequency,
+      recurringSettings.customDays
+    ).length
+  }, [recurringSettings])
+
+  // Initialize recurring settings when form loads (only for new workouts)
+  useEffect(() => {
+    if (!initialData && typeof window !== 'undefined') {
+      setRecurringSettings({
+        enabled: false,
+        startDate: formData.date,
+        endDate: '',
+        frequency: 'weekly',
+        customDays: 7,
+      })
+    }
+  }, [initialData])
+
+  // Update start date when workout date changes
+  useEffect(() => {
+    if (!initialData && recurringSettings.startDate) {
+      setRecurringSettings(prev => ({ ...prev, startDate: formData.date }))
+    }
+  }, [formData.date, initialData])
+
   const updateFormData = (field: string, value: string | number | object | null) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // Clear timeOfDay when workout type changes away from MENTAL_PRACTICE
+      if (field === 'type' && value !== 'MENTAL_PRACTICE') {
+        updated.timeOfDay = [];
+      }
+      
+      // Clear mentalPracticeType when workout type changes away from MENTAL_PRACTICE
+      if (field === 'type' && value !== 'MENTAL_PRACTICE') {
+        updated.mentalPracticeType = null as any;
+      }
+      
+      return updated;
+    });
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -317,7 +491,9 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-uc-purple/20">
           <h2 className="text-2xl font-bold text-uc-text-light">
-            {initialData 
+            {isDuplicating
+              ? `📋 ${t('workouts.formDuplicateTitle') || 'Duplicate Workout'}`
+              : initialData 
               ? `✏️ ${t('workouts.formEditTitle') || 'Edit Workout'}` 
               : `➕ ${t('workouts.formTitle') || 'Add New Workout'}`}
           </h2>
@@ -829,6 +1005,172 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               />
             )}
 
+            {/* Recurring Workouts Section - Only when creating (not editing) */}
+            {!initialData && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                <button
+                  type="button"
+                  onClick={() => setIsRecurringExpanded(!isRecurringExpanded)}
+                  className="w-full flex items-center justify-between text-left p-4"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">🔁</span>
+                    <div>
+                      <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-100">
+                        {t('workouts.recurringTitle') || 'Create Recurring Workouts'}
+                      </h3>
+                      <p className="text-sm text-purple-700 dark:text-purple-300">
+                        {t('workouts.recurringDescription') || 'Create multiple copies of this workout at regular intervals'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-purple-600 dark:text-purple-400">
+                    {isRecurringExpanded ? '▼' : '▶'}
+                  </span>
+                </button>
+
+                {isRecurringExpanded && (
+                  <div className="p-4 pt-0 space-y-4">
+                    {/* Enable Recurring Toggle */}
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={recurringSettings.enabled}
+                        onChange={(e) => setRecurringSettings({ ...recurringSettings, enabled: e.target.checked })}
+                        className="w-5 h-5 text-purple-600 border-purple-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                        {t('workouts.enableRecurring') || 'Make this workout recurring'}
+                      </span>
+                    </label>
+
+                    {recurringSettings.enabled && (
+                      <>
+                        {/* Start Date */}
+                        <div>
+                          <label className="block text-sm font-medium text-purple-900 dark:text-purple-100 mb-2">
+                            {t('workouts.recurringStartDate') || 'Start Date'} *
+                          </label>
+                          <input
+                            type="date"
+                            value={recurringSettings.startDate}
+                            onChange={(e) => {
+                              setRecurringSettings({ ...recurringSettings, startDate: e.target.value })
+                              // Clear error when user changes date
+                              if (errors.recurring) {
+                                setErrors(prev => {
+                                  const newErrors = { ...prev }
+                                  delete newErrors.recurring
+                                  return newErrors
+                                })
+                              }
+                            }}
+                            min={formData.date}
+                            className="w-full bg-white dark:bg-gray-700 border border-purple-300 dark:border-purple-600 rounded-lg px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+
+                        {/* End Date */}
+                        <div>
+                          <label className="block text-sm font-medium text-purple-900 dark:text-purple-100 mb-2">
+                            {t('workouts.recurringEndDate') || 'End Date'} *
+                          </label>
+                          <input
+                            type="date"
+                            value={recurringSettings.endDate}
+                            onChange={(e) => {
+                              setRecurringSettings({ ...recurringSettings, endDate: e.target.value })
+                              // Clear error when user changes date
+                              if (errors.recurring) {
+                                setErrors(prev => {
+                                  const newErrors = { ...prev }
+                                  delete newErrors.recurring
+                                  return newErrors
+                                })
+                              }
+                            }}
+                            min={recurringSettings.startDate || formData.date}
+                            className="w-full bg-white dark:bg-gray-700 border border-purple-300 dark:border-purple-600 rounded-lg px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+
+                        {/* Frequency */}
+                        <div>
+                          <label className="block text-sm font-medium text-purple-900 dark:text-purple-100 mb-2">
+                            {t('workouts.recurringFrequency') || 'Frequency'} *
+                          </label>
+                          <div className="space-y-2">
+                            <label className="flex items-center space-x-2 p-3 bg-white/50 dark:bg-gray-700/50 rounded-lg border border-purple-200 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-400 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="recurringFrequency"
+                                value="daily"
+                                checked={recurringSettings.frequency === 'daily'}
+                                onChange={(e) => setRecurringSettings({ ...recurringSettings, frequency: 'daily' })}
+                                className="text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-purple-900 dark:text-purple-100">{t('workouts.frequencyDaily') || 'Daily'}</span>
+                            </label>
+                            <label className="flex items-center space-x-2 p-3 bg-white/50 dark:bg-gray-700/50 rounded-lg border border-purple-200 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-400 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="recurringFrequency"
+                                value="weekly"
+                                checked={recurringSettings.frequency === 'weekly'}
+                                onChange={(e) => setRecurringSettings({ ...recurringSettings, frequency: 'weekly' })}
+                                className="text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-purple-900 dark:text-purple-100">{t('workouts.frequencyWeekly') || 'Weekly'}</span>
+                            </label>
+                            <label className="flex items-center space-x-2 p-3 bg-white/50 dark:bg-gray-700/50 rounded-lg border border-purple-200 dark:border-purple-600 hover:border-purple-400 dark:hover:border-purple-400 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="recurringFrequency"
+                                value="custom"
+                                checked={recurringSettings.frequency === 'custom'}
+                                onChange={(e) => setRecurringSettings({ ...recurringSettings, frequency: 'custom' })}
+                                className="text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-purple-900 dark:text-purple-100">{t('workouts.frequencyEvery') || 'Every'}</span>
+                              <input
+                                type="number"
+                                min="1"
+                                value={recurringSettings.customDays}
+                                onChange={(e) => setRecurringSettings({ ...recurringSettings, customDays: parseInt(e.target.value) || 1 })}
+                                disabled={recurringSettings.frequency !== 'custom'}
+                                className="w-20 bg-white dark:bg-gray-700 border border-purple-300 dark:border-purple-600 rounded-lg px-2 py-1 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:opacity-50"
+                              />
+                              <span className="text-purple-900 dark:text-purple-100">{t('workouts.frequencyDays') || 'days'}</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Error Display */}
+                        {errors.recurring && (
+                          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-300 dark:border-red-600">
+                            <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                              {errors.recurring}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Preview */}
+                        {recurringPreviewCount > 0 && !errors.recurring && (
+                          <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg border border-purple-300 dark:border-purple-600">
+                            <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                              {recurringPreviewCount === 1 
+                                ? (t('workouts.recurringPreview') || `This will create ${recurringPreviewCount} workout`).replace('{{count}}', recurringPreviewCount.toString())
+                                : (t('workouts.recurringPreview_plural') || `This will create ${recurringPreviewCount} workouts`).replace('{{count}}', recurringPreviewCount.toString())}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
           </form>
         </div>
 
@@ -863,6 +1205,74 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
           </button>
         </div>
       </div>
+
+      {/* Incomplete Data Confirmation Modal */}
+      {showIncompleteDataModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-orange-300 dark:border-orange-600">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                <span className="mr-2">⚠️</span>
+                {t('workouts.incompleteData.title') || 'Incomplete Data'}
+              </h3>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-4">
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                {t('workouts.incompleteData.message') || 'Some exercises have missing weights or reps. Do you want to save the workout with incomplete data?'}
+              </p>
+              
+              {/* List of incomplete exercises */}
+              {incompleteExercises.length > 0 && (
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 mb-4 border border-orange-200 dark:border-orange-700">
+                  <p className="text-sm font-medium text-orange-900 dark:text-orange-200 mb-2">
+                    {t('workouts.incompleteData.incompleteItems') || 'Incomplete items:'}
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-orange-800 dark:text-orange-300 space-y-1">
+                    {incompleteExercises.slice(0, 5).map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                    {incompleteExercises.length > 5 && (
+                      <li className="text-orange-600 dark:text-orange-400">
+                        {t('workouts.incompleteData.andMore') || `...and ${incompleteExercises.length - 5} more`}
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowIncompleteDataModal(false);
+                  setIncompleteExercises([]);
+                }}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl border border-gray-300 dark:border-gray-600"
+              >
+                {t('workouts.incompleteData.goBack') || 'Go Back & Fill'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowIncompleteDataModal(false);
+                  setIncompleteExercises([]);
+                  // Re-submit the form (this time modal won't show)
+                  const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                  handleSubmit(fakeEvent);
+                }}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-colors shadow-lg"
+              >
+                {t('workouts.incompleteData.saveAnyway') || 'Save Anyway'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

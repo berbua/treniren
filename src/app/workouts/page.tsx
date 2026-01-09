@@ -8,7 +8,8 @@ import { Event, EventFormData } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useApiError } from '@/hooks/useApiError'
 import { useConfirmation } from '@/hooks/useConfirmation'
-import { extractApiError } from '@/lib/errors'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { extractApiError, ValidationError } from '@/lib/errors'
 import AuthGuard from '@/components/AuthGuard'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import { QuickLogData } from '@/components/QuickLogModal'
@@ -19,6 +20,7 @@ const EnhancedWorkoutForm = dynamic(() => import('@/components/EnhancedWorkoutFo
 const EventCard = dynamic(() => import('@/components/EventCard'), { ssr: false })
 const EventForm = dynamic(() => import('@/components/EventForm'), { ssr: false })
 const QuickLogModal = dynamic(() => import('@/components/QuickLogModal'), { ssr: false })
+const GoalsConfigurator = dynamic(() => import('@/components/GoalsConfigurator'), { ssr: false })
 
 export default function WorkoutsPage() {
   return (
@@ -32,6 +34,7 @@ function WorkoutsPageContent() {
   const { t } = useLanguage()
   const { handleError, showSuccess } = useApiError()
   const confirmation = useConfirmation()
+  const { getToken } = useCsrfToken()
   
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [events, setEvents] = useState<Event[]>([])
@@ -49,6 +52,8 @@ function WorkoutsPageContent() {
   const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
   const [deletingWorkoutId, setDeletingWorkoutId] = useState<string | null>(null)
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
+  const [showGoalsConfigurator, setShowGoalsConfigurator] = useState(false)
+  const [userProfile, setUserProfile] = useState<any>(null)
   
   // Pagination state
   const [workoutsPage, setWorkoutsPage] = useState(1)
@@ -64,19 +69,27 @@ function WorkoutsPageContent() {
       if (response.ok) {
         const data = await response.json()
         if (data.workouts && data.pagination) {
+          // Ensure workouts is always an array
+          const workoutsArray = Array.isArray(data.workouts) ? data.workouts : []
           if (append) {
-            setWorkouts(prev => [...prev, ...data.workouts])
+            setWorkouts(prev => [...prev, ...workoutsArray])
           } else {
-            setWorkouts(data.workouts)
+            setWorkouts(workoutsArray)
           }
           setWorkoutsPagination(data.pagination)
         } else {
           // Fallback for old API format
           setWorkouts(Array.isArray(data) ? data : [])
         }
+      } else {
+        // If response is not ok, ensure workouts is still an array
+        setWorkouts([])
+        console.error('Failed to fetch workouts:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching workouts:', error)
+      // Ensure workouts is always an array even on error
+      setWorkouts([])
     }
   }
 
@@ -87,19 +100,27 @@ function WorkoutsPageContent() {
       if (response.ok) {
         const data = await response.json()
         if (data.events && data.pagination) {
+          // Ensure events is always an array
+          const eventsArray = Array.isArray(data.events) ? data.events : []
           if (append) {
-            setEvents(prev => [...prev, ...data.events])
+            setEvents(prev => [...prev, ...eventsArray])
           } else {
-            setEvents(data.events)
+            setEvents(eventsArray)
           }
           setEventsPagination(data.pagination)
         } else {
           // Fallback for old API format
           setEvents(Array.isArray(data) ? data : [])
         }
+      } else {
+        // If response is not ok, ensure events is still an array
+        setEvents([])
+        console.error('Failed to fetch events:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching events:', error)
+      // Ensure events is always an array even on error
+      setEvents([])
     }
   }
 
@@ -129,11 +150,60 @@ function WorkoutsPageContent() {
     }
   }
 
+  // Fetch user profile to get goals
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/user-profile')
+      if (response.ok) {
+        const data = await response.json()
+        setUserProfile(data)
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    }
+  }
+
+  // Save goals
+  const handleSaveGoals = async (goals: { 
+    weeklyGoal: number
+    monthlyGoal: number | null
+    useAutoMonthly: boolean
+    workoutTypeGoals: { type: string; count: number }[]
+  }) => {
+    const csrfToken = await getToken()
+    const response = await fetch('/api/user-profile', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken,
+      },
+      body: JSON.stringify({
+        weeklyWorkoutGoal: goals.weeklyGoal,
+        monthlyWorkoutGoal: goals.monthlyGoal,
+        useAutoMonthlyGoal: goals.useAutoMonthly,
+        workoutTypeGoals: goals.workoutTypeGoals,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to save goals')
+    }
+
+    const updatedProfile = await response.json()
+    setUserProfile(updatedProfile)
+    showSuccess(t('goals.saveSuccess') || 'Cele zostały zapisane!')
+  }
+
   // Create exercise
   const handleCreateExercise = async (name: string, category?: string, defaultUnit?: string): Promise<Exercise> => {
+    const csrfToken = await getToken()
     const response = await fetch('/api/exercises', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken,
+      },
+      credentials: 'include',
       body: JSON.stringify({ name, category, defaultUnit: defaultUnit || 'kg' }),
     })
 
@@ -153,20 +223,29 @@ function WorkoutsPageContent() {
     
     setIsSubmitting(true)
     try {
+      const csrfToken = await getToken()
       const response = await fetch('/api/workouts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
         credentials: 'include',
         body: JSON.stringify(workoutData),
       })
 
       if (response.ok) {
-        showSuccess(t('workouts.created') || 'Workout created successfully')
+        showSuccess(t('workouts.createSuccess') || 'Workout created successfully')
         await fetchWorkouts(1, false) // Reset to first page
         setShowForm(false)
       } else {
         const error = await extractApiError(response)
+        // Don't override validation errors with custom message - let the error details show
+        if (error instanceof ValidationError && error.details && error.details.length > 0) {
+          handleError(error)
+        } else {
         handleError(error, 'Failed to create workout')
+        }
       }
     } catch (error) {
       handleError(error, 'Failed to create workout')
@@ -181,14 +260,19 @@ function WorkoutsPageContent() {
     
     setIsSubmitting(true)
     try {
+      const csrfToken = await getToken()
       const response = await fetch(`/api/workouts/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        credentials: 'include',
         body: JSON.stringify(workoutData),
       })
 
       if (response.ok) {
-        showSuccess(t('workouts.updated') || 'Workout updated successfully')
+        showSuccess(t('workouts.updateSuccess') || 'Workout updated successfully')
         await fetchWorkouts(workoutsPage, false) // Refresh current page
         setShowForm(false)
         setEditingWorkout(null)
@@ -214,14 +298,19 @@ function WorkoutsPageContent() {
       async () => {
         try {
           setDeletingWorkoutId(id)
+          const csrfToken = await getToken()
           const response = await fetch(`/api/workouts/${id}`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-csrf-token': csrfToken,
+            },
+            credentials: 'include',
             body: JSON.stringify({}),
           })
 
           if (response.ok) {
-            showSuccess(t('workouts.deleted') || 'Workout deleted successfully')
+            showSuccess(t('workouts.deleteSuccess') || 'Workout deleted successfully')
             await fetchWorkouts(workoutsPage, false) // Refresh current page
           } else {
             const error = await extractApiError(response)
@@ -247,7 +336,7 @@ function WorkoutsPageContent() {
 
   // Handle edit
   const handleEdit = (id: string) => {
-    const workout = workouts.find(w => w.id === id)
+    const workout = Array.isArray(workouts) ? workouts.find(w => w.id === id) : undefined
     setEditingWorkout(workout || null)
     setShowForm(true)
   }
@@ -287,9 +376,14 @@ function WorkoutsPageContent() {
     
     setIsSubmitting(true)
     try {
+      const csrfToken = await getToken()
       const response = await fetch('/api/events', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        credentials: 'include',
         body: JSON.stringify(eventData),
       })
 
@@ -309,9 +403,14 @@ function WorkoutsPageContent() {
     
     setIsSubmitting(true)
     try {
+      const csrfToken = await getToken()
       const response = await fetch(`/api/events/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        credentials: 'include',
         body: JSON.stringify(eventData),
       })
 
@@ -337,8 +436,14 @@ function WorkoutsPageContent() {
       async () => {
         try {
           setDeletingEventId(id)
+          const csrfToken = await getToken()
           const response = await fetch(`/api/events/${id}`, {
             method: 'DELETE',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-csrf-token': csrfToken,
+            },
+            credentials: 'include',
           })
 
           if (response.ok) {
@@ -367,10 +472,12 @@ function WorkoutsPageContent() {
 
   const handleCycleDayUpdate = async (eventId: string, cycleDay: number | null, manuallySet: boolean) => {
     try {
+      const csrfToken = await getToken()
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -391,7 +498,7 @@ function WorkoutsPageContent() {
   }
 
   const handleEventEdit = (id: string) => {
-    const event = events.find(e => e.id === id)
+    const event = Array.isArray(events) ? events.find(e => e.id === id) : undefined
     setEditingEvent(event || null)
     setShowForm(true)
   }
@@ -399,11 +506,14 @@ function WorkoutsPageContent() {
   // Create new tag
   const handleCreateTag = async (name: string, color: string) => {
     try {
+      const csrfToken = await getToken()
       const response = await fetch('/api/tags', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
         },
+        credentials: 'include',
         body: JSON.stringify({
           name,
           color,
@@ -420,7 +530,13 @@ function WorkoutsPageContent() {
 
   useEffect(() => {
     const fetchAllData = async () => {
-      await Promise.all([fetchWorkouts(1, false), fetchEvents(1, false), fetchTags(), fetchExercises()])
+      await Promise.all([
+        fetchWorkouts(1, false), 
+        fetchEvents(1, false), 
+        fetchTags(), 
+        fetchExercises(),
+        fetchUserProfile()
+      ])
       setLoading(false)
     }
     fetchAllData()
@@ -443,6 +559,16 @@ function WorkoutsPageContent() {
             </p>
           </div>
           <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+            <button
+              onClick={() => setShowGoalsConfigurator(true)}
+              className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-uc-dark-bg/50 hover:bg-uc-dark-bg transition-colors border border-uc-mustard/30"
+              title={t('goals.title') || 'Training Goals'}
+            >
+              <span className="text-lg">🎯</span>
+              <span className="text-sm font-medium text-uc-text-light hidden sm:inline">
+                {t('goals.button') || 'Cele'}
+              </span>
+            </button>
             <button
               onClick={() => setShowInfo(!showInfo)}
               className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-uc-dark-bg/50 hover:bg-uc-dark-bg transition-colors border border-uc-purple/20"
@@ -578,7 +704,7 @@ function WorkoutsPageContent() {
                 : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
             }`}
           >
-            🏋️ {t('nav.workouts')} ({workouts.length})
+            🏋️ {t('nav.workouts')} ({Array.isArray(workouts) ? workouts.length : 0})
           </button>
           <button
             onClick={() => setActiveTab('events')}
@@ -588,13 +714,13 @@ function WorkoutsPageContent() {
                 : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
             }`}
           >
-            📅 {t('events.title')} ({events.length})
+            📅 {t('events.title')} ({Array.isArray(events) ? events.length : 0})
           </button>
         </div>
 
         {/* Content based on active tab */}
         {activeTab === 'workouts' ? (
-          workouts.length === 0 ? (
+          !Array.isArray(workouts) || workouts.length === 0 ? (
             <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
               <div className="text-6xl mb-4">🏋️‍♀️</div>
               <h2 className="text-xl font-semibold text-uc-text-light mb-2">
@@ -622,7 +748,7 @@ function WorkoutsPageContent() {
           ) : (
             <>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {workouts.map((workout) => (
+                {Array.isArray(workouts) && workouts.map((workout) => (
                   <WorkoutCard
                     key={workout.id}
                     workout={workout}
@@ -665,7 +791,7 @@ function WorkoutsPageContent() {
             </>
           )
         ) : (
-          events.length === 0 ? (
+          !Array.isArray(events) || events.length === 0 ? (
             <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
               <div className="text-6xl mb-4">📅</div>
               <h2 className="text-xl font-semibold text-uc-text-light mb-2">
@@ -693,7 +819,7 @@ function WorkoutsPageContent() {
           ) : (
             <>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {events.map((event) => (
+                {Array.isArray(events) && events.map((event) => (
                   <EventCard
                     key={event.id}
                     event={event}
@@ -822,9 +948,13 @@ function WorkoutsPageContent() {
             onSubmit={async (data: QuickLogData) => {
               setIsSubmittingQuickLog(true)
               try {
+                const csrfToken = await getToken()
                 const response = await fetch('/api/workouts', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'x-csrf-token': csrfToken,
+                  },
                   credentials: 'include',
                   body: JSON.stringify({
                     type: data.type,
@@ -870,6 +1000,18 @@ function WorkoutsPageContent() {
           variant={confirmation.variant}
           isLoading={deletingWorkoutId !== null || deletingEventId !== null}
         />
+
+        {/* Goals Configurator */}
+        {showGoalsConfigurator && (
+          <GoalsConfigurator
+            onClose={() => setShowGoalsConfigurator(false)}
+            initialWeeklyGoal={userProfile?.weeklyWorkoutGoal || 3}
+            initialMonthlyGoal={userProfile?.monthlyWorkoutGoal || null}
+            initialUseAutoMonthly={userProfile?.useAutoMonthlyGoal !== false}
+            initialWorkoutTypeGoals={userProfile?.workoutTypeGoals || []}
+            onSave={handleSaveGoals}
+          />
+        )}
       </div>
     </div>
   )

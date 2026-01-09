@@ -5,6 +5,7 @@ import { useCycle } from '@/contexts/CycleContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useApiError } from '@/hooks/useApiError'
 import { useConfirmation } from '@/hooks/useConfirmation'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { extractApiError } from '@/lib/errors'
 import { calculateCycleInfo } from '@/lib/cycle-utils'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
@@ -160,6 +161,7 @@ function CalendarPageContent() {
   const { t } = useLanguage()
   const { handleError, showSuccess } = useApiError()
   const confirmation = useConfirmation()
+  const { getToken } = useCsrfToken()
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('week')
@@ -185,16 +187,6 @@ function CalendarPageContent() {
   const [availableTags, setAvailableTags] = useState<Tag[]>([])
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showRecurringModal, setShowRecurringModal] = useState(false)
-  const [recurringWorkout, setRecurringWorkout] = useState<Workout | null>(null)
-  const [recurringFormData, setRecurringFormData] = useState({
-    mode: 'recurring' as 'recurring' | 'duplicate',
-    startDate: new Date().toISOString().slice(0, 10),
-    endDate: '',
-    frequency: 'weekly' as 'daily' | 'weekly' | 'custom',
-    customDays: 7,
-    duplicateDate: new Date().toISOString().slice(0, 10),
-  })
   const [showQuickLog, setShowQuickLog] = useState(false)
   const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
 
@@ -281,6 +273,7 @@ function CalendarPageContent() {
 
   // Get workouts for a specific date
   const getWorkoutsForDate = (date: Date) => {
+    if (!Array.isArray(workouts)) return []
     const dateStr = date.toISOString().slice(0, 10)
     let filteredWorkouts = workouts.filter(workout => workout.startTime.startsWith(dateStr))
     
@@ -433,7 +426,8 @@ function CalendarPageContent() {
       if (response.ok) {
         const fullWorkout = await response.json()
         setDuplicatingWorkout(fullWorkout)
-        setSelectedDate(new Date(workout.startTime))
+        // Set selected date to today (user can change it in the form)
+        setSelectedDate(new Date())
         setShowWorkoutForm(true)
       } else {
         alert(t('workouts.errors.loadWorkoutDetailsFailed') || 'Failed to load workout details')
@@ -444,220 +438,18 @@ function CalendarPageContent() {
     }
   }
 
-  const handleRecurringWorkout = (workout: Workout, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setRecurringWorkout(workout)
-    setRecurringFormData({
-      mode: 'recurring',
-      startDate: new Date().toISOString().slice(0, 10),
-      endDate: '',
-      frequency: 'weekly',
-      customDays: 7,
-      duplicateDate: new Date().toISOString().slice(0, 10),
-    })
-    setShowRecurringModal(true)
-  }
 
-  const handleRecurringSubmit = async () => {
-    if (!recurringWorkout) return
-
-    if (recurringFormData.mode === 'duplicate') {
-      // Duplicate to single date
-      if (!recurringFormData.duplicateDate) {
-        alert(t('workouts.errors.selectDate') || 'Please select a date')
-        return
-      }
-
-      setIsSubmitting(true)
-      try {
-        // Fetch full workout data including exercises and hangs
-        const workoutResponse = await fetch(`/api/workouts/${recurringWorkout.id}`)
-        if (!workoutResponse.ok) {
-          alert('Failed to fetch workout details')
-          return
-        }
-        const fullWorkout = await workoutResponse.json()
-
-        const workoutData: WorkoutFormData = {
-          type: fullWorkout.type,
-          date: recurringFormData.duplicateDate,
-          trainingVolume: fullWorkout.trainingVolume,
-          notes: fullWorkout.notes,
-          tagIds: fullWorkout.workoutTags?.map((wt: any) => wt.tagId) || [],
-          exercises: fullWorkout.workoutExercises?.map((we: any) => ({
-            exerciseId: we.exercise.id,
-            exerciseName: we.exercise.name,
-            order: we.order,
-            sets: we.sets.map((s: any) => ({
-              reps: s.reps || undefined,
-              weight: s.weight || undefined,
-              rir: s.rir || undefined,
-              notes: s.notes || undefined,
-            })),
-          })) || undefined,
-          fingerboardHangs: fullWorkout.fingerboardHangs?.map((fh: any) => ({
-            order: fh.order,
-            handType: fh.handType,
-            gripType: fh.gripType,
-            crimpSize: fh.crimpSize || undefined,
-            customDescription: fh.customDescription || undefined,
-            load: fh.load || undefined,
-            unload: fh.unload || undefined,
-            reps: fh.reps || undefined,
-            timeSeconds: fh.timeSeconds || undefined,
-            notes: fh.notes || undefined,
-          })) || undefined,
-        }
-
-        const response = await fetch('/api/workouts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(workoutData),
-        })
-
-        if (response.ok) {
-          alert(t('workouts.errors.duplicateWorkoutSuccess') || 'Workout duplicated successfully!')
-          // Refresh workouts
-          const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' })
-          if (workoutsResponse.ok) {
-            const workoutsData = await workoutsResponse.json()
-            setWorkouts(workoutsData)
-          }
-          setShowRecurringModal(false)
-          setRecurringWorkout(null)
-        } else {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-          alert(`Failed to duplicate workout: ${errorData.error || 'Unknown error'}`)
-        }
-      } catch (error) {
-        console.error('Error duplicating workout:', error)
-        alert(`Error: ${error instanceof Error ? error.message : 'Failed to duplicate workout'}`)
-      } finally {
-        setIsSubmitting(false)
-      }
-    } else {
-      // Recurring workouts
-      if (!recurringFormData.startDate || !recurringFormData.endDate) {
-        alert(t('workouts.errors.selectStartEndDates') || 'Please select both start and end dates')
-        return
-      }
-
-      if (recurringFormData.frequency === 'custom' && (!recurringFormData.customDays || recurringFormData.customDays < 1)) {
-        alert(t('workouts.errors.validNumberOfDays') || 'Please enter a valid number of days (at least 1)')
-        return
-      }
-
-      const frequency = recurringFormData.frequency === 'daily' 
-        ? 'daily' 
-        : recurringFormData.frequency === 'weekly' 
-        ? 'weekly' 
-        : recurringFormData.customDays.toString()
-
-      createRecurringWorkouts(recurringWorkout, recurringFormData.startDate, recurringFormData.endDate, frequency)
-      setShowRecurringModal(false)
-      setRecurringWorkout(null)
-    }
-  }
-
-  const createRecurringWorkouts = async (templateWorkout: Workout, startDateStr: string, endDateStr: string, frequency: string) => {
-    const startDate = new Date(startDateStr)
-    const endDate = new Date(endDateStr)
-    const dates: Date[] = []
-
-    if (frequency === 'daily') {
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        dates.push(new Date(d))
-      }
-    } else if (frequency === 'weekly') {
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
-        dates.push(new Date(d))
-      }
-    } else {
-      const days = parseInt(frequency)
-      if (!isNaN(days)) {
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + days)) {
-          dates.push(new Date(d))
-        }
-      }
-    }
-
-    setIsSubmitting(true)
-    try {
-      // Fetch full workout data including exercises and hangs
-      const workoutResponse = await fetch(`/api/workouts/${templateWorkout.id}`)
-      if (!workoutResponse.ok) {
-        alert('Failed to fetch workout details')
-        return
-      }
-      const fullWorkout = await workoutResponse.json()
-
-      // Create workouts for each date
-      const promises = dates.map(async (date) => {
-        const workoutData: WorkoutFormData = {
-          type: fullWorkout.type,
-          date: date.toISOString().slice(0, 10),
-          trainingVolume: fullWorkout.trainingVolume,
-          notes: fullWorkout.notes,
-          tagIds: fullWorkout.workoutTags?.map((wt: any) => wt.tagId) || [],
-          exercises: fullWorkout.workoutExercises?.map((we: any) => ({
-            exerciseId: we.exercise.id,
-            exerciseName: we.exercise.name,
-            order: we.order,
-            sets: we.sets.map((s: any) => ({
-              reps: s.reps || undefined,
-              weight: s.weight || undefined,
-              rir: s.rir || undefined,
-              notes: s.notes || undefined,
-            })),
-          })) || undefined,
-          fingerboardHangs: fullWorkout.fingerboardHangs?.map((fh: any) => ({
-            order: fh.order,
-            handType: fh.handType,
-            gripType: fh.gripType,
-            crimpSize: fh.crimpSize || undefined,
-            customDescription: fh.customDescription || undefined,
-            load: fh.load || undefined,
-            unload: fh.unload || undefined,
-            reps: fh.reps || undefined,
-            timeSeconds: fh.timeSeconds || undefined,
-            notes: fh.notes || undefined,
-          })) || undefined,
-        }
-
-        const response = await fetch('/api/workouts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(workoutData),
-        })
-
-        if (!response.ok) {
-          throw new Error(`Failed to create workout for ${date.toISOString().slice(0, 10)}`)
-        }
-      })
-
-      await Promise.all(promises)
-      alert(`Successfully created ${dates.length} recurring workouts!`)
-      // Refresh workouts
-      const workoutsResponse = await fetch('/api/workouts')
-      if (workoutsResponse.ok) {
-        const workoutsData = await workoutsResponse.json()
-        setWorkouts(workoutsData)
-      }
-    } catch (error) {
-      console.error('Error creating recurring workouts:', error)
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to create recurring workouts'}`)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   const handleCreateTag = async (name: string, color: string) => {
     try {
+      const csrfToken = await getToken()
       const response = await fetch('/api/tags', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        credentials: 'include',
         body: JSON.stringify({ name, color }),
       })
       if (response.ok) {
@@ -671,9 +463,14 @@ function CalendarPageContent() {
   }
 
   const handleCreateExercise = async (name: string, category?: string, defaultUnit?: string): Promise<Exercise> => {
+    const csrfToken = await getToken()
     const response = await fetch('/api/exercises', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken,
+      },
+      credentials: 'include',
       body: JSON.stringify({ name, category, defaultUnit: defaultUnit || 'kg' }),
     })
     if (response.ok) {
@@ -692,9 +489,14 @@ function CalendarPageContent() {
       const url = isEditing ? `/api/workouts/${editingWorkout.id}` : '/api/workouts'
       const method = isEditing ? 'PUT' : 'POST'
 
+      const csrfToken = await getToken()
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        credentials: 'include',
         body: JSON.stringify(workoutData),
       })
 
@@ -743,9 +545,13 @@ function CalendarPageContent() {
       const url = isEditing ? `/api/events/${editingEvent.id}` : '/api/events'
       const method = isEditing ? 'PUT' : 'POST'
 
+      const csrfToken = await getToken()
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
         credentials: 'include',
         body: JSON.stringify(eventData),
       })
@@ -1073,11 +879,14 @@ function CalendarPageContent() {
                       <div
                         key={workout.id}
                         className={`${viewMode === 'week' ? 'text-sm md:text-xs p-2 md:p-1' : 'text-xs p-1'} rounded ${getTrainingTypeColor(workout.type)} text-white ${viewMode === 'week' ? '' : 'truncate'} relative`}
-                        title={`${getTrainingTypeEmoji(workout.type)} ${workout.type} - ${workout.notes || 'No notes'}`}
+                        title={`${getTrainingTypeEmoji(workout.type)} ${workout.type}${workout.sector ? ` - ${workout.sector}` : ''}${workout.notes ? ` - ${workout.notes}` : ''}`}
                       >
                         <div className="flex items-center justify-between gap-1">
                           <span className="flex-1 truncate flex items-center gap-1">
                             {getTrainingTypeEmoji(workout.type)} {getTrainingTypeLabel(workout.type, t)}
+                            {workout.sector && viewMode === 'month' && (
+                              <span className="opacity-80">({workout.sector})</span>
+                            )}
                             {workout.details && (workout.details as any)?.quickLog && (
                               <span className="text-xs bg-yellow-500/30 text-yellow-200 px-1 rounded" title={t('quickLog.quickLogBadge') || 'Quick'}>
                                 ⚡
@@ -1098,12 +907,12 @@ function CalendarPageContent() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleRecurringWorkout(workout, e)
+                                handleDuplicateWorkout(workout, e)
                               }}
                               className="text-xs bg-white/20 hover:bg-white/30 active:bg-white/40 rounded px-1.5 py-0.5 transition-colors"
-                              title="Duplicate or create recurring workouts"
+                              title={t('workouts.duplicate') || 'Duplicate workout'}
                             >
-                              🔁
+                              📋
                             </button>
                           </div>
                         </div>
@@ -1112,6 +921,11 @@ function CalendarPageContent() {
                             {workout.type === 'GYM' && workout.details && (workout.details as any)?.routineVariation && (
                               <div className="text-xs opacity-90 mt-1 truncate">
                                 📦 {(workout.details as any).routineVariation.routineName} - {(workout.details as any).routineVariation.variationName}
+                              </div>
+                            )}
+                            {workout.sector && (
+                              <div className="text-xs opacity-90 mt-1 truncate">
+                                🏔️ {t('workouts.sector') || 'Sector'}: {workout.sector}
                               </div>
                             )}
                             {workout.notes && (
@@ -1333,7 +1147,8 @@ function CalendarPageContent() {
             isSubmitting={isSubmitting}
             availableExercises={availableExercises}
             onCreateExercise={handleCreateExercise}
-            defaultDate={!editingWorkout && !duplicatingWorkout && selectedDate ? selectedDate.toISOString().slice(0, 10) : undefined}
+            defaultDate={duplicatingWorkout && selectedDate ? selectedDate.toISOString().slice(0, 10) : (!editingWorkout && selectedDate ? selectedDate.toISOString().slice(0, 10) : undefined)}
+            isDuplicating={!!duplicatingWorkout}
           />
         )}
 
@@ -1357,9 +1172,13 @@ function CalendarPageContent() {
           onSubmit={async (data: QuickLogData) => {
             setIsSubmittingQuickLog(true)
             try {
+              const csrfToken = await getToken()
               const response = await fetch('/api/workouts', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'x-csrf-token': csrfToken,
+                },
                 credentials: 'include',
                 body: JSON.stringify({
                   type: data.type,
@@ -1381,7 +1200,10 @@ function CalendarPageContent() {
                 const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' })
                 if (workoutsResponse.ok) {
                   const updatedWorkouts = await workoutsResponse.json()
-                  setWorkouts(updatedWorkouts)
+                  const workoutsData = Array.isArray(updatedWorkouts) 
+                    ? updatedWorkouts 
+                    : (updatedWorkouts.workouts || [])
+                  setWorkouts(workoutsData)
                 }
               } else {
                 const error = await response.json()
@@ -1398,179 +1220,6 @@ function CalendarPageContent() {
           isSubmitting={isSubmittingQuickLog}
         />
 
-        {/* Recurring/Duplicate Workout Modal */}
-        {showRecurringModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-md">
-              <div className="p-6 border-b border-uc-purple/20">
-                <h2 className="text-2xl font-bold text-uc-text-light mb-2">
-                  {recurringFormData.mode === 'duplicate' ? '📋 Duplicate Workout' : '🔁 Create Recurring Workouts'}
-                </h2>
-                <p className="text-sm text-uc-text-muted">
-                  {recurringFormData.mode === 'duplicate' 
-                    ? 'Copy this workout to a specific date'
-                    : 'Create multiple copies of this workout at regular intervals'}
-                </p>
-              </div>
-
-              <div className="p-6 space-y-4">
-                {/* Mode Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    Action *
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setRecurringFormData({ ...recurringFormData, mode: 'duplicate' })}
-                      className={`p-3 rounded-lg border-2 text-center transition-all ${
-                        recurringFormData.mode === 'duplicate'
-                          ? 'border-uc-purple bg-uc-purple/20'
-                          : 'border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black/50'
-                      }`}
-                    >
-                      <div className="text-lg mb-1">📋</div>
-                      <div className="text-sm font-medium text-uc-text-light">Duplicate to Date</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRecurringFormData({ ...recurringFormData, mode: 'recurring' })}
-                      className={`p-3 rounded-lg border-2 text-center transition-all ${
-                        recurringFormData.mode === 'recurring'
-                          ? 'border-uc-purple bg-uc-purple/20'
-                          : 'border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black/50'
-                      }`}
-                    >
-                      <div className="text-lg mb-1">🔁</div>
-                      <div className="text-sm font-medium text-uc-text-light">Recurring</div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Duplicate Mode - Single Date */}
-                {recurringFormData.mode === 'duplicate' && (
-                  <div>
-                    <label className="block text-sm font-medium text-uc-text-light mb-2">
-                      Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={recurringFormData.duplicateDate}
-                      onChange={(e) => setRecurringFormData({ ...recurringFormData, duplicateDate: e.target.value })}
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                    />
-                  </div>
-                )}
-
-                {/* Recurring Mode - Start/End Dates and Frequency */}
-                {recurringFormData.mode === 'recurring' && (
-                  <>
-                    {/* Start Date */}
-                    <div>
-                      <label className="block text-sm font-medium text-uc-text-light mb-2">
-                        Start Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={recurringFormData.startDate}
-                        onChange={(e) => setRecurringFormData({ ...recurringFormData, startDate: e.target.value })}
-                        className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                      />
-                    </div>
-
-                    {/* End Date */}
-                    <div>
-                      <label className="block text-sm font-medium text-uc-text-light mb-2">
-                        End Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={recurringFormData.endDate}
-                        onChange={(e) => setRecurringFormData({ ...recurringFormData, endDate: e.target.value })}
-                        min={recurringFormData.startDate}
-                        className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                      />
-                    </div>
-
-                    {/* Frequency */}
-                    <div>
-                      <label className="block text-sm font-medium text-uc-text-light mb-2">
-                        Frequency *
-                      </label>
-                      <div className="space-y-2">
-                        <label className="flex items-center space-x-2 p-3 bg-uc-black/50 rounded-lg border border-uc-purple/20 hover:border-uc-purple/40 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="frequency"
-                            value="daily"
-                            checked={recurringFormData.frequency === 'daily'}
-                            onChange={(e) => setRecurringFormData({ ...recurringFormData, frequency: 'daily' })}
-                            className="text-uc-purple focus:ring-uc-purple"
-                          />
-                          <span className="text-uc-text-light">Daily</span>
-                        </label>
-                        <label className="flex items-center space-x-2 p-3 bg-uc-black/50 rounded-lg border border-uc-purple/20 hover:border-uc-purple/40 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="frequency"
-                            value="weekly"
-                            checked={recurringFormData.frequency === 'weekly'}
-                            onChange={(e) => setRecurringFormData({ ...recurringFormData, frequency: 'weekly' })}
-                            className="text-uc-purple focus:ring-uc-purple"
-                          />
-                          <span className="text-uc-text-light">Weekly</span>
-                        </label>
-                        <label className="flex items-center space-x-2 p-3 bg-uc-black/50 rounded-lg border border-uc-purple/20 hover:border-uc-purple/40 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="frequency"
-                            value="custom"
-                            checked={recurringFormData.frequency === 'custom'}
-                            onChange={(e) => setRecurringFormData({ ...recurringFormData, frequency: 'custom' })}
-                            className="text-uc-purple focus:ring-uc-purple"
-                          />
-                          <span className="text-uc-text-light">Every</span>
-                          <input
-                            type="number"
-                            min="1"
-                            value={recurringFormData.customDays}
-                            onChange={(e) => setRecurringFormData({ ...recurringFormData, customDays: parseInt(e.target.value) || 1 })}
-                            disabled={recurringFormData.frequency !== 'custom'}
-                            className="w-20 bg-uc-black border border-uc-purple/30 rounded-lg px-2 py-1 text-uc-text-light focus:outline-none focus:border-uc-purple disabled:opacity-50"
-                          />
-                          <span className="text-uc-text-light">days</span>
-                        </label>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-3 p-6 border-t border-uc-purple/20">
-                <button
-                  onClick={() => {
-                    setShowRecurringModal(false)
-                    setRecurringWorkout(null)
-                  }}
-                  className="px-4 py-2 text-uc-text-muted hover:text-uc-text-light transition-colors bg-uc-dark-bg/50 hover:bg-uc-dark-bg rounded-xl border border-uc-purple/20"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleRecurringSubmit}
-                  disabled={isSubmitting}
-                  className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
-                >
-                  {isSubmitting 
-                    ? 'Creating...' 
-                    : recurringFormData.mode === 'duplicate' 
-                    ? 'Duplicate Workout' 
-                    : 'Create Recurring Workouts'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Confirmation Dialog */}
         <ConfirmationDialog

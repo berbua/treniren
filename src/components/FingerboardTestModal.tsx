@@ -8,6 +8,7 @@ import FingerboardTestingProtocolForm from './FingerboardTestingProtocolForm'
 import PerformTestModal from './PerformTestModal'
 import FingerboardTestChart from './FingerboardTestChart'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
 
 interface FingerboardTestModalProps {
   onClose: () => void
@@ -17,6 +18,7 @@ type ModalStep = 'select' | 'create' | 'perform' | 'results'
 
 export default function FingerboardTestModal({ onClose }: FingerboardTestModalProps) {
   const { t } = useLanguage()
+  const { getToken } = useCsrfToken()
   const [step, setStep] = useState<ModalStep>('select')
   const [testingProtocols, setTestingProtocols] = useState<FingerboardTestingProtocol[]>([])
   const [selectedProtocol, setSelectedProtocol] = useState<FingerboardTestingProtocol | null>(null)
@@ -76,9 +78,13 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
   const handleSubmitTestingProtocol = async (protocolData: any) => {
     setIsSubmitting(true)
     try {
+      const token = await getToken()
       const response = await fetch('/api/fingerboard-testing-protocols', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': token,
+        },
         body: JSON.stringify(protocolData),
       })
 
@@ -139,9 +145,13 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
         })),
       }
 
+      const token = await getToken()
       const response = await fetch('/api/fingerboard-testing-protocols', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': token,
+        },
         body: JSON.stringify(clonedData),
       })
 

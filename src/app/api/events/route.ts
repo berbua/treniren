@@ -8,8 +8,8 @@ import { applySecurity } from '@/lib/api-security'
 // GET /api/events - Get all events for a user (with pagination support)
 export async function GET(request: NextRequest) {
   try {
-    // Apply security middleware
-    const securityResponse = await applySecurity(request, { csrf: false })
+    // Apply security middleware - disable rate limiting for GET requests (they're safe and frequently used)
+    const securityResponse = await applySecurity(request, { csrf: false, rateLimit: false })
     if (securityResponse) return securityResponse
 
     const user = await requireAuth(request)
@@ -58,8 +58,14 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching events:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Error details:', { errorMessage, errorStack })
     return NextResponse.json(
-      { error: 'Failed to fetch events' },
+      { 
+        error: 'Failed to fetch events',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }

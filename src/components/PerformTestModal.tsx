@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestResultFormData } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
 
 interface PerformTestModalProps {
@@ -19,6 +20,7 @@ export default function PerformTestModal({
   onProtocolUpdated,
 }: PerformTestModalProps) {
   const { t } = useLanguage()
+  const { getToken } = useCsrfToken()
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [results, setResults] = useState<Record<string, any>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -103,9 +105,14 @@ export default function PerformTestModal({
         notes: results[hang.id!]?.notes || undefined,
       }))
 
+      const csrfToken = await getToken()
       const response = await fetch('/api/fingerboard-test-results', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        credentials: 'include',
         body: JSON.stringify({
           protocolId: protocol.id,
           date,

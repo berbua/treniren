@@ -7,10 +7,12 @@ import { useConfirmation } from '@/hooks/useConfirmation'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import EventForm from '@/components/EventForm'
 import EventCard from '@/components/EventCard'
+import { useCsrfToken } from '@/hooks/useCsrfToken'
 
 export default function EventsPage() {
   const { t } = useLanguage()
   const confirmation = useConfirmation()
+  const { getToken } = useCsrfToken()
   const [events, setEvents] = useState<Event[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -50,10 +52,12 @@ export default function EventsPage() {
   const handleCreateEvent = async (eventData: EventFormData) => {
     setIsSubmitting(true)
     try {
+      const token = await getToken()
       const response = await fetch('/api/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': token,
         },
         credentials: 'include',
         body: JSON.stringify(eventData),
@@ -78,10 +82,12 @@ export default function EventsPage() {
 
     setIsSubmitting(true)
     try {
+      const token = await getToken()
       const response = await fetch(`/api/events/${editingEvent.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': token,
         },
         body: JSON.stringify(eventData),
       })
@@ -112,8 +118,12 @@ export default function EventsPage() {
       async () => {
         try {
           setDeletingEventId(eventId)
+          const token = await getToken()
           const response = await fetch(`/api/events/${eventId}`, {
             method: 'DELETE',
+            headers: {
+              'x-csrf-token': token,
+            },
           })
 
           if (response.ok) {
@@ -174,10 +184,12 @@ export default function EventsPage() {
 
   const handleCreateTag = async (name: string, color: string) => {
     try {
+      const token = await getToken()
       const response = await fetch('/api/tags', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': token,
         },
         body: JSON.stringify({ name, color }),
       })

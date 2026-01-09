@@ -1,0 +1,439 @@
+
+> treniren-app@1.0.0 build
+> next build --turbopack
+
+   ▲ Next.js 15.5.9 (Turbopack)
+   - Environments: .env.local, .env.production, .env
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 459ms
+ ✓ Compiled successfully in 2.7s
+   Linting and checking validity of types ...
+
+./src/app/api/csrf-token/route.ts
+5:27  Warning: 'request' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/events/[id]/route.ts
+254:11  Warning: 'event' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+275:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/exercises/[id]/progression/route.ts
+2:10  Warning: 'prisma' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/export/data/route.ts
+179:17  Warning: 'workoutExercises' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+179:35  Warning: 'workoutTags' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+179:48  Warning: 'fingerboardHangs' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+179:66  Warning: 'plan' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+229:17  Warning: 'eventTags' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+252:17  Warning: 'routineExercises' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+252:35  Warning: 'variations' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+280:17  Warning: 'hangs' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+302:17  Warning: 'testHangs' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+322:17  Warning: 'protocol' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+322:27  Warning: 'testHang' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+336:17  Warning: 'planTags' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/fingerboard-protocols/[id]/route.ts
+90:13  Warning: 'updatedProtocol' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+106:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/fingerboard-protocols/route.ts
+72:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/fingerboard-test-results/route.ts
+23:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+66:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+138:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/fingerboard-testing-protocols/[id]/route.ts
+95:13  Warning: 'updatedProtocol' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+111:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/fingerboard-testing-protocols/route.ts
+77:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/import/dummy-data/route.ts
+92:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+94:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+104:13  Warning: 'workoutId' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+107:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+110:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+116:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+117:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+120:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+121:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+124:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+126:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+129:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+133:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+142:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+145:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+147:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+148:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+168:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+181:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+184:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+186:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+201:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+205:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+208:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+232:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+233:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+259:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+260:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+299:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+300:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/periods/route.ts
+13:7  Warning: 'UpdatePeriodSchema' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/push/send/route.ts
+76:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/routines/[id]/route.ts
+105:13  Warning: 'updatedRoutine' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+124:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+136:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/routines/route.ts
+87:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+94:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/tags/route.ts
+5:10  Warning: 'applySecurity' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/workouts/[id]/route.ts
+176:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/workouts/route.ts
+210:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+214:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+225:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/auth/forgot-password/page.tsx
+35:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/auth/reset-password/page.tsx
+93:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/auth/signin/page.tsx
+37:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+48:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/auth/signup/page.tsx
+89:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+100:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/calendar/page.tsx
+117:7  Warning: 'getEventTypeLabel' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+117:45  Warning: 't' is defined but never used.  @typescript-eslint/no-unused-vars
+164:11  Warning: 'getToken' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+395:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+403:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+798:21  Warning: 'dayWorkouts' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+799:21  Warning: 'dayEvents' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+867:69  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+898:95  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+900:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+900:115  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/cycle/page.tsx
+8:30  Warning: 'getPhaseColor' is defined but never used.  @typescript-eslint/no-unused-vars
+8:45  Warning: 'CyclePhase' is defined but never used.  @typescript-eslint/no-unused-vars
+8:96  Warning: 'getPhaseStartDay' is defined but never used.  @typescript-eslint/no-unused-vars
+8:114  Warning: 'getPhaseEndDay' is defined but never used.  @typescript-eslint/no-unused-vars
+462:3  Warning: 'cycleSettings' is defined but never used.  @typescript-eslint/no-unused-vars
+463:3  Warning: 'trainingStatsByPhase' is defined but never used.  @typescript-eslint/no-unused-vars
+467:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+468:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/events/page.tsx
+148:15  Warning: 'updatedEvent' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/exercises/[id]/page.tsx
+43:9  Warning: 'router' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+51:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+60:6  Warning: React Hook useEffect has a missing dependency: 'fetchExerciseData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+66:6  Warning: React Hook useEffect has missing dependencies: 'fetchProgressionData' and 'quickStats'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+92:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+93:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+96:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+96:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+371:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/fingerboard-protocols/page.tsx
+12:8  Warning: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
+90:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/fingerboard-testing/[id]/page.tsx
+6:61  Warning: 'FingerboardTestHang' is defined but never used.  @typescript-eslint/no-unused-vars
+37:6  Warning: React Hook useEffect has missing dependencies: 'fetchProtocol' and 'fetchTestResults'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+186:27  Warning: 'hang' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/fingerboard-testing/page.tsx
+88:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+193:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+193:82  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/profile/page.tsx
+19:30  Warning: 'photoUrl' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/routines/page.tsx
+13:8  Warning: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
+106:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/strong-mind/page.tsx
+12:7  Warning: 'StatisticsContent' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+125:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+126:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+126:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/workouts/page.tsx
+490:6  Warning: React Hook useEffect has missing dependencies: 'fetchEvents' and 'fetchWorkouts'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/EnhancedWorkoutForm.tsx
+131:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+134:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+146:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+154:92  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+158:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+170:91  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+279:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+296:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+300:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+304:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+401:6  Warning: React Hook useEffect has a missing dependency: 'formData.date'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setRecurringSettings' needs the current value of 'formData.date'.  react-hooks/exhaustive-deps
+408:6  Warning: React Hook useEffect has a missing dependency: 'recurringSettings.startDate'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+421:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1054:44  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+1065:44  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+1076:44  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/EventCard.tsx
+104:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/EventForm.tsx
+4:48  Warning: 'TripClimbingType' is defined but never used.  @typescript-eslint/no-unused-vars
+8:8  Warning: 'TagSelector' is defined but never used.  @typescript-eslint/no-unused-vars
+29:70  Warning: 'availableTags' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+29:90  Warning: 'onCreateTag' is defined but never used.  @typescript-eslint/no-unused-vars
+63:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+73:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/ExerciseLibrary.tsx
+86:10  Warning: 'loadingStats' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+95:6  Warning: React Hook useEffect has a missing dependency: 'quickStats'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+321:3  Warning: 'isDeleting' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/ExerciseProgressionChart.tsx
+30:12  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+82:6  Warning: React Hook useEffect has a missing dependency: 'fetchProgressionData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/FingerboardHangTracker.tsx
+6:68  Warning: 'getHandTypeLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/FingerboardProtocolForm.tsx
+6:68  Warning: 'getHandTypeLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/FingerboardTestChart.tsx
+6:10  Warning: 'LoadingSpinner' is defined but never used.  @typescript-eslint/no-unused-vars
+26:12  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/FingerboardTestModal.tsx
+36:6  Warning: React Hook useEffect has a missing dependency: 'fetchTestResults'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+76:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+264:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+267:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+353:33  Warning: 'hang' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/FingerboardTestingProtocolForm.tsx
+6:68  Warning: 'getHandTypeLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/GoalProgressDisplay.tsx
+22:57  Warning: 'goalName' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/PerformTestModal.tsx
+4:38  Warning: 'FingerboardTestResultFormData' is defined but never used.  @typescript-eslint/no-unused-vars
+23:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+32:73  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/ProcessGoalsSection.tsx
+4:10  Warning: 'ProcessGoalProgress' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/QuickLogModal.tsx
+44:6  Warning: React Hook useEffect has a missing dependency: 'protocols.length'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/RoutineForm.tsx
+7:10  Warning: 'LoadingSpinner' is defined but never used.  @typescript-eslint/no-unused-vars
+133:9  Warning: 'handleAddExercise' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/StatisticsContent.tsx
+9:10  Warning: 'calculateCycleInfo' is defined but never used.  @typescript-eslint/no-unused-vars
+203:6  Warning: React Hook useMemo has an unnecessary dependency: 't'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+606:43  Warning: 'phaseStartDay' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/StrongMindSection.tsx
+41:10  Warning: 'isClient' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/UserMenu.tsx
+4:22  Warning: 'signOut' is defined but never used.  @typescript-eslint/no-unused-vars
+102:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/WorkoutCard.tsx
+23:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+85:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+147:75  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+151:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+151:97  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/WorkoutExerciseTracker.tsx
+34:10  Warning: 'selectedRoutine' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+45:6  Warning: React Hook useEffect has a missing dependency: 'quickStats'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/contexts/LanguageContext.tsx
+87:10  Warning: 'isClient' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/hooks/useFetchCache.ts
+95:6  Warning: React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/lib/api-security.ts
+23:5  Warning: 'requireAuth' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/export-utils.ts
+13:9  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+14:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:14  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+19:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+21:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:9  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+45:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+67:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+67:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+74:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+109:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+119:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+136:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+145:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+224:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/fetch-with-retry.ts
+76:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/generate-dummy-data.ts
+48:68  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/progression-service.ts
+167:9  Warning: 'totalReps' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+168:9  Warning: 'totalRIR' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+169:9  Warning: 'rirCount' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+251:11  Warning: 'maxReps' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/sanitize.ts
+129:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+130:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+136:72  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+138:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+142:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/lib/test-reminder-notifications.ts
+79:9  Warning: 'unitText' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/types/next-auth.d.ts
+1:8  Warning: 'NextAuth' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/types/workout.ts
+58:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+❌ Service workers not supported in this browser
+   Generating static pages (0/43) ...
+   Generating static pages (10/43) 
+❌ Service workers not supported in this browser
+❌ Service workers not supported in this browser
+   Generating static pages (21/43) 
+   Generating static pages (32/43) 
+ ✓ Generating static pages (43/43)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                     Size  First Load JS
+┌ ○ /                                        2.63 kB         175 kB
+├ ○ /_not-found                                  0 B         172 kB
+├ ƒ /api/auth/[...nextauth]                      0 B            0 B
+├ ƒ /api/auth/forgot-password                    0 B            0 B
+├ ƒ /api/auth/register                           0 B            0 B
+├ ƒ /api/auth/reset-password                     0 B            0 B
+├ ƒ /api/csrf-token                              0 B            0 B
+├ ƒ /api/events                                  0 B            0 B
+├ ƒ /api/events/[id]                             0 B            0 B
+├ ƒ /api/exercises                               0 B            0 B
+├ ƒ /api/exercises/[id]                          0 B            0 B
+├ ƒ /api/exercises/[id]/progression              0 B            0 B
+├ ƒ /api/exercises/[id]/quick-stats              0 B            0 B
+├ ƒ /api/export/data                             0 B            0 B
+├ ƒ /api/fingerboard-protocols                   0 B            0 B
+├ ƒ /api/fingerboard-protocols/[id]              0 B            0 B
+├ ƒ /api/fingerboard-test-results                0 B            0 B
+├ ƒ /api/fingerboard-testing-protocols           0 B            0 B
+├ ƒ /api/fingerboard-testing-protocols/[id]      0 B            0 B
+├ ƒ /api/import/dummy-data                       0 B            0 B
+├ ƒ /api/periods                                 0 B            0 B
+├ ƒ /api/periods/[id]                            0 B            0 B
+├ ƒ /api/push/public-key                         0 B            0 B
+├ ƒ /api/push/send                               0 B            0 B
+├ ƒ /api/push/subscribe                          0 B            0 B
+├ ƒ /api/routines                                0 B            0 B
+├ ƒ /api/routines/[id]                           0 B            0 B
+├ ƒ /api/statistics                              0 B            0 B
+├ ƒ /api/tags                                    0 B            0 B
+├ ƒ /api/test-reminder                           0 B            0 B
+├ ƒ /api/user                                    0 B            0 B
+├ ƒ /api/user-profile                            0 B            0 B
+├ ƒ /api/workouts                                0 B            0 B
+├ ƒ /api/workouts/[id]                           0 B            0 B
+├ ○ /auth/forgot-password                    1.47 kB         174 kB
+├ ○ /auth/logout                             1.16 kB         174 kB
+├ ○ /auth/reset-password                     2.12 kB         175 kB
+├ ○ /auth/signin                             2.11 kB         175 kB
+├ ○ /auth/signup                              2.7 kB         175 kB
+├ ○ /calendar                                28.5 kB         201 kB
+├ ○ /cycle                                   7.73 kB         180 kB
+├ ○ /dashboard                               14.6 kB         187 kB
+├ ○ /events                                  8.14 kB         181 kB
+├ ○ /exercises                               6.35 kB         179 kB
+├ ƒ /exercises/[id]                          4.67 kB         320 kB
+├ ○ /fingerboard-protocols                   10.9 kB         327 kB
+├ ○ /fingerboard-testing                     5.95 kB         178 kB
+├ ƒ /fingerboard-testing/[id]                5.72 kB         321 kB
+├ ○ /profile                                 10.7 kB         183 kB
+├ ○ /routines                                7.68 kB         180 kB
+├ ○ /statistics                              2.12 kB         175 kB
+├ ○ /strong-mind                             8.78 kB         181 kB
+└ ○ /workouts                                8.48 kB         181 kB
++ First Load JS shared by all                 189 kB
+  ├ chunks/4e89477597f3f8db.js               11.8 kB
+  ├ chunks/6198e7455731ec4e.js               13.1 kB
+  ├ chunks/7fd964e6e7d66713.js               59.2 kB
+  ├ chunks/8082ab48faca5ea1.js               17.2 kB
+  └ chunks/b46330127f3986c6.js               27.3 kB
+  ├ chunks/9261ddb401080d7d.css              15.5 kB
+  └ other shared chunks (total)              44.7 kB
+
+
+ƒ Middleware                                 59.8 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

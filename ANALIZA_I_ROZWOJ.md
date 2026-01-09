@@ -512,13 +512,13 @@ import rateLimit from 'express-rate-limit'
 
 ## 🚀 Quick Wins (Można zrobić szybko)
 
-1. **Dodać loading states** wszędzie gdzie brakuje
-2. **Dodać empty states** z helpful messages
-3. **Dodać keyboard shortcuts** dla częstych akcji
-4. **Poprawić error messages** - bardziej user-friendly
-5. **Dodać tooltips** dla niejasnych funkcji
-6. **Dodać confirmation dialogs** dla destruktywnych akcji
-7. **Dodać undo/redo** dla formularzy
+1. **Dodać loading states** wszędzie gdzie brakuje - done
+2. **Dodać empty states** z helpful messages - done
+3. **Dodać keyboard shortcuts** dla częstych akcji - done
+4. **Poprawić error messages** - bardziej user-friendly - done
+5. **Dodać tooltips** dla niejasnych funkcji - done
+6. **Dodać confirmation dialogs** dla destruktywnych akcji - done
+7. **Dodać undo/redo** dla formularzy 
 8. **Dodać search** dla treningów/ćwiczeń
 9. **Dodać filters** dla list
 10. **Dodać sorting** dla list

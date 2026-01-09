@@ -21,11 +21,17 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(tags);
   } catch (error) {
-    console.error('Error fetching tags:', error);
+    console.error('Error fetching tags:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Error details:', { errorMessage, errorStack })
     return NextResponse.json(
-      { error: 'Failed to fetch tags' },
+      { 
+        error: 'Failed to fetch tags',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
-    );
+    )
   }
 }
 

@@ -1,5 +1,6 @@
 // CSRF protection for Next.js API routes
 import { cookies } from 'next/headers'
+import { NextRequest } from 'next/server'
 import { randomBytes } from 'crypto'
 
 const CSRF_TOKEN_NAME = 'csrf-token'
@@ -32,7 +33,7 @@ export async function getCsrfToken(): Promise<string> {
 }
 
 // Verify CSRF token
-export async function verifyCsrfToken(request: Request): Promise<boolean> {
+export async function verifyCsrfToken(request: NextRequest | Request): Promise<boolean> {
   // Skip CSRF check for GET, HEAD, OPTIONS requests
   if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
     return true
@@ -44,8 +45,24 @@ export async function verifyCsrfToken(request: Request): Promise<boolean> {
     return true
   }
 
-  const cookieStore = await cookies()
-  const cookieToken = cookieStore.get(CSRF_TOKEN_NAME)?.value
+  // Get cookie token - use NextRequest.cookies if available, otherwise parse from headers
+  let cookieToken: string | undefined
+  
+  if (request instanceof NextRequest) {
+    // NextRequest has a cookies property
+    cookieToken = request.cookies.get(CSRF_TOKEN_NAME)?.value
+  } else {
+    // Fallback for regular Request - parse from cookie header
+    const cookieHeader = request.headers.get('cookie') || ''
+    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=')
+      if (key && value) {
+        acc[key] = decodeURIComponent(value)
+      }
+      return acc
+    }, {} as Record<string, string>)
+    cookieToken = cookies[CSRF_TOKEN_NAME]
+  }
 
   if (!cookieToken) {
     return false

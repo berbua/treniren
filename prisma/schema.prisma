@@ -192,6 +192,11 @@ model UserProfile {
   testReminderEnabled Boolean  @default(false)
   testReminderInterval Int?    // Number (1-12)
   testReminderUnit     String? // "days", "weeks", "months"
+  // Training goals
+  weeklyWorkoutGoal  Int?      @default(3)  // Default weekly goal: 3 workouts
+  monthlyWorkoutGoal Int?      // If null, calculate as weeklyWorkoutGoal * 4
+  useAutoMonthlyGoal Boolean   @default(true) // Auto-calculate monthly from weekly
+  workoutTypeGoals   Json?     // Array of { type: string, count: number }
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
