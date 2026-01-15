@@ -24,7 +24,7 @@ export async function getCsrfToken(): Promise<string> {
   cookieStore.set(CSRF_TOKEN_NAME, newToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax', // Changed from 'strict' to 'lax' for better compatibility
     maxAge: CSRF_TOKEN_EXPIRY,
     path: '/',
   })
@@ -65,6 +65,7 @@ export async function verifyCsrfToken(request: NextRequest | Request): Promise<b
   }
 
   if (!cookieToken) {
+    console.error('[CSRF] No cookie token found')
     return false
   }
 
@@ -74,6 +75,13 @@ export async function verifyCsrfToken(request: NextRequest | Request): Promise<b
   // For JSON requests, we'll check the header
   if (headerToken && headerToken === cookieToken) {
     return true
+  }
+  
+  // Log mismatch for debugging
+  if (headerToken) {
+    console.error('[CSRF] Token mismatch - header:', headerToken?.substring(0, 10) + '...', 'cookie:', cookieToken?.substring(0, 10) + '...')
+  } else {
+    console.error('[CSRF] No header token provided')
   }
 
   // For form submissions, check the body

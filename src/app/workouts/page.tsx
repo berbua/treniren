@@ -34,7 +34,7 @@ function WorkoutsPageContent() {
   const { t } = useLanguage()
   const { handleError, showSuccess } = useApiError()
   const confirmation = useConfirmation()
-  const { getToken } = useCsrfToken()
+  const { getToken, refreshToken } = useCsrfToken()
   
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [events, setEvents] = useState<Event[]>([])
@@ -233,6 +233,36 @@ function WorkoutsPageContent() {
         credentials: 'include',
         body: JSON.stringify(workoutData),
       })
+
+      // If CSRF validation failed, try refreshing token and retrying once
+      if (response.status === 403) {
+        const errorData = await response.json()
+        if (errorData.error === 'CSRF token validation failed') {
+          console.log('CSRF token failed, refreshing and retrying...')
+          const newToken = await refreshToken(true) // Force refresh
+          
+          const retryResponse = await fetch('/api/workouts', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-csrf-token': newToken,
+            },
+            credentials: 'include',
+            body: JSON.stringify(workoutData),
+          })
+          
+          if (retryResponse.ok) {
+            showSuccess(t('workouts.createSuccess') || 'Workout created successfully')
+            await fetchWorkouts(1, false) // Reset to first page
+            setShowForm(false)
+            return
+          }
+          
+          const retryError = await extractApiError(retryResponse)
+          handleError(retryError, 'Failed to create workout after retry')
+          return
+        }
+      }
 
       if (response.ok) {
         showSuccess(t('workouts.createSuccess') || 'Workout created successfully')
