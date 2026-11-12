@@ -18,49 +18,38 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const token = await getToken({
-    req: request, 
-    secret: process.env.NEXTAUTH_SECRET 
-  })
-
-  // Allow public routes
-  const publicRoutes = [
-    '/',
-    '/auth/signin',
-    '/auth/signup',
-    '/auth/error',
-    '/api/auth', // All NextAuth routes are public
-    '/api/auth/register',
-    '/api/auth/forgot-password',
-    '/api/auth/reset-password',
-  ]
-
-  const isPublicRoute = publicRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  )
-
-  if (isPublicRoute) {
+  // API routes check the session themselves (requireAuth) and return specific errors
+  if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 
-  // Protect API routes (but let the API route handle the error for better debugging)
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    // Don't block here - let the API route handle authentication
-    // This allows the API route to return more specific error messages
+  // Static files from public/ (sw.js, manifest.json, icons, ...) must load without a session
+  if (/\.[^/]+$/.test(pathname)) {
+    return NextResponse.next()
   }
 
-  // Protect dashboard and other protected pages
-  const protectedRoutes = ['/dashboard', '/workouts', '/calendar', '/statistics']
-  const isProtectedRoute = protectedRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
+  // Every other page needs a session, except the landing page and the auth pages.
+  // '/' is matched exactly: as a prefix it would make every route public.
+  const isPublicPage = pathname === '/' || PUBLIC_PAGE_PREFIXES.some(prefix =>
+    pathname === prefix || pathname.startsWith(`${prefix}/`)
   )
+  if (isPublicPage) {
+    return NextResponse.next()
+  }
 
-  if (isProtectedRoute && !token) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET
+  })
+
+  if (!token) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 
   return NextResponse.next()
 }
+
+const PUBLIC_PAGE_PREFIXES = ['/auth', '/gate']
 
 export const config = {
   matcher: [

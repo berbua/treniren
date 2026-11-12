@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth-helpers'
+import { UpdateRoutineSchema, formatValidationError } from '@/lib/validation'
+import { validateRoutineExercises } from '@/lib/routine-utils'
 
 // GET /api/routines/[id] - Get a specific routine
 export async function GET(
@@ -82,7 +84,19 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { name, description, exercises, variations } = body
+
+    const validationResult = UpdateRoutineSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: formatValidationError(validationResult.error),
+        },
+        { status: 400 }
+      )
+    }
+
+    const { name, description, exercises, variations } = validationResult.data
 
     // Verify routine belongs to user
     const existingRoutine = await prisma.routine.findFirst({
@@ -97,6 +111,11 @@ export async function PUT(
         { error: 'Routine not found' },
         { status: 404 }
       )
+    }
+
+    const exercisesError = await validateRoutineExercises(user.id, exercises)
+    if (exercisesError) {
+      return NextResponse.json({ error: exercisesError }, { status: 400 })
     }
 
     // Update routine using transaction to handle exercises and variations
@@ -121,7 +140,7 @@ export async function PUT(
       // Create new exercises
       if (exercises && exercises.length > 0) {
         await tx.routineExercise.createMany({
-          data: exercises.map((ex: any, index: number) => ({
+          data: exercises.map((ex, index) => ({
             routineId: id,
             exerciseId: ex.exerciseId,
             order: ex.order !== undefined ? ex.order : index,
@@ -133,7 +152,7 @@ export async function PUT(
       // Create new variations
       if (variations && variations.length > 0) {
         await tx.routineVariation.createMany({
-          data: variations.map((variation: any) => ({
+          data: variations.map((variation) => ({
             routineId: id,
             name: variation.name,
             description: variation.description || null,
@@ -176,9 +195,8 @@ export async function PUT(
     return NextResponse.json(routine)
   } catch (error) {
     console.error('Error updating routine:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update routine'
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Failed to update routine' },
       { status: 500 }
     )
   }

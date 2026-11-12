@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth-helpers'
+import { CreateRoutineSchema, formatValidationError } from '@/lib/validation'
+import { validateRoutineExercises } from '@/lib/routine-utils'
 
 // GET /api/routines - Get all routines for the current user
 export async function GET(request: NextRequest) {
@@ -68,13 +70,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, description, exercises, variations } = body
 
-    if (!name || !name.trim()) {
+    const validationResult = CreateRoutineSchema.safeParse(body)
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Routine name is required' },
+        {
+          error: 'Validation failed',
+          details: formatValidationError(validationResult.error),
+        },
         { status: 400 }
       )
+    }
+
+    const { name, description, exercises, variations } = validationResult.data
+
+    const exercisesError = await validateRoutineExercises(user.id, exercises)
+    if (exercisesError) {
+      return NextResponse.json({ error: exercisesError }, { status: 400 })
     }
 
     // Create routine with exercises and variations
@@ -84,14 +96,14 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         description: description?.trim() || null,
         routineExercises: exercises && exercises.length > 0 ? {
-          create: exercises.map((ex: any, index: number) => ({
+          create: exercises.map((ex, index) => ({
             exerciseId: ex.exerciseId,
             order: ex.order !== undefined ? ex.order : index,
             notes: ex.notes || null,
           })),
         } : undefined,
         variations: variations && variations.length > 0 ? {
-          create: variations.map((variation: any) => ({
+          create: variations.map((variation) => ({
             name: variation.name,
             description: variation.description || null,
             defaultSets: variation.defaultSets || null,
@@ -128,9 +140,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(routine, { status: 201 })
   } catch (error) {
     console.error('Error creating routine:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create routine'
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Failed to create routine' },
       { status: 500 }
     )
   }
