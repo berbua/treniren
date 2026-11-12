@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { buttonClasses } from '@/components/ui'
 
 interface UserMenuProps {
   isOnline?: boolean
@@ -68,16 +69,16 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
 
   if (!session?.user) {
     return (
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-2">
         <button
           onClick={() => router.push('/auth/signin')}
-          className="text-uc-text-muted hover:text-uc-mustard font-medium transition-colors"
+          className="min-h-11 px-3 text-sm font-bold text-uc-text-muted hover:text-uc-text transition-colors"
         >
           {t('auth.signIn') || 'Sign In'}
         </button>
         <button
           onClick={() => router.push('/auth/signup')}
-          className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-xl font-medium transition-colors shadow-lg"
+          className={buttonClasses('accent', 'md')}
         >
           {t('auth.signUp') || 'Sign Up'}
         </button>

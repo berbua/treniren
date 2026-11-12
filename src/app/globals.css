@@ -84,26 +84,6 @@
   --radius-uc-pill: var(--uc-radius-pill);
 
   --shadow-uc: var(--uc-shadow);
-
-  /* Legacy names, pointed at the new tokens until each screen is restyled.
-     The per-property overrides keep text readable where one old colour served two roles. */
-  --color-uc-black: var(--uc-bg);
-  --text-color-uc-black: var(--uc-on-accent); /* was text on mustard buttons */
-  --color-uc-dark-bg: var(--uc-surface);
-  --color-uc-purple: var(--uc-primary);
-  --background-color-uc-purple: var(--uc-primary-container); /* filled with light text on top */
-  --color-uc-mustard: var(--uc-accent);
-  --text-color-uc-mustard: var(--uc-accent-text);
-  --color-uc-text-light: var(--uc-text);
-  --color-uc-alert: var(--uc-error);
-
-  --color-training-gym: var(--uc-workout-gym);
-  --color-training-bouldering: var(--uc-workout-bouldering);
-  --color-training-circuits: var(--uc-workout-circuits);
-  --color-training-leadRock: var(--uc-workout-lead-rock);
-  --color-training-leadArtificial: var(--uc-workout-lead-wall);
-  --color-training-mentalPractice: var(--uc-workout-mental);
-  --color-training-fingerboard: var(--uc-workout-fingerboard);
 }
 
 body {

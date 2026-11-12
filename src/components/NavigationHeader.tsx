@@ -100,10 +100,10 @@ export const NavigationHeader = () => {
             >
               {t('nav.home') || 'Home'}
             </Link>
-            <div className="flex items-center min-h-11 px-2">
+            <div className="flex items-center min-h-11 px-1 sm:px-2">
               <LanguageSwitcher />
             </div>
-            <Link href="/auth/signin" className={buttonClasses('primary', 'md')}>
+            <Link href="/auth/signin" className={buttonClasses('primary', 'md', 'px-3 sm:px-4')}>
               {t('auth.signIn') || 'Sign In'}
             </Link>
           </nav>

@@ -169,26 +169,6 @@ export function getPhaseDisplayName(phaseKey: 'menstrual' | 'follicular' | 'ovul
 }
 
 /**
- * Get phase color for UI display
- */
-export function getPhaseColor(phase: CyclePhase): string {
-  switch (phase) {
-    case 'menstrual':
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    case 'follicular':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    case 'ovulation':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-    case 'early-luteal':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-    case 'late-luteal':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-  }
-}
-
-/**
  * Format date for display
  */
 export function formatCycleDate(date: Date): string {

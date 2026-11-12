@@ -73,12 +73,14 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Auth & landing — `Sign in, sign up, password, sign out.png`, `Landing page.png`
 
 ### 4. Finish
-- [ ] Search for leftover hard-coded colors (`#`, `slate-`, `pink-`, …) and Montserrat.
-- [ ] Remove the legacy `--color-uc-*` / `--color-training-*` aliases from `globals.css` once no
+- [x] Search for leftover hard-coded colors (`#`, `slate-`, `pink-`, …) and Montserrat.
+- [x] Remove the legacy `--color-uc-*` / `--color-training-*` aliases from `globals.css` once no
       component uses them; update the old palette section in `DEVELOPMENT_RULES.md`.
-- [ ] Check dark + light, EN + PL, 390px and desktop on each screen.
+- [ ] Check dark + light, EN + PL, 390px and desktop on each screen. (Logged-out screens done; logged-in screens
+      need the user's session.)
 - [ ] Update `design/MISSING_DESIGNS.md` (remove gaps the new mockups covered).
-- [ ] Open a PR from `redesign/unicorn-climb` to `main`.
+- [ ] Open a PR from `redesign/unicorn-climb` to `main`. **On hold (user, 2026-11-12): bug fixes, testing and the
+      icons (step 5) come first.**
 
 ### 5. Icons (after the user delivers the custom SVGs)
 - [ ] Add the SVGs as React components behind one `Icon` wrapper (`currentColor`, 24px).
@@ -324,3 +326,13 @@ note the answer.
   phase ring (5 arcs in `--uc-phase-*`, 🦄 centre), the same 12 feature cards (now a data list: icon tile, title,
   description, bullets) in 1/2/4 columns, closing primary-container band with the existing unused `landing.readyToStart` /
   `ctaDescription` / `startTracking` texts → /dashboard. Same links and handlers. Not checked in a browser.
+- 2026-11-12: Step 4 cleanup. No raw Tailwind palette, `dark:` variants or legacy names left in `src`: restyled
+  `ErrorBoundary` (tokens + `buttonClasses`; texts stay English, it sits outside the language provider), `LanguageSwitcher`,
+  the unused logged-out branch of `UserMenu`; removed the unused `getPhaseColor` from `lib/cycle-utils.ts`; removed the
+  legacy `--color-uc-*` / `--color-training-*` aliases from `globals.css`; rewrote the palette / CTA / styling sections of
+  `DEVELOPMENT_RULES.md` for the tokens. Hex left on purpose: `layout.tsx` theme-color meta (needs literals), stored tag
+  colours in `TagSelector` / dummy data, the Google logo. Headless check (Playwright against the dev server) of landing +
+  all auth pages in dark/light × EN/PL × 390/1280: no horizontal overflow, no page errors. Fix: the PL app name was cut
+  off in the logged-out header at 390px; the flag is hidden on phones and the paddings tightened (still "…" at 360px).
+  Found, not fixed (bugs for the user): logged out, `NotificationProvider` fetches workouts → 401 + console error
+  (Next dev overlay "1 Issue" on every logged-out page); `pl-custom.json` has "Mindfulness i bycie obecn_".

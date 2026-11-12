@@ -19,14 +19,14 @@ export default function LanguageSwitcher() {
 
   // Always render the same structure, but suppress hydration warnings for dynamic content
   return (
-    <div className="flex items-center space-x-1">
-      <span className="text-sm text-uc-text-muted" suppressHydrationWarning>
+    <div className="flex items-center gap-1">
+      <span aria-hidden className="hidden sm:inline text-sm text-uc-text-muted" suppressHydrationWarning>
         {mounted && language === 'en' ? '🇺🇸' : '🇵🇱'}
       </span>
       <select
         value={mounted ? language : 'pl'}
         onChange={handleLanguageChange}
-        className="bg-transparent border-none text-sm text-uc-text-light focus:outline-none cursor-pointer hover:text-uc-mustard transition-colors"
+        className="bg-transparent border-none min-h-11 text-sm font-bold text-uc-text focus-visible:outline-2 focus-visible:outline-uc-primary cursor-pointer hover:text-uc-primary transition-colors"
         disabled={!mounted}
         suppressHydrationWarning
       >
