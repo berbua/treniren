@@ -84,6 +84,7 @@ function DashboardContent() {
     const fetchDashboardData = async () => {
       try {
         let allEvents: Event[] = []
+        let totalEvents = 0
         
         // Fetch user data (nickname)
         const userResponse = await fetch('/api/user', { credentials: 'include' })
@@ -105,6 +106,8 @@ function DashboardContent() {
           const tripsData = await tripsResponse.json()
           // Handle both new paginated format and old format
           allEvents = tripsData.events || tripsData
+          // Only the newest 50 events are loaded; the total comes from the API
+          totalEvents = tripsData.pagination?.total ?? allEvents.length
           const trips = allEvents.filter((event: Event) =>
             event.type === 'TRIP' &&
             event.tripStartDate &&
@@ -145,7 +148,7 @@ function DashboardContent() {
             thisMonthWorkouts,
             lastWeekWorkouts,
             lastMonthWorkouts,
-            totalEvents: allEvents.length
+            totalEvents
           })
           
           // Calculate streak
