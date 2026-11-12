@@ -21,6 +21,16 @@ export async function siteGateToken(password: string): Promise<string> {
   return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
-/** Only same-site paths are allowed as the redirect after the gate. */
-export const safeNextPath = (next: string | null | undefined) =>
-  next && next.startsWith('/') && !next.startsWith('//') ? next : '/'
+/**
+ * Only same-site paths are allowed as the redirect after the gate. Browsers treat "\" like "/" and strip
+ * tabs/newlines, so "/\evil.com" would otherwise leave the site; resolving against a dummy origin catches all of it.
+ */
+export const safeNextPath = (next: string | null | undefined) => {
+  if (!next || !next.startsWith('/')) return '/'
+  try {
+    const url = new URL(next, 'http://same-site.invalid')
+    return url.origin === 'http://same-site.invalid' ? url.pathname + url.search + url.hash : '/'
+  } catch {
+    return '/'
+  }
+}

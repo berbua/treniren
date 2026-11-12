@@ -18,6 +18,9 @@ export interface OfflineWorkout {
   notes?: string;
   exercises?: OfflineExercise[];
   createdAt: string;
+  // Account that logged the workout; only that account uploads it. Missing on entries saved before this
+  // field existed or while signed out, which upload with whoever signs in next.
+  userId?: string;
   synced: boolean;
   // Id of the workout on the server once uploaded. Older entries were marked `synced` without ever
   // being uploaded, so a missing serverId (not `synced`) is what marks a workout as pending upload.

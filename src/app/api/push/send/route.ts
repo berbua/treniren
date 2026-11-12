@@ -32,11 +32,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, message, icon, badge, tag, data, userId } = body;
+    const { title, message, icon, badge, tag, data } = body;
 
-    // If userId is provided, send to that user's subscriptions
-    // Otherwise, send to current user's subscriptions
-    const targetUserId = userId || session.user.id;
+    // Only ever send to the signed-in user's own subscriptions
+    const targetUserId = session.user.id;
 
     // Get all push subscriptions for the user
     const subscriptions = await prisma.pushSubscription.findMany({

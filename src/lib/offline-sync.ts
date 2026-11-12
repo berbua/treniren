@@ -88,8 +88,12 @@ const postWorkout = async (workout: OfflineWorkout, tokens: TokenProvider): Prom
   return created.id as string;
 };
 
-const uploadPending = async (tokens: TokenProvider): Promise<SyncResult> => {
-  const pending = getPendingUploadWorkouts();
+// Workouts the signed-in user may upload: their own, plus untagged ones (see OfflineWorkout.userId)
+const getUploadableWorkouts = (userId: string) =>
+  getPendingUploadWorkouts().filter(workout => !workout.userId || workout.userId === userId);
+
+const uploadPending = async (tokens: TokenProvider, userId: string): Promise<SyncResult> => {
+  const pending = getUploadableWorkouts(userId);
   let uploaded = 0;
   let failed = 0;
 
@@ -121,11 +125,11 @@ const uploadPending = async (tokens: TokenProvider): Promise<SyncResult> => {
 
 let inFlight: Promise<SyncResult> | null = null;
 
-export const syncOfflineWorkouts = async (tokens: TokenProvider): Promise<SyncResult> => {
+export const syncOfflineWorkouts = async (tokens: TokenProvider, userId: string): Promise<SyncResult> => {
   if (typeof window === 'undefined' || !navigator.onLine) {
     return { uploaded: 0, failed: 0, skipped: true };
   }
-  if (getPendingUploadWorkouts().length === 0) {
+  if (getUploadableWorkouts(userId).length === 0) {
     return { uploaded: 0, failed: 0, skipped: false };
   }
   // Already running in this tab
@@ -140,11 +144,11 @@ export const syncOfflineWorkouts = async (tokens: TokenProvider): Promise<SyncRe
         const result = await navigator.locks.request(
           SYNC_LOCK_NAME,
           { ifAvailable: true },
-          async (lock) => (lock ? uploadPending(tokens) : null)
+          async (lock) => (lock ? uploadPending(tokens, userId) : null)
         );
         return result ?? { uploaded: 0, failed: 0, skipped: true };
       }
-      return await uploadPending(tokens);
+      return await uploadPending(tokens, userId);
     } finally {
       window.dispatchEvent(new CustomEvent(OFFLINE_WORKOUTS_CHANGED_EVENT));
     }
