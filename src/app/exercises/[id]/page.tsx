@@ -60,11 +60,13 @@ function ExerciseDetailPageContent() {
     }
   }, [exerciseId])
 
+  // Wait for quick stats: the chart and records only load once we know the exercise has been used
+  const hasBeenUsed = (quickStats?.timesUsed ?? 0) > 0
   useEffect(() => {
-    if (exerciseId && quickStats && quickStats.timesUsed > 0) {
+    if (exerciseId && hasBeenUsed) {
       fetchProgressionData()
     }
-  }, [exerciseId, selectedTimeframe])
+  }, [exerciseId, selectedTimeframe, hasBeenUsed])
 
   const fetchExerciseData = async () => {
     try {
