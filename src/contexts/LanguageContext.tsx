@@ -8,6 +8,8 @@ interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
   t: (key: string, params?: Record<string, string | number>) => string
+  /** Plural form of `key.one` / `key.few` / `key.many` / `key.other` for `count` (falls back to `key.other`). */
+  tPlural: (key: string, count: number, params?: Record<string, string | number>) => string
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
@@ -127,8 +129,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return result
   }
 
+  const tPlural = (key: string, count: number, params?: Record<string, string | number>): string => {
+    const exactKey = `${key}.${new Intl.PluralRules(language).select(count)}`
+    const exact = t(exactKey, { count, ...params })
+    return exact === exactKey ? t(`${key}.other`, { count, ...params }) : exact
+  }
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tPlural }}>
       {children}
     </LanguageContext.Provider>
   )

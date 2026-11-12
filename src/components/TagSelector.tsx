@@ -12,18 +12,19 @@ interface TagSelectorProps {
   onCreateTag?: (name: string, color: string) => void;
 }
 
-// Stored on the tag itself (data, not theme colours)
+// Stored on the tag itself: the design's tag tokens (they change with the theme), with the dark-theme hex as
+// fallback for places outside the app (export). Older tags keep their plain hex colours.
 const predefinedColors = [
-  '#3b82f6', // blue
-  '#ef4444', // red
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#8b5cf6', // violet
-  '#06b6d4', // cyan
-  '#84cc16', // lime
-  '#f97316', // orange
-  '#ec4899', // pink
-  '#6b7280', // gray
+  'var(--uc-tag-1, #C4A8EE)',
+  'var(--uc-tag-2, #EDB54E)',
+  'var(--uc-tag-3, #3CC0A5)',
+  'var(--uc-tag-4, #F48A6A)',
+  'var(--uc-tag-5, #6A9BF5)',
+  'var(--uc-tag-6, #C9DC55)',
+  'var(--uc-tag-7, #E37DD0)',
+  'var(--uc-tag-8, #4CC8EA)',
+  'var(--uc-tag-9, #DDA46A)',
+  'var(--uc-tag-10, #CFC9D6)',
 ];
 
 export default function TagSelector({ 
@@ -128,12 +129,12 @@ export default function TagSelector({
               <div role="group" aria-labelledby="tag-color-label">
                 <p id="tag-color-label" className="mb-1.5 text-[13px] font-semibold text-uc-text-muted">Color:</p>
                 <div className="grid grid-cols-5 gap-2">
-                  {predefinedColors.map(color => (
+                  {predefinedColors.map((color, index) => (
                     <button
                       type="button"
                       key={color}
                       onClick={() => setNewTagColor(color)}
-                      aria-label={color}
+                      aria-label={`${index + 1}`}
                       aria-pressed={newTagColor === color}
                       className={`flex min-h-11 items-center justify-center rounded-uc-input border transition-colors ${
                         newTagColor === color ? 'border-uc-text border-2' : 'border-uc-border hover:border-uc-primary'

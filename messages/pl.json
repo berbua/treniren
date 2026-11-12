@@ -118,7 +118,8 @@
     "resetSuccess": "Hasło zostało zmienione. Możesz zalogować się nowym hasłem.",
     "invalidLinkTitle": "Ten link jest nieprawidłowy",
     "invalidLinkMessage": "Brak tokenu resetu lub jest nieprawidłowy. Poproś o nowy link.",
-    "requestNewLink": "Poproś o nowy link"
+    "requestNewLink": "Poproś o nowy link",
+    "signInAgain": "Zaloguj się ponownie"
   },
   "messages": {
     "title": "Wiadomości",
@@ -149,6 +150,8 @@
     "events": "Wydarzenia",
     "fingerboardTesting": "Testy fingerboardu",
     "mainNavigation": "Nawigacja główna",
+    "today": "Dziś",
+    "stats": "Statystyki",
     "cycleDayOf": "Dzień {{day}} z {{length}}"
   },
   "stats": {
@@ -406,12 +409,29 @@
     "saveWorkout": "Zapisz Trening",
     "updateWorkout": "Aktualizuj Trening",
     "incompleteData": {
-      "title": "Niekompletne Dane",
+      "title": "Niektóre serie są puste",
       "message": "Niektóre ćwiczenia mają niewypełnione wagi lub powtórzenia. Czy chcesz zapisać trening z niekompletnymi danymi?",
       "incompleteItems": "Niekompletne pozycje:",
       "andMore": "...i jeszcze {{count}}",
-      "goBack": "Wróć i Uzupełnij",
-      "saveAnyway": "Zapisz Mimo To"
+      "goBack": "Wróć i uzupełnij",
+      "saveAnyway": "Zapisz mimo to",
+      "setsIn": "{{sets}} ({{exercise}})",
+      "sets": {
+        "one": "{{count}} seria",
+        "few": "{{count}} serie",
+        "many": "{{count}} serii",
+        "other": "{{count}} serii"
+      },
+      "hangs": {
+        "one": "{{count}} zwis",
+        "few": "{{count}} zwisy",
+        "many": "{{count}} zwisów",
+        "other": "{{count}} zwisu"
+      },
+      "and": "i",
+      "summary": {
+        "other": "Bez wartości: {{items}}. Puste wiersze nie będą liczone w statystykach."
+      }
     },
     "errors": {
       "workoutTypeRequired": "Proszę wybrać rodzaj treningu",
@@ -551,7 +571,13 @@
     },
     "addFirstWorkout": "Dodaj pierwszy trening",
     "eventDeleted": "Wydarzenie usunięte",
-    "useQuickLog": "lub użyj Szybkiego zapisu"
+    "useQuickLog": "lub użyj Szybkiego zapisu",
+    "exercisesCount": {
+      "one": "{{count}} ćwiczenie",
+      "few": "{{count}} ćwiczenia",
+      "many": "{{count}} ćwiczeń",
+      "other": "{{count}} ćwiczenia"
+    }
   },
   "exercises": {
     "title": "Biblioteka Ćwiczeń",

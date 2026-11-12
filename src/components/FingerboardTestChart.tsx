@@ -43,7 +43,7 @@ export default function FingerboardTestChart({ testResults, protocol, showHangFi
   const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
   const hangLabel = (hang: FingerboardTestingProtocol['testHangs'][number]) =>
     formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize, hang.customDescription).replace(/ • /g, ' · ')
-  const [metric, setMetric] = useState<'time' | 'load'>('time')
+  const [metric, setMetric] = useState<'time' | 'load'>('load')
   const [selectedHangId, setSelectedHangId] = useState<string | null>(null)
 
   // Group results by date and hang

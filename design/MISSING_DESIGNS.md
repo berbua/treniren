@@ -81,13 +81,14 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - **Crimp size** stays a select of the fixed sizes 6–30 mm (mock shows a free number field with "mm").
     Hand and grip are segments with their emoji; the Polish crimp label wraps to two lines.
   - Load hint text stays the app's "negative for unload" (mock: "Negative load = assisted (unloaded) hang.").
-  - **Tag creator**: no "Name" label (no fitting key; the input keeps its "Tag name" placeholder); colours are the
-    app's 10 stored tag colours, not the mock's palette; buttons stay "Cancel" / "Create".
+  - **Tag creator**: no "Name" label (no fitting key; the input keeps its "Tag name" placeholder); buttons stay
+    "Cancel" / "Create". Colours: the mock's 10 `--uc-tag-*` swatches since 2026-11-12 (decision 29), stored as
+    `var(--uc-tag-N, #hex)` so they follow the theme; tags created earlier keep their old hex colours.
   - **Recurring**: the mock's header checkbox is the app's collapsible card + "Make this workout recurring" checkbox.
     Frequency is Daily / Weekly / "Every N days" segments; the N-days input shows below when that segment is picked.
-  - **Incomplete-data dialog** keeps the app's title/message and the list of incomplete items (mock: "Some sets are
-    empty — 2 sets in … have no values. Empty rows won't count in your stats."). "Go back & fill" is now the filled
-    button as in the mock. The shared `ConfirmationDialog` now shows its icon in a tinted tile above the title, with
+  - **Incomplete-data dialog**: design copy since 2026-11-12 (decision 30): "Some sets are empty" + "2 sets in Weighted
+    pull-up and 1 hang have no values. Empty rows won't count in your stats." (the item list is gone; plural forms via
+    the new `tPlural`). "Go back & fill" is the filled button as in the mock. The shared `ConfirmationDialog` now shows its icon in a tinted tile above the title, with
     equal-width buttons — this applies to every confirmation in the app.
   - Load routine / Load protocol pickers are bottom sheets now (no design; "Start from routine" in the component
     sheet used as reference).
@@ -103,7 +104,7 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     colours). Field labels "Training volume" / "Variation" / "Practice type" moved to tooltips. "Pre-session feel",
     "Gratitude", "Improvements" stay hard-coded English. Before-climbing rating and reflections are still shown.
     Edit/delete keep their emoji until the custom icons land.
-  - Mock's gym chip "5 exercises" isn't shown on list cards (it never was).
+  - Gym cards show the mock's "5 exercises" chip (decision 32, 2026-11-12).
   - **Add choice** is a bottom sheet with 3 tiles; its Cancel button was dropped (✕, Esc and scrim close it, as in Quick log).
   - **Goals configurator**: sheet keeps the 🎯 title, description and a Cancel + Save footer. Weekly goal keeps range +
     number input (mock: − slider +). Monthly auto/manual is now a segmented control (was a checkbox; new keys
@@ -248,7 +249,7 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     (mock: green Yes). Notes is one line. A Cancel button sits next to "Save results". The load-unload hint is one line
     under the hang cards.
   - **Detail**: hang filter chips only when the protocol has more than one hang; the chart's own hang `Select` is hidden
-    there (the chips filter it). Chart metric default stays Time (mock: Load). The results table keeps a Hang column and
+    there (the chips filter it). Chart metric defaults to Load, as in the mock (decision 58). The results table keeps a Hang column and
     the year in the date; header labels keep the app's texts ("Load (kg)", "Success").
   - New test protocol: "Load from protocol" is a full-width tonal button above the hang list; hang targets are edited in
     the hang sheet (Target load / Target time), not inline in the form.
@@ -283,8 +284,8 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - **Install prompt** keeps the app's description ("Install this app on your device…", not "Log at the crag, even
     without signal.") and title. iOS variant keeps the three steps and "Maybe later"; its title is the shared
     "Install Unicorn Climb" + "To install this app on your iPhone:" (no "Add to Home Screen (iPhone)" key).
-  - **User menu**: flag emoji for Language and no sign-out icon until the custom SVGs land; name + chevron still show
-    next to the avatar from `sm`.
+  - **User menu**: flag emoji for Language and no sign-out icon until the custom SVGs land. The trigger is the avatar
+    only, as in the mock (decision 5; the name is its accessible label).
   - **Loading**: message is the screen's own text ("Loading..." / "Loading workouts..."), not "Loading your training…";
     the bar is indeterminate (there's no real progress to show).
   - ℹ️ tooltip triggers are still the 14px emoji; tooltips on calendar / cycle day cells stay hover-only so tapping the
@@ -302,8 +303,8 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     error in the alert on submit. The "invalid link" screen title is new copy (`auth.invalidLinkTitle`); the button stays
     "Request new reset link" → forgot-password.
   - Reset success keeps the success alert + automatic redirect to sign in after 3 s.
-  - Sign out keeps "Redirecting you to the home page…" and "Go to Home Page" (mock: "Sign in again"); it still redirects
-    to `/` after 2 s.
+  - Sign out: accent "Sign in again" → sign in, as in the mock (decision 64); the 2 s auto-redirect to `/` and the
+    "Redirecting…" line are gone (they'd leave before the button could be used). Title and message stay the app's (63).
   - **Landing**: copy stays the app's (tagline, "What You Can Track", feature texts); the mock's pill "Training diary for
     climbers" shows the app name; "Your next session is the first entry." band uses the existing "Ready to Start Your
     Journey?" texts. Feature cards keep their bullet lists (mock: one line each) and emoji icons; order kept.
@@ -313,7 +314,8 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event
   choice sheet) would need a decision, since that's new behaviour.
-- **Tab labels** — mockup says "Today" / "Stats"; the app keeps its existing labels Dashboard / Statistics.
+- **Tab labels** — the phone tab bar says "Today" / "Stats" (PL "Dziś" / "Statystyki"), as in the mock (decision 2);
+  the desktop sidebar keeps Dashboard / Statistics like the desktop mock.
 
 ### Components
 - **Toast with "Undo"** — toasts have no actions (success / error / warning / info + close).

@@ -22,6 +22,7 @@ interface WorkoutCardProps {
     improvements?: string
     tags?: Tag[]
     workoutTags?: { tag: Tag }[]
+    workoutExercises?: unknown[]
     details?: any
   }
   onEdit?: (id: string) => void
@@ -87,11 +88,12 @@ const iconButton =
   'inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text-muted hover:text-uc-text hover:bg-uc-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
 
 export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = false }: WorkoutCardProps) {
-  const { t } = useLanguage()
+  const { t, tPlural } = useLanguage()
   // List endpoints return tags as workoutTags join rows
   const tags = workout.tags ?? workout.workoutTags?.map(wt => wt.tag) ?? []
   const details = workout.details as any
   const isMental = workout.type === 'MENTAL_PRACTICE'
+  const exercisesCount = workout.type === 'GYM' ? workout.workoutExercises?.length ?? 0 : 0
   const isLead = workout.type === 'LEAD_ROCK' || workout.type === 'LEAD_ARTIFICIAL'
   const mentalState = workout.mentalState
   const hasMentalState = !!mentalState && (!!mentalState.beforeClimbing || (mentalState.climbSections?.length ?? 0) > 0)
@@ -140,10 +142,13 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
         </div>
       </div>
 
-      {(workout.trainingVolume || details?.routineVariation || workout.sector || (isMental && (workout.mentalPracticeType || (workout.timeOfDay?.length ?? 0) > 0)) || tags.length > 0) && (
+      {(workout.trainingVolume || exercisesCount > 0 || details?.routineVariation || workout.sector || (isMental && (workout.mentalPracticeType || (workout.timeOfDay?.length ?? 0) > 0)) || tags.length > 0) && (
         <div className="flex flex-wrap gap-1.5">
           {workout.trainingVolume && (
             <Chip title={t('workouts.trainingVolume')} className="uc-num">{workout.trainingVolume}</Chip>
+          )}
+          {exercisesCount > 0 && (
+            <Chip className="uc-num">{tPlural('workouts.exercisesCount', exercisesCount)}</Chip>
           )}
           {workout.type === 'GYM' && details?.routineVariation && (
             <Chip title={t('workouts.labels.variation')}>

@@ -66,8 +66,13 @@ export const NavigationHeader = () => {
     { label: analysisLabel, items: [statistics, strongMind, cycle] },
   ];
 
-  // Mobile: four tabs + "More" sheet with everything else
-  const tabs: NavItem[] = [dashboard, calendar, workouts, statistics];
+  // Mobile: four tabs (short labels, as in the mockup) + "More" sheet with everything else
+  const tabs: NavItem[] = [
+    { ...dashboard, name: t('nav.today') || 'Today' },
+    calendar,
+    workouts,
+    { ...statistics, name: t('nav.stats') || 'Stats' },
+  ];
   const moreGroups: NavGroup[] = [
     { label: trainingLabel, items: [workouts, cycle, events] },
     { label: libraryLabel, items: [exercises, routines, fingerboard] },

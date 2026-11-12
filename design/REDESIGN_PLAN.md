@@ -94,12 +94,12 @@ note the answer.
 
 - [ ] **Edit / Duplicate subtitles** in the workout sheet ("Gym · Mon 9 Nov", "Copy of Fingerboard · Mon 9 Nov —
       pick a new date"): show the original workout's type and date in the header?
-- [ ] **Per-set validation** ("Enter reps for set 3", red empty cell): add inline errors for empty sets/hangs, or keep
+- [ ] **Per-set validation** (decided: build, #19 in `DESIGN_DECISIONS.md`) ("Enter reps for set 3", red empty cell): add inline errors for empty sets/hangs, or keep
       only the incomplete-data dialog on save?
 - [ ] **Collapsible hangs** (one-line "Hang 2 · Both · open · 20 mm · +4 kg · 6 × 10 s" row): add collapse/expand?
 - [ ] **Crimp size**: keep the fixed 6–30 mm list, or allow any number (mock shows a free "mm" field)?
 - [ ] **Centre "+" tab**: today it opens Workouts. Should it open a Quick log / Add workout / Add event choice sheet?
-- [ ] **Tab labels**: keep Dashboard / Statistics or switch to the mock's Today / Stats?
+- [x] **Tab labels**: keep Dashboard / Statistics or switch to the mock's Today / Stats? → Today / Stats on the phone tab bar, built.
 - [x] **Workouts tab counts**: show the total from the API ("Workouts (214)") instead of the items on this page? → Yes, built.
 - [x] **Numbered pagination** ("1 2 … 11", "1–20 of 214"): add jump-to-page, or keep Previous / Next? → Yes, built.
 - [x] **Cycle — recent periods list with edit**: the API supports it but there's no UI. Build it in the Cycle step? → Yes, built (list + edit + delete).
@@ -347,3 +347,13 @@ note the answer.
   general messages). Language picker flag → `globe`. `UserProfile` action rows got a `busy` spinner (was ⏳).
   `tsc` clean, lint unchanged (177 warnings, same as before), all routes compile. Logged-in screens not checked in a
   browser.
+- 2026-11-12: User decisions recorded in `design/DESIGN_DECISIONS.md` (66 items); they override "visual only" for the
+  Design / Mixed items. Building them in chunks, item numbers from that file.
+- 2026-11-12: Decisions 2, 5, 29, 30, 32, 58, 64 built. Phone tab bar "Today" / "Stats" (new `nav.today`, `nav.stats`;
+  sidebar unchanged, like the desktop mock). `UserMenu` trigger is the avatar only (+ online dot, name as `aria-label`).
+  Tag creator uses the 10 `--uc-tag-*` swatches, stored as `var(--uc-tag-N, #hex)`. Incomplete-data dialog: "Some sets
+  are empty" + one summary sentence ("2 sets in X and 1 hang have no values…") instead of the item list; new
+  `tPlural(key, count)` in `LanguageContext` (`Intl.PluralRules`, keys `.one/.few/.many/.other`). Gym `WorkoutCard`
+  shows an "N exercises" chip (`workouts.exercisesCount`). Fingerboard test chart defaults to Load. Sign out: "Sign in
+  again" → `/auth/signin` (`auth.signInAgain`), no auto-redirect. 12 (shortcuts 3×2) waits for the user: which 6 links.
+  Not checked logged-in in a browser.

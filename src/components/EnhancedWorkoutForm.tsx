@@ -80,7 +80,7 @@ const getTrainingVolumes = (t: (key: string) => string): { value: TrainingVolume
 
 export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate, isDuplicating = false }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
-  const { t } = useLanguage();
+  const { t, tPlural } = useLanguage();
 
   // Set current date on client side to prevent hydration mismatch
   // Also handle duplication: when defaultDate is provided, use it even if initialData exists
@@ -264,7 +264,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     updateFormData('mentalState', { ...formData.mentalState, projectGoals: [...others, { goalId, completed }] });
   };
   const [showIncompleteDataModal, setShowIncompleteDataModal] = useState(false);
-  const [incompleteExercises, setIncompleteExercises] = useState<string[]>([]);
+  const [incompleteData, setIncompleteData] = useState<IncompleteData>({ exercises: [], hangs: 0 });
 
   // Calculate cycle info for the selected date
   const cycleInfoForSelectedDate = useMemo(() => {
@@ -274,48 +274,46 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     return calculateCycleInfo(cycleSettings, formData.date);
   }, [formData.date, cycleSettings, isCycleTrackingEnabled]);
 
-  // Check for incomplete data (missing weights/reps in exercises)
-  const checkIncompleteData = (): { hasIncomplete: boolean; incompleteList: string[] } => {
-    const incomplete: string[] = [];
-    
-    // Check gym exercises
-    if (formData.exercises && formData.exercises.length > 0) {
-      formData.exercises.forEach((exercise, exIdx) => {
-        if (exercise.sets && exercise.sets.length > 0) {
-          exercise.sets.forEach((set, setIdx) => {
-            const hasWeight = set.weight !== null && set.weight !== undefined && set.weight > 0;
-            const hasReps = set.reps !== null && set.reps !== undefined && set.reps > 0;
-            
-            // If neither weight nor reps are filled, consider it incomplete
-            if (!hasWeight && !hasReps) {
-              const exerciseName = exercise.exerciseName || `Exercise ${exIdx + 1}`;
-              const entry = `${exerciseName} (Set ${setIdx + 1})`;
-              if (!incomplete.includes(entry)) {
-                incomplete.push(entry);
-              }
-            }
-          });
-        }
-      });
-    }
-    
-    // Check fingerboard hangs
-    if (formData.fingerboardHangs && formData.fingerboardHangs.length > 0) {
-      formData.fingerboardHangs.forEach((hang, hangIdx) => {
-        const hasTime = hang.timeSeconds !== null && hang.timeSeconds !== undefined && hang.timeSeconds > 0;
-        const hasReps = hang.reps !== null && hang.reps !== undefined && hang.reps > 0;
-        
-        // If neither time nor reps are filled, consider it incomplete
-        if (!hasTime && !hasReps) {
-          incomplete.push(`Hang ${hangIdx + 1}`);
-        }
-      });
-    }
-    
-    return {
-      hasIncomplete: incomplete.length > 0,
-      incompleteList: incomplete
-    };
+  // Check for incomplete data (sets without weight and reps, hangs without time and reps)
+  const checkIncompleteData = (): IncompleteData => {
+    const exercises: IncompleteData['exercises'] = [];
+    formData.exercises?.forEach((exercise, exIdx) => {
+      const emptySets = (exercise.sets || []).filter((set) => {
+        const hasWeight = set.weight !== null && set.weight !== undefined && set.weight > 0;
+        const hasReps = set.reps !== null && set.reps !== undefined && set.reps > 0;
+        return !hasWeight && !hasReps;
+      }).length;
+      if (emptySets > 0) {
+        exercises.push({ name: exercise.exerciseName || `${t('exercises.exercise') || 'Exercise'} ${exIdx + 1}`, sets: emptySets });
+      }
+    });
+
+    const hangs = (formData.fingerboardHangs || []).filter((hang) => {
+      const hasTime = hang.timeSeconds !== null && hang.timeSeconds !== undefined && hang.timeSeconds > 0;
+      const hasReps = hang.reps !== null && hang.reps !== undefined && hang.reps > 0;
+      return !hasTime && !hasReps;
+    }).length;
+
+    return { exercises, hangs };
+  };
+
+  // "2 sets in Weighted pull-up and 1 hang have no values." (plural forms per language)
+  const incompleteSummary = () => {
+    const parts = [
+      ...incompleteData.exercises.map((exercise) =>
+        t('workouts.incompleteData.setsIn', {
+          sets: tPlural('workouts.incompleteData.sets', exercise.sets),
+          exercise: exercise.name,
+        })
+      ),
+      ...(incompleteData.hangs > 0 ? [tPlural('workouts.incompleteData.hangs', incompleteData.hangs)] : []),
+    ];
+    const items =
+      parts.length > 1
+        ? `${parts.slice(0, -1).join(', ')} ${t('workouts.incompleteData.and') || 'and'} ${parts[parts.length - 1]}`
+        : parts[0] || '';
+    const total = incompleteData.exercises.reduce((sum, exercise) => sum + exercise.sets, 0) + incompleteData.hangs;
+    return tPlural('workouts.incompleteData.summary', total, { items });
   };
 
   const validateForm = () => {
@@ -345,10 +343,10 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     }
 
     // Check for incomplete data (before submitting)
-    const { hasIncomplete, incompleteList } = checkIncompleteData();
-    if (hasIncomplete && !showIncompleteDataModal) {
+    const incomplete = checkIncompleteData();
+    if ((incomplete.exercises.length > 0 || incomplete.hangs > 0) && !showIncompleteDataModal) {
       // Show modal to confirm
-      setIncompleteExercises(incompleteList);
+      setIncompleteData(incomplete);
       setShowIncompleteDataModal(true);
       return; // Stop here and wait for user decision
     }
@@ -517,7 +515,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
 
   const closeIncompleteDataModal = () => {
     setShowIncompleteDataModal(false);
-    setIncompleteExercises([]);
+    setIncompleteData({ exercises: [], hangs: 0 });
   };
 
   return (
@@ -1033,37 +1031,18 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
         }}
         variant="warning"
         emphasis="cancel"
-        title={t('workouts.incompleteData.title') || 'Incomplete Data'}
-        message={
-          <>
-            <p className="mb-3">
-              {t('workouts.incompleteData.message') || 'Some exercises have missing weights or reps. Do you want to save the workout with incomplete data?'}
-            </p>
-            {/* List of incomplete exercises */}
-            {incompleteExercises.length > 0 && (
-              <div className="rounded-uc-input bg-uc-warning-bg p-3 text-uc-text">
-                <p className="text-sm font-bold mb-1.5">
-                  {t('workouts.incompleteData.incompleteItems') || 'Incomplete items:'}
-                </p>
-                <ul className="list-disc list-inside text-sm space-y-1">
-                  {incompleteExercises.slice(0, 5).map((item, idx) => (
-                    <li key={idx}>{item}</li>
-                  ))}
-                  {incompleteExercises.length > 5 && (
-                    <li className="text-uc-text-muted">
-                      {t('workouts.incompleteData.andMore') || `...and ${incompleteExercises.length - 5} more`}
-                    </li>
-                  )}
-                </ul>
-              </div>
-            )}
-          </>
-        }
-        cancelText={t('workouts.incompleteData.goBack') || 'Go Back & Fill'}
-        confirmText={t('workouts.incompleteData.saveAnyway') || 'Save Anyway'}
+        title={t('workouts.incompleteData.title') || 'Some sets are empty'}
+        message={incompleteSummary()}
+        cancelText={t('workouts.incompleteData.goBack') || 'Go back & fill'}
+        confirmText={t('workouts.incompleteData.saveAnyway') || 'Save anyway'}
       />
     </>
   );
+}
+
+interface IncompleteData {
+  exercises: { name: string; sets: number }[];
+  hangs: number;
 }
 
 const goalRowClass =

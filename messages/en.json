@@ -118,7 +118,8 @@
     "resetSuccess": "Password reset successfully! You can now sign in with your new password.",
     "invalidLinkTitle": "This reset link isn’t valid",
     "invalidLinkMessage": "Invalid or missing reset token. Please request a new password reset.",
-    "requestNewLink": "Request new reset link"
+    "requestNewLink": "Request new reset link",
+    "signInAgain": "Sign in again"
   },
   "messages": {
     "title": "Messages",
@@ -149,6 +150,8 @@
     "events": "Events",
     "fingerboardTesting": "Fingerboard testing",
     "mainNavigation": "Main navigation",
+    "today": "Today",
+    "stats": "Stats",
     "cycleDayOf": "Day {{day}} of {{length}}"
   },
   "stats": {
@@ -406,12 +409,26 @@
     "saveWorkout": "Save Workout",
     "updateWorkout": "Update Workout",
     "incompleteData": {
-      "title": "Incomplete Data",
+      "title": "Some sets are empty",
       "message": "Some exercises have missing weights or reps. Do you want to save the workout with incomplete data?",
       "incompleteItems": "Incomplete items:",
       "andMore": "...and {{count}} more",
-      "goBack": "Go Back & Fill",
-      "saveAnyway": "Save Anyway"
+      "goBack": "Go back & fill",
+      "saveAnyway": "Save anyway",
+      "setsIn": "{{sets}} in {{exercise}}",
+      "sets": {
+        "one": "{{count}} set",
+        "other": "{{count}} sets"
+      },
+      "hangs": {
+        "one": "{{count}} hang",
+        "other": "{{count}} hangs"
+      },
+      "and": "and",
+      "summary": {
+        "one": "{{items}} has no values. Empty rows won't count in your stats.",
+        "other": "{{items}} have no values. Empty rows won't count in your stats."
+      }
     },
     "errors": {
       "workoutTypeRequired": "Please select a workout type",
@@ -551,7 +568,11 @@
     },
     "addFirstWorkout": "Add Your First Workout",
     "eventDeleted": "Event deleted successfully",
-    "useQuickLog": "or use Quick Log for fast entry"
+    "useQuickLog": "or use Quick Log for fast entry",
+    "exercisesCount": {
+      "one": "{{count}} exercise",
+      "other": "{{count}} exercises"
+    }
   },
   "exercises": {
     "title": "Exercise Library",

@@ -112,7 +112,8 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="flex items-center gap-2 min-h-11 p-0.5 sm:pr-2 rounded-uc-pill text-uc-text hover:bg-uc-elevated transition-colors"
+        aria-label={userNickname || session.user.name?.split(' ')[0] || session.user.email || undefined}
+        className="flex items-center min-h-11 p-0.5 rounded-uc-pill text-uc-text hover:bg-uc-elevated transition-colors"
         title={isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}
       >
         <div className="relative">
@@ -127,20 +128,6 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
             title={isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}
           />
         </div>
-        <span className="hidden sm:block font-bold">
-          {(() => {
-            const displayName = userNickname || session.user.name?.split(' ')[0] || session.user.email;
-            return displayName;
-          })()}
-        </span>
-        <svg
-          className={`hidden sm:block w-4 h-4 text-uc-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 9l-7 7-7-7" />
-        </svg>
       </button>
 
       {isOpen && (
