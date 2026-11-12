@@ -1770,5 +1770,50 @@
     "backOnline": "Znów online",
     "pending": "Oczekuje: {{count}}",
     "savedLocally": "Treningi zapiszą się na urządzeniu i zsynchronizują po powrocie do sieci."
+  },
+  "plans": {
+    "importTitle": "Importuj plan treningowy",
+    "import": "Importuj",
+    "importCount": {
+      "one": "Importuj {{count}} trening",
+      "few": "Importuj {{count}} treningi",
+      "many": "Importuj {{count}} treningów",
+      "other": "Importuj {{count}} treningu"
+    },
+    "imported": {
+      "one": "Dodano {{count}} zaplanowany trening",
+      "few": "Dodano {{count}} zaplanowane treningi",
+      "many": "Dodano {{count}} zaplanowanych treningów",
+      "other": "Dodano {{count}} zaplanowanego treningu"
+    },
+    "step1": "Poproś Claude o plan i dodaj te instrukcje, żeby odpowiedź była w formacie, który aplikacja odczyta:",
+    "copyPrompt": "Kopiuj instrukcje dla Claude",
+    "copied": "Skopiowano",
+    "copyFailed": "Nie udało się skopiować — otwórz „Pokaż format” i skopiuj tekst stamtąd",
+    "showFormat": "Pokaż format",
+    "step2": "Wklej CSV od Claude",
+    "chooseFile": "Albo wybierz plik .csv",
+    "errorsSkipped": "Wiersze z błędami zostaną pominięte.",
+    "errors": {
+      "row": "Wiersz {{row}}: {{reason}}",
+      "empty": "Brak danych do importu",
+      "header": "Pierwsza linia musi zawierać nazwy kolumn: date,type,title,volume,notes",
+      "date": "data musi mieć format RRRR-MM-DD",
+      "type": "nieznany typ (użyj GYM, BOULDERING, CIRCUITS, LEAD_ROCK, LEAD_ARTIFICIAL, MENTAL_PRACTICE lub FINGERBOARD)",
+      "volume": "objętość musi być TR1–TR5 albo pusta",
+      "tooMany": "Importowanych jest tylko pierwszych 100 treningów"
+    },
+    "logPlannedTitle": "Zapisz zaplanowany trening",
+    "planned": "Zaplanowany",
+    "missed": "Niewykonany",
+    "log": "Zapisz",
+    "logIt": "Zapisz trening",
+    "delete": "Usuń z planu",
+    "deleteConfirmTitle": "Usunąć zaplanowany trening?",
+    "deleteConfirm": "Zostanie usunięty z planu. Zapisane treningi pozostaną bez zmian.",
+    "deletedUndo": "Usunięto zaplanowany trening",
+    "todaysPlan": "Plan na dziś",
+    "nextPlanned": "Następny w planie",
+    "seeInCalendar": "Zobacz w kalendarzu"
   }
 }

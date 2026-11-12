@@ -454,3 +454,13 @@ note the answer.
   grade pyramid (top 6 grades, style counts), Routes / Boulders toggle; grades show in the system used most. Keys
   `workouts.boulderNumber / sendStyle / sendStyles.* / climbTries / triesCount`, `stats.grades …`. Not checked in a
   browser yet. No mockup — needs a design.
+- 2026-11-13: Training plan import (branch `feat/plan-import`). `Plan` gets `type` + `trainingVolume` (migration
+  `20261113_add_plan_type_volume`, **apply to production before deploying** — Prisma selects the columns, so
+  /api/plans and the data export fail without them). `lib/plan-import.ts` parses CSV (header `date,type,title,volume,
+  notes`, any column order, `;` when the header uses it, ``` fences ignored, friendly type names like "lead wall") and
+  holds the "Copy instructions for Claude" prompt. API `/api/plans` (GET all with linked workout ids, POST up to 100)
+  and `DELETE /api/plans/[id]`. Calendar: import button (header), `PlanImportSheet` (paste or .csv, preview, row
+  errors), planned sessions as dashed rows (Planned / Not done, Log, Remove) and hollow dots in month cells, legend
+  item. "Log" opens the workout form prefilled (type, TR, title + notes as notes) with `planId`; a plan with a workout
+  counts as done and hides. Today: "Today's plan" / "Next planned" card, "Log it" → `/calendar?plan=<id>`. Keys
+  `plans.*`. No mockup.

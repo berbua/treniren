@@ -10,6 +10,8 @@ import CycleInfoComponent from './CycleInfo';
 import { StrongMindSection } from './StrongMindSection';
 import { ProcessGoalsSection } from './ProcessGoalsSection';
 import { ProcessGoal, ProjectGoal, isGoalAchieved, markGoalsAchieved } from '@/lib/strong-mind-goals';
+import { plannedSessionNotes } from '@/lib/plan-import';
+import type { PlannedSession } from '@/types/plan';
 import TagSelector from './TagSelector';
 import WorkoutExerciseTracker, { setHasReps } from './WorkoutExerciseTracker';
 import FingerboardHangTracker from './FingerboardHangTracker';
@@ -57,6 +59,7 @@ interface EnhancedWorkoutFormProps {
   defaultDate?: string; // Optional default date to pre-fill
   isDuplicating?: boolean; // Indicates if this is a duplication (not editing)
   onDelete?: () => void;
+  plannedSession?: PlannedSession; // Logging a planned session: prefills the form and links the workout to the plan
 }
 
 // Workout types will be generated dynamically with translations (mockup order: lead first)
@@ -80,7 +83,7 @@ const getTrainingVolumes = (t: (key: string) => string): { value: TrainingVolume
 ];
 
 
-export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate, isDuplicating = false, onDelete }: EnhancedWorkoutFormProps) {
+export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate, isDuplicating = false, onDelete, plannedSession }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t, tPlural, language } = useLanguage();
 
@@ -195,14 +198,14 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   
   const climbDetails = (initialData?.details ?? {}) as { routeName?: string; wallAngle?: WallAngle; climbStyle?: ClimbStyle };
   const [formData, setFormData] = useState({
-    type: initialData?.type || 'GYM',
+    type: initialData?.type || plannedSession?.type || 'GYM',
     // When duplicating (defaultDate provided), use defaultDate instead of initialData date
     date: defaultDate || (initialData?.startTime 
       ? toStoredDateString(initialData.startTime)
       : '2024-01-15'), // Use defaultDate if provided (for duplication), otherwise use initialData date or default
-    trainingVolume: initialData?.trainingVolume || 'TR3',
+    trainingVolume: initialData?.trainingVolume || plannedSession?.trainingVolume || 'TR3',
     focusLevel: initialData?.focusLevel || 3,
-    notes: initialData?.notes || '',
+    notes: initialData?.notes || (plannedSession ? plannedSessionNotes(plannedSession) : ''),
     mentalState: initialData?.mentalState || {},
     sector: initialData?.sector || '',
     mentalPracticeType: initialData?.mentalPracticeType || 'MEDITATION',
@@ -436,6 +439,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       gratitude: formData.gratitude || null,
       improvements: formData.improvements || null,
       details,
+      ...(plannedSession ? { planId: plannedSession.id } : {}),
     };
 
     // Handle recurring workouts if enabled (only for new workouts, not editing)
@@ -579,9 +583,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
         closeLabel={t('common.close') || 'Close'}
         title={
           <span className="flex items-center gap-2">
-            <Icon name={isDuplicating ? 'duplicate' : initialData ? 'edit' : 'plus'} size={24} className="text-uc-primary" />
+            <Icon name={isDuplicating ? 'duplicate' : initialData ? 'edit' : plannedSession ? 'calendar' : 'plus'} size={24} className="text-uc-primary" />
             {isDuplicating
               ? t('workouts.formDuplicateTitle') || 'Duplicate Workout'
+              : plannedSession
+              ? t('plans.logPlannedTitle') || 'Log planned session'
               : initialData
               ? t('workouts.formEditTitle') || 'Edit Workout'
               : t('workouts.formTitle') || 'Add New Workout'}

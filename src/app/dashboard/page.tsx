@@ -11,6 +11,7 @@ import { OfflineWorkoutForm } from '@/components/OfflineWorkoutForm'
 import { MessagesPanel } from '@/components/MessagesPanel'
 import { Event } from '@/types/event'
 import { Workout } from '@/types/workout'
+import { PlannedSession } from '@/types/plan'
 import AuthGuard from '@/components/AuthGuard'
 import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
@@ -25,7 +26,7 @@ import { useCycle } from '@/contexts/CycleContext'
 import { CyclePhase, getPhaseRanges } from '@/lib/cycle-utils'
 import {
   Button, buttonClasses, Card, EmptyState, Overline, PhaseBadge, phaseBandBg, phaseSolidBg, phaseTranslationKey,
-  SessionRow, Skeleton, SkeletonRows, StatTile, TrBadge, Icon, IconName, eventTypeMeta,
+  SessionRow, Skeleton, SkeletonRows, StatTile, TrBadge, Icon, IconName, WorkoutIconTile, eventTypeMeta,
 } from '@/components/ui'
 
 export default function Dashboard() {
@@ -61,6 +62,7 @@ function DashboardContent() {
   const [streak, setStreak] = useState(0)
   const [deload, setDeload] = useState<ReturnType<typeof currentDeload<Event>>>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [nextPlan, setNextPlan] = useState<PlannedSession | null>(null)
   const [showPWAStatus, setShowPWAStatus] = useState(false)
   const [showQuickLog, setShowQuickLog] = useState(false)
   // Bumped to refetch dashboard data, e.g. after offline workouts are uploaded
@@ -207,10 +209,23 @@ function DashboardContent() {
     { href: '/profile', icon: 'user', label: t('nav.profile') || 'Profile' },
   ]
 
+  // Next planned session from today on that isn't logged yet (plans come sorted by date)
+  useEffect(() => {
+    fetch('/api/plans', { credentials: 'include' })
+      .then(response => (response.ok ? response.json() : []))
+      .then((plans: PlannedSession[]) => {
+        const today = localDayNumber()
+        setNextPlan(plans.find(plan => plan.workouts.length === 0 && storedDayNumber(plan.date) >= today) ?? null)
+      })
+      .catch(error => console.error('Error fetching plans:', error))
+  }, [dataVersion])
+
+  const nextPlanIsToday = !!nextPlan && storedDayNumber(nextPlan.date) === localDayNumber()
+
   const showHero = isCycleTrackingEnabled && cycleInfo
   // During a deload the "Time to train!" nudge is replaced by the deload card
   const hasSuggestion = !isLoading && recentWorkouts.length > 0 && (streak >= 2 || (streak === 0 && stats.thisWeekWorkouts === 0 && !deload))
-  const hasSideCards = hasSuggestion || upcomingTrips.length > 0 || !!deload
+  const hasSideCards = hasSuggestion || upcomingTrips.length > 0 || !!deload || !!nextPlan
 
   return (
     <div className="min-h-screen bg-uc-bg text-uc-text">
@@ -268,6 +283,37 @@ function DashboardContent() {
                       <p className="mt-1 text-[13px] text-uc-text line-clamp-2">{deload.event.description}</p>
                     )}
                   </div>
+                </Card>
+              )}
+
+              {/* Planned session (imported training plan): today's, else the next one */}
+              {nextPlan && (
+                <Card className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    {nextPlan.type ? <WorkoutIconTile workoutType={nextPlan.type} /> : <IconTile><Icon name="calendar" size={22} /></IconTile>}
+                    <div className="min-w-0">
+                      <Overline className="uc-num">
+                        {nextPlanIsToday
+                          ? t('plans.todaysPlan') || "Today's plan"
+                          : `${t('plans.nextPlanned') || 'Next planned'} · ${new Date(`${toStoredDateString(nextPlan.date)}T12:00:00`).toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`}
+                      </Overline>
+                      <h3 className="text-[15px] font-extrabold">
+                        {nextPlan.title || (nextPlan.type ? t(`workouts.workoutTypes.${nextPlan.type}`) : '')}
+                        {nextPlan.trainingVolume && <span className="font-semibold text-uc-text-muted"> · {nextPlan.trainingVolume}</span>}
+                      </h3>
+                      {nextPlan.notes && <p className="text-[13px] text-uc-text-muted line-clamp-2">{nextPlan.notes}</p>}
+                    </div>
+                  </div>
+                  {nextPlanIsToday ? (
+                    <Link href={`/calendar?plan=${nextPlan.id}`} className={buttonClasses('primary', 'md', 'w-full')}>
+                      <Icon name="plus" />
+                      {t('plans.logIt') || 'Log it'}
+                    </Link>
+                  ) : (
+                    <Link href="/calendar" className={buttonClasses('tonal', 'md', 'w-full')}>
+                      {t('plans.seeInCalendar') || 'See in calendar'}
+                    </Link>
+                  )}
                 </Card>
               )}
 

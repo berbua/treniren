@@ -1756,5 +1756,46 @@
     "backOnline": "Back online",
     "pending": "{{count}} pending",
     "savedLocally": "Your workouts will be saved locally and synced when you're back online."
+  },
+  "plans": {
+    "importTitle": "Import training plan",
+    "import": "Import",
+    "importCount": {
+      "one": "Import {{count}} session",
+      "other": "Import {{count}} sessions"
+    },
+    "imported": {
+      "one": "{{count}} planned session added",
+      "other": "{{count}} planned sessions added"
+    },
+    "step1": "Ask Claude for your plan and add these instructions, so it answers in the format the app reads:",
+    "copyPrompt": "Copy instructions for Claude",
+    "copied": "Copied",
+    "copyFailed": "Could not copy — open \"Show the format\" and copy the text from there",
+    "showFormat": "Show the format",
+    "step2": "Paste the CSV Claude gave you",
+    "chooseFile": "Or choose a .csv file",
+    "errorsSkipped": "Rows with problems are skipped.",
+    "errors": {
+      "row": "Row {{row}}: {{reason}}",
+      "empty": "Nothing to import",
+      "header": "The first line must be the column names: date,type,title,volume,notes",
+      "date": "the date must be YYYY-MM-DD",
+      "type": "unknown type (use GYM, BOULDERING, CIRCUITS, LEAD_ROCK, LEAD_ARTIFICIAL, MENTAL_PRACTICE or FINGERBOARD)",
+      "volume": "volume must be TR1–TR5 or empty",
+      "tooMany": "Only the first 100 sessions are imported"
+    },
+    "logPlannedTitle": "Log planned session",
+    "planned": "Planned",
+    "missed": "Not done",
+    "log": "Log",
+    "logIt": "Log it",
+    "delete": "Remove from plan",
+    "deleteConfirmTitle": "Remove planned session?",
+    "deleteConfirm": "It is removed from your plan. Logged workouts are not affected.",
+    "deletedUndo": "Planned session removed",
+    "todaysPlan": "Today's plan",
+    "nextPlanned": "Next planned",
+    "seeInCalendar": "See in calendar"
   }
 }

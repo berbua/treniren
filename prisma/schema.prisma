@@ -214,6 +214,8 @@ model Plan {
   title     String
   label     String?
   notes     String?
+  type           WorkoutType?    // Planned session type (plan import)
+  trainingVolume TrainingVolume? // Planned TR volume
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -18,9 +18,11 @@ import { EventType, Event, EventFormData, isRangeEventType } from '@/types/event
 import TrainingTypeFilter from '@/components/TrainingTypeFilter'
 import AuthGuard from '@/components/AuthGuard'
 import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
-import { localDayNumber, storedDayNumber, toLocalDateString } from '@/lib/date-utils'
+import { dayNumberToLocalDate, localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils'
 import EventForm from '@/components/EventForm'
 import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
+import { PlanImportSheet } from '@/components/PlanImportSheet'
+import { PlannedSession } from '@/types/plan'
 import {
   BottomSheet,
   Button,
@@ -37,6 +39,7 @@ import {
   phaseTranslationKey,
   SegmentedControl,
   workoutBg,
+  workoutText,
   WorkoutIcon,
 } from '@/components/ui'
 
@@ -241,6 +244,62 @@ function UpcomingEventRow({ event, start, end, t, locale, onClick }: UpcomingEve
   )
 }
 
+interface PlanRowProps {
+  plan: PlannedSession
+  missed: boolean
+  t: (key: string) => string
+  onLog: (plan: PlannedSession) => void
+  onDelete: (plan: PlannedSession) => void
+}
+
+/** A planned session not logged yet: dashed outline, "Log" opens the workout form prefilled from the plan. */
+function PlanRow({ plan, missed, t, onLog, onDelete }: PlanRowProps) {
+  const meta = plan.type ? workoutMeta(plan.type) : null
+  const typeLabel = meta ? t(`training.types.${meta.key}`) : t('plans.planned')
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-dashed border-uc-text-muted bg-uc-surface py-1.5 pl-3 pr-1">
+      <span
+        aria-hidden
+        className={`mt-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-current ${plan.type ? workoutText[plan.type] : 'text-uc-text-muted'}`}
+      >
+        {plan.type ? <WorkoutIcon workoutType={plan.type} size={16} /> : <Icon name="calendar" size={16} />}
+      </span>
+      <div className="min-w-0 flex-1 py-1.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-[15px] font-extrabold text-uc-text">{plan.title || typeLabel}</span>
+          <span className={`inline-flex min-h-6 items-center rounded-lg px-2 text-xs font-bold ${missed ? 'bg-uc-warning-bg text-uc-warning' : 'bg-uc-elevated text-uc-text-muted'}`}>
+            {missed ? t('plans.missed') : t('plans.planned')}
+            {plan.trainingVolume && ` · ${plan.trainingVolume}`}
+          </span>
+        </div>
+        <p className="mt-0.5 line-clamp-2 text-[13px] text-uc-text-muted">
+          {[plan.title ? typeLabel : null, plan.notes].filter(Boolean).join(' · ')}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onLog(plan)
+        }}
+        className="mt-1 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-uc-input bg-uc-primary px-3 text-sm font-bold text-uc-on-primary hover:brightness-110"
+      >
+        <Icon name="plus" size={16} />
+        {t('plans.log')}
+      </button>
+      <IconButton
+        label={t('plans.delete') || 'Remove from plan'}
+        onClick={(e) => {
+          e.stopPropagation()
+          onDelete(plan)
+        }}
+      >
+        <Icon name="delete" />
+      </IconButton>
+    </div>
+  )
+}
+
 export default function CalendarPage() {
   return (
     <AuthGuard>
@@ -251,7 +310,7 @@ export default function CalendarPage() {
 
 function CalendarPageContent() {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle()
-  const { t, language } = useLanguage()
+  const { t, tPlural, language } = useLanguage()
   const { handleError, showSuccess } = useApiError()
   const confirmation = useConfirmation()
   const undoableDelete = useUndoableDelete()
@@ -284,6 +343,9 @@ function CalendarPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showQuickLog, setShowQuickLog] = useState(false)
   const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
+  const [plans, setPlans] = useState<PlannedSession[]>([])
+  const [loggingPlan, setLoggingPlan] = useState<PlannedSession | null>(null)
+  const [showPlanImport, setShowPlanImport] = useState(false)
 
   // Fetch workouts, events, tags, and exercises
   useEffect(() => {
@@ -327,7 +389,27 @@ function CalendarPageContent() {
     }
 
     fetchData()
+    fetchPlans()
   }, [])
+
+  // Planned sessions load on their own, so the calendar works if they fail
+  const fetchPlans = async () => {
+    try {
+      const response = await fetch('/api/plans', { credentials: 'include' })
+      if (response.ok) setPlans(await response.json())
+    } catch (error) {
+      console.error('Error fetching plans:', error)
+    }
+  }
+
+  // Today's "Log it" links here with ?plan=<id>: open that plan's form once plans are loaded
+  useEffect(() => {
+    const planId = new URLSearchParams(window.location.search).get('plan')
+    if (!planId || plans.length === 0) return
+    const plan = plans.find(p => p.id === planId)
+    window.history.replaceState(null, '', window.location.pathname)
+    if (plan && plan.workouts.length === 0) handleLogPlan(plan)
+  }, [plans])
 
   // Calculate calendar dates
   const calendarDates = useMemo(() => {
@@ -379,6 +461,17 @@ function CalendarPageContent() {
     }
     
     return filteredWorkouts
+  }
+
+  // Planned sessions not logged yet; same workout filters as the logged ones
+  const getPlansForDate = (date: Date) => {
+    if (!showWorkouts) return []
+    const dateStr = toLocalDateString(date)
+    return plans.filter(plan =>
+      plan.workouts.length === 0 &&
+      toStoredDateString(plan.date) === dateStr &&
+      (selectedTypes.length === 0 || (plan.type && selectedTypes.includes(plan.type)))
+    )
   }
 
   // Get events for a specific date
@@ -635,9 +728,11 @@ function CalendarPageContent() {
           const workoutsData = Array.isArray(data) ? data : (data.workouts || [])
           setWorkouts(workoutsData)
         }
+        if (loggingPlan) fetchPlans()
         setShowWorkoutForm(false)
         setEditingWorkout(null)
         setDuplicatingWorkout(null)
+        setLoggingPlan(null)
         setSelectedDate(null)
       } else {
         const error = await extractApiError(response)
@@ -654,7 +749,36 @@ function CalendarPageContent() {
     setShowWorkoutForm(false)
     setEditingWorkout(null)
     setDuplicatingWorkout(null)
+    setLoggingPlan(null)
     setSelectedDate(null)
+  }
+
+  const handleLogPlan = (plan: PlannedSession) => {
+    setShowAddChoice(false)
+    setEditingWorkout(null)
+    setDuplicatingWorkout(null)
+    setLoggingPlan(plan)
+    setSelectedDate(dayNumberToLocalDate(storedDayNumber(plan.date)))
+    setShowWorkoutForm(true)
+  }
+
+  const handleDeletePlan = (plan: PlannedSession) => {
+    confirmation.showConfirmation(
+      {
+        title: t('plans.deleteConfirmTitle') || 'Remove planned session?',
+        message: t('plans.deleteConfirm') || 'It is removed from your plan. Logged workouts are not affected.',
+        variant: 'danger',
+      },
+      () => {
+        undoableDelete({
+          url: `/api/plans/${plan.id}`,
+          item: plan,
+          setItems: setPlans,
+          message: t('plans.deletedUndo') || 'Planned session removed',
+          errorFallback: 'Failed to remove planned session',
+        })
+      }
+    )
   }
 
   const handleEventClick = (event: Event, e: React.MouseEvent) => {
@@ -841,6 +965,7 @@ function CalendarPageContent() {
   const sheetDate = showAddChoice ? selectedDate : null
   const sheetCycleInfo = sheetDate ? getCycleInfoForDate(sheetDate) : null
   const sheetWorkouts = sheetDate ? getWorkoutsForDate(sheetDate) : []
+  const sheetPlans = sheetDate ? getPlansForDate(sheetDate) : []
   const sheetEvents = sheetDate ? getEventsForDate(sheetDate) : []
 
   return (
@@ -870,6 +995,15 @@ function CalendarPageContent() {
                   {activeFilterCount}
                 </span>
               )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowPlanImport(true)}
+              aria-label={t('plans.importTitle') || 'Import training plan'}
+              title={t('plans.importTitle') || 'Import training plan'}
+            >
+              <Icon name="download" />
             </Button>
             <Button variant="accent" size="icon" onClick={openAddForToday} aria-label={t('common.add') || 'Add'} title={t('common.add') || 'Add'}>
               <Icon name="plus" />
@@ -934,6 +1068,7 @@ function CalendarPageContent() {
                           const roundRight = i === 6 || phaseAt(i + 1) !== phase
                           const predicted = !!phase && date > todayStart
                           const dayWorkouts = getWorkoutsForDate(date)
+                          const dayPlans = getPlansForDate(date)
                           const dayEvents = getEventsForDate(date)
                           const badgeEvent = dayEvents.find(e => !isRangeEventType(e.type))
                           const goalAchieved = dayWorkouts.some(hasAchievedGoal)
@@ -984,7 +1119,11 @@ function CalendarPageContent() {
                                 {dayWorkouts.slice(0, 3).map((workout) => (
                                   <span key={workout.id} className={`size-[7px] rounded-full ${workoutBg[workout.type]}`} />
                                 ))}
-                                {dayWorkouts.length > 3 && (
+                                {/* Planned: hollow dot in the type colour */}
+                                {dayPlans.slice(0, Math.max(0, 3 - dayWorkouts.length)).map((plan) => (
+                                  <span key={plan.id} className={`size-[7px] rounded-full border-[1.5px] border-current ${plan.type ? workoutText[plan.type] : 'text-uc-text-muted'}`} />
+                                ))}
+                                {dayWorkouts.length + dayPlans.length > 3 && (
                                   <span className="text-[9px] font-extrabold leading-none text-uc-text-muted">+</span>
                                 )}
                               </span>
@@ -1002,6 +1141,7 @@ function CalendarPageContent() {
                 {calendarDates.map((date, index) => {
                   const cycleInfo = getCycleInfoForDate(date)
                   const dayWorkouts = getWorkoutsForDate(date)
+                  const dayPlans = getPlansForDate(date)
                   const dayEvents = getEventsForDate(date)
                   const isToday = isTodayDate(date)
 
@@ -1032,7 +1172,7 @@ function CalendarPageContent() {
                           </Tooltip>
                         )}
                       </div>
-                      {(dayWorkouts.length > 0 || dayEvents.length > 0) && (
+                      {(dayWorkouts.length > 0 || dayPlans.length > 0 || dayEvents.length > 0) && (
                         <div className="mt-2 space-y-2">
                           {dayEvents.map((event) => (
                             <EventRow key={event.id} event={event} date={date} t={t} onClick={handleEventClick} />
@@ -1045,6 +1185,9 @@ function CalendarPageContent() {
                               onEdit={handleWorkoutClick}
                               onDuplicate={handleDuplicateWorkout}
                             />
+                          ))}
+                          {dayPlans.map((plan) => (
+                            <PlanRow key={plan.id} plan={plan} missed={date < todayStart} t={t} onLog={handleLogPlan} onDelete={handleDeletePlan} />
                           ))}
                         </div>
                       )}
@@ -1088,6 +1231,10 @@ function CalendarPageContent() {
               <li className="flex items-center gap-2 text-sm text-uc-text-muted">
                 <span aria-hidden className="inline-flex size-5 items-center justify-center rounded-md bg-uc-success-bg text-uc-success"><Icon name="achieved" size={12} /></span>
                 {t('strongMind.goalAchieved')}
+              </li>
+              <li className="flex items-center gap-2 text-sm text-uc-text-muted">
+                <span aria-hidden className="size-2.5 rounded-full border-[1.5px] border-uc-text-muted" />
+                {t('plans.planned')}
               </li>
               {injuryStats?.phaseWithMostInjuries && (
                 <li className="flex items-center gap-2 text-sm text-uc-text-muted">
@@ -1230,7 +1377,7 @@ function CalendarPageContent() {
                 </div>
               )}
 
-              {(sheetWorkouts.length > 0 || sheetEvents.length > 0) && (
+              {(sheetWorkouts.length > 0 || sheetPlans.length > 0 || sheetEvents.length > 0) && (
                 <div className="space-y-2">
                   {sheetEvents.map((event) => (
                     <EventRow key={event.id} event={event} date={sheetDate} t={t} onClick={editEventFromSheet} />
@@ -1243,6 +1390,9 @@ function CalendarPageContent() {
                       onEdit={editFromSheet}
                       onDuplicate={duplicateFromSheet}
                     />
+                  ))}
+                  {sheetPlans.map((plan) => (
+                    <PlanRow key={plan.id} plan={plan} missed={sheetDate < todayStart} t={t} onLog={handleLogPlan} onDelete={handleDeletePlan} />
                   ))}
                 </div>
               )}
@@ -1292,8 +1442,20 @@ function CalendarPageContent() {
             onCreateExercise={handleCreateExercise}
             defaultDate={duplicatingWorkout && selectedDate ? toLocalDateString(selectedDate) : (!editingWorkout && selectedDate ? toLocalDateString(selectedDate) : undefined)}
             isDuplicating={!!duplicatingWorkout}
+            plannedSession={loggingPlan || undefined}
           />
         )}
+
+        {/* Training plan import */}
+        <PlanImportSheet
+          isOpen={showPlanImport}
+          onClose={() => setShowPlanImport(false)}
+          onImported={(count) => {
+            setShowPlanImport(false)
+            showSuccess(tPlural('plans.imported', count))
+            fetchPlans()
+          }}
+        />
 
         {/* Event Form Modal */}
         {showEventForm && (

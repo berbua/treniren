@@ -137,6 +137,7 @@ export interface WorkoutFormData {
   improvements?: string | null // 3 things to do better next time
   preSessionFeel?: number // 1-5 scale
   dayAfterTiredness?: number // 1-5 scale
+  planId?: string // Planned session this workout was logged from
 }
 
 export interface RoutineVariation {
