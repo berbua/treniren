@@ -388,3 +388,8 @@ note the answer.
   Reset page: spinner while checking, then the form, the invalid-link screen, or the expired variant (new keys
   `auth.expiredLinkTitle`, `expiredLinkMessage`; button stays "Request new reset link"). Not tried against a running
   server.
+- 2026-11-12: Decision 62 checked, text not changed yet (waiting for the user). `disableCycleTracking` (CycleContext) only
+  POSTs `/api/user-profile` with `lastPeriodDate: null`, `cycleAvgLengthDays: 28`, `timezone: 'Europe/Warsaw'` and clears
+  the `cycle-settings` localStorage. Logged periods, events' cycle days and workouts are **not** deleted, so the mock's
+  "your logged periods are kept" is true and "will remove all cycle-related data" is not; lost are the last period date
+  and the cycle length. Side effect: the user's timezone is reset to Europe/Warsaw.
