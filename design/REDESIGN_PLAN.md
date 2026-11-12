@@ -52,7 +52,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Mobile floating bottom tab bar + desktop sidebar (restyle `NavigationHeader`, same routes).
 
 ### 3. Screens (one per session; tick when done)
-- [ ] Today / Dashboard — `Dashboard — dark.png`, `Dashboard — light.png`,
+- [x] Today / Dashboard — `Dashboard — dark.png`, `Dashboard — light.png`,
       `Dashboard — cycle onboarding, alt states, offline.png`, `Desktop — Dashboard.png`
 - [ ] Quick log — `Quick log sheet.png`
 - [ ] Log workout (lead) — `Log workout — lead climbing (full form).png`
@@ -109,3 +109,14 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
   language, Sign in). New keys `nav.events`, `nav.fingerboardTesting`, `nav.mainNavigation`, `nav.cycleDayOf`.
   Not checked logged-in in a browser (headless has no session) — check nav on phone + desktop before step 3.
   Screens still use the old classes; they switch to the primitives in step 3.
+- 2026-11-12: Step 3 · Dashboard done. `src/app/dashboard/page.tsx` rebuilt on the primitives: date overline + greeting,
+  **phase hero card** (user approved showing existing cycle data here: badge, "Day X of Y", phase goal + impact from
+  `cycle.phaseDetails`, 5-segment strip from `getPhaseRanges`, next ovulation, "Recommendations" → /cycle; only when
+  tracking is on), accent Quick log (full width on phones, header button on `lg`), suggestion + trip cards, stat
+  tiles (streak, total, events + week/month with goal bars; 5 in a row on `lg`), recent workouts as `SessionRow`s,
+  recent events with outlined event-colour tiles, 3×3 shortcuts, App status card. Same data, conditions and links.
+  Removed the mobile ⚡ FAB (it sat under the new tab bar; Quick log stays at the top). New key
+  `dashboard.recommendations`; `StatTile` got `progressClassName`; `phaseTranslationKey` moved to `PhaseBadge`.
+  Restyled `CycleConsentModal`, `CycleSetupForm` (bottom sheet, still a select for 21–35) and `OfflineWorkoutForm`
+  (`BottomSheet`, type chips, TR cards, rating dots) — all fields kept. Not checked logged-in in a browser.
+

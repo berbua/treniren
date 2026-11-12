@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from './ui'
 
 interface CycleConsentModalProps {
   onAccept: (latePeriodNotifications?: boolean) => void
@@ -23,82 +24,77 @@ export default function CycleConsentModal({ onAccept, onDecline }: CycleConsentM
 
   if (!isOpen) return null
 
+  const includes = [
+    'Track your cycle phases and training recommendations',
+    'See how your cycle affects your training performance',
+    'Get personalized workout suggestions based on your phase',
+    'All data is private and stored securely',
+  ]
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full">
-        <div className="p-6">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-pink-100 dark:bg-pink-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🌸</span>
-            </div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-2">
-              Cycle Tracking
-            </h2>
-            <p className="text-slate-600 dark:text-slate-300">
-              Would you like to include menstruation cycle tracking in your training diary?
-            </p>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-uc-scrim" aria-hidden />
+      <div role="dialog" aria-modal="true" aria-labelledby="cycle-consent-title" className="relative w-full max-w-md max-h-[92dvh] overflow-y-auto bg-uc-elevated text-uc-text shadow-uc rounded-[20px] p-6">
+        <div aria-hidden className="mb-4 flex size-14 items-center justify-center rounded-uc-card bg-uc-primary-container text-2xl">
+          🌸
+        </div>
+        <h2 id="cycle-consent-title" className="text-[22px] leading-7 font-extrabold">
+          Cycle Tracking
+        </h2>
+        <p className="mt-2 text-[15px] text-uc-text-muted">
+          Would you like to include menstruation cycle tracking in your training diary?
+        </p>
 
-          <div className="bg-pink-50 dark:bg-pink-900/20 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-2">
-              What this includes:
-            </h3>
-            <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
-              <li>• Track your cycle phases and training recommendations</li>
-              <li>• See how your cycle affects your training performance</li>
-              <li>• Get personalized workout suggestions based on your phase</li>
-              <li>• All data is private and stored securely</li>
-            </ul>
-          </div>
+        <h3 className="mt-5 mb-2 text-sm font-extrabold">
+          What this includes:
+        </h3>
+        <ul className="space-y-2 text-sm">
+          {includes.map((item) => (
+            <li key={item} className="flex items-start gap-2.5">
+              <CheckIcon />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
 
-          {/* Notification Preferences */}
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-3">
-              📱 Notification Preferences
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id="latePeriodNotifications"
-                  checked={latePeriodNotifications}
-                  onChange={(e) => setLatePeriodNotifications(e.target.checked)}
-                  className="mt-1 h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-                />
-                <div>
-                  <label htmlFor="latePeriodNotifications" className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                    Late period reminders
-                  </label>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                    Get notified if your period is overdue (more than 32 days since last period)
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Notification Preferences */}
+        <label htmlFor="latePeriodNotifications" className="mt-5 flex cursor-pointer items-start gap-3 rounded-uc-input border border-uc-border bg-uc-surface p-3">
+          <input
+            type="checkbox"
+            id="latePeriodNotifications"
+            checked={latePeriodNotifications}
+            onChange={(e) => setLatePeriodNotifications(e.target.checked)}
+            className="mt-0.5 size-5 shrink-0 accent-uc-primary"
+          />
+          <span>
+            <span className="block text-sm font-bold">📱 Late period reminders</span>
+            <span className="mt-0.5 block text-[13px] text-uc-text-muted">
+              Get notified if your period is overdue (more than 32 days since last period)
+            </span>
+          </span>
+        </label>
 
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Note:</strong> You can enable this feature later in your profile settings if you prefer to skip it now.
-            </p>
-          </div>
+        <p className="mt-4 text-[13px] text-uc-text-muted">
+          <strong className="text-uc-text">Note:</strong> You can enable this feature later in your profile settings if you prefer to skip it now.
+        </p>
 
-          <div className="flex space-x-3">
-            <button
-              onClick={handleDecline}
-              className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700"
-            >
-              Skip for now
-            </button>
-            <button
-              onClick={handleAccept}
-              className="flex-1 px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700"
-            >
-              Yes, enable cycle tracking
-            </button>
-          </div>
+        <div className="mt-6 flex gap-3">
+          <Button variant="ghost" size="lg" onClick={handleDecline} className="flex-1">
+            Skip for now
+          </Button>
+          <Button variant="accent" size="lg" onClick={handleAccept} className="flex-[1.5]">
+            Yes, enable cycle tracking
+          </Button>
         </div>
       </div>
     </div>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg aria-hidden className="mt-0.5 size-4 shrink-0 text-uc-success" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="m5 12 5 5 9-10" />
+    </svg>
   )
 }

@@ -29,6 +29,14 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **Phase hero card** — OK to keep (cycle day/phase/recommendations exist), but note the app's phase day ranges
   are **Menstrual 1–7, Follicular 8–12, Ovulation 13–16, Early luteal 17–20, Late luteal 21–end of cycle**
   (design says 1–5 / 6–12 / 13–16 / 17–22 / 23–28). Cycle length is configurable 21–35 days.
+- Built 2026-11-12: hero card is shown (user decision) with the horizontal phase strip on phone **and** desktop —
+  the desktop mock's cycle ring waits for the Cycle screen step. "Ovulation in ~N days" is shown as the existing
+  "Next ovulation: <date>".
+- **Cycle consent / setup**: mock texts ("Train with your cycle?", slider for cycle length) differ from the app's;
+  the app keeps its (hard-coded English) texts and a 21–35 select. Mock consent also omits the "Note: enable later" line.
+- **Offline workout form**: mock shows only date, type and notes; the app's form also has TR, sector, mental-practice
+  fields, three 1–5 ratings, Strong Mind, gratitude/improvements — kept.
+- Dashboard quick-log ⚡ floating button (phones) was dropped: it collided with the floating tab bar.
 
 ### Log workout
 - **Bottom sheet** — fine as a visual, but the form is much longer than shown (see B).

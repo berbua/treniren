@@ -10,6 +10,15 @@ export const phaseSolidBg: Record<CyclePhase, string> = {
   'late-luteal': 'bg-uc-phase-late-luteal',
 }
 
+/** Key under `cycle.phases.*` / `cycle.phaseDetails.*` in the translations. */
+export const phaseTranslationKey: Record<CyclePhase, string> = {
+  menstrual: 'menstrual',
+  follicular: 'follicular',
+  ovulation: 'ovulation',
+  'early-luteal': 'earlyLuteal',
+  'late-luteal': 'lateLuteal',
+}
+
 export const phaseBandBg: Record<CyclePhase, string> = {
   menstrual: 'bg-uc-band-menstruation',
   follicular: 'bg-uc-band-follicular',

@@ -1061,7 +1061,8 @@
     "loadingTrips": "Loading trips...",
     "noUpcomingTrips": "No upcoming trips with countdown",
     "noUpcomingTripsDescription": "Create a trip event and enable the 'Show countdown on homepage' option",
-    "addTrip": "Add Trip"
+    "addTrip": "Add Trip",
+    "recommendations": "Recommendations"
   },
   "goals": {
     "title": "Training Goals",

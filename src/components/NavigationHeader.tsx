@@ -10,8 +10,7 @@ import { useOffline } from '@/hooks/useOffline';
 import { NotificationBell } from './NotificationBell';
 import UserMenu from './UserMenu';
 import LanguageSwitcher from './LanguageSwitcher';
-import { BottomSheet, Overline, buttonClasses, phaseBandBg, phaseSolidBg } from './ui';
-import type { CyclePhase } from '@/lib/cycle-utils';
+import { BottomSheet, Overline, buttonClasses, phaseBandBg, phaseSolidBg, phaseTranslationKey } from './ui';
 
 interface NavItem {
   name: string;
@@ -23,14 +22,6 @@ interface NavGroup {
   label: string;
   items: NavItem[];
 }
-
-const phaseKey: Record<CyclePhase, string> = {
-  menstrual: 'menstrual',
-  follicular: 'follicular',
-  ovulation: 'ovulation',
-  'early-luteal': 'earlyLuteal',
-  'late-luteal': 'lateLuteal',
-};
 
 /** Logged-in app: floating bottom tab bar + "More" sheet on phones, left sidebar from `lg`. */
 export const NavigationHeader = () => {
@@ -187,7 +178,7 @@ export const NavigationHeader = () => {
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-extrabold text-uc-text">
-                {t(`cycle.phases.${phaseKey[cycleInfo.phase]}`)}
+                {t(`cycle.phases.${phaseTranslationKey[cycleInfo.phase]}`)}
               </span>
               <span className="block text-[13px] font-semibold text-uc-text-muted uc-num">
                 {t('nav.cycleDayOf', { day: cycleInfo.currentDay, length: cycleSettings?.cycleLength ?? 28 })}

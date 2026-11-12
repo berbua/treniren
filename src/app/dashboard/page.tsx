@@ -16,6 +16,12 @@ import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { OFFLINE_WORKOUTS_SYNCED_EVENT } from '@/lib/offline-sync'
 import { localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils'
+import { useCycle } from '@/contexts/CycleContext'
+import { CyclePhase, getPhaseRanges } from '@/lib/cycle-utils'
+import {
+  Button, buttonClasses, Card, EmptyState, Overline, PhaseBadge, phaseBandBg, phaseSolidBg, phaseTranslationKey,
+  SessionRow, Skeleton, SkeletonRows, StatTile, TrBadge,
+} from '@/components/ui'
 
 export default function Dashboard() {
   return (
@@ -27,7 +33,8 @@ export default function Dashboard() {
 
 function DashboardContent() {
   const { data: session } = useSession()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const { cycleInfo, cycleSettings, isCycleTrackingEnabled } = useCycle()
   const { isOnline, unsyncedWorkouts, storageSize } = useOffline()
   const { isMessagesPanelOpen, setIsMessagesPanelOpen } = useNotifications()
   const { getToken } = useCsrfToken()
@@ -196,708 +203,388 @@ function DashboardContent() {
     return Math.round(((current - previous) / previous) * 100)
   }
 
+  const weeklyGoal = userProfile?.weeklyWorkoutGoal || 3
+  const monthlyGoal = userProfile?.useAutoMonthlyGoal !== false
+    ? weeklyGoal * 4
+    : (userProfile?.monthlyWorkoutGoal || 12)
+  const goalPercent = (count: number, goal: number) => Math.min(Math.round((count / goal) * 100), 100)
+
+  const trend = (current: number, previous: number) => previous > 0 && (
+    <span className={current >= previous ? 'text-uc-success' : 'text-uc-error'}>
+      {current >= previous ? '↑' : '↓'} {Math.abs(calculateTrend(current, previous))}%
+    </span>
+  )
+
+  const todayLabel = new Date().toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  })
+
+  const quickLogLabel = t('quickLog.button') || 'Quick Log'
+
+  const shortcutGroups = [
+    {
+      label: t('dashboard.categories.training') || 'Trening',
+      links: [
+        { href: '/workouts', icon: '🏋️', label: t('nav.workouts') || 'Workouts' },
+        { href: '/calendar', icon: '📅', label: t('nav.calendar') || 'Calendar' },
+        { href: '/cycle', icon: '🔄', label: t('nav.cycle') || 'Cycle' },
+      ]
+    },
+    {
+      label: t('dashboard.categories.library') || 'Biblioteka',
+      links: [
+        { href: '/exercises', icon: '💪', label: t('nav.exercises') || 'Exercises' },
+        { href: '/routines', icon: '👯', label: t('nav.routines') || 'Routines' },
+        { href: '/fingerboard-protocols', icon: '🖐️', label: t('nav.fingerboardProtocols') || 'Fingerboard' },
+      ]
+    },
+    {
+      label: t('dashboard.categories.analysis') || 'Analiza',
+      links: [
+        { href: '/statistics', icon: '📊', label: t('nav.statistics') || 'Statistics' },
+        { href: '/strong-mind', icon: '🧠', label: t('strongMind.title') || 'Strong Mind' },
+        { href: '/profile', icon: '👤', label: t('nav.profile') || 'Profile' },
+      ]
+    },
+  ]
+
+  const showHero = isCycleTrackingEnabled && cycleInfo
+  const hasSuggestion = !isLoading && recentWorkouts.length > 0 && (streak >= 3 || (streak === 0 && stats.thisWeekWorkouts === 0))
+  const hasSideCards = hasSuggestion || upcomingTrips.length > 0
+
   return (
-    <div className="min-h-screen bg-uc-black">
+    <div className="min-h-screen bg-uc-bg text-uc-text">
       <CycleSetupFlow />
-      <main className="container mx-auto px-4 py-8">
-        
-        {/* Welcome Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h1 className="text-3xl font-bold text-uc-text-light mb-2">
-                {t('dashboard.hi') || 'Hi'} {userNickname || session?.user?.name?.split(' ')[0] || (t('dashboard.there') || 'there')}! 🦄
-              </h1>
-              <p className="text-uc-text-muted">
-                {t('dashboard.subtitle') || 'Track your climbing journey and stay motivated'}
-              </p>
-            </div>
-            {streak > 0 && (
-              <div className="flex items-center space-x-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 border-2 border-orange-500/40 rounded-2xl px-5 py-3 shadow-lg animate-pulse">
-                <span className="text-3xl">🔥</span>
-                <div>
-                  <div className="text-2xl font-bold text-orange-400">{streak}</div>
-                  <div className="text-xs text-uc-text-muted uppercase tracking-wide">
-                    {streak === 1 ? (t('dashboard.dayStreak') || 'day streak') : (t('dashboard.daysStreak') || 'days streak')}
+      <main className="mx-auto max-w-[1120px] px-5 lg:px-8 pt-6 pb-8 space-y-5 lg:space-y-6">
+
+        {/* Header */}
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <Overline className="uc-num">{todayLabel}</Overline>
+            <h1 className="mt-1 text-[28px] leading-[34px] lg:text-[34px] lg:leading-[40px] font-extrabold tracking-[-0.02em] text-uc-text">
+              {t('dashboard.hi') || 'Hi'} {userNickname || session?.user?.name?.split(' ')[0] || (t('dashboard.there') || 'there')}! 🦄
+            </h1>
+            <p className="mt-1 text-sm text-uc-text-muted">
+              {t('dashboard.subtitle') || 'Track your climbing journey and stay motivated'}
+            </p>
+          </div>
+          <Button variant="accent" size="lg" onClick={() => setShowQuickLog(true)} className="hidden lg:inline-flex shrink-0">
+            <span aria-hidden>⚡</span>
+            {quickLogLabel}
+          </Button>
+        </div>
+
+        {/* Phase hero + suggestion / trips */}
+        <div className={`grid gap-4 ${showHero ? 'lg:grid-cols-2' : ''}`}>
+          {showHero && cycleSettings && (
+            <PhaseHeroCard
+              phase={cycleInfo.phase}
+              currentDay={cycleInfo.currentDay}
+              cycleLength={cycleSettings.cycleLength}
+              nextOvulationDate={cycleInfo.nextOvulationDate}
+            />
+          )}
+
+          {/* Mobile: main CTA right under the hero */}
+          <Button variant="accent" size="lg" onClick={() => setShowQuickLog(true)} className="lg:hidden w-full min-h-16 text-lg">
+            <span aria-hidden>⚡</span>
+            {quickLogLabel}
+          </Button>
+
+          {hasSideCards && (
+            <div className={`grid gap-4 content-start ${showHero ? '' : 'lg:grid-cols-2'}`}>
+              {/* Personalized Suggestions */}
+              {hasSuggestion && streak >= 3 && (
+                <Card className="flex items-start gap-3">
+                  <IconTile>💪</IconTile>
+                  <div className="min-w-0">
+                    <h3 className="text-[15px] font-extrabold">{t('dashboard.greatStreak') || 'Świetna passa!'}</h3>
+                    <p className="text-[13px] text-uc-text-muted">
+                      {t('dashboard.keepGoing') || `Masz ${streak} dni z rzędu! Nie przerywaj swojego streaku 🔥`}
+                    </p>
                   </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Hero CTA - Quick Log */}
-        <div className="mb-6">
-          <button
-            onClick={() => setShowQuickLog(true)}
-            className="w-full group relative overflow-hidden bg-gradient-to-br from-uc-purple/40 to-uc-mustard/40 rounded-2xl shadow-xl border-2 border-uc-purple/50 hover:border-uc-mustard/70 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-uc-purple/20 to-uc-mustard/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="relative p-6 flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 bg-uc-mustard/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-3xl">⚡</span>
-                </div>
-                <div className="text-left">
-                  <h3 className="text-xl font-bold text-uc-text-light mb-1">
-                    {t('quickLog.button') || 'Quick Log'}
-                  </h3>
-                  <p className="text-sm text-uc-text-muted">
-                    {t('quickLog.description') || 'Quickly log a workout. You can add details later.'}
-                  </p>
-                </div>
-              </div>
-              <svg className="w-8 h-8 text-uc-mustard group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </div>
-          </button>
-        </div>
-
-        {/* Quick Actions - Categorized */}
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Training Category */}
-          <div className="bg-uc-dark-bg/50 rounded-2xl p-5 border border-uc-purple/20">
-            <h3 className="text-sm font-semibold text-uc-text-muted mb-3 uppercase tracking-wide">
-              🏋️ {t('dashboard.categories.training') || 'Trening'}
-            </h3>
-            <div className="space-y-2">
-              <Link
-                href="/workouts"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">🏋️</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('nav.workouts') || 'Workouts'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/calendar"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">📅</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('nav.calendar') || 'Calendar'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/cycle"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">🔄</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('nav.cycle') || 'Cycle'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-
-          {/* Library Category */}
-          <div className="bg-uc-dark-bg/50 rounded-2xl p-5 border border-uc-purple/20">
-            <h3 className="text-sm font-semibold text-uc-text-muted mb-3 uppercase tracking-wide">
-              📚 {t('dashboard.categories.library') || 'Biblioteka'}
-            </h3>
-            <div className="space-y-2">
-              <Link
-                href="/exercises"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">💪</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('nav.exercises') || 'Exercises'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/routines"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">👯</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('nav.routines') || 'Routines'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/fingerboard-protocols"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">🖐️</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('nav.fingerboardProtocols') || 'Fingerboard'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-
-          {/* Analysis Category */}
-          <div className="bg-uc-dark-bg/50 rounded-2xl p-5 border border-uc-purple/20">
-            <h3 className="text-sm font-semibold text-uc-text-muted mb-3 uppercase tracking-wide">
-              📊 {t('dashboard.categories.analysis') || 'Analiza'}
-            </h3>
-            <div className="space-y-2">
-              <Link
-                href="/statistics"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">📊</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('nav.statistics') || 'Statistics'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/strong-mind"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">🧠</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('strongMind.title') || 'Strong Mind'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all group"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">👤</span>
-                  <span className="text-sm font-medium text-uc-text-light">{t('nav.profile') || 'Profile'}</span>
-                </div>
-                <svg className="w-4 h-4 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Personalized Suggestions */}
-        {!isLoading && recentWorkouts.length > 0 && (
-          <div className="mb-8">
-            {streak >= 3 && (
-              <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-2xl p-5 flex items-start space-x-4">
-                <span className="text-3xl">💪</span>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-orange-400 mb-1">
-                    {t('dashboard.greatStreak') || 'Świetna passa!'}
-                  </h4>
-                  <p className="text-sm text-uc-text-muted">
-                    {t('dashboard.keepGoing') || `Masz ${streak} dni z rzędu! Nie przerywaj swojego streaku 🔥`}
-                  </p>
-                </div>
-              </div>
-            )}
-            {streak === 0 && stats.thisWeekWorkouts === 0 && (
-              <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-5 flex items-start space-x-4">
-                <span className="text-3xl">👋</span>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-blue-400 mb-1">
-                    {t('dashboard.timeToTrain') || 'Czas na trening!'}
-                  </h4>
-                  <p className="text-sm text-uc-text-muted">
-                    {t('dashboard.noWorkoutsThisWeek') || 'Nie miałaś jeszcze treningu w tym tygodniu. Dodaj szybki wpis!'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowQuickLog(true)}
-                  className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-4 py-2 rounded-xl transition-colors font-medium text-sm whitespace-nowrap"
-                >
-                  {t('quickLog.button') || 'Quick Log'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Trip Countdown - Only show when trips exist */}
-        {upcomingTrips.length > 0 && (
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-uc-purple/20 to-uc-mustard/20 border border-uc-purple/30 rounded-2xl p-6 shadow-lg">
-              <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                ✈️ {t('dashboard.upcomingTrips') || 'Upcoming Trips'}
-              </h3>
-              {!isLoading ? (
-                <div className="space-y-3">
-                  {upcomingTrips.map((trip) => {
-                    const daysUntil = getDaysUntilTrip(trip.tripStartDate!)
-                    return (
-                      <div key={trip.id} className="flex items-center justify-between p-4 bg-uc-dark-bg rounded-xl border border-uc-purple/20">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-uc-purple/20 rounded-full flex items-center justify-center">
-                            <span className="text-lg">✈️</span>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-uc-text-light">
-                              {trip.destination}
-                            </h4>
-                            <p className="text-sm text-uc-text-muted">
-                              {trip.climbingType === 'BOULDERING' ? '🧗 Bouldering' : '🧗‍♀️ Sport Climbing'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-uc-mustard">
-                            {daysUntil}
-                          </div>
-                          <div className="text-sm text-uc-text-muted">
-                            {daysUntil === 1 ? (t('dashboard.dayToGo') || 'day to go') : (t('dashboard.daysToGo') || 'days to go')}
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-4">✈️</div>
-                  <p className="text-uc-text-muted">
-                    {t('dashboard.loadingTrips') || 'Loading trips...'}
-                  </p>
-                </div>
+                </Card>
               )}
+              {hasSuggestion && streak === 0 && stats.thisWeekWorkouts === 0 && (
+                <Card className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <IconTile>👋</IconTile>
+                    <div className="min-w-0">
+                      <h3 className="text-[15px] font-extrabold">{t('dashboard.timeToTrain') || 'Czas na trening!'}</h3>
+                      <p className="text-[13px] text-uc-text-muted">
+                        {t('dashboard.noWorkoutsThisWeek') || 'Nie miałaś jeszcze treningu w tym tygodniu. Dodaj szybki wpis!'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="accent" onClick={() => setShowQuickLog(true)} className="w-full">
+                    {quickLogLabel}
+                  </Button>
+                </Card>
+              )}
+
+              {/* Trip Countdown - Only show when trips exist */}
+              {upcomingTrips.map((trip) => {
+                const daysUntil = getDaysUntilTrip(trip.tripStartDate!)
+                return (
+                  <Card key={trip.id} className="flex items-center gap-4">
+                    <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-uc-input bg-uc-primary-container text-uc-on-primary-container">
+                      <span className="text-[22px] leading-6 font-extrabold uc-num">{daysUntil}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <Overline>✈️ {t('dashboard.upcomingTrips') || 'Upcoming Trips'}</Overline>
+                      <h3 className="text-[15px] font-extrabold truncate">{trip.destination}</h3>
+                      <p className="text-[13px] text-uc-text-muted">
+                        {trip.climbingType === 'BOULDERING' ? '🧗 Bouldering' : '🧗‍♀️ Sport Climbing'}
+                        {' · '}
+                        <span className="uc-num">{daysUntil}</span>{' '}
+                        {daysUntil === 1 ? (t('dashboard.dayToGo') || 'day to go') : (t('dashboard.daysToGo') || 'days to go')}
+                      </p>
+                    </div>
+                  </Card>
+                )
+              })}
             </div>
-          </div>
-        )}
-
-        {/* Quick Stats - Enhanced with Progress */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {isLoading ? (
-            // Loading skeletons
-            <>
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-uc-dark-bg p-5 rounded-xl shadow-lg border border-uc-purple/20 animate-pulse">
-                  <div className="h-8 bg-uc-black/50 rounded mb-2"></div>
-                  <div className="h-4 bg-uc-black/30 rounded w-2/3"></div>
-                </div>
-              ))}
-            </>
-          ) : (
-            <>
-              {/* Total Workouts */}
-              <div className="bg-uc-dark-bg p-5 rounded-xl shadow-lg border border-uc-purple/20 hover:border-uc-purple/40 transition-all group">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-10 h-10 bg-uc-mustard/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="text-xl">🏋️</span>
-                  </div>
-                  <div className="text-3xl font-bold text-uc-mustard">{stats.totalWorkouts}</div>
-                </div>
-                <div className="text-sm text-uc-text-muted font-medium">{t('dashboard.totalWorkouts') || 'Total Workouts'}</div>
-              </div>
-
-              {/* This Week with Goal */}
-              <div className="bg-uc-dark-bg p-5 rounded-xl shadow-lg border border-uc-purple/20 hover:border-uc-purple/40 transition-all group">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <span className="text-xl">📈</span>
-                    </div>
-                    <div className="text-3xl font-bold text-uc-success">{stats.thisWeekWorkouts}</div>
-                  </div>
-                  {stats.lastWeekWorkouts > 0 && (
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      stats.thisWeekWorkouts >= stats.lastWeekWorkouts 
-                        ? 'bg-green-500/20 text-green-400' 
-                        : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {stats.thisWeekWorkouts >= stats.lastWeekWorkouts ? '↑' : '↓'} {Math.abs(calculateTrend(stats.thisWeekWorkouts, stats.lastWeekWorkouts))}%
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-uc-text-muted font-medium mb-2">{t('dashboard.thisWeek') || 'This Week'}</div>
-                {/* Weekly Goal Progress */}
-                <div className="mt-2">
-                  <div className="flex justify-between text-xs text-uc-text-muted mb-1">
-                    <span>
-                      {t('dashboard.goal') || 'Cel'}: {userProfile?.weeklyWorkoutGoal || 3}
-                    </span>
-                    <span>{Math.min(Math.round((stats.thisWeekWorkouts / (userProfile?.weeklyWorkoutGoal || 3)) * 100), 100)}%</span>
-                  </div>
-                  <div className="w-full bg-uc-black/50 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        stats.thisWeekWorkouts >= (userProfile?.weeklyWorkoutGoal || 3) ? 'bg-green-500' : 'bg-yellow-500'
-                      }`}
-                      style={{ width: `${Math.min((stats.thisWeekWorkouts / (userProfile?.weeklyWorkoutGoal || 3)) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* This Month with Goal */}
-              <div className="bg-uc-dark-bg p-5 rounded-xl shadow-lg border border-uc-purple/20 hover:border-uc-purple/40 transition-all group">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-10 h-10 bg-uc-purple/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <span className="text-xl">📅</span>
-                    </div>
-                    <div className="text-3xl font-bold text-uc-purple">{stats.thisMonthWorkouts}</div>
-                  </div>
-                  {stats.lastMonthWorkouts > 0 && (
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      stats.thisMonthWorkouts >= stats.lastMonthWorkouts 
-                        ? 'bg-green-500/20 text-green-400' 
-                        : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {stats.thisMonthWorkouts >= stats.lastMonthWorkouts ? '↑' : '↓'} {Math.abs(calculateTrend(stats.thisMonthWorkouts, stats.lastMonthWorkouts))}%
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-uc-text-muted font-medium mb-2">{t('dashboard.thisMonth') || 'This Month'}</div>
-                {/* Monthly Goal Progress */}
-                <div className="mt-2">
-                  <div className="flex justify-between text-xs text-uc-text-muted mb-1">
-                    <span>
-                      {t('dashboard.goal') || 'Cel'}: {
-                        userProfile?.useAutoMonthlyGoal !== false 
-                          ? (userProfile?.weeklyWorkoutGoal || 3) * 4
-                          : (userProfile?.monthlyWorkoutGoal || 12)
-                      }
-                    </span>
-                    <span>
-                      {Math.min(Math.round((stats.thisMonthWorkouts / (
-                        userProfile?.useAutoMonthlyGoal !== false 
-                          ? (userProfile?.weeklyWorkoutGoal || 3) * 4
-                          : (userProfile?.monthlyWorkoutGoal || 12)
-                      )) * 100), 100)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-uc-black/50 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        stats.thisMonthWorkouts >= (
-                          userProfile?.useAutoMonthlyGoal !== false 
-                            ? (userProfile?.weeklyWorkoutGoal || 3) * 4
-                            : (userProfile?.monthlyWorkoutGoal || 12)
-                        ) ? 'bg-uc-purple' : 'bg-yellow-500'
-                      }`}
-                      style={{ 
-                        width: `${Math.min((stats.thisMonthWorkouts / (
-                          userProfile?.useAutoMonthlyGoal !== false 
-                            ? (userProfile?.weeklyWorkoutGoal || 3) * 4
-                            : (userProfile?.monthlyWorkoutGoal || 12)
-                        )) * 100, 100)}%` 
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Events */}
-              <div className="bg-uc-dark-bg p-5 rounded-xl shadow-lg border border-uc-purple/20 hover:border-uc-purple/40 transition-all group">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="text-xl">📆</span>
-                  </div>
-                  <div className="text-3xl font-bold text-blue-400">{stats.totalEvents}</div>
-                </div>
-                <div className="text-sm text-uc-text-muted font-medium">{t('dashboard.events') || 'Events'}</div>
-              </div>
-            </>
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Recent Workouts */}
-          <div className="bg-uc-dark-bg p-6 rounded-2xl shadow-lg border border-uc-purple/20">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-uc-text-light">
-                {t('dashboard.recentWorkouts') || 'Recent Workouts'}
-              </h3>
-              <Link 
-                href="/workouts"
-                className="text-uc-mustard hover:text-uc-mustard/80 text-sm font-medium transition-colors"
-              >
-                {t('dashboard.viewAll') || 'View All'}
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {isLoading ? (
-                // Loading skeleton
-                <>
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl animate-pulse">
-                      <div className="w-6 h-6 bg-uc-black/50 rounded"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-uc-black/50 rounded mb-2"></div>
-                        <div className="h-3 bg-uc-black/30 rounded w-2/3"></div>
-                      </div>
-                      <div className="h-3 bg-uc-black/30 rounded w-12"></div>
-                    </div>
-                  ))}
-                </>
-              ) : recentWorkouts.length > 0 ? (
-                recentWorkouts.map((workout) => {
+        {/* Quick Stats */}
+        {isLoading ? (
+          <div className="grid grid-cols-3 lg:grid-cols-5 gap-3" role="status" aria-busy="true">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className={`h-[118px] rounded-uc-card ${i > 3 ? 'col-span-3 lg:col-span-1' : ''}`} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 lg:grid-cols-5 gap-3">
+            <StatTile
+              className="order-1"
+              icon="🔥"
+              label={t('dashboard.streak') || 'Day Streak'}
+              value={streak}
+            />
+            <StatTile
+              className="order-2 lg:order-4"
+              label={t('dashboard.totalWorkouts') || 'Total Workouts'}
+              value={stats.totalWorkouts}
+            />
+            <StatTile
+              className="order-3 lg:order-5"
+              label={t('dashboard.events') || 'Events'}
+              value={stats.totalEvents}
+            />
+            <StatTile
+              className="order-4 lg:order-2 col-span-3 lg:col-span-1"
+              label={t('dashboard.thisWeek') || 'This Week'}
+              value={stats.thisWeekWorkouts}
+              unit={`/ ${weeklyGoal}`}
+              progress={goalPercent(stats.thisWeekWorkouts, weeklyGoal)}
+              progressClassName={stats.thisWeekWorkouts >= weeklyGoal ? 'bg-uc-success' : undefined}
+              footer={
+                <span className="flex flex-wrap justify-between gap-x-3 uc-num">
+                  <span>{t('dashboard.goal') || 'Cel'}: {weeklyGoal} · {goalPercent(stats.thisWeekWorkouts, weeklyGoal)}%</span>
+                  {trend(stats.thisWeekWorkouts, stats.lastWeekWorkouts)}
+                </span>
+              }
+            />
+            <StatTile
+              className="order-5 lg:order-3 col-span-3 lg:col-span-1"
+              label={t('dashboard.thisMonth') || 'This Month'}
+              value={stats.thisMonthWorkouts}
+              unit={`/ ${monthlyGoal}`}
+              progress={goalPercent(stats.thisMonthWorkouts, monthlyGoal)}
+              progressClassName={stats.thisMonthWorkouts >= monthlyGoal ? 'bg-uc-success' : undefined}
+              footer={
+                <span className="flex flex-wrap justify-between gap-x-3 uc-num">
+                  <span>{t('dashboard.goal') || 'Cel'}: {monthlyGoal} · {goalPercent(stats.thisMonthWorkouts, monthlyGoal)}%</span>
+                  {trend(stats.thisMonthWorkouts, stats.lastMonthWorkouts)}
+                </span>
+              }
+            />
+          </div>
+        )}
+
+        {/* Recent workouts + events */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
+          <section>
+            <SectionHeader title={t('dashboard.recentWorkouts') || 'Recent Workouts'} href="/workouts" linkLabel={t('dashboard.viewAll') || 'View All'} />
+            {isLoading ? (
+              <Card><SkeletonRows rows={3} /></Card>
+            ) : recentWorkouts.length > 0 ? (
+              <div className="space-y-2.5">
+                {recentWorkouts.map((workout) => {
                   // Get workout details summary
                   const exercisesCount = (workout as any).workoutExercises?.length || 0
                   const hangsCount = (workout as any).fingerboardHangs?.length || 0
-                  const detailsText = exercisesCount > 0 ? `${exercisesCount} ${t('dashboard.exercises') || 'exercises'}` 
-                    : hangsCount > 0 ? `${hangsCount} hangs` 
+                  const detailsText = exercisesCount > 0 ? `${exercisesCount} ${t('dashboard.exercises') || 'exercises'}`
+                    : hangsCount > 0 ? `${hangsCount} hangs`
                     : t('dashboard.quickLog') || 'Quick log'
-                  
-                  return (
-                    <div
-                      key={workout.id}
-                      className="group relative p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-all border border-transparent hover:border-uc-purple/30"
-                    >
-                      <Link href={`/workouts`} className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-uc-purple/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <span className="text-xl">{getWorkoutTypeEmoji(workout.type)}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <div className="font-semibold text-uc-text-light truncate">
-                              {t(`workoutTypes.${workout.type.toLowerCase()}`) || workout.type}
-                            </div>
-                            {workout.trainingVolume && (
-                              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-uc-purple/20 text-uc-purple">
-                                {workout.trainingVolume}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-2 text-xs text-uc-text-muted">
-                            <span>📅 {new Date(workout.startTime).toLocaleDateString()}</span>
-                            <span>•</span>
-                            <span>{detailsText}</span>
-                          </div>
-                        </div>
-                        <svg className="w-5 h-5 text-uc-text-muted group-hover:text-uc-mustard group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                    </div>
-                  )
-                })
-              ) : (
-                <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-                  <div className="text-6xl mb-4">🏋️</div>
-                  <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-                    {t('dashboard.noWorkouts') || 'No workouts yet'}
-                  </h3>
-                  <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-                    {t('dashboard.noWorkoutsDescription') || 'Start tracking your training sessions to see your progress and statistics here.'}
-                  </p>
-                  <Link 
-                    href="/workouts"
-                    className="inline-flex items-center space-x-2 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-                  >
-                    <span>➕</span>
-                    <span>{t('dashboard.addFirst') || 'Add your first workout'}</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* Recent Events */}
-          <div className="bg-uc-dark-bg p-6 rounded-2xl shadow-lg border border-uc-purple/20">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-uc-text-light">
-                {t('dashboard.recentEvents') || 'Recent Events'}
-              </h3>
-              <Link 
-                href="/calendar"
-                className="text-uc-mustard hover:text-uc-mustard/80 text-sm font-medium transition-colors"
-              >
-                {t('dashboard.viewAll') || 'View All'}
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {isLoading ? (
-                // Loading skeleton
-                <>
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl animate-pulse">
-                      <div className="w-6 h-6 bg-uc-black/50 rounded"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-uc-black/50 rounded mb-2"></div>
-                        <div className="h-3 bg-uc-black/30 rounded w-2/3"></div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              ) : recentEvents.length > 0 ? (
-                recentEvents.map((event) => (
+                  return (
+                    <Link key={workout.id} href="/workouts" className="block rounded-uc-card hover:brightness-110 transition">
+                      <SessionRow
+                        workoutType={workout.type}
+                        icon={<span className="text-xl">{getWorkoutTypeEmoji(workout.type)}</span>}
+                        title={t(`workoutTypes.${workout.type.toLowerCase()}`) || workout.type}
+                        meta={<span className="uc-num">{new Date(workout.startTime).toLocaleDateString()} · {detailsText}</span>}
+                        trailing={workout.trainingVolume && <TrBadge>{workout.trainingVolume}</TrBadge>}
+                      />
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <Card>
+                <EmptyState
+                  icon="🏋️"
+                  title={t('dashboard.noWorkouts') || 'No workouts yet'}
+                  description={t('dashboard.noWorkoutsDescription') || 'Start tracking your training sessions to see your progress and statistics here.'}
+                  action={
+                    <Link href="/workouts" className={buttonClasses('tonal')}>
+                      <span aria-hidden>➕</span>
+                      {t('dashboard.addFirst') || 'Add your first workout'}
+                    </Link>
+                  }
+                />
+              </Card>
+            )}
+          </section>
+
+          <section>
+            <SectionHeader title={t('dashboard.recentEvents') || 'Recent Events'} href="/calendar" linkLabel={t('dashboard.viewAll') || 'View All'} />
+            {isLoading ? (
+              <Card><SkeletonRows rows={3} /></Card>
+            ) : recentEvents.length > 0 ? (
+              <Card padded={false} className="px-4 divide-y divide-uc-border">
+                {recentEvents.map((event) => (
                   <Link
                     key={event.id}
                     href="/calendar"
-                    className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl hover:bg-uc-black/70 transition-colors"
+                    className="flex items-center gap-3 min-h-16 py-2.5 hover:opacity-80 transition-opacity"
                   >
-                    <span className="text-lg">{getEventTypeEmoji(event.type)}</span>
-                    <div className="flex-1">
-                      <div className="font-medium text-uc-text-light">
+                    <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center rounded-xl border-[1.5px] bg-uc-elevated text-lg ${eventTone[event.type] ?? eventTone.OTHER}`}>
+                      {getEventTypeEmoji(event.type)}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-[15px] font-extrabold truncate">
                         {event.type === 'TRIP' ? event.destination : event.title}
                       </div>
-                      <div className="text-sm text-uc-text-muted">
+                      <div className="text-[13px] font-medium text-uc-text-muted uc-num">
                         {new Date(event.date).toLocaleDateString()}
                       </div>
                     </div>
                   </Link>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-3">📅</div>
-                  <p className="text-uc-text-muted mb-4">{t('dashboard.noEvents') || 'No events yet'}</p>
-                  <Link 
-                    href="/calendar"
-                    className="inline-flex items-center space-x-2 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-                  >
-                    <span>➕</span>
-                    <span>{t('dashboard.addFirst') || 'Add your first event'}</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
+                ))}
+              </Card>
+            ) : (
+              <Card className="border-dashed">
+                <EmptyState
+                  icon="📅"
+                  title={t('dashboard.noEvents') || 'No events yet'}
+                  action={
+                    <Link href="/calendar" className={buttonClasses('tonal')}>
+                      <span aria-hidden>➕</span>
+                      {t('dashboard.addFirst') || 'Add your first event'}
+                    </Link>
+                  }
+                />
+              </Card>
+            )}
+          </section>
         </div>
 
-        {/* PWA Status Cards - Only show toggle if there are no issues */}
+        {/* Shortcuts */}
+        <div className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0">
+          {shortcutGroups.map((group) => (
+            <section key={group.label}>
+              <Overline className="mb-2">{group.label}</Overline>
+              <div className="grid grid-cols-3 gap-2.5">
+                {group.links.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="flex min-h-[88px] flex-col justify-between gap-3 p-3 bg-uc-surface border border-uc-border rounded-uc-card hover:bg-uc-elevated transition-colors"
+                  >
+                    <span aria-hidden className="text-xl leading-6">{link.icon}</span>
+                    <span className="text-sm font-bold text-uc-text break-words">{link.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        {/* PWA Status - only when there are issues (offline or unsynced workouts) */}
         {(!isOnline || unsyncedWorkouts.length > 0 || showPWAStatus) && (
-          <div className="mb-8">
-            {/* Show alert header if there are issues */}
+          <Card className="space-y-3">
+            <h3 className="text-[17px] font-extrabold">{t('dashboard.appStatus') || 'App Status'}</h3>
             {(!isOnline || unsyncedWorkouts.length > 0) && (
-              <div className="bg-orange-500/10 border-2 border-orange-500/30 rounded-xl p-4 mb-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">⚠️</span>
-                  <div>
-                    <h4 className="font-semibold text-orange-400">
-                      {!isOnline ? (t('dashboard.offlineMode') || 'Offline Mode') : (t('dashboard.unsyncedData') || 'Unsynced Data')}
-                    </h4>
-                    <p className="text-sm text-uc-text-muted">
-                      {!isOnline 
-                        ? (t('dashboard.offlineModeDesc') || 'You are working offline. Changes will sync when you reconnect.')
-                        : `${unsyncedWorkouts.length} ${t('dashboard.workoutsWaitingSync') || 'workouts waiting to sync'}`
-                      }
-                    </p>
-                  </div>
+              <div className="flex items-start gap-3 rounded-uc-input bg-uc-warning-bg px-3 py-2.5">
+                <span aria-hidden className="text-lg leading-6">⚠️</span>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-extrabold text-uc-warning">
+                    {!isOnline ? (t('dashboard.offlineMode') || 'Offline Mode') : (t('dashboard.unsyncedData') || 'Unsynced Data')}
+                  </h4>
+                  <p className="text-[13px] text-uc-text">
+                    {!isOnline
+                      ? (t('dashboard.offlineModeDesc') || 'You are working offline. Changes will sync when you reconnect.')
+                      : `${unsyncedWorkouts.length} ${t('dashboard.workoutsWaitingSync') || 'workouts waiting to sync'}`
+                    }
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowPWAStatus(!showPWAStatus)}
-                  className="text-uc-mustard hover:text-uc-mustard/80 text-sm font-medium"
+                  className="-my-1 min-h-11 px-2 text-sm font-bold text-uc-primary shrink-0"
                 >
                   {showPWAStatus ? (t('common.hide') || 'Hide') : (t('common.showDetails') || 'Show Details')}
                 </button>
               </div>
             )}
-            
+
             {showPWAStatus && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Connection Status */}
-              <div className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                isOnline
-                  ? 'bg-uc-success/20 border-uc-success/30'
-                  : 'bg-uc-mustard/20 border-uc-mustard/30'
-              }`}>
-              <div className="flex items-center space-x-3 mb-2">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  isOnline ? 'bg-uc-success/20' : 'bg-uc-mustard/20'
-                }`}>
-                  <span className="text-sm">{isOnline ? '🟢' : '🟠'}</span>
+              <div className="divide-y divide-uc-border">
+                {/* Connection Status */}
+                <StatusRow
+                  label={t('pwaStatus.online') || 'Online'}
+                  value={isOnline
+                    ? (t('pwaStatus.onlineDescription') || 'Connected to the internet')
+                    : (t('pwaStatus.offlineDescription') || 'Working offline')}
+                  dotClassName={isOnline ? 'bg-uc-success' : 'bg-uc-warning'}
+                />
+                {/* Storage Status */}
+                <div className="py-3 space-y-2">
+                  <StatusRow
+                    label={t('pwaStatus.storage') || 'Storage'}
+                    value={`${t('pwaStatus.used') || 'Used'} ${Math.round(storageSize.used / 1024)}KB`}
+                    dotClassName="bg-uc-success"
+                    className="py-0"
+                  />
+                  <div className="h-1.5 rounded-uc-pill bg-uc-skeleton overflow-hidden">
+                    <div
+                      className="h-full rounded-uc-pill bg-uc-primary transition-all duration-300"
+                      style={{ width: `${Math.min((storageSize.used / storageSize.total) * 100, 100)}%` }}
+                    />
+                  </div>
                 </div>
-                <h4 className="font-semibold text-uc-text-light">
-                  {t('pwaStatus.online') || 'Online'}
-                </h4>
-              </div>
-              <p className="text-sm text-uc-text-muted">
-                {isOnline
-                  ? (t('pwaStatus.onlineDescription') || 'Connected to the internet')
-                  : (t('pwaStatus.offlineDescription') || 'Working offline')
-                }
-              </p>
-            </div>
-
-            {/* Storage Status */}
-            <div className="p-4 rounded-xl border-2 border-uc-purple/30 bg-uc-purple/20">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-6 h-6 bg-uc-purple/20 rounded-full flex items-center justify-center">
-                  <span className="text-sm">💾</span>
-                </div>
-                <h4 className="font-semibold text-uc-text-light">
-                  {t('pwaStatus.storage') || 'Storage'}
-                </h4>
-              </div>
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-uc-text-muted">{t('pwaStatus.used') || 'Used'}</span>
-                  <span className="font-medium text-uc-text-light">
-                    {Math.round(storageSize.used / 1024)}KB
-                  </span>
-                </div>
-                <div className="w-full bg-uc-black/50 rounded-full h-1">
-                  <div
-                    className="bg-uc-purple h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((storageSize.used / storageSize.total) * 100, 100)}%` }}
-                  ></div>
+                {/* Sync Status */}
+                <div className="pt-3 space-y-3">
+                  <StatusRow
+                    label={t('pwaStatus.syncStatus') || 'Sync Status'}
+                    value={unsyncedWorkouts.length > 0
+                      ? `${unsyncedWorkouts.length} workout${unsyncedWorkouts.length > 1 ? 's' : ''} waiting to sync`
+                      : (t('pwaStatus.allSynced') || 'All workouts are synced!')}
+                    dotClassName={unsyncedWorkouts.length > 0 ? 'bg-uc-warning' : 'bg-uc-success'}
+                    className="py-0"
+                  />
+                  <Button variant="ghost" onClick={() => setShowOfflineForm(true)} className="w-full">
+                    <span aria-hidden>📱</span>
+                    {t('pwaStatus.addOfflineTraining') || 'Add Offline Training'}
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            {/* Sync Status */}
-            <div className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-              unsyncedWorkouts.length > 0
-                ? 'bg-uc-mustard/20 border-uc-mustard/30'
-                : 'bg-uc-success/20 border-uc-success/30'
-            }`}>
-              <div className="flex items-center space-x-3 mb-2">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  unsyncedWorkouts.length > 0 ? 'bg-uc-mustard/20' : 'bg-uc-success/20'
-                }`}>
-                  <span className="text-sm">{unsyncedWorkouts.length > 0 ? '⏳' : '✅'}</span>
-                </div>
-                <h4 className="font-semibold text-uc-text-light">
-                  {t('pwaStatus.syncStatus') || 'Sync Status'}
-                </h4>
-              </div>
-              <p className="text-sm text-uc-text-muted mb-2">
-                {unsyncedWorkouts.length > 0
-                  ? `${unsyncedWorkouts.length} workout${unsyncedWorkouts.length > 1 ? 's' : ''} waiting to sync`
-                  : (t('pwaStatus.allSynced') || 'All workouts are synced!')
-                }
-              </p>
-              <button
-                onClick={() => setShowOfflineForm(true)}
-                className="w-full bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black py-2 px-3 rounded-xl transition-colors font-medium text-sm shadow-lg"
-              >
-                📱 {t('pwaStatus.addOfflineTraining') || 'Add Offline Training'}
-              </button>
-            </div>
-          </div>
-          )}
-          </div>
+            )}
+          </Card>
         )}
-
-
       </main>
-
-      {/* Mobile FAB - Floating Action Button for Quick Log */}
-      <button
-        onClick={() => setShowQuickLog(true)}
-        className="md:hidden fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-uc-purple to-uc-mustard rounded-full shadow-2xl flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-transform duration-200"
-        aria-label="Quick Log"
-      >
-        <span className="text-3xl">⚡</span>
-      </button>
 
       {showOfflineForm && (
         <OfflineWorkoutForm onClose={() => setShowOfflineForm(false)} />
@@ -954,5 +641,101 @@ function DashboardContent() {
         onClose={() => setIsMessagesPanelOpen(false)}
       />
     </div>
+  )
+}
+
+// Event marker colours (injury / physio / competition / trip)
+const eventTone: Record<string, string> = {
+  INJURY: 'border-uc-error text-uc-error',
+  PHYSIO: 'border-uc-primary text-uc-primary',
+  COMPETITION: 'border-uc-accent-text text-uc-accent-text',
+  TRIP: 'border-uc-success text-uc-success',
+  OTHER: 'border-uc-border text-uc-text-muted',
+}
+
+function IconTile({ children }: { children: React.ReactNode }) {
+  return (
+    <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-xl">
+      {children}
+    </span>
+  )
+}
+
+function SectionHeader({ title, href, linkLabel }: { title: string; href: string; linkLabel: string }) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <h2 className="text-[19px] font-extrabold text-uc-text">{title}</h2>
+      <Link href={href} className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm font-bold text-uc-primary hover:underline">
+        {linkLabel}
+      </Link>
+    </div>
+  )
+}
+
+function StatusRow({ label, value, dotClassName, className = 'py-3' }: { label: string; value: string; dotClassName: string; className?: string }) {
+  return (
+    <div className={`flex items-center justify-between gap-3 text-sm ${className}`}>
+      <span className="font-semibold text-uc-text-muted">{label}</span>
+      <span className="flex items-center gap-2 text-right font-bold text-uc-text uc-num">
+        <span aria-hidden className={`size-2 shrink-0 rounded-full ${dotClassName}`} />
+        {value}
+      </span>
+    </div>
+  )
+}
+
+/** Today's cycle phase on its soft band: badge, day, the phase goal, a 5-segment phase strip and a link to /cycle. */
+function PhaseHeroCard({ phase, currentDay, cycleLength, nextOvulationDate }: {
+  phase: CyclePhase
+  currentDay: number
+  cycleLength: number
+  nextOvulationDate: Date
+}) {
+  const { t, language } = useLanguage()
+  const key = phaseTranslationKey[phase]
+  const ranges = getPhaseRanges(cycleLength).filter(r => r.end >= r.start)
+  const currentIndex = ranges.findIndex(r => r.phase === phase)
+  const markerLeft = Math.min(Math.max(((currentDay - 0.5) / cycleLength) * 100, 2), 98)
+
+  return (
+    <section className={`rounded-uc-card p-5 lg:p-6 ${phaseBandBg[phase]} text-uc-text`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <PhaseBadge phase={phase}>{t(`cycle.phases.${key}`)}</PhaseBadge>
+        <span className="text-sm font-extrabold uc-num">
+          {t('nav.cycleDayOf', { day: currentDay, length: cycleLength })}
+        </span>
+      </div>
+      <h2 className="mt-4 text-[22px] leading-7 lg:text-[26px] lg:leading-8 font-extrabold tracking-[-0.01em]">
+        {t(`cycle.phaseDetails.${key}.goal`)}
+      </h2>
+      <p className="mt-2 text-[15px] leading-[22px]">{t(`cycle.phaseDetails.${key}.impact`)}</p>
+
+      {/* Phase strip with today's marker */}
+      <div className="relative mt-5 flex h-2 gap-1" aria-hidden>
+        {ranges.map((range, i) => (
+          <span
+            key={range.phase}
+            className={`h-full rounded-uc-pill ${phaseSolidBg[range.phase]} ${i > currentIndex ? 'opacity-45' : ''}`}
+            style={{ flexGrow: range.end - range.start + 1, flexBasis: 0 }}
+          />
+        ))}
+        <span
+          className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-uc-text bg-uc-bg"
+          style={{ left: `${markerLeft}%` }}
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <span className="text-[13px] font-semibold text-uc-text-muted uc-num">
+          {t('common.nextOvulation')} {nextOvulationDate.toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB', { day: 'numeric', month: 'short' })}
+        </span>
+        <Link href="/cycle" className="-mr-2 inline-flex min-h-11 items-center gap-1 px-2 text-sm font-extrabold text-uc-text hover:underline">
+          {t('dashboard.recommendations')}
+          <svg aria-hidden className="size-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+        </Link>
+      </div>
+    </section>
   )
 }

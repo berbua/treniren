@@ -1061,7 +1061,8 @@
     "loadingTrips": "Ładowanie wyjazdów...",
     "noUpcomingTrips": "Brak nadchodzących wyjazdów z odliczaniem",
     "noUpcomingTripsDescription": "Utwórz wydarzenie wyjazdu i włącz opcję \"Pokaż odliczanie na stronie głównej\"",
-    "addTrip": "Dodaj Wyjazd"
+    "addTrip": "Dodaj Wyjazd",
+    "recommendations": "Rekomendacje"
   },
   "goals": {
     "title": "Cele Treningowe",

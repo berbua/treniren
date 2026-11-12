@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { toLocalDateString } from '@/lib/date-utils'
+import { Button, Input, Label, Select } from './ui'
 // import { getDefaultCycleSettings } from '@/lib/cycle-utils'
 
 interface CycleSetupFormProps {
@@ -47,146 +48,121 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-pink-100 dark:bg-pink-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">📅</span>
-            </div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-2">
-              Set Up Cycle Tracking
-            </h2>
-            <p className="text-slate-600 dark:text-slate-300">
-              Help us personalize your training recommendations
-            </p>
-          </div>
+  const nextSteps = [
+    'We\'ll calculate your current cycle phase',
+    'Training recommendations will appear in your workout form',
+    'You can update your cycle info anytime in settings',
+    'All data is private and secure',
+  ]
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
+      <div className="absolute inset-0 bg-uc-scrim" aria-hidden />
+      <div role="dialog" aria-modal="true" aria-labelledby="cycle-setup-title" className="relative w-full sm:max-w-md max-h-[92dvh] flex flex-col bg-uc-elevated text-uc-text shadow-uc rounded-t-uc-sheet sm:rounded-uc-sheet pb-[env(safe-area-inset-bottom)]">
+        <div aria-hidden className="sm:hidden mx-auto mt-2.5 h-[5px] w-10 rounded-uc-pill bg-uc-border" />
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex-1 overflow-y-auto px-5 pt-4 pb-5 space-y-5">
+            <div className="flex items-center gap-3">
+              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-xl">📅</span>
+              <div>
+                <h2 id="cycle-setup-title" className="text-[22px] leading-7 font-extrabold">
+                  Set Up Cycle Tracking
+                </h2>
+                <p className="text-sm text-uc-text-muted">
+                  Help us personalize your training recommendations
+                </p>
+              </div>
+            </div>
+
             {/* Last Period Date */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                When did your last period start?
-              </label>
-              <input
+              <Label htmlFor="cycle-last-period">When did your last period start?</Label>
+              <Input
+                id="cycle-last-period"
                 type="date"
                 value={formData.lastPeriodDate}
                 onChange={(e) => handleChange('lastPeriodDate', e.target.value)}
-                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
                 required
                 max={typeof window !== 'undefined' ? toLocalDateString() : '2024-01-15'}
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <p className="mt-1.5 text-[13px] text-uc-text-muted">
                 This helps us calculate your current cycle phase
               </p>
             </div>
 
             {/* Cycle Length */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Average cycle length (days)
-              </label>
-              <select
+              <Label htmlFor="cycle-length">Average cycle length (days)</Label>
+              <Select
+                id="cycle-length"
                 value={formData.cycleLength}
                 onChange={(e) => handleChange('cycleLength', parseInt(e.target.value))}
-                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
               >
-                <option value={21}>21 days</option>
-                <option value={22}>22 days</option>
-                <option value={23}>23 days</option>
-                <option value={24}>24 days</option>
-                <option value={25}>25 days</option>
-                <option value={26}>26 days</option>
-                <option value={27}>27 days</option>
-                <option value={28}>28 days (most common)</option>
-                <option value={29}>29 days</option>
-                <option value={30}>30 days</option>
-                <option value={31}>31 days</option>
-                <option value={32}>32 days</option>
-                <option value={33}>33 days</option>
-                <option value={34}>34 days</option>
-                <option value={35}>35 days</option>
-              </select>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {Array.from({ length: 15 }, (_, i) => 21 + i).map((days) => (
+                  <option key={days} value={days}>
+                    {days === 28 ? '28 days (most common)' : `${days} days`}
+                  </option>
+                ))}
+              </Select>
+              <p className="mt-1.5 text-[13px] text-uc-text-muted">
                 Most cycles are 21-35 days long
               </p>
             </div>
 
             {/* Timezone */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Timezone
-              </label>
-              <input
+              <Label htmlFor="cycle-timezone">Timezone</Label>
+              <Input
+                id="cycle-timezone"
                 type="text"
                 value={formData.timezone}
                 onChange={(e) => handleChange('timezone', e.target.value)}
-                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
+                className="border-dashed text-uc-text-muted"
                 readOnly
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <p className="mt-1.5 text-[13px] text-uc-text-muted">
                 Automatically detected from your device
               </p>
             </div>
 
             {/* Notification Preferences */}
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-3">
-                📱 Notification Preferences
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    id="latePeriodNotifications"
-                    checked={formData.latePeriodNotifications}
-                    onChange={(e) => handleChange('latePeriodNotifications', e.target.checked)}
-                    className="mt-1 h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-                  />
-                  <div>
-                    <label htmlFor="latePeriodNotifications" className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                      Late period reminders
-                    </label>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                      Get notified if your period is overdue (more than 32 days since last period)
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <label htmlFor="latePeriodNotifications" className="flex cursor-pointer items-start justify-between gap-3 rounded-uc-input border border-uc-border bg-uc-surface p-3">
+              <span>
+                <span className="block text-sm font-bold">📱 Late period reminders</span>
+                <span className="mt-0.5 block text-[13px] text-uc-text-muted">
+                  Get notified if your period is overdue (more than 32 days since last period)
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                id="latePeriodNotifications"
+                checked={formData.latePeriodNotifications}
+                onChange={(e) => handleChange('latePeriodNotifications', e.target.checked)}
+                className="mt-0.5 size-5 shrink-0 accent-uc-primary"
+              />
+            </label>
 
             {/* Info Box */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+            <div className="rounded-uc-input bg-uc-primary-container/40 p-3">
+              <h3 className="mb-1.5 text-sm font-extrabold">
                 What happens next?
               </h3>
-              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                <li>• We&apos;ll calculate your current cycle phase</li>
-                <li>• Training recommendations will appear in your workout form</li>
-                <li>• You can update your cycle info anytime in settings</li>
-                <li>• All data is private and secure</li>
+              <ul className="space-y-1 text-[13px] text-uc-text-muted list-disc pl-4">
+                {nextSteps.map((step) => <li key={step}>{step}</li>)}
               </ul>
             </div>
+          </div>
 
-            {/* Buttons */}
-            <div className="flex space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-1 px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700"
-              >
-                Complete Setup
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Buttons */}
+          <div className="flex gap-3 px-5 py-3 border-t border-uc-border">
+            <Button variant="ghost" size="lg" onClick={onCancel} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" variant="accent" size="lg" className="flex-[1.5]">
+              Complete Setup
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   )
