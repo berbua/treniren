@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import AuthGuard from '@/components/AuthGuard'
 import { Routine, Exercise } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -150,7 +151,15 @@ function RoutinesPageContent() {
       <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
         {/* Header */}
         <div className="mb-5 flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <Link
+            href="/exercises"
+            aria-label={t('exercises.detail.back') || 'Back to Exercise Library'}
+            title={t('exercises.detail.back') || 'Back to Exercise Library'}
+            className="-ml-2 -mr-1 inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text transition-colors hover:bg-uc-elevated"
+          >
+            <Icon name="chevron-left" size={24} />
+          </Link>
+          <div className="min-w-0 flex-1">
             <h1 className="text-[28px] font-extrabold leading-tight text-uc-text">
               {t('routines.title') || 'My Routines'}
             </h1>

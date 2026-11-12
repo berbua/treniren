@@ -176,8 +176,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 ### Strong Mind
 - Built 2026-11-12 against `Strong Mind.png`. Kept where the mock differs:
   - **Goal progress dots on the card's meta line** — the app has no per-goal progress summary; each card keeps its
-    "Linked workouts (N)" list (date · type · 1–3 dots per workout). Project cards keep the full "🏆 Achieved! date"
-    history (one chip per workout) and still have edit/delete (the mock shows none on project cards).
+    "Linked workouts (N)" list (date · type · 1–3 dots per workout). Project cards use the same list for every
+    workout linked to the project, with a "🏆 Achieved!" chip on sessions where it was sent (earlier only sends were
+    shown, so linked-but-not-sent workouts appeared nowhere), and still have edit/delete (the mock shows none on
+    project cards).
   - Process / Project goals were sub-tabs with inline forms; now both lists sit on the Goals tab (side by side on `lg`)
     and the forms open in bottom sheets from "+ Add" / ✏️ (Esc/scrim don't close them). Form titles and button
     labels keep the existing strings ("Add New Goal", "Add Goal") instead of "New process goal" / "Save goal".
@@ -242,6 +244,8 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     before). Select all / Deselect all became one checkbox row ("Select All (N)").
   - Header keeps "My Routines" + subtitle; the accent "+" shows "Create Routine" from `sm`. Variation chips on the cards
     keep the rep range ("Strength 3–5 reps"). Every card uses the gym icon tile (🏋️), as routines have no type.
+  - Header has a back chevron to the Exercise Library (same as on Exercise detail); the mock has none, and the page
+    otherwise had no way back to Exercises.
   - Save button keeps "Create Routine" / "Update Routine" (mock: "Save routine"); field labels keep the app texts
     ("Routine Name", "Description (optional)").
 

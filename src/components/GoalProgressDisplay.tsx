@@ -70,7 +70,7 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
     if (goalType === 'process') {
       return workout.mentalState?.processGoals?.some(pg => pg.goalId === goalId);
     } else {
-      return workout.mentalState?.projectGoals?.some(pg => pg.goalId === goalId && pg.completed);
+      return workout.mentalState?.projectGoals?.some(pg => pg.goalId === goalId);
     }
   });
 
@@ -84,6 +84,9 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
     );
   }
 
+  const isAchievedIn = (workout: Workout) =>
+    !!workout.mentalState?.projectGoals?.some(pg => pg.goalId === goalId && pg.completed);
+
   // Sort workouts by date (newest first)
   const sortedWorkouts = [...relevantWorkouts].sort((a, b) =>
     new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
@@ -93,23 +96,6 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
     typeLabelKey[type] ? t(`training.types.${typeLabelKey[type]}`) || type : type;
   const formatDate = (value: string) =>
     new Date(value).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
-
-  if (goalType === 'project') {
-    return (
-      <div className="mt-3 flex flex-wrap gap-2">
-        {sortedWorkouts.map(workout => (
-          <span
-            key={workout.id}
-            className="inline-flex min-h-7 items-center gap-1.5 rounded-uc-chip bg-uc-success-bg px-2.5 text-[13px] font-bold text-uc-success"
-          >
-            <Icon name="achieved" size={16} />
-            {t('strongMind.achieved') || 'Achieved!'} <span className="uc-num">{formatDate(workout.startTime)}</span>
-            <span className="sr-only"> · {typeLabel(workout.type)}</span>
-          </span>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="mt-3 border-t border-uc-border pt-3">
@@ -126,18 +112,25 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
                 <span className="uc-num">{formatDate(workout.startTime)}</span>
                 <span className="text-uc-text-muted"> · {typeLabel(workout.type)}</span>
               </span>
-              <span
-                className="flex shrink-0 items-center gap-1"
-                role="img"
-                aria-label={`${t('strongMind.progress') || 'Progress'}: ${progress}/3`}
-              >
-                {[1, 2, 3].map(level => (
-                  <span
-                    key={level}
-                    className={`size-2.5 rounded-full border-[1.5px] border-uc-primary ${progress >= level ? 'bg-uc-primary' : ''}`}
-                  />
-                ))}
-              </span>
+              {goalType === 'process' ? (
+                <span
+                  className="flex shrink-0 items-center gap-1"
+                  role="img"
+                  aria-label={`${t('strongMind.progress') || 'Progress'}: ${progress}/3`}
+                >
+                  {[1, 2, 3].map(level => (
+                    <span
+                      key={level}
+                      className={`size-2.5 rounded-full border-[1.5px] border-uc-primary ${progress >= level ? 'bg-uc-primary' : ''}`}
+                    />
+                  ))}
+                </span>
+              ) : isAchievedIn(workout) && (
+                <span className="inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-uc-chip bg-uc-success-bg px-2.5 text-[13px] font-bold text-uc-success">
+                  <Icon name="achieved" size={16} />
+                  {t('strongMind.achieved') || 'Achieved!'}
+                </span>
+              )}
             </li>
           );
         })}
