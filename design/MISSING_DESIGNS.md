@@ -177,9 +177,15 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **Range 4W / 3M / 6M / 1Y** — built 2026-11-12 (decision 42): those four segments (PL 4T / 3M / 6M / 1R), default 4W
   (last 28 days, new `4weeks` timeframe). 1 week, 1 month and All time are gone from the Statistics screen.
   The second selector "show frequency per Week / Month / Quarter / Year" stays.
-- **Volume in TR points, weekly volume bar chart** — no volume metric or charts; there's a TR1–TR5 **count breakdown**.
+- **Volume in TR points, weekly volume bar chart** (decision 43, built 2026-11-12; no mock of the chart): "Weekly volume"
+  card under the types/tags grid. TR1 = 1 … TR5 = 5 points; workouts without TR don't count. Header: Total + Avg per
+  week; bars per Mon–Sun week over the range (primary, 4px top radius), hover tooltip "3 – 9 Nov 2026 · 12 TR points ·
+  4 sessions", sr-only table. The TR1–TR5 count breakdown stays.
 - **Performance by cycle phase (avg session rating 1–5)** — no session rating exists; don't show.
-- **Fingerboard test chart on Statistics** — that chart lives on the Fingerboard testing detail page.
+- **Fingerboard test chart on Statistics** (decision 45, built 2026-11-12): "Fingerboard tests" card next to Weekly
+  volume, hidden without test results. Reuses `FingerboardTestChart` (new `plain` prop: no inner card) for one test
+  protocol — the most recently tested; a select switches when there are several. Shows **all** tests, not only the
+  stats range (tests are weeks apart). Link "Open test protocol →".
 - Tiles that exist: **Total workouts, This month, Avg per week, Current streak**.
 - Mock's **"Current streak · 5 days"** unit and **"11 climbing workouts with a TR value"** subtitle aren't shown (no
   keys / not computed); the app's extra lines are kept: Strong Mind link card, "Each phase shows…" note, notification

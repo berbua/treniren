@@ -10,6 +10,8 @@ import { useCycle } from '@/contexts/CycleContext';
 import { CyclePhase, getPhaseDisplayName, getPhaseDayRange } from '@/lib/cycle-utils';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { STREAK_MIN_SESSIONS } from '@/lib/streak';
+import { WeeklyVolumeChart } from './WeeklyVolumeChart';
+import { StatsFingerboardTests } from './StatsFingerboardTests';
 import {
   Button, Card, EmptyState, Icon, Overline, SegmentedControl, SkeletonRows, StatTile, WorkoutIconTile,
   buttonClasses, phaseBandBg, phaseTranslationKey, workoutBg,
@@ -181,6 +183,16 @@ export const StatisticsContent = () => {
       setStatsData(stats);
     }
   }, [workouts, tags, timeframe, events, isCycleTrackingEnabled, cycleSettings]);
+
+  // Workouts in the stats range (weekly volume chart)
+  const workoutsInRange = useMemo(() => {
+    if (!statsData) return [];
+    const { start, end } = statsData.timeRange;
+    return workouts.filter(workout => {
+      const date = new Date(workout.startTime);
+      return date >= start && date <= end;
+    });
+  }, [workouts, statsData]);
 
   // Filter workouts with gratitude/improvements based on timeframe
   const filteredGratitudeWorkouts = useMemo(() => {
@@ -422,6 +434,19 @@ export const StatisticsContent = () => {
                 </p>
               </Card>
             </div>
+          </div>
+
+          {/* Weekly volume in TR points (decision 43) and fingerboard tests (decision 45) */}
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+            <Section
+              title={t('stats.weeklyVolume') || 'Weekly volume'}
+              subtitle={t('stats.weeklyVolumeSubtitle') || 'TR points per week: TR1 = 1 … TR5 = 5'}
+            >
+              <WeeklyVolumeChart workouts={workoutsInRange} start={statsData.timeRange.start} end={statsData.timeRange.end} />
+            </Section>
+            <StatsFingerboardTests
+              renderSection={(title, subtitle, body) => <Section title={title} subtitle={subtitle}>{body}</Section>}
+            />
           </div>
 
           {/* Injury Cycle Analysis */}

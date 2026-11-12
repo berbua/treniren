@@ -428,3 +428,6 @@ note the answer.
   `details.climbStyle` (option lists `wallAnglesFor` / `BOULDER_STYLES` in `types/workout.ts`), `ClimbSection.name`.
   New keys `workouts.routeName / routeNamePlaceholder / climbName / wallAngle / wallAngles.* / climbStyle /
   climbStyles.*`. Offline form unchanged (decision 15 pending).
+- 2026-11-12: Stats 43 `WeeklyVolumeChart` (Recharts bars, TR points per Mon–Sun week) and 45 `StatsFingerboardTests`
+  (`FingerboardTestChart` with `plain`, all tests of the most recently tested protocol). New `stats.*` keys
+  (weeklyVolume, trPoints, fingerboardTests, …). Not checked in a browser yet (no local server / test account).

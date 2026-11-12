@@ -161,6 +161,18 @@
     "log": "Log"
   },
   "stats": {
+    "weeklyVolume": "Weekly volume",
+    "weeklyVolumeSubtitle": "TR points per week: TR1 = 1 … TR5 = 5",
+    "volumeTotal": "Total",
+    "trPoints": "TR points",
+    "volumeAvgPerWeek": "Avg per week",
+    "noTrValues": "No workouts with a TR value in this range",
+    "sessionsCount": "{{count}} sessions",
+    "week": "Week",
+    "fingerboardTests": "Fingerboard tests",
+    "fingerboardTestsSubtitle": "All tests · last on {{date}}",
+    "testProtocol": "Test protocol",
+    "openTestProtocol": "Open test protocol →",
     "title": "Statistics",
     "timeframe": "Timeframe",
     "1week": "1 Week",

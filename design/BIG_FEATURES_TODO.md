@@ -26,9 +26,9 @@ MISSING_DESIGNS.md, commit. Tick an item here when it's built.
 - [x] **33 Upcoming events list**.
 
 ## Statistics
-- [ ] **43 TR-points volume + weekly bar charts**.
+- [x] **43 TR-points volume + weekly bar charts**.
 - [ ] **44 Performance by phase** (avg session rating) — needs a session rating first.
-- [ ] **45 Fingerboard test chart on Stats**.
+- [x] **45 Fingerboard test chart on Stats**.
 
 ## Exercises / routines / fingerboard
 - [x] **52 Exercise detail "Improving" status**.

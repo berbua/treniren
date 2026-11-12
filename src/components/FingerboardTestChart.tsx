@@ -33,12 +33,14 @@ interface FingerboardTestChartProps {
   protocol: FingerboardTestingProtocol
   /** false when the page already filters by hang (testing protocol detail). */
   showHangFilter?: boolean
+  /** true: no card around it (it sits inside another card, e.g. on Statistics). */
+  plain?: boolean
 }
 
 // First line in the fingerboard colour, then tag colours
 const LINE_COLORS = ['var(--uc-workout-fingerboard)', 'var(--uc-tag-1)', 'var(--uc-tag-5)', 'var(--uc-tag-3)', 'var(--uc-tag-4)', 'var(--uc-tag-2)']
 
-export default function FingerboardTestChart({ testResults, protocol, showHangFilter = true }: FingerboardTestChartProps) {
+export default function FingerboardTestChart({ testResults, protocol, showHangFilter = true, plain = false }: FingerboardTestChartProps) {
   const { t, language } = useLanguage()
   const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
   const hangLabel = (hang: FingerboardTestingProtocol['testHangs'][number]) =>
@@ -116,8 +118,10 @@ export default function FingerboardTestChart({ testResults, protocol, showHangFi
   const formatDate = (value: string, long = false) =>
     new Date(value).toLocaleDateString(locale, long ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' })
 
+  const Wrapper = plain ? 'div' : Card
+
   return (
-    <Card className="space-y-3">
+    <Wrapper className="space-y-3">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-base font-extrabold text-uc-text">
           {metric === 'time'
@@ -219,6 +223,6 @@ export default function FingerboardTestChart({ testResults, protocol, showHangFi
         value={metric}
         onChange={setMetric}
       />
-    </Card>
+    </Wrapper>
   )
 }

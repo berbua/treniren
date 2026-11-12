@@ -161,6 +161,18 @@
     "log": "Dodaj"
   },
   "stats": {
+    "weeklyVolume": "Objętość tygodniowa",
+    "weeklyVolumeSubtitle": "Punkty TR na tydzień: TR1 = 1 … TR5 = 5",
+    "volumeTotal": "Razem",
+    "trPoints": "pkt TR",
+    "volumeAvgPerWeek": "Średnio na tydzień",
+    "noTrValues": "Brak treningów z wartością TR w tym okresie",
+    "sessionsCount": "treningi: {{count}}",
+    "week": "Tydzień",
+    "fingerboardTests": "Testy na chwytotablicy",
+    "fingerboardTestsSubtitle": "Wszystkie testy · ostatni {{date}}",
+    "testProtocol": "Protokół testu",
+    "openTestProtocol": "Otwórz protokół testu →",
     "title": "Statystyki",
     "timeframe": "Okres",
     "1week": "1 Tydzień",
