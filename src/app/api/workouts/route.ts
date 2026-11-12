@@ -168,6 +168,12 @@ export async function POST(request: NextRequest) {
     // Validate exercises exist and belong to user
     if (exercises && exercises.length > 0) {
       const exerciseIds = exercises.map((e) => e.exerciseId)
+      if (new Set(exerciseIds).size !== exerciseIds.length) {
+        return NextResponse.json(
+          { error: 'Each exercise can only appear once in a workout' },
+          { status: 400 }
+        )
+      }
       const existingExercises = await prisma.exercise.findMany({
         where: {
           id: { in: exerciseIds },

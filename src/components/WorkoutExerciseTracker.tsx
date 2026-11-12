@@ -114,10 +114,13 @@ export default function WorkoutExerciseTracker({
     const defaultReps = variation?.defaultRepRangeMin || 8
     const defaultSets = variation?.defaultSets || 3
 
-    // Convert routine exercises to workout exercises
+    // Convert routine exercises to workout exercises, skipping ones already in the workout
+    // (a workout can contain each exercise only once)
+    const usedExerciseIds = new Set(exercises.map((ex) => ex.exerciseId))
     const newExercises: WorkoutExerciseData[] = routine.routineExercises.map((re) => {
       const exercise = availableExercises.find((e) => e.id === re.exerciseId)
-      if (!exercise) return null
+      if (!exercise || usedExerciseIds.has(re.exerciseId)) return null
+      usedExerciseIds.add(re.exerciseId)
 
       // Create sets based on variation or default
       const sets: WorkoutSet[] = Array.from({ length: defaultSets }, () => ({
