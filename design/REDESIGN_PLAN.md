@@ -334,8 +334,8 @@ note the answer.
   colours in `TagSelector` / dummy data, the Google logo. Headless check (Playwright against the dev server) of landing +
   all auth pages in dark/light × EN/PL × 390/1280: no horizontal overflow, no page errors. Fix: the PL app name was cut
   off in the logged-out header at 390px; the flag is hidden on phones and the paddings tightened (still "…" at 360px).
-  Found, not fixed (bugs for the user): logged out, `NotificationProvider` fetches workouts → 401 + console error
-  (Next dev overlay "1 Issue" on every logged-out page); `pl-custom.json` has "Mindfulness i bycie obecn_".
+  Found: logged out, `NotificationProvider` fetched workouts → 401 + console error (Next dev overlay "1 Issue" on every
+  logged-out page) — fixed later the same day. (`pl-custom.json` "obecn_" is a deliberate they/them form, not a typo.)
 - 2026-11-12: Step 5 · Icons done. User added 67 line icons (`public/icons/sprite.svg`, `svg/`, README). New
   `ui/Icon.tsx` (`<Icon name size label />`, `IconName`): paths generated from the sprite and inlined (offline, no request;
   regenerate if the sprite changes). `workoutIcon` / `WorkoutIcon`; `WorkoutIconTile` and `WorkoutTypeChip` default to the
