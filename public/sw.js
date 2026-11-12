@@ -1,17 +1,27 @@
 // Custom service worker for enhanced offline functionality
-const CACHE_NAME = 'treniren-v7';
-const STATIC_CACHE_NAME = 'treniren-static-v7';
-const DYNAMIC_CACHE_NAME = 'treniren-dynamic-v7';
+// v8: pages are no longer cache-first, and redirects (e.g. to the site gate) are never cached
+const CACHE_VERSION = 'v8';
+const CACHE_NAME = `treniren-${CACHE_VERSION}`;
+const STATIC_CACHE_NAME = `treniren-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE_NAME = `treniren-dynamic-${CACHE_VERSION}`;
 
-// Static assets to cache
+// Files served cache-first
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/icon-192.svg',
   '/icon-512.svg',
+];
+
+// Pages kept as offline fallbacks only; they always load from the network first
+const OFFLINE_PAGES = [
+  '/',
   '/workouts',
   '/calendar',
 ];
+
+// Only real pages/files go into the cache: a redirected response (site gate, sign-in) served
+// from the cache makes the browser refuse the navigation
+const isCacheable = (response) => response.ok && !response.redirected;
 
 // API routes to cache
 const API_ROUTES = [
@@ -27,7 +37,14 @@ self.addEventListener('install', (event) => {
     caches.open(STATIC_CACHE_NAME)
       .then((cache) => {
         console.log('Service Worker: Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
+        return Promise.all([...STATIC_ASSETS, ...OFFLINE_PAGES].map(async (url) => {
+          try {
+            const response = await fetch(url);
+            if (isCacheable(response)) await cache.put(url, response);
+          } catch {
+            console.log('Service Worker: Could not cache', url);
+          }
+        }));
       })
       .then(() => {
         console.log('Service Worker: Static assets cached');
@@ -35,7 +52,7 @@ self.addEventListener('install', (event) => {
         return caches.keys().then((cacheNames) => {
           return Promise.all(
             cacheNames.map((cacheName) => {
-              if (cacheName.startsWith('treniren-') && !cacheName.includes('v7')) {
+              if (cacheName.startsWith('treniren-') && !cacheName.includes(CACHE_VERSION)) {
                 console.log('Service Worker: Deleting old cache:', cacheName);
                 return caches.delete(cacheName);
               }
@@ -122,7 +139,7 @@ async function networkFirstStrategy(request, fallbackUrl = null) {
     const networkResponse = await fetch(request);
     
     // Cache successful responses
-    if (networkResponse.ok) {
+    if (isCacheable(networkResponse)) {
       const cache = await caches.open(DYNAMIC_CACHE_NAME);
       cache.put(request, networkResponse.clone());
     }
@@ -170,7 +187,7 @@ async function cacheFirstStrategy(request) {
   try {
     const networkResponse = await fetch(request);
     
-    if (networkResponse.ok) {
+    if (isCacheable(networkResponse)) {
       const cache = await caches.open(STATIC_CACHE_NAME);
       cache.put(request, networkResponse.clone());
     }
