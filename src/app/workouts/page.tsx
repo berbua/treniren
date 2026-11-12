@@ -681,8 +681,8 @@ function WorkoutsPageContent() {
         {/* Tabs */}
         <div role="tablist" className="mb-5 flex border-b border-uc-border">
           {([
-            { key: 'workouts', label: `🏋️ ${t('nav.workouts')}`, count: Array.isArray(workouts) ? workouts.length : 0 },
-            { key: 'events', label: `📅 ${t('events.title')}`, count: Array.isArray(events) ? events.length : 0 },
+            { key: 'workouts', label: `🏋️ ${t('nav.workouts')}`, count: workoutsPagination.total || (Array.isArray(workouts) ? workouts.length : 0) },
+            { key: 'events', label: `📅 ${t('events.title')}`, count: eventsPagination.total || (Array.isArray(events) ? events.length : 0) },
           ] as const).map((tab) => (
             <button
               key={tab.key}
@@ -738,6 +738,7 @@ function WorkoutsPageContent() {
                   totalPages={workoutsPagination.totalPages}
                   total={workoutsPagination.total}
                   hasMore={workoutsPagination.hasMore}
+                  pageSize={ITEMS_PER_PAGE}
                   onPage={(newPage) => {
                     setWorkoutsPage(newPage)
                     fetchWorkouts(newPage, false)
@@ -783,6 +784,7 @@ function WorkoutsPageContent() {
                   totalPages={eventsPagination.totalPages}
                   total={eventsPagination.total}
                   hasMore={eventsPagination.hasMore}
+                  pageSize={ITEMS_PER_PAGE}
                   onPage={(newPage) => {
                     setEventsPage(newPage)
                     fetchEvents(newPage, false)
@@ -941,24 +943,65 @@ const INFO_EVENT_TYPES = [
   { key: 'other', dot: 'bg-uc-text-muted', label: 'Other', description: 'Other important events' },
 ]
 
-function Pagination({ page, totalPages, total, hasMore, onPage }: {
+/** Pages to show: first, last and the current one ±1, with gaps as null ("1 2 … 11"). */
+function pageItems(page: number, totalPages: number): (number | null)[] {
+  const items: (number | null)[] = []
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - page) <= 1) {
+      items.push(p)
+    } else if (items[items.length - 1] !== null) {
+      items.push(null)
+    }
+  }
+  return items
+}
+
+function Pagination({ page, totalPages, total, hasMore, pageSize, onPage }: {
   page: number
   totalPages: number
   total: number
   hasMore: boolean
+  pageSize: number
   onPage: (page: number) => void
 }) {
+  const { t } = useLanguage()
+  const from = (page - 1) * pageSize + 1
+  const to = Math.min(page * pageSize, total)
+  const arrow = 'inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input border border-uc-border text-uc-text hover:bg-uc-elevated transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
   return (
-    <div className="mt-6 flex items-center justify-center gap-3">
-      <Button variant="ghost" onClick={() => onPage(page - 1)} disabled={page === 1}>
-        ← Previous
-      </Button>
-      <span className="text-center text-[13px] font-semibold text-uc-text-muted uc-num">
-        Page {page} of {totalPages} ({total} total)
-      </span>
-      <Button variant="ghost" onClick={() => onPage(page + 1)} disabled={!hasMore}>
-        Next →
-      </Button>
-    </div>
+    <nav aria-label="Pagination" className="mt-6 flex flex-col items-center gap-2">
+      <div className="flex items-center gap-1.5">
+        <button type="button" onClick={() => onPage(page - 1)} disabled={page === 1} aria-label={t('common.previous')} className={arrow}>
+          <svg aria-hidden className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="m15 6-6 6 6 6" />
+          </svg>
+        </button>
+        {pageItems(page, totalPages).map((item, i) =>
+          item === null ? (
+            <span key={`gap-${i}`} aria-hidden className="w-6 text-center text-sm text-uc-text-muted">…</span>
+          ) : (
+            <button
+              key={item}
+              type="button"
+              onClick={() => item !== page && onPage(item)}
+              aria-current={item === page ? 'page' : undefined}
+              className={`inline-flex min-w-11 h-11 items-center justify-center rounded-uc-input px-2 text-base font-extrabold uc-num transition-colors ${
+                item === page ? 'bg-uc-primary text-uc-on-primary' : 'text-uc-text hover:bg-uc-elevated'
+              }`}
+            >
+              {item}
+            </button>
+          ),
+        )}
+        <button type="button" onClick={() => onPage(page + 1)} disabled={!hasMore} aria-label={t('common.next')} className={arrow}>
+          <svg aria-hidden className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+      <p className="text-[13px] font-semibold text-uc-text-muted uc-num">
+        {t('common.pageRange', { from, to, total })}
+      </p>
+    </nav>
   )
 }

@@ -94,10 +94,7 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 
 ### Workouts list & goals
 - Built 2026-11-12 against `Workouts list & goals.png`. Kept where the mock differs:
-  - **Tab counts** show the number of items on the current page (max 20), as before — the mock's "Workouts (214)"
-    would be the API's total. Switching to the total is a one-line change; user's call.
-  - **Pagination** stays "← Previous · Page X of Y (N total) · Next →" (hard-coded English, as before); the mock's
-    numbered pages ("1 2 … 11") and "1–20 of 214" would add jump-to-page.
+  - Tab counts and numbered pagination ("‹ 1 2 … 11 ›", "1–20 of 214") built after the user's go-ahead (2026-11-12).
   - Header keeps the description line; Goals / Info show their labels next to the icon from `sm` up, icon only on phones.
   - **Info panel**: same 6 training types as before (no Fingerboard row — there's no description key for it) and the 4
     event types with their own descriptions (no Trip) + the tip; not the mock's one-line event summary.

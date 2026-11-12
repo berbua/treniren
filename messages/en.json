@@ -26,6 +26,7 @@
     "week": "Week",
     "month": "Month",
     "previous": "Previous",
+    "pageRange": "{{from}}–{{to}} of {{total}}",
     "next": "Next",
     "close": "Close",
     "online": "Online",

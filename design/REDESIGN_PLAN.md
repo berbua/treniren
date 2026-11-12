@@ -98,8 +98,8 @@ note the answer.
 - [ ] **Crimp size**: keep the fixed 6–30 mm list, or allow any number (mock shows a free "mm" field)?
 - [ ] **Centre "+" tab**: today it opens Workouts. Should it open a Quick log / Add workout / Add event choice sheet?
 - [ ] **Tab labels**: keep Dashboard / Statistics or switch to the mock's Today / Stats?
-- [ ] **Workouts tab counts**: show the total from the API ("Workouts (214)") instead of the items on this page?
-- [ ] **Numbered pagination** ("1 2 … 11", "1–20 of 214"): add jump-to-page, or keep Previous / Next?
+- [x] **Workouts tab counts**: show the total from the API ("Workouts (214)") instead of the items on this page? → Yes, built.
+- [x] **Numbered pagination** ("1 2 … 11", "1–20 of 214"): add jump-to-page, or keep Previous / Next? → Yes, built.
 - [ ] **Cycle — recent periods list with edit**: the API supports it but there's no UI. Build it in the Cycle step?
 
 ## Log
@@ -170,3 +170,6 @@ note the answer.
   (new keys `goals.auto`, `goals.manual`), per-type goals in a `CollapsibleCard`, preview on primary-container, Cancel +
   accent Save footer. Same data, handlers and API calls. `EventCard` left for the Events step. Not checked logged-in
   in a browser.
+- 2026-11-12: User approved: Workouts/Events tab counts now show the API total (`pagination.total`, falls back to the
+  list length for the old API format); pagination is ‹ first … current±1 … last › with 44px buttons (current in
+  `--uc-primary`) and a "1–20 of 214" line (new key `common.pageRange`).
