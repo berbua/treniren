@@ -17,16 +17,16 @@ export const LoadingSpinner = ({ message, size = 'md', fullScreen = false }: Loa
 
   const spinner = (
     <div className="flex flex-col items-center justify-center space-y-4">
-      <div className={`animate-spin rounded-full border-b-2 border-blue-600 ${sizeClasses[size]}`}></div>
+      <div className={`animate-spin rounded-full border-2 border-uc-primary border-r-transparent ${sizeClasses[size]}`}></div>
       {message && (
-        <p className="text-slate-600 dark:text-slate-300 text-sm">{message}</p>
+        <p className="text-uc-text-muted text-sm font-semibold">{message}</p>
       )}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-uc-bg flex items-center justify-center">
         {spinner}
       </div>
     );

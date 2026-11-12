@@ -46,10 +46,10 @@ add a line to the log at the bottom, commit. Branch: `redesign/unicorn-climb`.
 ### 2. Shared components (build once, reuse everywhere)
 Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — forms, navigation, data.png`,
 `mockups/Style guide — color & type tokens.png`.
-- [ ] Button (accent / primary / tonal / ghost / destructive), Card, Input/Select/Textarea, Chip.
-- [ ] Phase badge (solid + soft), workout type chip, segmented selector, stat tile, session row.
-- [ ] Bottom sheet, confirmation dialog, toast, empty state, skeleton.
-- [ ] Mobile floating bottom tab bar + desktop sidebar (restyle `NavigationHeader`, same routes).
+- [x] Button (accent / primary / tonal / ghost / destructive), Card, Input/Select/Textarea, Chip.
+- [x] Phase badge (solid + soft), workout type chip, segmented selector, stat tile, session row.
+- [x] Bottom sheet, confirmation dialog, toast, empty state, skeleton.
+- [x] Mobile floating bottom tab bar + desktop sidebar (restyle `NavigationHeader`, same routes).
 
 ### 3. Screens (one per session; tick when done)
 - [ ] Today / Dashboard — `Dashboard — dark.png`, `Dashboard — light.png`,
@@ -97,4 +97,15 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
   Theme: inline script sets `data-theme` from `prefers-color-scheme` (same as before: no in-app
   setting); `dark:` follows `data-theme`. Removed dead `tailwind.config.ts` (v4 ignored it).
   Dev server needs a restart to pick up the new CSS.
-
+- 2026-11-12: Step 2 done. Primitives in `src/components/ui/` (import from `@/components/ui`): `Button` /
+  `buttonClasses()` (accent, primary, tonal, ghost, destructive; md 44px, lg 56px, icon), `Card`, `Overline`,
+  `Input`, `UnitInput`, `Select`, `Textarea`, `Label`, `FieldError`, `Chip`, `ChoiceChip`, `PhaseBadge`
+  (solid/soft) + `phaseSolidBg`/`phaseBandBg`, `WorkoutTypeChip`, `WorkoutIconTile` + `workoutBg`/`workoutText`,
+  `SegmentedControl` (single or multi value), `StatTile`, `SessionRow`, `TrBadge`, `BottomSheet`, `EmptyState`,
+  `Skeleton`, `SkeletonRows`. Restyled in place (same props): `ConfirmationDialog`, `Toast`, `LoadingSpinner`,
+  `NotificationBell` (44px), `UserMenu`. Nav: logged in = floating bottom tab bar (Dashboard, Calendar,
+  centre accent "+" → Workouts, Statistics, More sheet) on phones, 256px sidebar with a cycle-day card on `lg`;
+  `Providers` pads content (`lg:pl-64`, bottom space for the tab bar). Logged out = top header (logo, Home,
+  language, Sign in). New keys `nav.events`, `nav.fingerboardTesting`, `nav.mainNavigation`, `nav.cycleDayOf`.
+  Not checked logged-in in a browser (headless has no session) — check nav on phone + desktop before step 3.
+  Screens still use the old classes; they switch to the primitives in step 3.

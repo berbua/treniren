@@ -122,7 +122,7 @@ export const PWAInstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
+    <div className="fixed bottom-28 lg:bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">

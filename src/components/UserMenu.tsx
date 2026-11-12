@@ -93,11 +93,11 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-uc-text-light hover:text-uc-mustard transition-colors"
+        className="flex items-center gap-2 min-h-11 pl-1 pr-2 rounded-uc-pill border border-uc-border text-uc-text hover:bg-uc-elevated transition-colors"
         title={isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}
       >
         <div className="relative">
-          <div className="w-8 h-8 bg-gradient-to-br from-uc-purple to-uc-mustard rounded-full flex items-center justify-center text-uc-black text-sm font-medium overflow-hidden">
+          <div className="w-9 h-9 bg-uc-primary rounded-full flex items-center justify-center text-uc-on-primary text-sm font-extrabold overflow-hidden">
             {userPhotoUrl ? (
               <img 
                 src={userPhotoUrl} 
@@ -112,13 +112,13 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
           </div>
           {/* Online status dot badge - top right like notification badge */}
           <div 
-            className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-uc-black ${
-              isOnline ? 'bg-uc-success' : 'bg-uc-mustard'
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-uc-bg ${
+              isOnline ? 'bg-uc-success' : 'bg-uc-warning'
             }`}
             title={isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}
           />
         </div>
-        <span className="hidden sm:block font-medium">
+        <span className="hidden sm:block font-bold">
           {(() => {
             const displayName = userNickname || session.user.name?.split(' ')[0] || session.user.email;
             return displayName;
@@ -135,13 +135,13 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-uc-dark-bg rounded-xl shadow-lg border border-uc-purple/20 py-1 z-50">
-          <div className="px-4 py-2 border-b border-uc-purple/20">
-            <p className="text-sm font-medium text-uc-text-light">
+        <div className="absolute right-0 mt-2 w-64 bg-uc-elevated rounded-uc-card shadow-uc border border-uc-border p-1.5 z-50">
+          <div className="px-3 py-2.5 border-b border-uc-border mb-1">
+            <p className="text-[15px] font-extrabold text-uc-text">
               {userNickname || session.user.name?.split(' ')[0] || 'User'}
             </p>
             <p className="text-xs text-uc-text-muted mt-1 flex items-center space-x-2">
-              <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-uc-success' : 'bg-uc-mustard'}`} />
+              <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-uc-success' : 'bg-uc-warning'}`} />
               <span>{isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}</span>
             </p>
           </div>
@@ -151,36 +151,36 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
               router.push('/profile')
               setIsOpen(false)
             }}
-            className="w-full text-left px-4 py-2 text-sm text-uc-text-light hover:bg-uc-purple/20 transition-colors rounded-lg mx-1"
+            className="w-full text-left px-3 min-h-11 text-sm font-semibold text-uc-text hover:bg-uc-primary-container hover:text-uc-on-primary-container transition-colors rounded-uc-input"
           >
             👤 {t('nav.profile') || 'Profile'}
           </button>
           
           {/* Language Switcher */}
-          <div className="border-t border-uc-purple/20 my-1"></div>
-          <div className="px-4 py-2">
+          <div className="border-t border-uc-border my-1"></div>
+          <div className="px-3 py-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-uc-text-light flex items-center space-x-2">
+              <span className="text-sm font-semibold text-uc-text flex items-center space-x-2">
                 <span>{language === 'en' ? '🇺🇸' : '🇵🇱'}</span>
                 <span>{t('common.language') || 'Language'}</span>
               </span>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center p-0.5 rounded-uc-input border border-uc-border">
                 <button
                   onClick={() => handleLanguageChange('en')}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`min-w-10 min-h-9 px-2 rounded-[10px] text-xs font-extrabold transition-colors ${
                     language === 'en'
-                      ? 'bg-uc-purple/20 text-uc-mustard'
-                      : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-dark-bg/50'
+                      ? 'bg-uc-primary text-uc-on-primary'
+                      : 'text-uc-text-muted hover:text-uc-text'
                   }`}
                 >
                   EN
                 </button>
                 <button
                   onClick={() => handleLanguageChange('pl')}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`min-w-10 min-h-9 px-2 rounded-[10px] text-xs font-extrabold transition-colors ${
                     language === 'pl'
-                      ? 'bg-uc-purple/20 text-uc-mustard'
-                      : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-dark-bg/50'
+                      ? 'bg-uc-primary text-uc-on-primary'
+                      : 'text-uc-text-muted hover:text-uc-text'
                   }`}
                 >
                   PL
@@ -189,11 +189,11 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
             </div>
           </div>
           
-          <div className="border-t border-uc-purple/20 my-1"></div>
+          <div className="border-t border-uc-border my-1"></div>
           
           <button
             onClick={handleSignOut}
-            className="w-full text-left px-4 py-2 text-sm text-uc-alert hover:bg-uc-alert/20 transition-colors rounded-lg mx-1"
+            className="w-full text-left px-3 min-h-11 text-sm font-bold text-uc-error hover:bg-uc-error-bg transition-colors rounded-uc-input"
           >
             {t('auth.signOut') || 'Sign Out'}
           </button>

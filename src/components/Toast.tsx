@@ -27,18 +27,19 @@ export function ToastItem({ toast, onClose }: ToastProps) {
     }
   }, [toast.id, toast.duration, onClose])
 
+  // Inverted card; the type shows as a coloured bar on the left
   const getToastStyles = () => {
     switch (toast.type) {
       case 'success':
-        return 'bg-green-500/20 border-green-500/50 text-green-200'
+        return 'border-l-uc-success'
       case 'error':
-        return 'bg-red-500/20 border-red-500/50 text-red-200'
+        return 'border-l-uc-error'
       case 'warning':
-        return 'bg-yellow-500/20 border-yellow-500/50 text-yellow-200'
+        return 'border-l-uc-warning'
       case 'info':
-        return 'bg-blue-500/20 border-blue-500/50 text-blue-200'
+        return 'border-l-uc-primary'
       default:
-        return 'bg-uc-dark-bg border-uc-purple/50 text-uc-text-light'
+        return 'border-l-uc-text'
     }
   }
 
@@ -59,19 +60,21 @@ export function ToastItem({ toast, onClose }: ToastProps) {
 
   return (
     <div
-      className={`${getToastStyles()} border rounded-xl p-4 shadow-lg flex items-center justify-between min-w-[300px] max-w-md animate-slide-in`}
+      className={`${getToastStyles()} bg-uc-text text-uc-bg border-l-4 rounded-uc-card pl-4 pr-1 py-1 shadow-uc flex items-center justify-between gap-2 w-[min(28rem,calc(100vw-2rem))] animate-slide-in`}
       role="alert"
     >
-      <div className="flex items-center space-x-3">
-        <span className="text-xl">{getIcon()}</span>
-        <p className="text-sm font-medium">{toast.message}</p>
+      <div className="flex items-center gap-3 py-2 min-w-0">
+        <span aria-hidden className="text-lg leading-none">{getIcon()}</span>
+        <p className="text-sm font-bold">{toast.message}</p>
       </div>
       <button
         onClick={() => onClose(toast.id)}
-        className="ml-4 text-current opacity-70 hover:opacity-100 transition-opacity"
+        className="inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input opacity-70 hover:opacity-100 transition-opacity"
         aria-label="Close notification"
       >
-        ✕
+        <svg aria-hidden className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" viewBox="0 0 24 24">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
       </button>
     </div>
   )
@@ -86,7 +89,7 @@ export function ToastContainer({ toasts, onClose }: ToastContainerProps) {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 flex flex-col items-end">
+    <div className="fixed top-4 right-4 z-[60] space-y-2 flex flex-col items-end">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onClose={onClose} />
       ))}

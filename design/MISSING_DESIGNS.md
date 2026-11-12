@@ -65,6 +65,12 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **Fingerboard test chart on Statistics** — that chart lives on the Fingerboard testing detail page.
 - Tiles that exist: **Total workouts, This month, Avg per week, Current streak**.
 
+### Navigation
+- **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
+  (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event
+  choice sheet) would need a decision, since that's new behaviour.
+- **Tab labels** — mockup says "Today" / "Stats"; the app keeps its existing labels Dashboard / Statistics.
+
 ### Components
 - **Toast with "Undo"** — toasts have no actions (success / error / warning / info + close).
 

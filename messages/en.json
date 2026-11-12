@@ -118,7 +118,11 @@
     "exercises": "Exercises",
     "routines": "Routines",
     "fingerboardProtocols": "Fingerboard",
-    "cycle": "Cycle"
+    "cycle": "Cycle",
+    "events": "Events",
+    "fingerboardTesting": "Fingerboard testing",
+    "mainNavigation": "Main navigation",
+    "cycleDayOf": "Day {{day}} of {{length}}"
   },
   "stats": {
     "title": "Statistics",
