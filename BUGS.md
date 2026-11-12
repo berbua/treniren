@@ -36,20 +36,20 @@ Line numbers are from the review and may have shifted.
 22. ✅ Dashboard Events tile capped at 50 (uses page length, not `pagination.total`) — `src/app/dashboard/page.tsx:148`
 23. ✅ Workouts page: after adding a workout, list shows page 1 but pager keeps the old page — `src/app/workouts/page.tsx:259, 272, 857` (events: `:415`)
 
-## Smaller issues (all open)
-- ⬜ Fingerboard test results saved with `Promise.all`, no transaction → partial save + duplicates on retry; reminder upsert unvalidated — `src/app/api/fingerboard-test-results/route.ts:136-185`
-- ⬜ Fingerboard chart plots missing values as 0 and same-day retests overwrite each other — `src/components/FingerboardTestChart.tsx:56-74`
-- ⬜ Weight/reps/RIR 0 stored as null on create (`|| null`) but kept on edit (`??`) — `src/app/api/workouts/route.ts:216-235`
-- ⬜ Deleted reminders reappear and re-send push on every app open (dedupe based on local message list); duplicates across devices — `src/lib/cycle-notifications.ts:106-125`, `src/lib/test-reminder-notifications.ts:131-137`, `src/contexts/NotificationContext.tsx`
-- ⬜ Offline workout uploaded twice if response is lost (server ignores `details.offlineId`) — `src/lib/offline-sync.ts`
-- ⬜ Offline workout rejected by the server retries forever with an error toast, can't be discarded — `src/lib/offline-sync.ts`, `src/lib/offline-storage.ts`
-- ⬜ PUT without `description` wipes it — `src/app/api/fingerboard-protocols/[id]/route.ts:94`, `src/app/api/fingerboard-testing-protocols/[id]/route.ts:99`, `src/app/api/routines/[id]/route.ts:109`
-- ⬜ Non-numeric `page`/`limit` → 500 — `src/app/api/workouts/route.ts:26-28`, `src/app/api/events/route.ts:26-28`
-- ⬜ `planId` on workout create not ownership-checked; unknown id → 500 — `src/app/api/workouts/route.ts:203`
-- ⬜ Routine variations can reorder after edit (all recreated with same `createdAt`) — `src/app/api/routines/[id]/route.ts:115-163`
-- ⬜ Goals configurator mutates profile goal objects; Cancel doesn't discard edits — `src/components/GoalsConfigurator.tsx:87-95`
-- ⬜ Workouts list endpoint has no `orderBy` for exercises/sets; editing from the list can reorder sets — `src/app/api/workouts/route.ts:37-43`
-- ⬜ Signed-out offline device can still show the previous user as signed in via cached `/api/auth/session` (now cleared on sign-out via the logout page, but not on session expiry)
+## Smaller issues
+- ✅ Fingerboard test results saved with `Promise.all`, no transaction → partial save + duplicates on retry; reminder upsert unvalidated (now one transaction; unknown hang → 400; reminder interval 1–365 + unit checked) — `src/app/api/fingerboard-test-results/route.ts:136-185`
+- ✅ Fingerboard chart plots missing values as 0 and same-day retests overwrite each other (missing values skipped; same-day retests plot the best result) — `src/components/FingerboardTestChart.tsx:56-74`
+- ✅ Weight/reps/RIR 0 stored as null on create (`|| null`) but kept on edit (`??`) (create now uses `??` for sets and hangs) — `src/app/api/workouts/route.ts:216-235`
+- ✅ Deleted reminders reappear and re-send push on every app open (dedupe based on local message list); duplicates across devices (each device records reminders sent today apart from the messages; cross-device duplicates left as is, by decision) — `src/lib/cycle-notifications.ts:106-125`, `src/lib/test-reminder-notifications.ts:131-137`, `src/contexts/NotificationContext.tsx`
+- ✅ Offline workout uploaded twice if response is lost (server ignores `details.offlineId`) (server returns the workout already saved with that `offlineId`) — `src/lib/offline-sync.ts`
+- ✅ Offline workout rejected by the server retries forever with an error toast, can't be discarded (4xx answers mark it rejected: no retry, listed on the dashboard with Discard) — `src/lib/offline-sync.ts`, `src/lib/offline-storage.ts`
+- ✅ PUT without `description` wipes it (left out = kept; empty clears it) — `src/app/api/fingerboard-protocols/[id]/route.ts:94`, `src/app/api/fingerboard-testing-protocols/[id]/route.ts:99`, `src/app/api/routines/[id]/route.ts:109`
+- ✅ Non-numeric `page`/`limit` → 500 (fall back to defaults; limit capped at 1000) — `src/app/api/workouts/route.ts:26-28`, `src/app/api/events/route.ts:26-28`
+- ✅ `planId` on workout create not ownership-checked; unknown id → 500 (unknown or another user's plan → 400) — `src/app/api/workouts/route.ts:203`
+- ✅ Routine variations can reorder after edit (all recreated with same `createdAt`) (each variation gets its own createdAt, 1 ms apart, on create and edit) — `src/app/api/routines/[id]/route.ts:115-163`
+- ✅ Goals configurator mutates profile goal objects; Cancel doesn't discard edits (type goals replaced, not changed in place) — `src/components/GoalsConfigurator.tsx:87-95`
+- ✅ Workouts list endpoint has no `orderBy` for exercises/sets; editing from the list can reorder sets (exercises by order, sets by setNumber) — `src/app/api/workouts/route.ts:37-43`
+- ✅ Signed-out offline device can still show the previous user as signed in via cached `/api/auth/session` (cleared on sign-out via the logout page; on session expiry the service worker now answers "signed out" for a cached session past its expiry)
 
 ## Suggested next
 #15 + #16 (calendar), #9 (workout edit loses changes), (#4 + #5 fixed, not yet committed).
