@@ -11,7 +11,9 @@ add a line to the log at the bottom, commit. Branch: `redesign/unicorn-climb`.
 - No hard-coded hex, font or radius in components: use the `--uc-*` tokens (via the Tailwind
   mapping from step 1).
 - Font: Manrope only (replaces Montserrat and the unused Inter import in `layout.tsx`).
-- No emoji as icons: one line-icon set (24px grid, 1.75 stroke, round caps, `currentColor`).
+- Icons: **keep the existing icons/emoji as they are for now.** The user will provide custom SVGs
+  later (24px grid, 1.75 stroke, round caps, `currentColor`). Don't install an icon library and don't
+  draw icons; just leave room for 24px icons where the mockups have them.
 - Never fix label widths: Polish labels can be ~30% longer. Min tap target 44×44px.
 - Keep all translation keys; don't touch `messages/pl-custom.json`.
 - Read only the mockup(s) for the current step, cropped if detail is needed.
@@ -25,8 +27,7 @@ add a line to the log at the bottom, commit. Branch: `redesign/unicorn-climb`.
 - Components also use many raw Tailwind colors (`slate-*`, `pink-*`, …) with `dark:` variants.
 - Theme: spec wants `data-theme="dark|light"` on `<html>`; tokens.css defines both under
   `:root[data-theme=…]`.
-- No icon library installed. Proposal: `lucide-react` with `strokeWidth={1.75}` — confirm with the
-  user before installing.
+- No icon library installed, by decision: custom SVGs from the user come later (see step 5).
 - Nav lives in `src/components/NavigationHeader.tsx`.
 
 ## Steps
@@ -45,7 +46,6 @@ add a line to the log at the bottom, commit. Branch: `redesign/unicorn-climb`.
 ### 2. Shared components (build once, reuse everywhere)
 Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — forms, navigation, data.png`,
 `mockups/Style guide — color & type tokens.png`.
-- [ ] Icon set + an `Icon` wrapper; map of workout type → icon (replace emoji maps).
 - [ ] Button (accent / primary / tonal / ghost / destructive), Card, Input/Select/Textarea, Chip.
 - [ ] Phase badge (solid + soft), workout type chip, segmented selector, stat tile, session row.
 - [ ] Bottom sheet, confirmation dialog, toast, empty state, skeleton.
@@ -73,11 +73,17 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [ ] Auth & landing — `Sign in, sign up, password, sign out.png`, `Landing page.png`
 
 ### 4. Finish
-- [ ] Search for leftover hard-coded colors (`#`, `slate-`, `pink-`, …), emoji icons, Montserrat.
+- [ ] Search for leftover hard-coded colors (`#`, `slate-`, `pink-`, …) and Montserrat.
 - [ ] Check dark + light, EN + PL, 390px and desktop on each screen.
 - [ ] Update `design/MISSING_DESIGNS.md` (remove gaps the new mockups covered).
 - [ ] Open a PR from `redesign/unicorn-climb` to `main`.
 
+### 5. Icons (after the user delivers the custom SVGs)
+- [ ] Add the SVGs as React components behind one `Icon` wrapper (`currentColor`, 24px).
+- [ ] Map workout types, phases, nav tabs etc. to icons; replace the emoji icons screen by screen.
+- [ ] Search for leftover emoji icons.
+
 ## Log
 
 - 2026-11-12: Plan written. New mockups in `design/mockups/` (26 PNGs). Bug fixes merged to `main`.
+- 2026-11-12: Icons decided: keep current icons during the redesign; user provides custom SVGs later (step 5).
