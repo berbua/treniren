@@ -41,7 +41,6 @@ import {
 } from '@/components/ui'
 
 type ViewMode = 'week' | 'month'
-type FilterType = 'workouts' | 'events'
 
 const WORKOUT_TYPES: { type: WorkoutType; key: string }[] = [
   { type: 'BOULDERING', key: 'bouldering' },
@@ -217,7 +216,8 @@ function CalendarPageContent() {
   const [loading, setLoading] = useState(true)
   const [selectedTypes, setSelectedTypes] = useState<WorkoutType[]>([])
   const [selectedEventTypes, setSelectedEventTypes] = useState<EventType[]>([])
-  const [activeFilter, setActiveFilter] = useState<FilterType>('workouts')
+  const [showWorkouts, setShowWorkouts] = useState(true)
+  const [showEvents, setShowEvents] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [showWorkoutForm, setShowWorkoutForm] = useState(false)
   const [showEventForm, setShowEventForm] = useState(false)
@@ -315,7 +315,7 @@ function CalendarPageContent() {
 
   // Get workouts for a specific date
   const getWorkoutsForDate = (date: Date) => {
-    if (!Array.isArray(workouts)) return []
+    if (!Array.isArray(workouts) || !showWorkouts) return []
     // Cells are local dates; toISOString() would give the previous day ahead of UTC
     const dateStr = toLocalDateString(date)
     let filteredWorkouts = workouts.filter(workout => workout.startTime.startsWith(dateStr))
@@ -330,6 +330,7 @@ function CalendarPageContent() {
 
   // Get events for a specific date
   const getEventsForDate = (date: Date) => {
+    if (!showEvents) return []
     const dateStr = toLocalDateString(date)
     let filteredEvents = events.filter(event => {
       // Handle both date formats: "2025-10-24" and "2025-10-24T00:00:00.000Z"
@@ -665,7 +666,14 @@ function CalendarPageContent() {
     t('workouts.tooltips.injuryPhaseWarning') ||
     'This phase has the highest number of injuries in your history. Be extra cautious and consider adjusting training intensity during this phase.'
 
-  const activeFilterCount = selectedTypes.length + selectedEventTypes.length
+  const activeFilterCount = selectedTypes.length + selectedEventTypes.length + (showWorkouts ? 0 : 1) + (showEvents ? 0 : 1)
+
+  const resetFilters = () => {
+    setShowWorkouts(true)
+    setShowEvents(true)
+    setSelectedTypes([])
+    setSelectedEventTypes([])
+  }
 
   if (loading) {
     return <LoadingSpinner message={t('calendar.loading')} fullScreen />
@@ -959,27 +967,40 @@ function CalendarPageContent() {
           title={t('common.filter')}
           closeLabel={t('common.close')}
           footer={
-            <Button variant="primary" size="lg" className="w-full" onClick={() => setShowFilters(false)}>
-              {t('common.close')}
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="ghost" size="lg" onClick={resetFilters} disabled={activeFilterCount === 0}>
+                {t('calendar.resetFilters') || 'Reset'}
+              </Button>
+              <Button variant="primary" size="lg" className="flex-1" onClick={() => setShowFilters(false)}>
+                {t('calendar.showResults') || 'Show results'}
+              </Button>
+            </div>
           }
         >
           <div className="space-y-5">
-            <SegmentedControl<FilterType>
-              ariaLabel={t('common.filter')}
-              value={activeFilter}
-              onChange={setActiveFilter}
-              options={[
-                { value: 'workouts', label: t('nav.workouts'), icon: <Icon name="workouts" size={16} /> },
-                { value: 'events', label: t('nav.events'), icon: <Icon name="calendar" size={16} /> },
-              ]}
-            />
+            <div className="divide-y divide-uc-border">
+              {([
+                { id: 'filter-show-workouts', label: t('calendar.showWorkouts') || 'Show workouts', checked: showWorkouts, onChange: setShowWorkouts },
+                { id: 'filter-show-events', label: t('calendar.showEvents') || 'Show events', checked: showEvents, onChange: setShowEvents },
+              ]).map((row) => (
+                <label key={row.id} htmlFor={row.id} className="flex min-h-12 cursor-pointer items-center justify-between gap-3 text-[15px] font-bold text-uc-text">
+                  {row.label}
+                  <input
+                    id={row.id}
+                    type="checkbox"
+                    checked={row.checked}
+                    onChange={(e) => row.onChange(e.target.checked)}
+                    className="size-6 shrink-0 cursor-pointer accent-uc-primary"
+                  />
+                </label>
+              ))}
+            </div>
 
-            {activeFilter === 'workouts' && (
+            {showWorkouts && (
               <TrainingTypeFilter selectedTypes={selectedTypes} onTypesChange={setSelectedTypes} />
             )}
 
-            {activeFilter === 'events' && (
+            {showEvents && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <Overline>{t('calendar.filterByEventType')}</Overline>

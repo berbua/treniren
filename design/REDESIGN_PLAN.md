@@ -372,3 +372,7 @@ note the answer.
   `tPlural` count of exercises / hangs / climbs) + accent "Save session" / "Update session" (new keys
   `workouts.saveSession`, `updateSession`, `hangsCount`, `climbsCount`); no Cancel button (✕ calls `onCancel`). Duplicating
   now says "Save session" (it said "Update Workout" because `initialData` is set).
+- 2026-11-12: Decision 34 built. Calendar filter sheet: the Workouts / Events switch became "Show workouts" / "Show events"
+  checkboxes (`showWorkouts` / `showEvents` gate `getWorkoutsForDate` / `getEventsForDate`; each counts in the filter
+  badge), type lists stacked, footer Reset + "Show results" (new keys `calendar.showWorkouts`, `showEvents`,
+  `resetFilters`, `showResults`).

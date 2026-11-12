@@ -807,7 +807,11 @@
     "noTrainingTypesSelected": "No training types selected. All workouts will be shown.",
     "noEventTypesSelected": "No event types selected. All events will be shown.",
     "cycleDayShort": "d{{day}}",
-    "injuryRiskPhase": "Injury-risk phase"
+    "injuryRiskPhase": "Injury-risk phase",
+    "showWorkouts": "Show workouts",
+    "showEvents": "Show events",
+    "resetFilters": "Reset",
+    "showResults": "Show results"
   },
   "cycle": {
     "title": "Track Your Menstrual Cycle?",

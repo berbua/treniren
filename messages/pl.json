@@ -815,7 +815,11 @@
     "noTrainingTypesSelected": "Nie wybrano rodzajów treningu. Wyświetlane są wszystkie treningi.",
     "noEventTypesSelected": "Nie wybrano rodzajów wydarzeń. Wyświetlane są wszystkie wydarzenia.",
     "cycleDayShort": "dz. {{day}}",
-    "injuryRiskPhase": "Faza ryzyka kontuzji"
+    "injuryRiskPhase": "Faza ryzyka kontuzji",
+    "showWorkouts": "Pokaż treningi",
+    "showEvents": "Pokaż wydarzenia",
+    "resetFilters": "Resetuj",
+    "showResults": "Pokaż wyniki"
   },
   "cycle": {
     "title": "Śledzić Cykl Miesiączkowy?",

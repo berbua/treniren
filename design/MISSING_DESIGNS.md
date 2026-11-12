@@ -124,10 +124,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   existing Add sheet, which now lists that day's events (tap = edit) and workouts (edit, duplicate) above the
   Quick log / Add workout / Add event tiles. The mock shows the detail as an inline panel; ours is a sheet.
 - Built 2026-11-12. Remaining differences:
-  - **Filters**: mock has "Show workouts / Show events" checkboxes, a Reset link and "Show results". The app has a
-    Workouts / Events switch that only picks which filter list is shown, filters apply instantly, no reset — kept,
-    footer button is "Close". Mock's "All workouts are hidden" warning: the app's "None" means *show all*, so the
-    app's own note ("No training types selected. All workouts will be shown.") stays.
+  - **Filters** (decision 34, built 2026-11-12): "Show workouts" / "Show events" checkboxes (unticked hides them from the
+    calendar and the day sheet; that type list hides too), both type lists stacked, footer ghost "Reset" (clears
+    everything; in the footer, not the header as in the mock) + primary "Show results" (filters still apply instantly).
+    Mock's "All workouts are hidden" warning: the app's "None" still means *show all*, so the app's own note stays.
   - **Today** button (jump to current week/month) is kept next to the Week/Month switch; the mock has none.
   - **Event badges**: one badge per day cell (first non-trip event); all events are in the day sheet. Trips are a
     green line along the bottom of each trip day (as in the mock) rather than a badge.
