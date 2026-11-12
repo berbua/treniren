@@ -85,6 +85,21 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [ ] Map workout types, phases, nav tabs etc. to icons; replace the emoji icons screen by screen.
 - [ ] Search for leftover emoji icons.
 
+## Open points (decisions for the user)
+
+Not built because they'd change or add behaviour. Details in `design/MISSING_DESIGNS.md`. Tick when decided and
+note the answer.
+
+- [ ] **Edit / Duplicate subtitles** in the workout sheet ("Gym · Mon 9 Nov", "Copy of Fingerboard · Mon 9 Nov —
+      pick a new date"): show the original workout's type and date in the header?
+- [ ] **Per-set validation** ("Enter reps for set 3", red empty cell): add inline errors for empty sets/hangs, or keep
+      only the incomplete-data dialog on save?
+- [ ] **Collapsible hangs** (one-line "Hang 2 · Both · open · 20 mm · +4 kg · 6 × 10 s" row): add collapse/expand?
+- [ ] **Crimp size**: keep the fixed 6–30 mm list, or allow any number (mock shows a free "mm" field)?
+- [ ] **Centre "+" tab**: today it opens Workouts. Should it open a Quick log / Add workout / Add event choice sheet?
+- [ ] **Tab labels**: keep Dashboard / Statistics or switch to the mock's Today / Stats?
+- [ ] **Cycle — recent periods list with edit**: the API supports it but there's no UI. Build it in the Cycle step?
+
 ## Log
 
 - 2026-11-12: Plan written. New mockups in `design/mockups/` (26 PNGs). Bug fixes merged to `main`.
