@@ -310,3 +310,4 @@ note the answer.
   avatar + online dot, 24px icon slots, 288px menu. `NotificationBell` lost its border. More sheet, tab bar, logged-out
   header and the Add choice sheet were already built (step 2 / Workouts / Calendar). New keys `common.yesterday`,
   `messages.priorityHigh`. Not checked in a browser.
+- 2026-11-12: User approved tap-to-open tooltips (outside tap / Esc close); calendar / cycle day cells stay hover-only.
