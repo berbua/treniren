@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag, TimeOfDay, Exercise, WorkoutExerciseData, FingerboardWorkoutHang } from '@/types/workout';
+import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag, TimeOfDay, Exercise, WorkoutExerciseData, FingerboardWorkoutHang, ProcessGoalProgress, ProjectGoalCompletion } from '@/types/workout';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { dayNumberToDateString, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import CycleInfoComponent from './CycleInfo';
 import { StrongMindSection } from './StrongMindSection';
+import { ProcessGoalsSection } from './ProcessGoalsSection';
 import TagSelector from './TagSelector';
 import WorkoutExerciseTracker from './WorkoutExerciseTracker';
 import FingerboardHangTracker from './FingerboardHangTracker';
@@ -92,7 +94,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
         // When creating new workout, use today's date
         setFormData(prev => ({
           ...prev,
-          date: new Date().toISOString().slice(0, 10)
+          date: toLocalDateString()
       }))
       }
     }
@@ -191,7 +193,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     type: initialData?.type || 'GYM',
     // When duplicating (defaultDate provided), use defaultDate instead of initialData date
     date: defaultDate || (initialData?.startTime 
-      ? new Date(initialData.startTime).toISOString().slice(0, 10)
+      ? toStoredDateString(initialData.startTime)
       : '2024-01-15'), // Use defaultDate if provided (for duplication), otherwise use initialData date or default
     trainingVolume: initialData?.trainingVolume || 'TR3',
     focusLevel: initialData?.focusLevel || 3,
@@ -200,7 +202,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     sector: initialData?.sector || '',
     mentalPracticeType: initialData?.mentalPracticeType || 'MEDITATION',
     timeOfDay: initialData?.timeOfDay || [],
-    tagIds: initialData?.tags?.map(tag => tag.id) || [],
+    // List endpoints return tags as workoutTags join rows; the calendar edit path maps them to `tags`
+    tagIds: (initialData?.tags ?? initialData?.workoutTags?.map(wt => wt.tag) ?? []).map(tag => tag.id),
     exercises: [] as WorkoutExerciseData[],
     fingerboardHangs: [] as FingerboardWorkoutHang[],
     gratitude: initialData?.gratitude || '',
@@ -240,6 +243,24 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   }>>([]);
   const [selectedProcessGoalIds, setSelectedProcessGoalIds] = useState<Set<string>>(new Set());
   const [selectedProjectGoalIds, setSelectedProjectGoalIds] = useState<Set<string>>(new Set());
+
+  // Goal progress lives in mentalState so it's kept when a goal is unlinked and linked again before saving
+  const getProcessGoalProgress = (goalId: string): 1 | 2 | 3 | undefined =>
+    formData.mentalState?.processGoals?.find((pg: ProcessGoalProgress) => pg.goalId === goalId)?.progress;
+
+  const setProcessGoalProgress = (goalId: string, progress: 1 | 2 | 3) => {
+    const others = (formData.mentalState?.processGoals || []).filter((pg: ProcessGoalProgress) => pg.goalId !== goalId);
+    updateFormData('mentalState', { ...formData.mentalState, processGoals: [...others, { goalId, progress }] });
+  };
+
+  const isProjectGoalCompleted = (goalId: string): boolean =>
+    !!formData.mentalState?.projectGoals?.find((pg: ProjectGoalCompletion) => pg.goalId === goalId)?.completed;
+
+  const toggleProjectGoalCompletion = (goalId: string) => {
+    const completed = !isProjectGoalCompleted(goalId);
+    const others = (formData.mentalState?.projectGoals || []).filter((pg: ProjectGoalCompletion) => pg.goalId !== goalId);
+    updateFormData('mentalState', { ...formData.mentalState, projectGoals: [...others, { goalId, completed }] });
+  };
   const [showIncompleteDataModal, setShowIncompleteDataModal] = useState(false);
   const [incompleteExercises, setIncompleteExercises] = useState<string[]>([]);
 
@@ -247,8 +268,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   const cycleInfoForSelectedDate = useMemo(() => {
     if (!isCycleTrackingEnabled || !cycleSettings) return null;
     
-    const selectedDate = new Date(formData.date);
-    return calculateCycleInfo(cycleSettings, selectedDate);
+    // YYYY-MM-DD string: read as that calendar day
+    return calculateCycleInfo(cycleSettings, formData.date);
   }, [formData.date, cycleSettings, isCycleTrackingEnabled]);
 
   // Check for incomplete data (missing weights/reps in exercises)
@@ -406,26 +427,19 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     }
   };
 
-  // Calculate recurring dates
+  // Calculate recurring dates. Steps over day numbers so the DST change can't shift or repeat a day.
   const calculateRecurringDates = (startDateStr: string, endDateStr: string, frequency: string, customDays: number): string[] => {
-    const startDate = new Date(startDateStr)
-    const endDate = new Date(endDateStr)
+    const startDay = storedDayNumber(startDateStr)
+    const endDay = storedDayNumber(endDateStr)
+    const step = frequency === 'daily' ? 1 : frequency === 'weekly' ? 7 : customDays
     const dates: string[] = []
 
-    if (frequency === 'daily') {
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        dates.push(d.toISOString().slice(0, 10))
-      }
-    } else if (frequency === 'weekly') {
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
-        dates.push(d.toISOString().slice(0, 10))
-      }
-    } else {
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + customDays)) {
-        dates.push(d.toISOString().slice(0, 10))
-      }
+    if (!Number.isFinite(startDay) || !Number.isFinite(endDay) || !(step > 0)) {
+      return dates
     }
-
+    for (let day = startDay; day <= endDay; day += step) {
+      dates.push(dayNumberToDateString(day))
+    }
     return dates
   }
 
@@ -731,6 +745,15 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                         </div>
                       </div>
                     )}
+
+                    <ProcessGoalsSection
+                      processGoals={processGoals.filter(goal => selectedProcessGoalIds.has(goal.id))}
+                      projectGoals={projectGoals.filter(goal => selectedProjectGoalIds.has(goal.id))}
+                      onProcessGoalProgress={setProcessGoalProgress}
+                      onProjectGoalCompletion={toggleProjectGoalCompletion}
+                      getProcessGoalProgress={getProcessGoalProgress}
+                      isProjectGoalCompleted={isProjectGoalCompleted}
+                    />
 
                     {processGoals.length === 0 && projectGoals.length === 0 && (
                       <div className="text-center py-4 text-sm text-yellow-700 dark:text-yellow-300">

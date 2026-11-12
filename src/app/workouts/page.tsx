@@ -420,9 +420,11 @@ function WorkoutsPageContent() {
       if (response.ok) {
         await fetchEvents(1, false) // Reset to first page
         setShowForm(false)
+      } else {
+        handleError(await extractApiError(response), 'Failed to create event')
       }
     } catch (error) {
-      console.error('Error creating event:', error)
+      handleError(error, 'Failed to create event')
     } finally {
       setIsSubmitting(false)
     }
@@ -448,9 +450,11 @@ function WorkoutsPageContent() {
         await fetchEvents(eventsPage, false) // Refresh current page
         setShowForm(false)
         setEditingEvent(null)
+      } else {
+        handleError(await extractApiError(response), 'Failed to update event')
       }
     } catch (error) {
-      console.error('Error updating event:', error)
+      handleError(error, 'Failed to update event')
     } finally {
       setIsSubmitting(false)
     }

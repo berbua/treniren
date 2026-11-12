@@ -10,6 +10,8 @@ import { notificationService } from '@/lib/notification-service';
 import { exportAllData } from '@/lib/export-utils';
 import { generateDummyData } from '@/lib/generate-dummy-data';
 import { useCsrfToken } from '@/hooks/useCsrfToken';
+import { toLocalDateString, toPeriodDateString } from '@/lib/date-utils';
+import { useToast } from '@/contexts/ToastContext';
 
 interface UserProfileProps {
   onClose: () => void;
@@ -23,6 +25,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   const { isOnline, storageSize } = useOffline();
   const { settings: notificationSettings, updateSettings } = useNotifications();
   const { getToken } = useCsrfToken();
+  const { showSuccess, showError } = useToast();
   const [activeTab, setActiveTab] = useState<'profile' | 'cycle' | 'settings' | 'export'>('profile');
   const [profileData, setProfileData] = useState({
     googleName: session?.user?.name || 'Training User',
@@ -33,7 +36,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   });
   const [cycleData, setCycleData] = useState({
     cycleLength: cycleSettings?.cycleLength || 28,
-    lastPeriodDate: cycleSettings?.lastPeriodDate?.toISOString().slice(0, 10) || '',
+    lastPeriodDate: cycleSettings?.lastPeriodDate ? toPeriodDateString(cycleSettings.lastPeriodDate) : '',
   });
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -48,6 +51,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   const [isSavingTestReminder, setIsSavingTestReminder] = useState(false);
   const [isPushSubscribed, setIsPushSubscribed] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   
   // Check if we're in development mode
   const isDevelopment = typeof window !== 'undefined' && 
@@ -256,6 +260,35 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
         }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileSave = async () => {
+    setIsSavingProfile(true);
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/user-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': token,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          timezone: profileData.timezone,
+          googleSheetsUrl: profileData.googleSheetsUrl,
+        })
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to save profile: ${response.status}`);
+      }
+      showSuccess(t('profile.saved') || 'Profile saved');
+      onClose();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      showError(t('profile.saveFailed') || 'Failed to save profile');
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -553,7 +586,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
                     {t('profile.cycleTrackingDescription')}
                   </p>
                   <button
-                    onClick={() => setCycleData({ cycleLength: 28, lastPeriodDate: typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15' })}
+                    onClick={() => setCycleData({ cycleLength: 28, lastPeriodDate: typeof window !== 'undefined' ? toLocalDateString() : '2024-01-15' })}
                     className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
                   >
                     ✅ {t('profile.enableCycle')}
@@ -1086,10 +1119,11 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
             {t('common.close')}
           </button>
           <button
-            onClick={onClose}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            onClick={handleProfileSave}
+            disabled={isSavingProfile}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            💾 {t('common.save')}
+            💾 {isSavingProfile ? t('common.saving') || 'Saving...' : t('common.save')}
           </button>
         </div>
       </div>

@@ -56,7 +56,8 @@
     "focusLevel": "Focus level:",
     "dayAfterTiredness": "Day after tiredness:",
     "nextPeriod": "Next period:",
-    "nextOvulation": "Next ovulation:"
+    "nextOvulation": "Next ovulation:",
+    "saving": "Saving..."
   },
   "auth": {
     "signIn": "Sign In",
@@ -165,7 +166,11 @@
     "enableInjuryPhaseNotification": "🔔 Enable notification",
     "injuryPhaseNotificationEnabled": "Notification enabled! You will receive a reminder 1 day before this phase starts.",
     "injuryPhaseNotificationError": "Failed to enable notification. Please try again.",
-    "injuryPhaseNotificationAlreadyEnabled": "✓ Notification already enabled"
+    "injuryPhaseNotificationAlreadyEnabled": "✓ Notification already enabled",
+    "logFirstWorkout": "Log Your First Workout",
+    "noData": "No statistics available yet",
+    "noDataDescription": "Start logging workouts to see detailed statistics about your training progress, volume, and performance over time.",
+    "daysRange": "Days {{range}}"
   },
   "app": {
     "title": "Unicorn Climb - Train with your unicorn flow",
@@ -175,15 +180,16 @@
   "training": {
     "types": {
       "gym": "Gym",
-      "bouldering": "Bouldering", 
+      "bouldering": "Bouldering",
       "circuits": "Circuits",
       "leadRock": "Lead Rock",
       "leadArtificial": "Lead Wall",
-      "mentalPractice": "Mental Practice"
+      "mentalPractice": "Mental Practice",
+      "fingerboard": "Fingerboard"
     },
     "volumes": {
       "TR1": "TR1 - Very Light",
-      "TR2": "TR2 - Light", 
+      "TR2": "TR2 - Light",
       "TR3": "TR3 - Moderate",
       "TR4": "TR4 - Hard",
       "TR5": "TR5 - Very Hard"
@@ -191,36 +197,36 @@
     "descriptions": {
       "gym": "Strength training",
       "bouldering": "Power & technique",
-      "circuits": "Endurance training", 
+      "circuits": "Endurance training",
       "leadRock": "Outdoor climbing",
       "leadArtificial": "Indoor climbing",
       "mentalPractice": "Mindfulness & mental training"
     }
   },
-    "workouts": {
-      "title": "Manage Workouts",
-      "description": "Track your training sessions and progress",
-      "addNew": "Add New Workout",
-      "addChoiceDescription": "What would you like to add?",
-      "addFirst": "Add Your First Workout",
-      "editWorkout": "Edit Workout",
-      "workoutType": "Workout Type",
-      "date": "Date",
-      "trainingVolume": "Training Volume",
-      "preSessionFeel": "Pre-session Feel (1-5)",
-      "dayAfterTiredness": "Day After Tiredness (1-5)",
-      "focusLevel": "Focus Level (1-5)",
-      "notes": "Notes",
-      "notesPlaceholder": "Add any notes about your workout...",
-      "sector": "Sector",
-      "sectorPlaceholder": "Enter the climbing sector or area...",
-      "mentalPracticeType": "Practice Type",
-      "mentalPracticeTypePlaceholder": "Select the type of mental practice...",
-      "mentalPracticeTypes": {
-        "meditation": "Meditation",
-        "reflecting": "Reflecting",
-        "other": "Other"
-      },
+  "workouts": {
+    "title": "Manage Workouts",
+    "description": "Track your training sessions and progress",
+    "addNew": "Add New Workout",
+    "addChoiceDescription": "What would you like to add?",
+    "addFirst": "Add Your First Workout",
+    "editWorkout": "Edit Workout",
+    "workoutType": "Workout Type",
+    "date": "Date",
+    "trainingVolume": "Training Volume",
+    "preSessionFeel": "Pre-session Feel (1-5)",
+    "dayAfterTiredness": "Day After Tiredness (1-5)",
+    "focusLevel": "Focus Level (1-5)",
+    "notes": "Notes",
+    "notesPlaceholder": "Add any notes about your workout...",
+    "sector": "Sector",
+    "sectorPlaceholder": "Enter the climbing sector or area...",
+    "mentalPracticeType": "Practice Type",
+    "mentalPracticeTypePlaceholder": "Select the type of mental practice...",
+    "mentalPracticeTypes": {
+      "meditation": "Meditation",
+      "reflecting": "Reflecting",
+      "other": "Other"
+    },
     "noWorkouts": "No workouts yet",
     "noWorkoutsDescription": "Start tracking your training by adding your first workout",
     "loading": "Loading workouts...",
@@ -455,7 +461,10 @@
       "reflecting": "Reflecting",
       "other": "Other",
       "reps": "Reps",
-      "sets": "Sets"
+      "sets": "Sets",
+      "addHang": "Add Hang",
+      "noExercisesDescription": "Add exercises to track your sets, reps, and weights. Click \"Add Exercise\" above to get started.",
+      "noHangsDescription": "Add individual hangs or load a saved protocol to quickly set up your fingerboard training session."
     },
     "ratingLabels": {
       "preSessionFeel": {
@@ -479,14 +488,40 @@
         "4": "Focused",
         "5": "Very focused"
       }
-    }
+    },
+    "deleteWorkout": "Delete workout",
+    "deleting": "Deleting...",
+    "climbNumber": "Climb {{number}}",
+    "fell": "Fell",
+    "noFall": "No fall",
+    "beforeClimbingLabels": {
+      "1": "Very Nervous",
+      "2": "Nervous",
+      "3": "Neutral",
+      "4": "Confident",
+      "5": "Very Confident"
+    },
+    "addFirstWorkout": "Add Your First Workout",
+    "eventDeleted": "Event deleted successfully",
+    "useQuickLog": "or use Quick Log for fast entry"
   },
   "exercises": {
     "title": "Exercise Library",
     "subtitle": "Manage your exercise library and track your progress",
     "addExercise": "Add Exercise",
     "addRoutine": "Add Routine",
-    "deleteConfirmTitle": "Delete Exercise"
+    "deleteConfirmTitle": "Delete Exercise",
+    "addFirstExercise": "Add Your First Exercise",
+    "exercise": "exercise",
+    "exercises": "exercises",
+    "logWorkout": "Log Your First Workout",
+    "noExercises": "No exercises yet",
+    "noExercisesDescription": "Create your exercise library to track your progress. Add exercises you use in your workouts, and we'll help you monitor your strength gains over time.",
+    "noExercisesFound": "No exercises found",
+    "noExercisesFoundDescription": "Try adjusting your search or filters to find what you're looking for.",
+    "noWorkoutData": "No workout data yet",
+    "noWorkoutDataDescription": "Start logging workouts with this exercise to see your progression over time. Track your sets, reps, and weights to visualize your strength gains.",
+    "orUseQuickAdd": "or use Quick Add above for common exercises"
   },
   "fingerboard": {
     "title": "Fingerboard Protocols",
@@ -509,7 +544,20 @@
     "updateError": "Failed to update protocol",
     "saveError": "Failed to save protocol",
     "hang": "hang",
-    "hangs": "hangs"
+    "hangs": "hangs",
+    "noTestResults": "No test results yet",
+    "noTestResultsDescription": "Perform your first test to start tracking your fingerboard progress over time. Regular testing helps you see improvements and adjust your training.",
+    "performTest": "Perform Your First Test",
+    "tip": "Tip: Create protocols for different training phases",
+    "handTypes": {
+      "ONE_HAND": "One Hand",
+      "BOTH_HANDS": "Both Hands"
+    },
+    "gripTypes": {
+      "OPEN_HAND": "Open Hand",
+      "CRIMP": "Crimp",
+      "SLOPER": "Sloper"
+    }
   },
   "routines": {
     "title": "My Routines",
@@ -589,7 +637,13 @@
     "clickDateHint": "💡 Click on any date to add a workout, event, or quick log",
     "legend": "Legend",
     "cyclePhases": "Cycle Phases",
-    "noWorkoutsToday": "No workouts today"
+    "noWorkoutsToday": "No workouts today",
+    "filterByTrainingType": "Filter by Training Type",
+    "filterByEventType": "Filter by Event Type",
+    "filterAll": "All",
+    "filterNone": "None",
+    "noTrainingTypesSelected": "No training types selected. All workouts will be shown.",
+    "noEventTypesSelected": "No event types selected. All events will be shown."
   },
   "cycle": {
     "title": "Track Your Menstrual Cycle?",
@@ -602,7 +656,7 @@
     "saveSettings": "Save Cycle Settings",
     "phases": {
       "menstrual": "Menstrual",
-      "follicular": "Follicular", 
+      "follicular": "Follicular",
       "ovulation": "Ovulation",
       "earlyLuteal": "Early Luteal",
       "lateLuteal": "Late Luteal"
@@ -754,7 +808,7 @@
   "features": {
     "calendarSync": "Calendar Sync",
     "calendarSyncDesc": "Sync your workouts with Google Calendar automatically",
-    "pwaReady": "PWA Ready", 
+    "pwaReady": "PWA Ready",
     "pwaReadyDesc": "Install on your iPhone and use offline",
     "trackProgress": "Track Progress",
     "trackProgressDesc": "Monitor intensity, mood, and performance patterns"
@@ -843,7 +897,11 @@
     "quickStats": "Quick Stats",
     "viewYourProgress": "View your training progress and statistics",
     "manageCycleSettings": "Manage your menstrual cycle settings",
-    "controlYourData": "Control your data and privacy settings"
+    "controlYourData": "Control your data and privacy settings",
+    "saved": "Profile saved",
+    "saveFailed": "Failed to save profile",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "landing": {
     "tagline": "Train with your unicorn flow - Track your climbing journey with precision and mindfulness",
@@ -851,7 +909,7 @@
     "dayToGo": "day to go",
     "daysToGo": "days to go",
     "getStarted": "Get Started - Track Your Journey",
-        "freeToUse": "Free to use • Works offline",
+    "freeToUse": "Free to use • Works offline",
     "whatYouCanTrack": "What You Can Track",
     "featuresDescription": "Comprehensive tracking for every aspect of your climbing journey",
     "events": "Events & Trips",
@@ -1084,7 +1142,16 @@
     },
     "trainingTypesTitle": "Training Types to Track",
     "eventTypesTitle": "Event Types to Track",
-    "tip": "💡 Tip: Track both your training sessions and important events to understand patterns in your performance and recovery."
+    "tip": "💡 Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.",
+    "types": {
+      "injury": "Injury",
+      "physio": "Physio",
+      "competition": "Competition",
+      "trip": "Trip",
+      "other": "Other"
+    },
+    "addFirstEvent": "Add Your First Event",
+    "trackInjuries": "Track injuries to see patterns with your cycle"
   },
   "strongMind": {
     "title": "Strong Mind",
@@ -1187,7 +1254,22 @@
     "improvements": "3 things to do better next time",
     "noGratitudeWorkouts": "No workouts with gratitude entries yet. Add gratitude to your workouts to see them here!",
     "noGratitudeEntries": "No gratitude entries in this timeframe.",
-    "noImprovementsEntries": "No improvement entries in this timeframe."
+    "noImprovementsEntries": "No improvement entries in this timeframe.",
+    "addGratitude": "Add Gratitude to Workout",
+    "addImprovements": "Add Improvements to Workout",
+    "noGratitude": "No gratitude entries yet",
+    "noGratitudeDescription": "Start adding gratitude notes to your workouts to reflect on what you're thankful for in your training journey.",
+    "noImprovements": "No improvement notes yet",
+    "noImprovementsDescription": "Track what you're working on improving in your workouts. Add improvement notes to see your progress over time.",
+    "goalsProgress": "Goal progress",
+    "progressHint": "How much did this session move each goal forward? (1 = a little, 3 = a lot)",
+    "progressLevels": {
+      "1": "A little progress",
+      "2": "Good progress",
+      "3": "Great progress"
+    },
+    "achievedHint": "Tap the trophy if you sent this project in this session.",
+    "markAchieved": "Achieved in this session"
   },
   "quickLog": {
     "title": "⚡ Quick Log",
@@ -1201,5 +1283,72 @@
       "saveFailed": "Failed to save quick log",
       "saveError": "Error saving quick log"
     }
+  },
+  "pwaPrompt": {
+    "title": "Install Unicorn Climb",
+    "description": "Install this app on your device for quick access and offline use.",
+    "install": "Install",
+    "notNow": "Not now",
+    "close": "Close",
+    "iosIntro": "To install this app on your iPhone:",
+    "iosStep1": "1. Tap the Share button in the browser toolbar",
+    "iosStep2": "2. Scroll down and tap \"Add to Home Screen\"",
+    "iosStep3": "3. Tap \"Add\" to confirm",
+    "gotIt": "Got it!",
+    "maybeLater": "Maybe later",
+    "ok": "OK"
+  },
+  "fingerboardTesting": {
+    "title": "Fingerboard Testing Protocols",
+    "subtitle": "Create testing protocols to track your fingerboard progress over time",
+    "loadingProtocols": "Loading testing protocols...",
+    "loadingResults": "Loading test results...",
+    "createProtocol": "Create Testing Protocol",
+    "emptyTitle": "No testing protocols yet",
+    "emptyDescription": "Create your first testing protocol to track progress over time",
+    "createFirstProtocol": "Create Your First Testing Protocol",
+    "testHangsCount": "Test hangs: {{count}}",
+    "testResultsCount": "Test results: {{count}}",
+    "viewResults": "View Results",
+    "protocolNotFound": "Protocol not found",
+    "performTest": "Perform Test",
+    "filterByHang": "Filter by Hang Type",
+    "allHangs": "All Hangs",
+    "testResults": "Test Results",
+    "columns": {
+      "date": "Date",
+      "hangType": "Hang Type",
+      "load": "Load (kg)",
+      "time": "Time (s)",
+      "success": "Success",
+      "notes": "Notes"
+    }
+  },
+  "offlineForm": {
+    "title": "Add Workout",
+    "titleOffline": "Add Workout (Offline)",
+    "saveOffline": "Save Offline",
+    "savedOffline": "Workout saved on this device. It will be uploaded when you're back online."
+  },
+  "protocolForm": {
+    "nameRequired": "Protocol name is required",
+    "editTitle": "Edit Protocol",
+    "update": "Update Protocol",
+    "saving": "Saving...",
+    "name": "Protocol Name",
+    "description": "Description (optional)",
+    "addHang": "Add Hang",
+    "editHang": "Edit Hang",
+    "remove": "Remove",
+    "crimpSize": "Crimp Size (mm)",
+    "crimpSizeHint": "Optional: Specify edge size for open hand grip",
+    "load": "Load (kg)",
+    "loadHint": "negative value for unload",
+    "time": "Time (seconds)",
+    "notes": "Notes (optional)"
+  },
+  "offlineSync": {
+    "uploaded": "Uploaded {{count}} workout(s) saved offline",
+    "failed": "{{count}} workout(s) saved offline couldn't be uploaded. We'll try again later."
   }
 }

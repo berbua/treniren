@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { requireAuth } from '@/lib/auth-helpers'
+
+// Older versions stored the late-period reminder setting as JSON in googleSheetsUrl.
+// That setting lives in the client's notification settings, so hide the leftover value.
+const isLegacyNotificationSettings = (value: string | null): boolean => {
+  if (!value || !value.trim().startsWith('{')) return false
+  try {
+    const parsed = JSON.parse(value)
+    return typeof parsed === 'object' && parsed !== null && 'latePeriodNotificationsEnabled' in parsed
+  } catch {
+    return false
+  }
+}
 
 // GET /api/user-profile - Get user profile
 export async function GET(request: NextRequest) {
@@ -17,6 +30,10 @@ export async function GET(request: NextRequest) {
     const profile = await prisma.userProfile.findUnique({
       where: { userId: user.id },
     })
+    
+    if (profile && isLegacyNotificationSettings(profile.googleSheetsUrl)) {
+      profile.googleSheetsUrl = null
+    }
     
     return NextResponse.json(profile)
   } catch (error) {
@@ -39,7 +56,6 @@ export async function POST(request: NextRequest) {
       timezone, 
       photoUrl, 
       googleSheetsUrl, 
-      latePeriodNotificationsEnabled,
       weeklyWorkoutGoal,
       monthlyWorkoutGoal,
       useAutoMonthlyGoal,
@@ -68,14 +84,14 @@ export async function POST(request: NextRequest) {
     if (lastPeriodDate !== undefined) updateData.lastPeriodDate = lastPeriodDate ? new Date(lastPeriodDate) : null
     if (timezone !== undefined) updateData.timezone = timezone
     if (photoUrl !== undefined) updateData.photoUrl = photoUrl
-    if (googleSheetsUrl !== undefined || latePeriodNotificationsEnabled !== undefined) {
-      updateData.googleSheetsUrl = googleSheetsUrl || (latePeriodNotificationsEnabled !== undefined ? JSON.stringify({ latePeriodNotificationsEnabled }) : null)
-    }
+    if (googleSheetsUrl !== undefined) updateData.googleSheetsUrl = googleSheetsUrl || null
     // Training goals
     if (weeklyWorkoutGoal !== undefined) updateData.weeklyWorkoutGoal = weeklyWorkoutGoal
     if (monthlyWorkoutGoal !== undefined) updateData.monthlyWorkoutGoal = monthlyWorkoutGoal
     if (useAutoMonthlyGoal !== undefined) updateData.useAutoMonthlyGoal = useAutoMonthlyGoal
-    if (workoutTypeGoals !== undefined) updateData.workoutTypeGoals = workoutTypeGoals
+    // Prisma rejects a plain null for Json columns
+    const workoutTypeGoalsValue = workoutTypeGoals ? (workoutTypeGoals as Prisma.InputJsonValue) : Prisma.JsonNull
+    if (workoutTypeGoals !== undefined) updateData.workoutTypeGoals = workoutTypeGoalsValue
     
     const profile = await prisma.userProfile.upsert({
       where: { userId: user.id },
@@ -86,11 +102,11 @@ export async function POST(request: NextRequest) {
         lastPeriodDate: lastPeriodDate ? new Date(lastPeriodDate) : null,
         timezone: timezone || 'Europe/Warsaw',
         photoUrl,
-        googleSheetsUrl: googleSheetsUrl || (latePeriodNotificationsEnabled !== undefined ? JSON.stringify({ latePeriodNotificationsEnabled }) : null),
+        googleSheetsUrl: googleSheetsUrl || null,
         weeklyWorkoutGoal: weeklyWorkoutGoal || 3,
         monthlyWorkoutGoal,
         useAutoMonthlyGoal: useAutoMonthlyGoal !== undefined ? useAutoMonthlyGoal : true,
-        workoutTypeGoals: workoutTypeGoals || null,
+        workoutTypeGoals: workoutTypeGoalsValue,
       },
     })
     

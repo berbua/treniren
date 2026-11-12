@@ -52,7 +52,7 @@ export default function FingerboardProtocolForm({
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     if (!formData.name.trim()) {
-      newErrors.name = 'Protocol name is required'
+      newErrors.name = t('protocolForm.nameRequired')
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -118,7 +118,7 @@ export default function FingerboardProtocolForm({
       <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-uc-dark-bg border-b border-uc-purple/20 px-6 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-uc-text-light">
-            {protocol ? 'Edit Protocol' : 'Create Protocol'}
+            {protocol ? t('protocolForm.editTitle') : t('fingerboard.createProtocol')}
           </h2>
           <button onClick={onCancel} className="text-uc-text-muted hover:text-uc-text-light transition-colors">
             ✕
@@ -128,7 +128,7 @@ export default function FingerboardProtocolForm({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-uc-text-light mb-2">
-              Protocol Name *
+              {t('protocolForm.name')} *
             </label>
             <input
               type="text"
@@ -142,7 +142,7 @@ export default function FingerboardProtocolForm({
 
           <div>
             <label className="block text-sm font-medium text-uc-text-light mb-2">
-              Description (optional)
+              {t('protocolForm.description')}
             </label>
             <textarea
               value={formData.description}
@@ -163,13 +163,13 @@ export default function FingerboardProtocolForm({
                 onClick={handleAddHang}
                 className="bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
-                + Add Hang
+                + {t('protocolForm.addHang')}
               </button>
             </div>
 
             {formData.hangs.length === 0 ? (
               <div className="bg-uc-black/50 rounded-lg p-8 text-center border border-uc-purple/20">
-                <p className="text-uc-text-muted">No hangs added yet</p>
+                <p className="text-uc-text-muted">{t('workouts.labels.noHangsAdded')}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -181,7 +181,7 @@ export default function FingerboardProtocolForm({
                     <div className="flex items-center gap-3 flex-1">
                       <span className="text-uc-text-muted text-sm w-6">{index + 1}.</span>
                       <span className="text-uc-text-light font-medium">
-                        {getHandTypeEmoji(hang.handType)} {formatHangDescription(hang.handType, hang.gripType, hang.crimpSize)}
+                        {getHandTypeEmoji(hang.handType)} {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize)}
                         {hang.customDescription && ` • ${hang.customDescription}`}
                       </span>
                       {hang.defaultLoad !== undefined && (
@@ -219,14 +219,14 @@ export default function FingerboardProtocolForm({
                         onClick={() => handleEditHang(index)}
                         className="text-uc-text-muted hover:text-uc-text-light"
                       >
-                        Edit
+                        {t('common.edit')}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleRemoveHang(index)}
                         className="text-red-400 hover:text-red-300"
                       >
-                        Remove
+                        {t('protocolForm.remove')}
                       </button>
                     </div>
                   </div>
@@ -241,14 +241,14 @@ export default function FingerboardProtocolForm({
               onClick={onCancel}
               className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-3 rounded-xl font-medium transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? 'Saving...' : protocol ? 'Update Protocol' : 'Create Protocol'}
+              {isSubmitting ? t('protocolForm.saving') : protocol ? t('protocolForm.update') : t('fingerboard.createProtocol')}
             </button>
           </div>
         </form>
@@ -318,7 +318,7 @@ function HangForm({
       <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-md">
         <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-uc-text-light">
-            {hang ? 'Edit Hang' : 'Add Hang'}
+            {hang ? t('protocolForm.editHang') : t('protocolForm.addHang')}
           </h3>
           <button onClick={onCancel} className="text-uc-text-muted hover:text-uc-text-light">
             ✕
@@ -327,7 +327,7 @@ function HangForm({
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-uc-text-light mb-2">
-              Hand Type *
+              {t('workouts.labels.handType')} *
             </label>
             <select
               value={formData.handType}
@@ -336,7 +336,7 @@ function HangForm({
             >
               {HAND_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.emoji} {opt.label}
+                  {opt.emoji} {t(opt.labelKey)}
                 </option>
               ))}
             </select>
@@ -344,7 +344,7 @@ function HangForm({
 
           <div>
             <label className="block text-sm font-medium text-uc-text-light mb-2">
-              Grip Type *
+              {t('workouts.labels.gripType')} *
             </label>
             <select
               value={formData.gripType}
@@ -361,7 +361,7 @@ function HangForm({
             >
               {GRIP_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.emoji} {opt.label}
+                  {opt.emoji} {t(opt.labelKey)}
                 </option>
               ))}
             </select>
@@ -370,7 +370,7 @@ function HangForm({
           {shouldShowCrimpSize(formData.gripType) && (
             <div>
               <label className="block text-sm font-medium text-uc-text-light mb-2">
-                Crimp Size (mm) {formData.gripType === 'CRIMP' && '*'}
+                {t('protocolForm.crimpSize')} {formData.gripType === 'CRIMP' && '*'}
               </label>
               <select
                 value={formData.crimpSize || ''}
@@ -391,7 +391,7 @@ function HangForm({
               </select>
               {formData.gripType === 'OPEN_HAND' && (
                 <p className="text-xs text-uc-text-muted mt-1">
-                  Optional: Specify edge size for open hand grip
+                  {t('protocolForm.crimpSizeHint')}
                 </p>
               )}
             </div>
@@ -399,7 +399,7 @@ function HangForm({
 
           <div>
             <label className="block text-sm font-medium text-uc-text-light mb-2">
-              Custom Description (optional)
+              {t('workouts.labels.customDescription')}
             </label>
             <input
               type="text"
@@ -412,7 +412,7 @@ function HangForm({
 
           <div>
             <label className="block text-sm font-medium text-uc-text-light mb-2">
-              Load (kg) <span className="text-xs text-uc-text-muted font-normal">(negative value for unload)</span>
+              {t('protocolForm.load')} <span className="text-xs text-uc-text-muted font-normal">({t('protocolForm.loadHint')})</span>
             </label>
             <input
               type="number"
@@ -444,7 +444,7 @@ function HangForm({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-uc-text-light mb-2">
-                Reps
+                {t('workouts.labels.reps')}
               </label>
               <input
                 type="number"
@@ -461,7 +461,7 @@ function HangForm({
             </div>
             <div>
               <label className="block text-sm font-medium text-uc-text-light mb-2">
-                Time (seconds)
+                {t('protocolForm.time')}
               </label>
               <input
                 type="number"
@@ -480,7 +480,7 @@ function HangForm({
 
           <div>
             <label className="block text-sm font-medium text-uc-text-light mb-2">
-              Notes (optional)
+              {t('protocolForm.notes')}
             </label>
             <textarea
               value={formData.notes || ''}
@@ -496,13 +496,13 @@ function HangForm({
               onClick={onCancel}
               className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-4 py-2 rounded-lg transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              Save
+              {t('common.save')}
             </button>
           </div>
         </form>

@@ -4,7 +4,7 @@ import { useOffline } from '@/hooks/useOffline';
 import { useState, useEffect } from 'react';
 
 export const OfflineIndicator = () => {
-  const { isOnline, unsyncedWorkouts, syncQueue } = useOffline();
+  const { isOnline, unsyncedWorkouts } = useOffline();
   const [showIndicator, setShowIndicator] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -25,7 +25,8 @@ export const OfflineIndicator = () => {
     }
   }, [isOnline]);
 
-  const pendingCount = unsyncedWorkouts.length + syncQueue.length;
+  // Queued workouts are also unsynced, so count them once
+  const pendingCount = unsyncedWorkouts.length;
 
   // Don't render anything on the server side to prevent hydration mismatch
   if (!isClient || (!showIndicator && isOnline)) {

@@ -20,6 +20,7 @@ interface EventCardProps {
     status?: string
     notes?: string
     tags?: Tag[]
+    eventTags?: { tag: Tag }[]
     // Trip-specific fields
     tripStartDate?: string
     tripEndDate?: string
@@ -90,6 +91,8 @@ const formatTime = (timeString: string) => {
 
 export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, isDeleting = false }: EventCardProps) {
   const { t } = useLanguage()
+  // List endpoints return tags as eventTags join rows
+  const eventTags = event.tags ?? event.eventTags?.map(et => et.tag) ?? []
   const [isEditingCycleDay, setIsEditingCycleDay] = useState(false)
   const [cycleDayValue, setCycleDayValue] = useState<string>('')
   const [isUpdating, setIsUpdating] = useState(false)
@@ -107,7 +110,7 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
   
   // Calculate cycle info for injury events if cycle tracking is enabled
   const calculatedCycleInfo = event.type === 'INJURY' && isCycleTrackingEnabled && cycleSettings
-    ? calculateCycleInfo(cycleSettings, new Date(event.date))
+    ? calculateCycleInfo(cycleSettings, event.date)
     : null
   
   // Use manually set cycle day if available, otherwise use calculated
@@ -165,9 +168,9 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
           </h4>
 
           {/* Tags */}
-          {event.tags && event.tags.length > 0 && (
+          {eventTags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-3">
-              {event.tags.map((tag) => (
+              {eventTags.map((tag) => (
                 <span
                   key={tag.id}
                   className="px-2 py-1 text-xs rounded-full text-white"

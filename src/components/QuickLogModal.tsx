@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { toLocalDateString } from '@/lib/date-utils'
 import { WorkoutType, TrainingVolume, TimeOfDay, MentalPracticeType, FingerboardProtocol } from '@/types/workout'
 
 interface QuickLogModalProps {
@@ -30,9 +31,16 @@ export default function QuickLogModal({
 }: QuickLogModalProps) {
   const { t } = useLanguage()
   const [formData, setFormData] = useState<QuickLogData>({
-    date: defaultDate ? defaultDate.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+    date: toLocalDateString(defaultDate ?? new Date()),
     type: 'GYM',
   })
+
+  // The modal stays mounted, so pick up the clicked day each time it opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(prev => ({ ...prev, date: toLocalDateString(defaultDate ?? new Date()) }))
+    }
+  }, [isOpen, defaultDate])
   const [protocols, setProtocols] = useState<FingerboardProtocol[]>([])
   const [loadingProtocols, setLoadingProtocols] = useState(false)
 

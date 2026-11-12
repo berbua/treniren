@@ -9,7 +9,16 @@
   --color-uc-text-muted: #C7A256;
   --color-uc-success: #5D7B5C;
   --color-uc-alert: #A83F2F;
-  
+
+  /* Training type colors (Tailwind v4 doesn't read tailwind.config.ts) */
+  --color-training-gym: #7C2D12;
+  --color-training-bouldering: #DC2626;
+  --color-training-circuits: #EA580C;
+  --color-training-leadRock: #D97706;
+  --color-training-leadArtificial: #059669;
+  --color-training-mentalPractice: #7C3AED;
+  --color-training-fingerboard: #DB2777;
+
   --font-sans: "Montserrat", sans-serif;
 }
 

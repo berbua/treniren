@@ -125,7 +125,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   }`}
                 >
                   <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {mentalStateLabels[value as keyof typeof mentalStateLabels].label}
+                    {t(`workouts.beforeClimbingLabels.${value}`)}
                   </div>
                 </button>
               ))}
@@ -153,7 +153,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                 <div key={section.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-purple-200 dark:border-purple-700 mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-sm font-medium text-purple-900 dark:text-purple-100">
-                      Climb {index + 1}
+                      {t('workouts.climbNumber', { number: index + 1 })}
                     </h4>
                     <button
                       type="button"
@@ -297,7 +297,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-600 dark:text-gray-400">{t('workouts.before') || 'Before'}:</span>
                     <span className={mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].color}>
-                      {mentalStateLabels[mentalState.beforeClimbing as keyof typeof mentalStateLabels].label}
+                      {t(`workouts.beforeClimbingLabels.${mentalState.beforeClimbing}`)}
                     </span>
                   </div>
                 )}
@@ -306,7 +306,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                     <span className="text-gray-600 dark:text-gray-400">{t('workouts.climbs') || 'Climbs'}:</span>
                     {mentalState.climbSections.map((section, index) => (
                       <div key={section.id} className="ml-4 text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Climb {index + 1}:</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('workouts.climbNumber', { number: index + 1 })}:</span>
                         {section.focusState && (
                           <span className={`ml-2 ${focusStateLabels[section.focusState].color}`}>
                             {t(`workouts.focusStates.${section.focusState}`) || focusStateLabels[section.focusState].label}
@@ -314,7 +314,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                         )}
                         {section.tookFall !== undefined && (
                           <span className={`ml-2 ${section.tookFall ? 'text-pink-600' : 'text-green-600'}`}>
-                            ({section.tookFall ? 'Fell' : 'No fall'})
+                            ({section.tookFall ? t('workouts.fell') : t('workouts.noFall')})
                           </span>
                         )}
                         {section.comfortZone && (

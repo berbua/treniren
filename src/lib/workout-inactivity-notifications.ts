@@ -1,5 +1,6 @@
 // Workout inactivity notification logic
 import { Workout } from '@/types/workout';
+import { localDayNumber, storedDayNumber } from './date-utils';
 import { notificationService, NotificationMessage } from './notification-service';
 
 export interface WorkoutInactivityCheck {
@@ -30,13 +31,8 @@ export function checkWorkoutInactivity(
   const lastWorkout = sortedWorkouts[0];
   const lastWorkoutDate = new Date(lastWorkout.startTime);
   
-  // Calculate days since last workout
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  lastWorkoutDate.setHours(0, 0, 0, 0);
-  
-  const diffTime = today.getTime() - lastWorkoutDate.getTime();
-  const daysSinceLastWorkout = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // Calendar days since last workout (stored as UTC midnight; DST-safe)
+  const daysSinceLastWorkout = localDayNumber() - storedDayNumber(lastWorkout.startTime);
   
   // Should remind if days since last workout >= inactivityDays
   const shouldRemind = daysSinceLastWorkout >= inactivityDays;
@@ -108,7 +104,8 @@ export function processWorkoutInactivityNotifications(
  */
 export function scheduleDailyWorkoutInactivityCheck(
   workouts: Workout[],
-  settings: { workoutInactivityEnabled: boolean; workoutInactivityDays: number }
+  settings: { workoutInactivityEnabled: boolean; workoutInactivityDays: number },
+  reloadWorkouts?: () => Promise<Workout[]>
 ): () => void {
   if (!settings.workoutInactivityEnabled || workouts.length === 0) {
     return () => {}; // Return empty cleanup function
@@ -121,7 +118,10 @@ export function scheduleDailyWorkoutInactivityCheck(
   const checkInterval = setInterval(() => {
     const now = new Date();
     if (now.getHours() === 9 && now.getMinutes() < 5) {
-      processWorkoutInactivityNotifications(workouts, settings);
+      // Reload so workouts logged since the page opened count (PWA left open for days)
+      (reloadWorkouts ? reloadWorkouts() : Promise.resolve(workouts))
+        .then(latest => processWorkoutInactivityNotifications(latest, settings))
+        .catch(error => console.error('Failed to run inactivity check:', error));
     }
   }, 5 * 60 * 1000); // Check every 5 minutes
   

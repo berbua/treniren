@@ -1,6 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+const DISMISS_KEY = 'pwa-install-dismissed';
+const DISMISS_DURATION_MS = 14 * 24 * 60 * 60 * 1000; // Don't ask again for 14 days
+
+const wasRecentlyDismissed = () => {
+  try {
+    const dismissedAt = Number(localStorage.getItem(DISMISS_KEY));
+    return !!dismissedAt && Date.now() - dismissedAt < DISMISS_DURATION_MS;
+  } catch {
+    return false;
+  }
+};
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -12,10 +25,12 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const PWAInstallPrompt = () => {
+  const { t } = useLanguage();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   // Ensure this component only renders on the client
   useEffect(() => {
@@ -42,7 +57,9 @@ export const PWAInstallPrompt = () => {
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       
       // Show prompt for PWA installation
-      setShowInstallPrompt(true);
+      if (!wasRecentlyDismissed()) {
+        setShowInstallPrompt(true);
+      }
     };
 
     // Listen for app installed event
@@ -56,12 +73,14 @@ export const PWAInstallPrompt = () => {
     window.addEventListener('appinstalled', handleAppInstalled);
 
     // For iOS Safari, show manual install instructions after a delay
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
+    setIsIOS(isIOSDevice);
 
-    if (isIOS && !isInStandaloneMode) {
+    let iosPromptTimer: ReturnType<typeof setTimeout> | undefined;
+    if (isIOSDevice && !isInStandaloneMode && !wasRecentlyDismissed()) {
       // Show manual install prompt for iOS after 3 seconds
-      setTimeout(() => {
+      iosPromptTimer = setTimeout(() => {
         setShowInstallPrompt(true);
       }, 3000);
     }
@@ -69,6 +88,7 @@ export const PWAInstallPrompt = () => {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      clearTimeout(iosPromptTimer);
     };
   }, [isClient]);
 
@@ -86,15 +106,18 @@ export const PWAInstallPrompt = () => {
     setShowInstallPrompt(false);
   };
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
   const handleDismiss = () => {
     setShowInstallPrompt(false);
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    try {
+      localStorage.setItem(DISMISS_KEY, Date.now().toString());
+    } catch {
+      // Storage unavailable (e.g. private mode) - just hide for this session
+    }
   };
 
-  // Don't render anything on the server side to prevent hydration mismatch
-  if (!isClient || isInstalled || !showInstallPrompt || !deferredPrompt) {
+  // Don't render anything on the server side to prevent hydration mismatch.
+  // Without a deferred prompt, only iOS has something to show (manual instructions).
+  if (!isClient || isInstalled || !showInstallPrompt || (!deferredPrompt && !isIOS)) {
     return null;
   }
 
@@ -111,55 +134,52 @@ export const PWAInstallPrompt = () => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-medium text-gray-900">
-              Install Unicorn Climb
+              {t('pwaPrompt.title')}
             </h3>
             {deferredPrompt ? (
               <>
                 <p className="text-sm text-gray-500 mt-1">
-                  Install this app on your device for quick access and offline use.
+                  {t('pwaPrompt.description')}
                 </p>
                 <div className="mt-3 flex space-x-2">
                   <button
                     onClick={handleInstallClick}
                     className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
                   >
-                    Install
+                    {t('pwaPrompt.install')}
                   </button>
                   <button
                     onClick={handleDismiss}
                     className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
                   >
-                    Not now
+                    {t('pwaPrompt.notNow')}
                   </button>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-sm text-gray-500 mt-1">
-                  {isIOS 
-                    ? 'To install this app on your iPhone:'
-                    : 'Install this app for quick access and offline use.'
-                  }
+                  {isIOS ? t('pwaPrompt.iosIntro') : t('pwaPrompt.description')}
                 </p>
                 {isIOS ? (
                   <div className="mt-3 space-y-2">
                     <div className="text-xs text-gray-600">
-                      <p>1. Tap the <strong>Share</strong> button below</p>
-                      <p>2. Scroll down and tap <strong>&quot;Add to Home Screen&quot;</strong></p>
-                      <p>3. Tap <strong>&quot;Add&quot;</strong> to confirm</p>
+                      <p>{t('pwaPrompt.iosStep1')}</p>
+                      <p>{t('pwaPrompt.iosStep2')}</p>
+                      <p>{t('pwaPrompt.iosStep3')}</p>
                     </div>
                     <div className="flex space-x-2">
                       <button
                         onClick={handleDismiss}
                         className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
                       >
-                        Got it!
+                        {t('pwaPrompt.gotIt')}
                       </button>
                       <button
                         onClick={handleDismiss}
                         className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
                       >
-                        Maybe later
+                        {t('pwaPrompt.maybeLater')}
                       </button>
                     </div>
                   </div>
@@ -169,13 +189,13 @@ export const PWAInstallPrompt = () => {
                       onClick={handleDismiss}
                       className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
                     >
-                      OK
+                      {t('pwaPrompt.ok')}
                     </button>
                     <button
                       onClick={handleDismiss}
                       className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
                     >
-                      Not now
+                      {t('pwaPrompt.notNow')}
                     </button>
                   </div>
                 )}
@@ -184,6 +204,7 @@ export const PWAInstallPrompt = () => {
           </div>
           <button
             onClick={handleDismiss}
+            aria-label={t('pwaPrompt.close')}
             className="flex-shrink-0 text-gray-400 hover:text-gray-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

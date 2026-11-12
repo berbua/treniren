@@ -134,10 +134,12 @@ export async function PUT(
 
     // Update event using transaction
     const updatedEvent = await prisma.$transaction(async (tx) => {
-      // Delete existing tags
-      await tx.eventTag.deleteMany({
-        where: { eventId: id }
-      })
+      // Replace tags only when the client sent them (same as the workout update)
+      if (tagIds !== undefined) {
+        await tx.eventTag.deleteMany({
+          where: { eventId: id }
+        })
+      }
 
       // Update event
       await tx.event.update({

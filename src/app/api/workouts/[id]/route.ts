@@ -192,7 +192,10 @@ export async function PUT(
       }
       if (gratitude !== undefined) updateData.gratitude = gratitude
       if (improvements !== undefined) updateData.improvements = improvements
-      if (mentalState !== undefined) updateData.mentalState = mentalState
+      if (mentalState !== undefined) {
+        // Prisma rejects a plain null for Json columns
+        updateData.mentalState = mentalState === null ? Prisma.JsonNull : (mentalState as Prisma.InputJsonValue)
+      }
 
       await tx.workout.update({
         where: { id },

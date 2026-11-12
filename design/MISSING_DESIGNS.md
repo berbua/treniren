@@ -1,0 +1,283 @@
+# Unicorn Climb — what the redesign is missing
+
+Gap analysis between the Claude Design hand-off (`DESIGN.md`, `tokens.css`, the 10 PNGs) and the
+features already implemented in the app (checked against the code, 2026-11-11).
+
+Ground rule: **the redesign is visual only — no implemented functionality is changed, added or removed.**
+So the designs need to (A) stop showing features the app doesn't have, and (B) cover every feature it does have.
+
+Designs we already have: Style guide, Component sheet, Today (dark + light), Desktop Today,
+Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
+
+---
+
+## A. Designs show things the app does NOT do — please adjust these screens
+
+### Today / Dashboard
+- **"Log again" chips** — no such feature. (Closest: *Duplicate workout*, which exists on the calendar only.)
+- **Streak = "weeks with ≥3 sessions"** — the app counts **consecutive days** ("N days streak").
+- **"This week 3 / 4 sessions" with an M–S day strip** — the app's "this week" is a **rolling 7 days**, with a
+  % trend vs last week and a progress bar to the weekly goal (default 3). It also has a **This month** tile
+  (count, trend %, bar to monthly goal), **Total workouts** and **Events count** tiles.
+- **"This week's sessions" list** — the app shows **Recent workouts (last 3)**; row meta is type, TR badge,
+  date and "N exercises / N hangs / Quick log" (no time of day, wall angle or style).
+- **Goals card with goals like "Max hang 20 mm +10 kg" / "Present or better on 80%"** — no such measurable goals.
+  The goals that exist: weekly/monthly session goals (+ optional per-type "× per week"), and Strong Mind
+  process/project goals (see B).
+- **Shortcuts 3×2** — the app has 9 links in 3 groups: Training (Workouts, Calendar, Cycle),
+  Library (Exercises, Routines, Fingerboard), Analysis (Statistics, Strong Mind, Profile).
+- **Phase hero card** — OK to keep (cycle day/phase/recommendations exist), but note the app's phase day ranges
+  are **Menstrual 1–7, Follicular 8–12, Ovulation 13–16, Early luteal 17–20, Late luteal 21–end of cycle**
+  (design says 1–5 / 6–12 / 13–16 / 17–22 / 23–28). Cycle length is configurable 21–35 days.
+
+### Log workout
+- **Bottom sheet** — fine as a visual, but the form is much longer than shown (see B).
+- **Route name field** — doesn't exist. Lead climbing has a **Sector** text field instead.
+- **Named route sections ("Crux — roof traverse") with edit pencil** — sections are unnamed: "Climb 1, Climb 2…".
+- **Time of day for lead climbing** — time of day exists **only for Mental practice**, and it's **multi-select**
+  (Morning + Evening possible), not a single segment.
+- **Phase pill next to the date** — the app shows a collapsible **Cycle information** panel instead
+  (phase + recommendations for the chosen date). A pill is fine as a summary of it.
+- **"Save session" + one-line summary sticky footer** — the app has Cancel + Save/Update.
+- Wall angle (slab/overhang/roof…) and style (powerful/technical) — enums exist in the DB but **no UI** uses them; don't show.
+
+### Calendar
+- **Selected-day detail panel** and **Upcoming events list** — not implemented.
+- **Workout dots** — the app shows **full chips per workout** (type + label, sector, ⚡ quick-log badge,
+  edit and duplicate buttons). Dots are fine in month view only if the chips' info/actions live somewhere.
+- **Phase as a continuous band** — fine visually; today it's a small dot. "Predicted" days aren't marked separately.
+
+### Cycle
+- **Log symptoms** — doesn't exist.
+- **Flow bars on recent periods** — no flow intensity is recorded (period = start date, end date, notes).
+- **Recent periods list with edit** — not in the UI today (API supports it; design can keep it only if we
+  treat it as missing design for an existing API — please confirm).
+- **Avg cycle / Avg period / Logged tiles** — not computed. Only cycle length (from settings) is known.
+- **Train / Recover rows in guidance cards** — phase cards have **Physiology, Impact, Goal, Tips** and an
+  injury count instead.
+- **Settings (sliders) icon** — cycle settings live in Profile → Cycle tab.
+
+### Statistics
+- **Range 4W / 3M / 6M / 1Y** — the app offers **1 week, 1 month (default), 3 months, 6 months, 1 year, All time**,
+  plus a second selector "show frequency per Week / Month / Quarter / Year".
+- **Volume in TR points, weekly volume bar chart** — no volume metric or charts; there's a TR1–TR5 **count breakdown**.
+- **Performance by cycle phase (avg session rating 1–5)** — no session rating exists; don't show.
+- **Fingerboard test chart on Statistics** — that chart lives on the Fingerboard testing detail page.
+- Tiles that exist: **Total workouts, This month, Avg per week, Current streak**.
+
+### Components
+- **Toast with "Undo"** — toasts have no actions (success / error / warning / info + close).
+
+---
+
+## B. Implemented features with NO design yet — please design these
+
+### Global
+- **Navigation content** for logged-in users: Dashboard, Workouts, Calendar + Exercises, Routines, Fingerboard,
+  Statistics, Strong Mind, Cycle. (Events, Fingerboard testing and Profile are not in the nav today — "More" sheet
+  should include them.)
+- **Logged-out header**: logo, Home, Sign in.
+- **User menu**: avatar (photo or initial) with online/offline dot, name; Profile, Language EN/PL, Sign out.
+- **Notification bell** with unread badge ("99+").
+- **Messages panel**: Mark all read, Clear all, empty state; message item with type icon (cycle reminder,
+  period overdue, workout reminder, inactivity), priority, timestamp, Mark read, action button
+  (Mark period started, Update period date, Log workout, Log mental workout, Log climbing, Perform test).
+- **Offline banner** ("You're offline · N pending" / "Back online").
+- **PWA install prompt** (Install / Not now) + iOS "Add to Home Screen" instructions variant.
+- **Choice sheet** "Quick log / Add workout / Add event" (used from Calendar and Workouts).
+- **Tooltip / info popover** for ℹ️ help next to fields (must work on tap).
+- **Full-screen loading** state in the new theme.
+- **Light mode versions** of every screen below.
+
+### Today / Dashboard extras
+- **Cycle consent modal** (what's included, late-period reminders checkbox, Skip / Enable) and
+  **Cycle setup form** (last period date, average cycle length 21–35, timezone read-only, reminders).
+- **Suggestion cards** ("Great streak!", "Time to train!" + Quick log).
+- **Upcoming trips countdown** (destination, Bouldering / Sport climbing, "N days to go").
+- **Recent events** (last 3) with empty state.
+- **PWA / offline status**: alert bar (Offline / Unsynced data), Connection, Storage (KB + bar),
+  Sync status (N waiting) + "Add offline training".
+- **Offline workout form**.
+
+### Quick log (modal/sheet)
+- Date, 7 type chips, Fingerboard → protocol select + TR, Gym → TR, Mental → practice type + time-of-day multi-chips,
+  "Mark as done".
+
+### Log workout — all the other variants and sections
+Order in the app: Date → Type (7) → Tags → Cycle information (collapsible) → Goals (collapsible) → Training volume
+→ type-specific → Notes → Gratitude (collapsible) → Strong Mind (lead) → Recurring (create only) → Cancel / Save.
+- **Edit** and **Duplicate** titles/states.
+- **Tags**: selected chips with ×, available chips, "Create new tag" inline form (name + 10-colour swatch picker).
+- **Goals linking**: checkboxes for process goals and project goals, then a "Goal progress" block for the linked
+  goals: progress 1–3 per process goal, 🏆 "achieved in this session" toggle per project goal.
+- **Training volume TR1–TR5** shows only for Bouldering, Circuits, Lead rock, Lead wall.
+- **Sector** text field: Bouldering, Circuits, Lead rock, Lead wall.
+- **Gym — Exercises & sets**: Load routine (routine → variation picker), Add exercise (search, create new),
+  exercise card with "Last: weight×reps" and "View progress", set rows (reps, weight kg, RIR 0–5), add/remove set,
+  empty state.
+- **Fingerboard — Hangs**: Load protocol, Add hang; hang card with reorder ↑↓ and delete; fields hand (one/both),
+  grip (open/crimp/sloper), crimp size 6–30 mm, description, load kg (negative = unload), reps, time s, notes.
+- **Mental practice**: practice type (Meditation / Reflecting / Other), focus level 1–5, time of day multi-select.
+- **Strong Mind block (lead)** — collapsible: "How did I feel before climbing?" 1–5 (Very nervous → Very confident);
+  per climb: focus state, **"Did I take any falls?" Yes/No**, comfort zone, **climb notes**, remove;
+  **Other reflections**; **Mental state summary**.
+- **Gratitude**: "3 things I am grateful for", "3 things to do better next time".
+- **Recurring workouts**: enable, start/end date, Daily / Weekly / Every N days, "This will create N workouts".
+- **Incomplete data dialog** (sets/hangs without values — Go back & fill / Save anyway).
+- Inline validation errors.
+
+### Workouts list (/workouts) — no design
+- Header with Goals 🎯, Info toggle, Add.
+- Collapsible info panel (training types & event types explained).
+- Tabs **Workouts (n) / Events (n)**, pagination (20 per page), empty states.
+- **Workout card**: type, ⚡ Quick badge, date, tags, edit/delete; TR, routine–variation, sector, practice type,
+  time of day, focus level dots, pre-session feel dots, day-after tiredness dots, notes, Strong Mind recap,
+  gratitude/improvements.
+- **Goals configurator**: weekly goal (1–10), auto monthly (×4) or manual monthly (1–40),
+  per-type goals ("Bouldering × 2 per week"), preview.
+
+### Calendar extras
+- **Week view** (it's the default) incl. mobile stacked layout and richer chips (routine variation, notes).
+- **Filters panel**: Workouts / Events toggle, training-type multi-select (All / None, "everything hidden" warning),
+  event-type filter.
+- **Injury-risk marker** (⚠️ phase with most injuries).
+- **Trip spanning several days** ("Destination 2/5").
+- Phase legend includes Ovulation.
+
+### Cycle extras
+- **Cycle-tracking-disabled** state ("enable in profile").
+- **Cycle month calendar** (confirmed period, predicted menstrual, ovulation, "~ forecast", injury marker);
+  tap a day → add period.
+- **Add/edit period form**: start date, end date (optional), notes.
+- **Injury warning banner**: "Most injuries in X phase — N of M injuries on days a–b" + advice.
+- **Phase cards**: Physiology, Impact, Goal, Tips, injury count, highlight for the most-injury phase.
+- **Cycle info card inside the workout form** (day, phase, fertile window, next period, next ovulation, top tips).
+
+### Statistics extras
+- Timeframe + frequency-period selectors; empty state "No statistics yet" + CTA.
+- **Workout types** cards (%, count, frequency; Gym shows top routine variations).
+- **Tags** breakdown (colour, %, count, frequency).
+- **Training volume** TR1–TR5 counts and %.
+- **Injuries by cycle phase**: totals (injuries, days since last, max per phase, phases affected), 5 phase tiles,
+  "most injuries" callout with **"Notify me 1 day before this phase"** button.
+- **Gratitude & improvements** feed with All / Gratitude / Improvements filter.
+- Footer: date range + last updated.
+
+### Strong Mind — whole screen, no design
+- Tabs: **Goals / Gratitude & improvements / Statistics**.
+- **Process goals**: form (duration 1–12 + unit days…years, start date, description, live Long-term / Short-term
+  pill), lists split Long-term / Short-term, card with edit/delete and linked-workout progress (1–3 dots).
+- **Project goals**: form (Route / Boulder, grade system French / Polish / YDS or French / V-scale, grade, name,
+  sector, linked process goal), card with grade, name, location, link, "🏆 Achieved!" history.
+- **Gratitude tab**: filter + card grids, empty states.
+- **Statistics tab**: timeframe; Mental practice (sessions, avg focus, days since last, meditations);
+  Falls (total, climbing sessions, falls per session, days since last fall); empty states.
+
+### Events — whole screen, no design
+- List grid, empty state ("Track injuries to see patterns with your cycle"), Add.
+- **Event form**: type picker (Injury, Physio, Competition, Trip, Other) with per-type fields —
+  Injury: body part, **cycle day** (calculated hint, manual override 1–50), date, description;
+  Physio / Competition / Other: location, date, description;
+  Trip: start + end date, destination, climbing type (Bouldering / Sport climbing), "Show countdown on home".
+- **Event card**: type, date, title, tags, time, location; trip details; injury severity dots, status chip,
+  cycle-day chip with inline edit; description, notes; edit/delete (danger confirmation).
+
+### Exercises — no design
+- Library: search, category filter, **grid / list toggle**, **Quick add** panel (~30 common exercises in groups),
+  empty states, card (name, category badge, unit, times used, last used, last set, View progress, edit, delete).
+- Exercise form: name, category chips (13 presets + custom), unit (kg, lbs, reps, time, distance).
+- **Exercise detail**: stats (times used, last used, last set, status), **personal records** (max weight,
+  est. 1RM, max volume, max reps), **progression chart** with timeframe, metric (max weight / 1RM / volume / avg reps)
+  and chart type (line / area / bar), summary row, recent workouts list, empty state.
+
+### Routines — no design
+- List cards (description, exercise and variation counts, exercise preview "+N more", variation chips, edit, delete).
+- Routine form: name, description, exercises (add via multi-select picker with search / select all, reorder, remove),
+  **variations** (name, description, min–max reps, default sets).
+- "Start from routine" sheet (in component sheet) — matches the in-workout **Load routine** picker; add the
+  variation choice step.
+
+### Fingerboard protocols & testing — no design
+- Protocols list + **Test yourself** entry; protocol form with hang list (reorder, edit, remove) and hang sub-form
+  (same fields as workout hangs).
+- **Test yourself** multi-step modal: select protocol (Perform test / View results / Clone), create, perform, results.
+- Testing protocols list (hang count, results count, view, edit, delete).
+- **Testing protocol detail**: Perform test, hang filter, **line chart** (time or load per hang), results table
+  (date, hang, load, time, success, notes), empty state.
+- Testing protocol form: "Load from protocol", test hangs with target load / target time.
+- **Perform test**: rename protocol inline, date, per-hang load / time / success (yes/no) / notes,
+  "Remind me to retest every N days/weeks/months".
+
+### Profile & settings — no design
+- Profile page header (avatar, name).
+- **Profile tab**: photo upload, Google name, display name, timezone, Google Sheets URL.
+- **Cycle tab**: enabled banner, cycle length 21–35, last period date, save, disable (confirm); disabled empty state.
+- **Settings tab**: app status (connection, storage), privacy (data collection, cycle tracking + Setup cycle),
+  push notifications enable/disable + permission-denied help, late-period notifications, inactivity reminders
+  (days 1–14), test reminders (interval + unit).
+- **Export tab**: Export JSON / CSV, error banner.
+
+### Auth & landing — no design
+- **Sign in**: email, password, forgot password link, Sign in, "Or continue with" **Google**, sign-up link.
+- **Sign up**: name, email, password with live requirements checklist (8+, upper, lower, number), confirm, Google.
+- **Forgot password** (+ sent state), **Reset password** (+ invalid/expired link state), **Signing out / logged out**.
+- **Landing**: hero (logo, tagline, Get started, "Free to use · Works offline") + 12 feature cards
+  (Cycle tracking, Strong Mind goals, Mental practice, Lead climbing + Strong Mind, Gym, Bouldering,
+  Events & injuries, Statistics, Data export, Exercises & routines, Fingerboard, PWA & offline).
+
+### Components still missing from the sheet
+Text area, select/dropdown, number input with unit, date input, checkbox, toggle switch, range slider,
+1–5 rating dots, Yes/No toggle, tabs, collapsible section, filter panel, pagination, tag creator with colour swatches,
+search field, grid/list toggle, table, line/area/bar chart styles, warning banner, info box, avatar, badge with count,
+dropdown menu, multi-step modal with back button, sheet for "More" navigation.
+
+---
+
+## C. Noticed along the way (bugs / inconsistencies, not design asks)
+Fixed on branch `fix/known-bugs` (2026-11-11): Events list, Profile save, iOS install prompt (+ 14-day
+dismissal), Strong Mind tab leak and unit default, offline form fields, calendar Trip/Fingerboard filters and
+colours, workout-type colours not compiling under Tailwind v4, unused components, 35 missing translation keys,
+hard-coded strings in fingerboard testing, PWA prompt, calendar legend/filters, workout card, Strong Mind
+section, offline form and fingerboard protocol form.
+
+Still open — bug review 2026-11-11 (✔ = re-checked by hand, rest traced in code by reviewers):
+
+*Data loss / wrong data saved*
+- Fixed 2026-11-12: testing-protocol edits keep test results; workout/event edits keep tags (and tags show on cards);
+  fingerboard load/unload and grip changes save; JSON nulls in /api/user-profile and workout PUT; calendar Quick Log
+  uses the clicked day and keeps older workouts; periods only move the cycle anchor forward (delete/edit fall back);
+  event save errors keep the form open with a message, cycle day 1–50 accepted.
+- Editing a workout can't remove all exercises/hangs or clear gratitude/improvements/time of day; switching GYM → other type keeps exercises.
+- RIR 0 / 0 kg / 0 reps saved as empty on create (and routine default RIR 0).
+- ✔ Exercise units "time"/"distance" (and Quick add e.g. Plank) are rejected by the API.
+- Strong Mind goal ids can collide after reload (project goals) → edit/delete hits two goals.
+- Exercise detail: PRs/progression don't load until the timeframe is changed.
+- Export misses periods and Strong Mind goals; CSV misses sets/hangs/mental fields.
+
+*Dates (Europe/Warsaw vs UTC)*
+- Fixed 2026-11-12 (`lib/date-utils.ts`, calendar-day numbers everywhere): streak counts today; cycle page day numbers and
+  period pre-fill; recurring workouts across DST; calendar/forms "today" between 00:00 and 01:00/02:00; "Mark period
+  started" keeps cycle length and the right day; next period/ovulation roll forward; phases scale with cycle length
+  (28-day unchanged); statistics 7-day weeks, avg/week, longest streak, "This month"; injury phase ranges follow cycle
+  length; period-tomorrow reminder on DST day; falls reminder "Infinity"; daily reminders reload workouts; cycle info
+  refreshes after midnight; dashboard total uses the real count.
+- Still open: removing a reminder brings it back on the next page load the same day; overdue threshold stays at a fixed
+  32 days (as the consent screen says).
+
+*Security / robustness*
+- ✔ Middleware page protection never runs (`'/'` matches everything) — pages render shells, API still checks auth.
+- Any signed-in user can send push notifications to another user (`/api/push/send` trusts `userId` from body).
+- Register + Google sign-in: someone can pre-register your email with a password and later read your data.
+- Login and forgot-password are case-sensitive (register lowercases) — "Kasia@…" from a phone keyboard fails.
+- Routines accept other users' exercise ids; workouts accept any `planId`.
+- Pagination params unvalidated/unbounded (500s, huge responses); one shared rate-limit counter for all limiters.
+- Some routes skip zod validation and return raw error messages; duplicate tag name → 500.
+
+- **Password reset never sends an email.** `src/app/api/auth/forgot-password/route.ts` creates the reset token
+  but has `// TODO: Send email with reset link`, while telling the user a link "has been sent". Needs an email
+  service (e.g. Resend or SMTP) wired in.
+
+Also fixed later the same day: offline workouts now upload to the server (`lib/offline-sync.ts`,
+`OfflineSyncManager`); goal progress 1–3 / project "achieved" connected in the workout form; the late-period
+reminder choice in cycle setup now applies (and no longer overwrites the Google Sheets URL); fingerboard hand/grip
+names translated.

@@ -17,6 +17,7 @@ import { EventType, Event, EventFormData } from '@/types/event'
 import TrainingTypeFilter from '@/components/TrainingTypeFilter'
 import AuthGuard from '@/components/AuthGuard'
 import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
+import { toLocalDateString } from '@/lib/date-utils'
 import EventForm from '@/components/EventForm'
 import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 
@@ -37,6 +38,8 @@ const getTrainingTypeColor = (type: WorkoutType) => {
       return 'bg-training-leadArtificial'
     case 'MENTAL_PRACTICE':
       return 'bg-training-mentalPractice'
+    case 'FINGERBOARD':
+      return 'bg-training-fingerboard'
     default:
       return 'bg-gray-500'
   }
@@ -56,6 +59,8 @@ const getTrainingTypeEmoji = (type: WorkoutType) => {
       return '🧗‍♀️'
     case 'MENTAL_PRACTICE':
       return '🧘'
+    case 'FINGERBOARD':
+      return '🖐️'
     default:
       return '📅'
   }
@@ -75,6 +80,8 @@ const getTrainingTypeLabel = (type: WorkoutType, t: (key: string) => string) => 
       return t('training.types.leadArtificial')
     case 'MENTAL_PRACTICE':
       return t('training.types.mentalPractice')
+    case 'FINGERBOARD':
+      return t('training.types.fingerboard')
     default:
       return type
   }
@@ -274,7 +281,8 @@ function CalendarPageContent() {
   // Get workouts for a specific date
   const getWorkoutsForDate = (date: Date) => {
     if (!Array.isArray(workouts)) return []
-    const dateStr = date.toISOString().slice(0, 10)
+    // Cells are local dates; toISOString() would give the previous day ahead of UTC
+    const dateStr = toLocalDateString(date)
     let filteredWorkouts = workouts.filter(workout => workout.startTime.startsWith(dateStr))
     
     // Apply type filter
@@ -287,7 +295,7 @@ function CalendarPageContent() {
 
   // Get events for a specific date
   const getEventsForDate = (date: Date) => {
-    const dateStr = date.toISOString().slice(0, 10)
+    const dateStr = toLocalDateString(date)
     let filteredEvents = events.filter(event => {
       // Handle both date formats: "2025-10-24" and "2025-10-24T00:00:00.000Z"
       const eventDateStr = event.date.includes('T') 
@@ -735,29 +743,30 @@ function CalendarPageContent() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      🔍 Filter by Event Type
+                      🔍 {t('calendar.filterByEventType')}
                     </label>
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => setSelectedEventTypes(['INJURY', 'PHYSIO', 'COMPETITION', 'OTHER'])}
+                        onClick={() => setSelectedEventTypes(['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'OTHER'])}
                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                       >
-                        All
+                        {t('calendar.filterAll')}
                       </button>
                       <button
                         onClick={() => setSelectedEventTypes([])}
                         className="text-xs text-uc-text-muted hover:text-uc-mustard transition-colors"
                       >
-                        None
+                        {t('calendar.filterNone')}
                       </button>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
-                      { type: 'INJURY' as EventType, label: 'Injury', emoji: '🤕', color: 'bg-red-500' },
-                      { type: 'PHYSIO' as EventType, label: 'Physio', emoji: '🏥', color: 'bg-blue-500' },
-                      { type: 'COMPETITION' as EventType, label: 'Competition', emoji: '🏆', color: 'bg-yellow-500' },
-                      { type: 'OTHER' as EventType, label: 'Other', emoji: '📅', color: 'bg-purple-500' }
+                      { type: 'INJURY' as EventType, label: t('events.types.injury'), emoji: '🤕', color: 'bg-red-500' },
+                      { type: 'PHYSIO' as EventType, label: t('events.types.physio'), emoji: '🏥', color: 'bg-blue-500' },
+                      { type: 'COMPETITION' as EventType, label: t('events.types.competition'), emoji: '🏆', color: 'bg-yellow-500' },
+                      { type: 'TRIP' as EventType, label: t('events.types.trip'), emoji: '✈️', color: 'bg-purple-500' },
+                      { type: 'OTHER' as EventType, label: t('events.types.other'), emoji: '📅', color: 'bg-gray-500' }
                     ].map(({ type, label, emoji, color }) => {
                       const isSelected = selectedEventTypes.includes(type)
                       return (
@@ -787,7 +796,7 @@ function CalendarPageContent() {
                   </div>
                   {selectedEventTypes.length === 0 && (
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      No event types selected. All events will be shown.
+                      {t('calendar.noEventTypesSelected')}
                     </p>
                   )}
                 </div>
@@ -1022,33 +1031,37 @@ function CalendarPageContent() {
               <div className="w-3 h-3 rounded bg-training-mentalPractice"></div>
               <span className="text-sm text-uc-text-muted">🧘 {t('training.types.mentalPractice')}</span>
             </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded bg-training-fingerboard"></div>
+              <span className="text-sm text-uc-text-muted">🖐️ {t('training.types.fingerboard')}</span>
+            </div>
           </div>
           
           {/* Events Legend */}
           <div className="mt-4 pt-4 border-t border-uc-purple/20">
             <h4 className="text-sm font-medium text-uc-text-light mb-2">
-              Wydarzenia
+              {t('events.title')}
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded bg-red-500"></div>
-                <span className="text-sm text-uc-text-muted">🤕 Kontuzja</span>
+                <span className="text-sm text-uc-text-muted">🤕 {t('events.types.injury')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded bg-blue-500"></div>
-                <span className="text-sm text-uc-text-muted">🏥 Fizjoterapia</span>
+                <span className="text-sm text-uc-text-muted">🏥 {t('events.types.physio')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded bg-yellow-500"></div>
-                <span className="text-sm text-uc-text-muted">🏆 Zawody</span>
+                <span className="text-sm text-uc-text-muted">🏆 {t('events.types.competition')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded bg-purple-500"></div>
-                <span className="text-sm text-uc-text-muted">✈️ Wyjazd</span>
+                <span className="text-sm text-uc-text-muted">✈️ {t('events.types.trip')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded bg-gray-500"></div>
-                <span className="text-sm text-uc-text-muted">📅 Inne</span>
+                <span className="text-sm text-uc-text-muted">📅 {t('events.types.other')}</span>
               </div>
             </div>
           </div>
@@ -1147,7 +1160,7 @@ function CalendarPageContent() {
             isSubmitting={isSubmitting}
             availableExercises={availableExercises}
             onCreateExercise={handleCreateExercise}
-            defaultDate={duplicatingWorkout && selectedDate ? selectedDate.toISOString().slice(0, 10) : (!editingWorkout && selectedDate ? selectedDate.toISOString().slice(0, 10) : undefined)}
+            defaultDate={duplicatingWorkout && selectedDate ? toLocalDateString(selectedDate) : (!editingWorkout && selectedDate ? toLocalDateString(selectedDate) : undefined)}
             isDuplicating={!!duplicatingWorkout}
           />
         )}
@@ -1161,7 +1174,7 @@ function CalendarPageContent() {
             availableTags={availableTags}
             onCreateTag={handleCreateTag}
             isSubmitting={isSubmitting}
-            defaultDate={!editingEvent && selectedDate ? selectedDate.toISOString().slice(0, 10) : undefined}
+            defaultDate={!editingEvent && selectedDate ? toLocalDateString(selectedDate) : undefined}
           />
         )}
 
@@ -1196,8 +1209,8 @@ function CalendarPageContent() {
 
               if (response.ok) {
                 setShowQuickLog(false)
-                // Refresh calendar data
-                const workoutsResponse = await fetch('/api/workouts', { credentials: 'include' })
+                // Refresh calendar data (same limit as the initial load, the API default is 50)
+                const workoutsResponse = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' })
                 if (workoutsResponse.ok) {
                   const updatedWorkouts = await workoutsResponse.json()
                   const workoutsData = Array.isArray(updatedWorkouts) 

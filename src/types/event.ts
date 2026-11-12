@@ -29,6 +29,7 @@ export interface Event {
   createdAt: string
   updatedAt: string
   tags?: Tag[] // Associated tags
+  eventTags?: { tag: Tag }[] // Raw join rows as returned by /api/events
 }
 
 export interface EventFormData {
@@ -49,7 +50,7 @@ export interface EventFormData {
   climbingType?: TripClimbingType
   showCountdown?: boolean
   // Cycle tracking for injuries
-  cycleDay?: number
+  cycleDay?: number | null // null clears a manually set cycle day
   cycleDayManuallySet?: boolean
   tagIds?: string[] // Array of tag IDs
 }

@@ -14,6 +14,8 @@ import { Workout } from '@/types/workout'
 import AuthGuard from '@/components/AuthGuard'
 import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { OFFLINE_WORKOUTS_SYNCED_EVENT } from '@/lib/offline-sync'
+import { localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils'
 
 export default function Dashboard() {
   return (
@@ -47,53 +49,22 @@ function DashboardContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [showPWAStatus, setShowPWAStatus] = useState(false)
   const [showQuickLog, setShowQuickLog] = useState(false)
+  // Bumped to refetch dashboard data, e.g. after offline workouts are uploaded
+  const [dataVersion, setDataVersion] = useState(0)
   const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
   
-  // Calculate workout streak
+  // Calculate workout streak: consecutive calendar days with a workout, ending today or yesterday
   const calculateStreak = (workouts: Workout[]) => {
-    if (workouts.length === 0) return 0
-    
-    // Sort workouts by date (most recent first)
-    const sortedWorkouts = [...workouts].sort((a, b) => 
-      new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-    )
-    
+    // Workout dates are stored as UTC midnight of the calendar day; compare plain day numbers
+    const workoutDays = new Set(workouts.map(w => storedDayNumber(w.startTime)))
+    const today = localDayNumber()
+
+    let day = workoutDays.has(today) ? today : today - 1
     let currentStreak = 0
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    // Get unique workout dates
-    const workoutDates = new Set(
-      sortedWorkouts.map(w => new Date(w.startTime).toISOString().split('T')[0])
-    )
-    
-    // Check if there's a workout today or yesterday to start counting
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-    
-    const todayStr = today.toISOString().split('T')[0]
-    const yesterdayStr = yesterday.toISOString().split('T')[0]
-    
-    let checkDate = new Date(today)
-    if (!workoutDates.has(todayStr)) {
-      // If no workout today, start from yesterday
-      if (!workoutDates.has(yesterdayStr)) {
-        return 0 // No recent workouts
-      }
-      checkDate = new Date(yesterday)
+    while (workoutDays.has(day)) {
+      currentStreak++
+      day--
     }
-    
-    // Count consecutive days with workouts
-    while (true) {
-      const dateStr = checkDate.toISOString().split('T')[0]
-      if (workoutDates.has(dateStr)) {
-        currentStreak++
-        checkDate.setDate(checkDate.getDate() - 1)
-      } else {
-        break
-      }
-    }
-    
     return currentStreak
   }
 
@@ -105,6 +76,12 @@ function DashboardContent() {
       setShowPWAStatus(false) // Hide when everything is fine
     }
   }, [isOnline, unsyncedWorkouts.length])
+
+  useEffect(() => {
+    const handleSynced = () => setDataVersion(v => v + 1)
+    window.addEventListener(OFFLINE_WORKOUTS_SYNCED_EVENT, handleSynced)
+    return () => window.removeEventListener(OFFLINE_WORKOUTS_SYNCED_EVENT, handleSynced)
+  }, [])
 
   // Fetch dashboard data
   useEffect(() => {
@@ -136,7 +113,8 @@ function DashboardContent() {
             event.type === 'TRIP' &&
             event.tripStartDate &&
             event.showCountdown === true &&
-            new Date(event.tripStartDate) > new Date()
+            // Trips starting after today (calendar days)
+            storedDayNumber(event.tripStartDate) > localDayNumber()
           )
           setUpcomingTrips(trips)
           setRecentEvents(allEvents.slice(0, 3))
@@ -150,33 +128,22 @@ function DashboardContent() {
           const workouts: Workout[] = workoutsData.workouts || workoutsData
           setRecentWorkouts(workouts.slice(0, 3))
           
-          // Calculate stats
+          // Calculate stats on calendar days (last 7 days incl. today, and calendar months)
+          const today = localDayNumber()
           const now = new Date()
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
-          const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1) // First day of current month
-          const lastMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 1) // First day of last month
-          
-          const thisWeekWorkouts = workouts.filter(w => 
-            new Date(w.startTime) >= weekAgo
-          ).length
-          
-          const lastWeekWorkouts = workouts.filter(w => {
-            const workoutDate = new Date(w.startTime)
-            return workoutDate >= twoWeeksAgo && workoutDate < weekAgo
-          }).length
-          
-          const thisMonthWorkouts = workouts.filter(w => 
-            new Date(w.startTime) >= monthAgo
-          ).length
-          
-          const lastMonthWorkouts = workouts.filter(w => {
-            const workoutDate = new Date(w.startTime)
-            return workoutDate >= lastMonthAgo && workoutDate < monthAgo
-          }).length
+          const thisMonthKey = toLocalDateString(now).slice(0, 7)
+          const lastMonthKey = toLocalDateString(new Date(now.getFullYear(), now.getMonth() - 1, 1)).slice(0, 7)
+          const daysAgo = (w: Workout) => today - storedDayNumber(w.startTime)
+          const monthKey = (w: Workout) => toStoredDateString(w.startTime).slice(0, 7)
+
+          const thisWeekWorkouts = workouts.filter(w => daysAgo(w) >= 0 && daysAgo(w) <= 6).length
+          const lastWeekWorkouts = workouts.filter(w => daysAgo(w) >= 7 && daysAgo(w) <= 13).length
+          const thisMonthWorkouts = workouts.filter(w => monthKey(w) === thisMonthKey).length
+          const lastMonthWorkouts = workouts.filter(w => monthKey(w) === lastMonthKey).length
 
           setStats({
-            totalWorkouts: workouts.length,
+            // Only the newest 100 workouts are loaded; the total comes from the API
+            totalWorkouts: workoutsData.pagination?.total ?? workouts.length,
             thisWeekWorkouts,
             thisMonthWorkouts,
             lastWeekWorkouts,
@@ -195,16 +162,10 @@ function DashboardContent() {
     }
 
     fetchDashboardData()
-  }, [])
+  }, [dataVersion])
 
-  // Calculate days until trip
-  const getDaysUntilTrip = (tripStartDate: string) => {
-    const today = new Date()
-    const tripDate = new Date(tripStartDate)
-    const diffTime = tripDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
+  // Calculate days until trip (calendar days, so it's right at any time of day)
+  const getDaysUntilTrip = (tripStartDate: string) => storedDayNumber(tripStartDate) - localDayNumber()
 
   const getWorkoutTypeEmoji = (type: string) => {
     const emojis: { [key: string]: string } = {

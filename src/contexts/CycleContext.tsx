@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { localDayNumber, toPeriodDateString } from '@/lib/date-utils'
 import { useSession } from 'next-auth/react'
 import { CycleInfo, CycleSettings, calculateCycleInfo } from '@/lib/cycle-utils'
 
@@ -71,12 +72,21 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     loadCycleSettings()
   }, [session, status])
 
-  // Calculate cycle info when settings change
+  // Calculate cycle info when settings change, and again when the day changes (e.g. PWA left open overnight)
   useEffect(() => {
-    if (cycleSettings) {
-      const info = calculateCycleInfo(cycleSettings)
-      setCycleInfo(info)
-    }
+    if (!cycleSettings) return
+
+    let lastDay = localDayNumber()
+    setCycleInfo(calculateCycleInfo(cycleSettings))
+
+    const interval = setInterval(() => {
+      const today = localDayNumber()
+      if (today !== lastDay) {
+        lastDay = today
+        setCycleInfo(calculateCycleInfo(cycleSettings))
+      }
+    }, 60 * 1000)
+    return () => clearInterval(interval)
   }, [cycleSettings])
 
   const setCycleSettings = async (settings: CycleSettings, latePeriodNotifications?: boolean) => {
@@ -90,9 +100,9 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cycleAvgLengthDays: settings.cycleLength,
-          lastPeriodDate: settings.lastPeriodDate.toISOString(),
+          // Save as the calendar day (YYYY-MM-DD) so it's stored as UTC midnight of that day
+          lastPeriodDate: toPeriodDateString(settings.lastPeriodDate),
           timezone: settings.timezone,
-          latePeriodNotificationsEnabled: latePeriodNotifications
         })
       })
     } catch (error) {

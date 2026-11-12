@@ -125,7 +125,7 @@ function FingerboardTestingPageContent() {
   }
 
   if (loading) {
-    return <LoadingSpinner message="Loading testing protocols..." fullScreen />
+    return <LoadingSpinner message={t('fingerboardTesting.loadingProtocols')} fullScreen />
   }
 
   return (
@@ -135,17 +135,17 @@ function FingerboardTestingPageContent() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-uc-text-light">
-                📊 Fingerboard Testing Protocols
+                📊 {t('fingerboardTesting.title')}
               </h1>
               <p className="text-uc-text-muted mt-2">
-                Create testing protocols to track your fingerboard progress over time
+                {t('fingerboardTesting.subtitle')}
               </p>
             </div>
             <button
               onClick={handleCreateProtocol}
               className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
             >
-              + Create Testing Protocol
+              + {t('fingerboardTesting.createProtocol')}
             </button>
           </div>
         </div>
@@ -154,16 +154,16 @@ function FingerboardTestingPageContent() {
           <div className="bg-uc-dark-bg rounded-xl p-12 border border-uc-purple/20 text-center">
             <div className="text-6xl mb-4">📊</div>
             <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-              No testing protocols yet
+              {t('fingerboardTesting.emptyTitle')}
             </h2>
             <p className="text-uc-text-muted mb-6">
-              Create your first testing protocol to track progress over time
+              {t('fingerboardTesting.emptyDescription')}
             </p>
             <button
               onClick={handleCreateProtocol}
               className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
             >
-              Create Your First Testing Protocol
+              {t('fingerboardTesting.createFirstProtocol')}
             </button>
           </div>
         ) : (
@@ -190,13 +190,13 @@ function FingerboardTestingPageContent() {
                   <div className="flex items-center text-sm text-uc-text-muted">
                     <span className="mr-2">🖐️</span>
                     <span>
-                      {protocol.testHangs.length} {protocol.testHangs.length === 1 ? 'test hang' : 'test hangs'}
+                      {t('fingerboardTesting.testHangsCount', { count: protocol.testHangs.length })}
                     </span>
                   </div>
                   <div className="flex items-center text-sm text-uc-text-muted">
                     <span className="mr-2">📊</span>
                     <span>
-                      {(protocol as any)._count?.testResults || 0} {(protocol as any)._count?.testResults === 1 ? 'test result' : 'test results'}
+                      {t('fingerboardTesting.testResultsCount', { count: (protocol as any)._count?.testResults || 0 })}
                     </span>
                   </div>
                 </div>
@@ -206,19 +206,19 @@ function FingerboardTestingPageContent() {
                     href={`/fingerboard-testing/${protocol.id}`}
                     className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg text-sm font-medium transition-colors text-center"
                   >
-                    View Results
+                    {t('fingerboardTesting.viewResults')}
                   </Link>
                   <button
                     onClick={() => handleEditProtocol(protocol)}
                     className="flex-1 bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                   >
-                    Edit
+                    {t('common.edit')}
                   </button>
                   <button
                     onClick={() => handleDeleteProtocol(protocol.id)}
                     className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                   >
-                    Delete
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>

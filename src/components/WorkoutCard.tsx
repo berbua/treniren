@@ -20,6 +20,7 @@ interface WorkoutCardProps {
     gratitude?: string
     improvements?: string
     tags?: Tag[]
+    workoutTags?: { tag: Tag }[]
     details?: any
   }
   onEdit?: (id: string) => void
@@ -41,6 +42,8 @@ const getTrainingTypeColor = (type: WorkoutType) => {
       return 'bg-training-leadArtificial'
     case 'MENTAL_PRACTICE':
       return 'bg-training-mentalPractice'
+    case 'FINGERBOARD':
+      return 'bg-training-fingerboard'
     default:
       return 'bg-gray-500'
   }
@@ -72,6 +75,8 @@ const formatDate = (dateString: string) => {
 
 export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = false }: WorkoutCardProps) {
   const { t } = useLanguage()
+  // List endpoints return tags as workoutTags join rows
+  const tags = workout.tags ?? workout.workoutTags?.map(wt => wt.tag) ?? []
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 border border-slate-200 dark:border-slate-700">
       <div className="flex items-start justify-between mb-3">
@@ -92,9 +97,9 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
           <p className="text-sm text-slate-600 dark:text-slate-300">
             {formatDate(workout.startTime)}
           </p>
-          {workout.tags && workout.tags.length > 0 && (
+          {tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
-              {workout.tags.map((tag) => (
+              {tags.map((tag) => (
                 <span
                   key={tag.id}
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
@@ -112,7 +117,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
             <button
               onClick={() => onEdit(workout.id)}
               className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-              title="Edit workout"
+              title={t('workouts.editWorkout')}
             >
               ✏️
             </button>
@@ -122,7 +127,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
               onClick={() => onDelete(workout.id)}
               disabled={isDeleting}
               className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isDeleting ? "Deleting..." : "Delete workout"}
+              title={isDeleting ? t('workouts.deleting') : t('workouts.deleteWorkout')}
             >
               {isDeleting ? (
                 <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
@@ -137,7 +142,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
       <div className="mt-3 space-y-2">
         {workout.trainingVolume && (
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">Volume:</span>
+            <span className="text-xs font-medium text-slate-500">{t('workouts.trainingVolume')}:</span>
             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
               {workout.trainingVolume}
             </span>
@@ -146,7 +151,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
 
         {workout.type === 'GYM' && workout.details && (workout.details as any)?.routineVariation && (
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">{t('workouts.labels.variation') || 'Variation:'}</span>
+            <span className="text-xs font-medium text-slate-500">{t('workouts.labels.variation')}:</span>
             <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
               📦 {(workout.details as any).routineVariation.routineName} - {(workout.details as any).routineVariation.variationName}
             </span>
@@ -155,7 +160,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
 
         {workout.sector && (
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">Sector:</span>
+            <span className="text-xs font-medium text-slate-500">{t('workouts.sector')}:</span>
             <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
               🏔️ {workout.sector}
             </span>
@@ -166,7 +171,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
           <div className="flex items-center space-x-2">
             <span className="text-xs font-medium text-slate-500">{t('common.practiceType') || 'Practice type:'}</span>
             <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
-              🧘 {workout.mentalPracticeType}
+              🧘 {t(`workouts.mentalPracticeTypes.${workout.mentalPracticeType.toLowerCase()}`)}
             </span>
           </div>
         )}
@@ -257,31 +262,28 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
           <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
             <div className="flex items-center space-x-2 mb-2">
               <span className="text-sm">🧠</span>
-              <span className="text-xs font-semibold text-purple-800 dark:text-purple-200">Strong Mind</span>
+              <span className="text-xs font-semibold text-purple-800 dark:text-purple-200">{t('workouts.strongMind')}</span>
             </div>
             <div className="space-y-1 text-xs">
               {workout.mentalState.beforeClimbing && (
                 <div className="flex items-center space-x-2">
-                  <span className="text-purple-600 dark:text-purple-400">Before:</span>
+                  <span className="text-purple-600 dark:text-purple-400">{t('workouts.before')}:</span>
                   <span className={`font-medium ${
                     workout.mentalState.beforeClimbing === 1 ? 'text-red-600' :
                     workout.mentalState.beforeClimbing === 2 ? 'text-orange-600' :
                     workout.mentalState.beforeClimbing === 3 ? 'text-yellow-600' :
                     workout.mentalState.beforeClimbing === 4 ? 'text-blue-600' : 'text-green-600'
                   }`}>
-                    {workout.mentalState.beforeClimbing === 1 ? 'Very Nervous' :
-                     workout.mentalState.beforeClimbing === 2 ? 'Nervous' :
-                     workout.mentalState.beforeClimbing === 3 ? 'Neutral' :
-                     workout.mentalState.beforeClimbing === 4 ? 'Confident' : 'Very Confident'}
+                    {t(`workouts.beforeClimbingLabels.${workout.mentalState.beforeClimbing}`)}
                   </span>
                 </div>
               )}
               {(workout.type === 'LEAD_ROCK' || workout.type === 'LEAD_ARTIFICIAL') && workout.mentalState.climbSections && workout.mentalState.climbSections.length > 0 && (
                 <div className="space-y-1">
-                  <span className="text-purple-600 dark:text-purple-400">Climbs:</span>
+                  <span className="text-purple-600 dark:text-purple-400">{t('workouts.climbs')}:</span>
                   {workout.mentalState.climbSections.map((section, index) => (
                     <div key={section.id} className="ml-2 text-xs">
-                      <span className="text-purple-600 dark:text-purple-400">Climb {index + 1}:</span>
+                      <span className="text-purple-600 dark:text-purple-400">{t('workouts.climbNumber', { number: index + 1 })}:</span>
                       {section.focusState && (
                         <span className={`ml-1 font-medium ${
                           section.focusState === 'CHOKE' ? 'text-red-600' :
@@ -290,12 +292,12 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
                           section.focusState === 'FOCUSED' ? 'text-blue-600' :
                           section.focusState === 'CLUTCH' ? 'text-green-600' : 'text-purple-600'
                         }`}>
-                          {section.focusState}
+                          {t(`workouts.focusStates.${section.focusState}`)}
                         </span>
                       )}
                       {section.tookFall !== undefined && (
                         <span className={`ml-1 ${section.tookFall ? 'text-pink-600' : 'text-green-600'}`}>
-                          ({section.tookFall ? 'Fell' : 'No fall'})
+                          ({section.tookFall ? t('workouts.fell') : t('workouts.noFall')})
                         </span>
                       )}
                       {section.comfortZone && (
@@ -304,9 +306,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
                           section.comfortZone === 'STRETCH1' ? 'text-yellow-600' :
                           section.comfortZone === 'STRETCH2' ? 'text-orange-600' : 'text-red-600'
                         }`}>
-                          - {section.comfortZone === 'COMFORT' ? 'Comfort' :
-                              section.comfortZone === 'STRETCH1' ? 'Stretch 1' :
-                              section.comfortZone === 'STRETCH2' ? 'Stretch 2' : 'Panic'}
+                          - {t(`workouts.comfortZones.${section.comfortZone}`)}
                         </span>
                       )}
                     </div>

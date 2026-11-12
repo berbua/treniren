@@ -4,12 +4,13 @@ import { useState, useMemo, useEffect } from 'react';
 import { EventType, EventFormData, Event, Tag, TripClimbingType } from '@/types/event';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCycle } from '@/contexts/CycleContext';
+import { toLocalDateString } from '@/lib/date-utils';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import TagSelector from './TagSelector';
 import { Tooltip } from './Tooltip';
 
 interface EventFormProps {
-  onSubmit: (event: EventFormData) => void;
+  onSubmit: (event: EventFormData) => void | Promise<void>;
   onCancel: () => void;
   initialData?: Event;
   availableTags?: Tag[];
@@ -33,11 +34,12 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
     type: initialData?.type || 'INJURY',
     date: initialData?.date 
       ? new Date(initialData.date).toISOString().slice(0, 10)
-      : (defaultDate || (typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15')),
+      : (defaultDate || (typeof window !== 'undefined' ? toLocalDateString() : '2024-01-15')),
     description: initialData?.description || initialData?.notes || '',
     bodyPart: initialData?.location || '', // For injuries, this will store body part instead of location
     location: initialData?.location || '', // Keep for non-injury events
-    tagIds: initialData?.tags?.map(tag => tag.id) || [],
+    // List endpoints return tags as eventTags join rows
+    tagIds: (initialData?.tags ?? initialData?.eventTags?.map(et => et.tag) ?? []).map(tag => tag.id),
     // Cycle tracking for injuries
     cycleDay: initialData?.cycleDay || undefined,
     cycleDayManuallySet: initialData?.cycleDayManuallySet || false,
@@ -68,7 +70,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
   const calculatedCycleDay = useMemo(() => {
     if (formData.type === 'INJURY' && isCycleTrackingEnabled && cycleSettings && formData.date) {
       try {
-        const cycleInfo = calculateCycleInfo(cycleSettings, new Date(formData.date))
+        const cycleInfo = calculateCycleInfo(cycleSettings, formData.date)
         return cycleInfo.currentDay
       } catch (error) {
         return undefined
@@ -140,7 +142,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
       notes: '', // We're consolidating into description field
       tagIds: formData.tagIds,
       // Cycle tracking for injuries
-      cycleDay: formData.type === 'INJURY' ? formData.cycleDay : undefined,
+      cycleDay: formData.type === 'INJURY' ? formData.cycleDay ?? null : undefined,
       cycleDayManuallySet: formData.type === 'INJURY' ? formData.cycleDayManuallySet : false,
       // Trip-specific fields
       tripStartDate: formData.type === 'TRIP' ? formData.tripStartDate : undefined,
@@ -150,10 +152,9 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
       showCountdown: formData.type === 'TRIP' ? formData.showCountdown : undefined,
     };
 
+    // The page closes the form when the save succeeds; on failure it stays open with the input intact
     try {
       await onSubmit(eventData);
-      // Close the form after successful submission
-      onCancel();
     } catch (error) {
       console.error('Error submitting event:', error);
     }
@@ -261,10 +262,8 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                     value={formData.cycleDay || ''}
                     onChange={(e) => {
                       const value = e.target.value === '' ? undefined : parseInt(e.target.value, 10)
-                      updateFormData('cycleDay', value || '')
-                      if (value !== undefined) {
-                        updateFormData('cycleDayManuallySet', true)
-                      }
+                      updateFormData('cycleDay', value)
+                      updateFormData('cycleDayManuallySet', value !== undefined)
                     }}
                     placeholder={calculatedCycleDay?.toString() || t('events.cycleDayPlaceholder') || 'Enter cycle day...'}
                     className="w-24 border border-pink-300 dark:border-pink-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 focus:border-pink-500 focus:outline-none"

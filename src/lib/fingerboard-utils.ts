@@ -1,14 +1,17 @@
 import { HandType, GripType } from '@/types/workout'
 
-export const HAND_TYPE_OPTIONS: { value: HandType; label: string; emoji: string }[] = [
-  { value: 'ONE_HAND', label: 'One Hand', emoji: '✋' },
-  { value: 'BOTH_HANDS', label: 'Both Hands', emoji: '🤲' },
+type Translate = (key: string) => string
+
+// Labels are translation keys - render them with t(option.labelKey)
+export const HAND_TYPE_OPTIONS: { value: HandType; labelKey: string; emoji: string }[] = [
+  { value: 'ONE_HAND', labelKey: 'fingerboard.handTypes.ONE_HAND', emoji: '✋' },
+  { value: 'BOTH_HANDS', labelKey: 'fingerboard.handTypes.BOTH_HANDS', emoji: '🤲' },
 ]
 
-export const GRIP_TYPE_OPTIONS: { value: GripType; label: string; emoji: string }[] = [
-  { value: 'OPEN_HAND', label: 'Open Hand', emoji: '🖐️' },
-  { value: 'CRIMP', label: 'Crimp', emoji: '✊' },
-  { value: 'SLOPER', label: 'Sloper', emoji: '🫳' },
+export const GRIP_TYPE_OPTIONS: { value: GripType; labelKey: string; emoji: string }[] = [
+  { value: 'OPEN_HAND', labelKey: 'fingerboard.gripTypes.OPEN_HAND', emoji: '🖐️' },
+  { value: 'CRIMP', labelKey: 'fingerboard.gripTypes.CRIMP', emoji: '✊' },
+  { value: 'SLOPER', labelKey: 'fingerboard.gripTypes.SLOPER', emoji: '🫳' },
 ]
 
 export const CRIMP_SIZE_OPTIONS = [
@@ -23,9 +26,9 @@ export const CRIMP_SIZE_OPTIONS = [
   { value: 30, label: '30mm', emoji: '📏' },
 ]
 
-export function getHandTypeLabel(handType: HandType): string {
+export function getHandTypeLabel(handType: HandType, t: Translate): string {
   const option = HAND_TYPE_OPTIONS.find(opt => opt.value === handType)
-  return option ? option.label : handType
+  return option ? t(option.labelKey) : handType
 }
 
 export function getHandTypeEmoji(handType: HandType): string {
@@ -33,9 +36,9 @@ export function getHandTypeEmoji(handType: HandType): string {
   return option ? option.emoji : '🖐️'
 }
 
-export function getGripTypeLabel(gripType: GripType): string {
+export function getGripTypeLabel(gripType: GripType, t: Translate): string {
   const option = GRIP_TYPE_OPTIONS.find(opt => opt.value === gripType)
-  return option ? option.label : gripType
+  return option ? t(option.labelKey) : gripType
 }
 
 export function getGripTypeEmoji(gripType: GripType): string {
@@ -50,9 +53,9 @@ export function getCrimpSizeLabel(crimpSize: number | null | undefined): string 
   return `${crimpSize}mm`
 }
 
-export function formatHangDescription(handType: HandType, gripType: GripType, crimpSize?: number | null, customDescription?: string | null): string {
-  const handLabel = getHandTypeLabel(handType)
-  const gripLabel = getGripTypeLabel(gripType)
+export function formatHangDescription(t: Translate, handType: HandType, gripType: GripType, crimpSize?: number | null, customDescription?: string | null): string {
+  const handLabel = getHandTypeLabel(handType, t)
+  const gripLabel = getGripTypeLabel(gripType, t)
   const crimpLabel = gripType === 'CRIMP' && crimpSize ? ` • ${crimpSize}mm` : ''
   const customLabel = customDescription ? ` • ${customDescription}` : ''
   return `${handLabel} • ${gripLabel}${crimpLabel}${customLabel}`

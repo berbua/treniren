@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toLocalDateString } from '@/lib/date-utils'
 // import { getDefaultCycleSettings } from '@/lib/cycle-utils'
 
 interface CycleSetupFormProps {
@@ -23,7 +24,7 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
     
     setFormData(prev => ({
       ...prev,
-      lastPeriodDate: new Date().toISOString().slice(0, 10), // Set current date on client side
+      lastPeriodDate: toLocalDateString(), // Set current date on client side
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       latePeriodNotifications,
     }))
@@ -74,7 +75,7 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
                 onChange={(e) => handleChange('lastPeriodDate', e.target.value)}
                 className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
                 required
-                max={typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15'}
+                max={typeof window !== 'undefined' ? toLocalDateString() : '2024-01-15'}
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 This helps us calculate your current cycle phase
