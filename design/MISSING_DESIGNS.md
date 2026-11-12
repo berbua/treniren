@@ -159,6 +159,7 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 ### Statistics
 - **Range 4W / 3M / 6M / 1Y** — built 2026-11-12 (decision 42): those four segments (PL 4T / 3M / 6M / 1R), default 4W
   (last 28 days, new `4weeks` timeframe). 1 week, 1 month and All time are gone from the Statistics screen.
+  The second selector "show frequency per Week / Month / Quarter / Year" stays.
 - **Volume in TR points, weekly volume bar chart** — no volume metric or charts; there's a TR1–TR5 **count breakdown**.
 - **Performance by cycle phase (avg session rating 1–5)** — no session rating exists; don't show.
 - **Fingerboard test chart on Statistics** — that chart lives on the Fingerboard testing detail page.
