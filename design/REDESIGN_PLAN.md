@@ -61,7 +61,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Workouts list & goals — `Workouts list & goals.png`
 - [x] Calendar — `Calendar — month.png`, `Calendar month — light.png`, `Calendar — week view & filters.png`
 - [x] Cycle — `Cycle.png`, `Cycle — disabled, period form.png`
-- [ ] Statistics — `Statistics.png`
+- [x] Statistics — `Statistics.png`
 - [ ] Strong Mind — `Strong Mind.png`
 - [ ] Events — `Events.png`
 - [ ] Exercises — `Exercises.png`
@@ -197,3 +197,16 @@ note the answer.
   (`UserProfile` got `initialTab`, `/profile` reads `?tab=`). Edit sends an emptied end date as `null` so it clears.
   Desktop: ring, Add, warning and recent periods in a 360px left column. New `cycle.tracking.*` keys (EN + PL).
   Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Statistics done. `/statistics`: plain 28px title (dropped the 📊 and the hard-coded Polish subtitle),
+  Timeframe as a 6-segment `SegmentedControl` (short labels 1W…All / 1T…Całość, full name for screen readers) and
+  "Show frequency per" Week/Month/Quarter/Year segments moved up from the Workout types header (same state, same
+  effect), 4 `StatTile`s, workout type cards (`WorkoutIconTile`, "Count: N · x/period", %, bar in the workout colour,
+  Gym top-3 variations as outlined chips), Tags and Training volume as list cards with bars (same counts and %),
+  Strong Mind link card, Injuries by cycle phase card (4 total tiles, 5 phase tiles on their bands, most-injury phase
+  ringed in `--uc-warning`, warning callout with the existing texts + full-width notify button, still `alert()`),
+  Gratitude & improvements as one feed with All/Gratitude/Improvements segments (✨ / 📈 rows, "Type · sector · date"),
+  footer "date range · Last updated date, time" (localized). Workout type names now use `training.types.*` (were English
+  only; Fingerboard had no icon). Desktop: types left, tags/volume right. New keys `stats.thisMonth`,
+  `stats.showFrequencyPer`, `stats.injuriesByPhase`, `stats.totalInjuries`, `stats.maxInPhase`, `stats.phasesAffected`,
+  `stats.noRecentInjuries`, `stats.injuriesPerPhase`, `stats.improvementsShort`, `stats.short.*` (replace the hard-coded
+  Polish strings). Not checked logged-in in a browser.

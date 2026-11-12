@@ -175,7 +175,24 @@
     "logFirstWorkout": "Log Your First Workout",
     "noData": "No statistics available yet",
     "noDataDescription": "Start logging workouts to see detailed statistics about your training progress, volume, and performance over time.",
-    "daysRange": "Days {{range}}"
+    "daysRange": "Days {{range}}",
+    "thisMonth": "This month",
+    "showFrequencyPer": "Show frequency per",
+    "injuriesByPhase": "Injuries by cycle phase",
+    "totalInjuries": "Injuries",
+    "maxInPhase": "Max in one phase",
+    "phasesAffected": "Phases affected",
+    "noRecentInjuries": "No injuries recently",
+    "injuriesPerPhase": "Injuries in each cycle phase",
+    "improvementsShort": "Improvements",
+    "short": {
+      "1week": "1W",
+      "1month": "1M",
+      "3months": "3M",
+      "6months": "6M",
+      "1year": "1Y",
+      "allTime": "All"
+    }
   },
   "app": {
     "title": "Unicorn Climb - Train with your unicorn flow",

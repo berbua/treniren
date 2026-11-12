@@ -175,7 +175,24 @@
     "logFirstWorkout": "Zapisz pierwszy trening",
     "noData": "Brak statystyk",
     "noDataDescription": "Zapisuj treningi, aby zobaczyć szczegółowe statystyki postępów, objętości i wyników w czasie.",
-    "daysRange": "Dni {{range}}"
+    "daysRange": "Dni {{range}}",
+    "thisMonth": "Ten miesiąc",
+    "showFrequencyPer": "Pokaż częstotliwość na",
+    "injuriesByPhase": "Kontuzje według fazy cyklu",
+    "totalInjuries": "Łącznie kontuzji",
+    "maxInPhase": "Najwięcej w fazie",
+    "phasesAffected": "Fazy z kontuzjami",
+    "noRecentInjuries": "0 kontuzji ostatnio",
+    "injuriesPerPhase": "Liczba kontuzji w każdej fazie cyklu",
+    "improvementsShort": "Do poprawy",
+    "short": {
+      "1week": "1T",
+      "1month": "1M",
+      "3months": "3M",
+      "6months": "6M",
+      "1year": "1R",
+      "allTime": "Całość"
+    }
   },
   "app": {
     "title": "Jednorożec wspin - trenuj z jednorożcowym flow",

@@ -157,6 +157,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **Performance by cycle phase (avg session rating 1–5)** — no session rating exists; don't show.
 - **Fingerboard test chart on Statistics** — that chart lives on the Fingerboard testing detail page.
 - Tiles that exist: **Total workouts, This month, Avg per week, Current streak**.
+- Mock's **"Current streak · 5 days"** unit and **"11 climbing workouts with a TR value"** subtitle aren't shown (no
+  keys / not computed); the app's extra lines are kept: Strong Mind link card, "Each phase shows…" note, notification
+  hint text, gratitude section description.
+- Gratitude feed: the mock's heart / trend icons are the existing ✨ / 📈 until the custom SVGs land.
 
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
