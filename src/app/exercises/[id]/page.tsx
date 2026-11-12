@@ -7,7 +7,7 @@ import { Exercise } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { ExerciseProgressionChart, TimeFrame, Metric, ChartType } from '@/components/ExerciseProgressionChart'
 import Link from 'next/link'
-import { Card, EmptyState, Overline, SegmentedControl, Select, Skeleton, SkeletonRows, buttonClasses } from '@/components/ui'
+import { Card, EmptyState, Icon, IconName, Overline, SegmentedControl, Select, Skeleton, SkeletonRows, buttonClasses } from '@/components/ui'
 
 interface ExerciseQuickStats {
   lastUsed: string | null
@@ -151,11 +151,11 @@ function ExerciseDetailPageContent() {
     return (
       <div className="min-h-screen bg-uc-bg flex items-center justify-center px-5">
         <EmptyState
-          icon="💪"
+          icon={<Icon name="library" size={28} />}
           title={t('exercises.detail.notFound') || 'Exercise not found'}
           action={
             <Link href="/exercises" className={buttonClasses('ghost', 'md')}>
-              ← {t('exercises.detail.back') || 'Back to Exercise Library'}
+              <Icon name="chevron-left" /> {t('exercises.detail.back') || 'Back to Exercise Library'}
             </Link>
           }
         />
@@ -216,8 +216,8 @@ function ExerciseDetailPageContent() {
                 <MiniTile
                   label={t('exercises.detail.status') || 'Status'}
                   value={hasWorkouts
-                    ? `📊 ${t('exercises.detail.statusTracking') || 'Tracking'}`
-                    : `🆕 ${t('exercises.detail.statusNew') || 'New'}`}
+                    ? (t('exercises.detail.statusTracking') || 'Tracking')
+                    : (t('exercises.detail.statusNew') || 'New')}
                   valueClassName={hasWorkouts ? 'text-uc-success' : ''}
                 />
               </div>
@@ -229,22 +229,26 @@ function ExerciseDetailPageContent() {
                 <h2 className={sectionTitle}>{t('exercises.detail.personalRecords') || 'Personal records'}</h2>
                 <div className="grid grid-cols-2 gap-3">
                   <RecordTile
-                    label={`🏆 ${t('exercises.detail.maxWeight') || 'Max weight'}`}
+                    icon="achieved"
+                    label={t('exercises.detail.maxWeight') || 'Max weight'}
                     value={`${records.maxWeight.value.toFixed(1)} ${exercise.defaultUnit}`}
                     date={records.maxWeight.date && formatShortDate(records.maxWeight.date)}
                   />
                   <RecordTile
-                    label={`💪 ${t('exercises.detail.est1RM') || 'Est. 1RM'}`}
+                    icon="type-gym"
+                    label={t('exercises.detail.est1RM') || 'Est. 1RM'}
                     value={`${records.max1RM.value.toFixed(1)} ${exercise.defaultUnit}`}
                     date={records.max1RM.date && formatShortDate(records.max1RM.date)}
                   />
                   <RecordTile
-                    label={`📊 ${t('exercises.detail.maxVolume') || 'Max volume'}`}
+                    icon="stats"
+                    label={t('exercises.detail.maxVolume') || 'Max volume'}
                     value={`${records.maxVolume.value.toFixed(0)} ${exercise.defaultUnit}`}
                     date={records.maxVolume.date && formatShortDate(records.maxVolume.date)}
                   />
                   <RecordTile
-                    label={`🔥 ${t('exercises.detail.maxReps') || 'Max reps'}`}
+                    icon="streak"
+                    label={t('exercises.detail.maxReps') || 'Max reps'}
                     value={records.maxReps.value}
                     date={records.maxReps.date && formatShortDate(records.maxReps.date)}
                   />
@@ -319,7 +323,7 @@ function ExerciseDetailPageContent() {
           ) : (
             <Card className="border-dashed lg:row-span-2">
               <EmptyState
-                icon="💪"
+                icon={<Icon name="improve" size={28} />}
                 title={t('exercises.noWorkoutData') || 'No workout data yet'}
                 description={t('exercises.noWorkoutDataDescription') || 'Start logging workouts with this exercise to see your progression over time. Track your sets, reps, and weights to visualize your strength gains.'}
                 action={
@@ -373,7 +377,7 @@ function ExerciseDetailPageContent() {
           {recentWorkouts.length === 0 && quickStats && quickStats.timesUsed === 0 && (
             <Card className="border-dashed">
               <EmptyState
-                icon="🏋️"
+                icon={<Icon name="type-gym" size={28} />}
                 title={t('exercises.detail.notUsedYet') || 'This exercise hasn’t been used in any workouts yet'}
                 action={
                   <Link href="/workouts" className={buttonClasses('accent', 'md')}>
@@ -398,10 +402,13 @@ function MiniTile({ label, value, valueClassName = '' }: { label: string; value:
   )
 }
 
-function RecordTile({ label, value, date }: { label: string; value: React.ReactNode; date?: string | null }) {
+function RecordTile({ icon, label, value, date }: { icon: IconName; label: string; value: React.ReactNode; date?: string | null }) {
   return (
     <div className="rounded-uc-card bg-uc-primary-container p-3 text-uc-on-primary-container">
-      <p className="text-[11px] leading-[14px] font-bold uppercase tracking-[0.08em] opacity-80">{label}</p>
+      <p className="flex items-center gap-1.5 text-[11px] leading-[14px] font-bold uppercase tracking-[0.08em] opacity-80">
+        <Icon name={icon} size={14} />
+        {label}
+      </p>
       <p className="mt-1 text-[22px] font-extrabold leading-tight uc-num">{value}</p>
       {date && <p className="mt-0.5 text-xs font-semibold opacity-80">{date}</p>}
     </div>

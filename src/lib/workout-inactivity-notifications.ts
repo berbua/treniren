@@ -56,7 +56,7 @@ export function createWorkoutInactivityNotification(
   
   return {
     type: 'workout_inactivity',
-    title: '🏋️ Workout Reminder',
+    title: 'Workout Reminder',
     message: `You haven't logged a workout in ${daysText}. Time to get back on track!`,
     priority: 'medium',
     actionButton: {

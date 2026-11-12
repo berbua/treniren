@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Routine, RoutineFormData, Exercise, RoutineExercise, RoutineVariation } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { BottomSheet, Button, EmptyState, FieldError, Input, Overline, Textarea } from '@/components/ui'
+import { BottomSheet, Button, EmptyState, FieldError, Icon, Input, Overline, Textarea } from '@/components/ui'
 
 interface RoutineFormProps {
   routine?: Routine | null
@@ -396,7 +396,7 @@ export default function RoutineForm({
                       aria-label={t('routines.form.moveUp') || 'Move up'}
                       className={iconButton}
                     >
-                      <span aria-hidden>↑</span>
+                      <Icon name="move-up" />
                     </button>
                     <button
                       type="button"
@@ -405,7 +405,7 @@ export default function RoutineForm({
                       aria-label={t('routines.form.moveDown') || 'Move down'}
                       className={iconButton}
                     >
-                      <span aria-hidden>↓</span>
+                      <Icon name="move-down" />
                     </button>
                     <button
                       type="button"
@@ -414,7 +414,7 @@ export default function RoutineForm({
                       title={t('routines.form.remove') || 'Remove'}
                       className={removeButton}
                     >
-                      <span aria-hidden>✕</span>
+                      <Icon name="close" />
                     </button>
                   </div>
                 ))}
@@ -458,7 +458,7 @@ export default function RoutineForm({
                       title={t('common.edit') || 'Edit'}
                       className={iconButton}
                     >
-                      <span aria-hidden>✏️</span>
+                      <Icon name="edit" />
                     </button>
                     <button
                       type="button"
@@ -467,7 +467,7 @@ export default function RoutineForm({
                       title={t('routines.form.remove') || 'Remove'}
                       className={removeButton}
                     >
-                      <span aria-hidden>✕</span>
+                      <Icon name="close" />
                     </button>
                   </div>
                 ))}

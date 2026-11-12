@@ -194,10 +194,10 @@
     "mostInjuriesPhaseTitle": "Most injuries in a phase",
     "mostInjuriesPhaseMessage": "Most injuries ({count}) occurred during cycle days {dayRange}.",
     "injuryPhaseNotificationHint": "Would you like to receive a push notification 1 day before this phase starts to be aware of the increased injury risk?",
-    "enableInjuryPhaseNotification": "🔔 Enable notification",
+    "enableInjuryPhaseNotification": "Enable notification",
     "injuryPhaseNotificationEnabled": "Notification enabled! You will receive a reminder 1 day before this phase starts.",
     "injuryPhaseNotificationError": "Failed to enable notification. Please try again.",
-    "injuryPhaseNotificationAlreadyEnabled": "✓ Notification already enabled",
+    "injuryPhaseNotificationAlreadyEnabled": "Notification already enabled",
     "logFirstWorkout": "Log Your First Workout",
     "noData": "No statistics available yet",
     "noDataDescription": "Start logging workouts to see detailed statistics about your training progress, volume, and performance over time.",
@@ -393,7 +393,7 @@
       "improvements": "Note 3 things you want to improve or do better next time. This helps you learn and grow from each session.",
       "sector": "The climbing area or location where you trained (e.g., 'Fontainebleau - Bas Cuvier'). Useful for tracking where you climb.",
       "mentalPracticeType": "Type of mental practice: Meditation (mindfulness), Reflecting (self-reflection), Other (custom practice).",
-      "timeOfDay": "When you did the mental practice: Morning (🌅), Midday (☀️), Evening (🌙). Track patterns in your practice timing.",
+      "timeOfDay": "When you did the mental practice: Morning, Midday, Evening. Track patterns in your practice timing.",
       "showCountdown": "Enable this to show a countdown timer for this trip on the homepage. Great for building excitement before a climbing trip!",
       "injuryPhaseWarning": "This phase has the highest number of injuries in your history. Be extra cautious and consider adjusting training intensity during this phase."
     },
@@ -441,7 +441,7 @@
       "importDummyDataConfirm": "This will import dummy data directly into your database. Continue?"
     },
     "placeholders": {
-      "searchExercises": "🔍 Search exercises...",
+      "searchExercises": "Search exercises...",
       "reps": "Reps",
       "sets": "Sets",
       "weight": "Weight",
@@ -1291,7 +1291,7 @@
     },
     "trainingTypesTitle": "Training Types to Track",
     "eventTypesTitle": "Event Types to Track",
-    "tip": "💡 Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.",
+    "tip": "Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.",
     "types": {
       "injury": "Injury",
       "physio": "Physio",
@@ -1432,10 +1432,10 @@
     "classifiedAs": "Classified as"
   },
   "quickLog": {
-    "title": "⚡ Quick Log",
+    "title": "Quick Log",
     "description": "Quickly log a workout. You can add details later.",
     "button": "Quick Log",
-    "markAsDone": "⚡ Mark as Done",
+    "markAsDone": "Mark as Done",
     "saving": "Saving...",
     "quickLogBadge": "Quick",
     "noProtocols": "No protocols available. Create one in Fingerboard Protocols.",

@@ -2,6 +2,7 @@
 
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useEffect, useState } from 'react'
+import { Icon } from '@/components/ui'
 
 export default function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage()
@@ -20,9 +21,7 @@ export default function LanguageSwitcher() {
   // Always render the same structure, but suppress hydration warnings for dynamic content
   return (
     <div className="flex items-center gap-1">
-      <span aria-hidden className="hidden sm:inline text-sm text-uc-text-muted" suppressHydrationWarning>
-        {mounted && language === 'en' ? '🇺🇸' : '🇵🇱'}
-      </span>
+      <Icon name="globe" size={16} className="hidden sm:block text-uc-text-muted" />
       <select
         value={mounted ? language : 'pl'}
         onChange={handleLanguageChange}

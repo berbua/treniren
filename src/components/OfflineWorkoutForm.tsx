@@ -18,19 +18,19 @@ import {
 import { WorkoutType, TrainingVolume } from '@/types/workout';
 import CycleInfoComponent from './CycleInfo';
 import { StrongMindSection } from './StrongMindSection';
-import { BottomSheet, Button, ChoiceChip, FieldError, Input, Label, RatingDots, Select, Textarea, WorkoutTypeChip, phaseBandBg } from './ui';
+import { BottomSheet, Button, ChoiceChip, FieldError, Icon, Input, Label, RatingDots, Select, Textarea, WorkoutTypeChip, phaseBandBg } from './ui';
 
 interface OfflineWorkoutFormProps {
   onClose: () => void;
 }
 
-const workoutTypes: { value: WorkoutType; label: string; emoji: string; description: string }[] = [
-  { value: 'GYM', label: 'Gym', emoji: '🏋️', description: 'Strength training with weights' },
-  { value: 'BOULDERING', label: 'Bouldering', emoji: '🧗', description: 'Short, powerful climbs' },
-  { value: 'CIRCUITS', label: 'Circuits', emoji: '🔄', description: 'Endurance training circuits' },
-  { value: 'LEAD_ROCK', label: 'Lead Rock', emoji: '🏔️', description: 'Outdoor lead climbing' },
-  { value: 'LEAD_ARTIFICIAL', label: 'Lead Wall', emoji: '🧗‍♀️', description: 'Indoor lead climbing' },
-  { value: 'MENTAL_PRACTICE', label: 'Mental Practice', emoji: '🧘', description: 'Mindfulness & mental training' },
+const workoutTypes: { value: WorkoutType; label: string; description: string }[] = [
+  { value: 'GYM', label: 'Gym', description: 'Strength training with weights' },
+  { value: 'BOULDERING', label: 'Bouldering', description: 'Short, powerful climbs' },
+  { value: 'CIRCUITS', label: 'Circuits', description: 'Endurance training circuits' },
+  { value: 'LEAD_ROCK', label: 'Lead Rock', description: 'Outdoor lead climbing' },
+  { value: 'LEAD_ARTIFICIAL', label: 'Lead Wall', description: 'Indoor lead climbing' },
+  { value: 'MENTAL_PRACTICE', label: 'Mental Practice', description: 'Mindfulness & mental training' },
 ];
 
 const trainingVolumes: { value: TrainingVolume; label: string; description: string }[] = [
@@ -153,14 +153,19 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
       onClose={onClose}
       closeLabel={t('common.close')}
       className="sm:max-w-2xl"
-      title={!isOnline ? `📱 ${t('offlineForm.titleOffline')}` : `➕ ${t('offlineForm.title')}`}
+      title={
+        <span className="flex items-center gap-2">
+          <Icon name={!isOnline ? 'offline' : 'plus'} size={24} className="text-uc-primary" />
+          {!isOnline ? t('offlineForm.titleOffline') : t('offlineForm.title')}
+        </span>
+      }
       footer={
         <div className="flex gap-3">
           <Button variant="ghost" size="lg" onClick={onClose} className="flex-1">
             {t('common.cancel')}
           </Button>
           <Button type="submit" form="offline-workout-form" variant="accent" size="lg" className="flex-[2]">
-            <span aria-hidden>💾</span>
+            <Icon name="download" />
             {!isOnline ? t('offlineForm.saveOffline') : t('workouts.saveWorkout')}
           </Button>
         </div>
@@ -169,14 +174,13 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
       <form id="offline-workout-form" onSubmit={handleSubmit} className="space-y-5">
         {/* Workout Type Selection */}
         <div>
-          <Label>🏋️ {t('workouts.workoutType')} *</Label>
+          <Label>{t('workouts.workoutType')} *</Label>
           <div className="flex flex-wrap gap-2">
             {workoutTypes.map((type) => (
               <WorkoutTypeChip
                 key={type.value}
                 workoutType={type.value}
                 selected={formData.type === type.value}
-                icon={type.emoji}
                 onClick={() => updateFormData('type', type.value)}
               >
                 {t(`workouts.workoutTypes.${type.value}`)}
@@ -188,7 +192,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
 
         {/* Date */}
         <div>
-          <Label htmlFor="offline-date">📅 {t('workouts.date')} *</Label>
+          <Label htmlFor="offline-date">{t('workouts.date')} *</Label>
           <Input
             id="offline-date"
             type="date"
@@ -213,7 +217,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
         {/* Training Volume */}
         {formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && (
           <div>
-            <Label>💪 {t('workouts.trainingVolume')} *</Label>
+            <Label>{t('workouts.trainingVolume')} *</Label>
             <div className="grid grid-cols-1 gap-2">
               {trainingVolumes.map((volume) => {
                 const selected = formData.trainingVolume === volume.value
@@ -246,7 +250,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
         {/* Mental Practice Type */}
         {formData.type === 'MENTAL_PRACTICE' && (
           <div>
-            <Label htmlFor="offline-mental-type">🧘 {t('workouts.mentalPracticeType')}</Label>
+            <Label htmlFor="offline-mental-type">{t('workouts.mentalPracticeType')}</Label>
             <Select
               id="offline-mental-type"
               value={formData.mentalPracticeType}
@@ -262,12 +266,12 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
         {/* Time of Day for Mental Practice */}
         {formData.type === 'MENTAL_PRACTICE' && (
           <div>
-            <Label>🕐 {t('workouts.timeOfDay')}</Label>
+            <Label>{t('workouts.timeOfDay')}</Label>
             <div className="flex flex-wrap gap-2">
               {[
-                { value: 'MORNING', label: t('workouts.timeOfDayOptions.MORNING') || 'Morning', emoji: '🌅' },
-                { value: 'MIDDAY', label: t('workouts.timeOfDayOptions.MIDDAY') || 'Midday', emoji: '☀️' },
-                { value: 'EVENING', label: t('workouts.timeOfDayOptions.EVENING') || 'Evening', emoji: '🌙' }
+                { value: 'MORNING', label: t('workouts.timeOfDayOptions.MORNING') || 'Morning', icon: 'morning' as const },
+                { value: 'MIDDAY', label: t('workouts.timeOfDayOptions.MIDDAY') || 'Midday', icon: 'midday' as const },
+                { value: 'EVENING', label: t('workouts.timeOfDayOptions.EVENING') || 'Evening', icon: 'evening' as const }
               ].map((time) => {
                 const selected = formData.timeOfDay.includes(time.value)
                 return (
@@ -281,7 +285,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                         : [...currentTimes, time.value]);
                     }}
                   >
-                    <span aria-hidden>{time.emoji}</span>
+                    <Icon name={time.icon} size={16} />
                     {time.label}
                   </ChoiceChip>
                 )
@@ -293,7 +297,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
         {/* Sector Field */}
         {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING' || formData.type === 'CIRCUITS') && (
           <div>
-            <Label htmlFor="offline-sector">🏔️ {t('workouts.sector')}</Label>
+            <Label htmlFor="offline-sector">{t('workouts.sector')}</Label>
             <Input
               id="offline-sector"
               type="text"
@@ -307,7 +311,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
         {/* Pre-session Feel / Day After Tiredness / Focus Level */}
         {ratingFields.map((field) => (
           <div key={field.name}>
-            <Label>{field.emoji} {t(`workouts.${field.name}`)}</Label>
+            <Label>{t(`workouts.${field.name}`)}</Label>
             <RatingDots
               name={field.name}
               value={formData[field.name]}
@@ -359,7 +363,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
 
         {/* Notes */}
         <div>
-          <Label htmlFor="offline-notes">📝 {t('workouts.notes')}</Label>
+          <Label htmlFor="offline-notes">{t('workouts.notes')}</Label>
           <Textarea
             id="offline-notes"
             value={formData.notes}
@@ -374,7 +378,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
 };
 
 const ratingFields = [
-  { name: 'preSessionFeel', emoji: '😊', filledClassName: 'bg-uc-primary' },
-  { name: 'dayAfterTiredness', emoji: '😴', filledClassName: 'bg-uc-accent' },
-  { name: 'focusLevel', emoji: '🎯', filledClassName: 'bg-uc-success' },
+  { name: 'preSessionFeel', filledClassName: 'bg-uc-primary' },
+  { name: 'dayAfterTiredness', filledClassName: 'bg-uc-accent' },
+  { name: 'focusLevel', filledClassName: 'bg-uc-success' },
 ] as const;

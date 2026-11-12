@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { toLocalDateString } from '@/lib/date-utils'
-import { BottomSheet, Button, ChoiceChip, Input, Overline, SegmentedControl, Select, WorkoutTypeChip } from './ui'
+import { BottomSheet, Button, ChoiceChip, Icon, Input, Overline, SegmentedControl, Select, WorkoutTypeChip } from './ui'
 import { WorkoutType, TrainingVolume, TimeOfDay, MentalPracticeType, FingerboardProtocol } from '@/types/workout'
 
 interface QuickLogModalProps {
@@ -74,14 +74,14 @@ export default function QuickLogModal({
     await onSubmit(formData)
   }
 
-  const workoutTypes: { value: WorkoutType; label: string; emoji: string }[] = [
-    { value: 'BOULDERING', label: t('workoutTypes.bouldering') || 'Bouldering', emoji: '🧗' },
-    { value: 'LEAD_ARTIFICIAL', label: t('workoutTypes.leadArtificial') || 'Lead Artificial', emoji: '🧗‍♂️' },
-    { value: 'LEAD_ROCK', label: t('workoutTypes.leadRock') || 'Lead Rock', emoji: '🧗‍♀️' },
-    { value: 'CIRCUITS', label: t('workoutTypes.circuits') || 'Circuits', emoji: '🔄' },
-    { value: 'GYM', label: t('workoutTypes.gym') || 'Gym', emoji: '🏋️' },
-    { value: 'FINGERBOARD', label: t('workoutTypes.fingerboard') || 'Fingerboard', emoji: '🖐️' },
-    { value: 'MENTAL_PRACTICE', label: t('workoutTypes.mentalPractice') || 'Mental Practice', emoji: '🧘' },
+  const workoutTypes: { value: WorkoutType; label: string }[] = [
+    { value: 'BOULDERING', label: t('workoutTypes.bouldering') || 'Bouldering' },
+    { value: 'LEAD_ARTIFICIAL', label: t('workoutTypes.leadArtificial') || 'Lead Artificial' },
+    { value: 'LEAD_ROCK', label: t('workoutTypes.leadRock') || 'Lead Rock' },
+    { value: 'CIRCUITS', label: t('workoutTypes.circuits') || 'Circuits' },
+    { value: 'GYM', label: t('workoutTypes.gym') || 'Gym' },
+    { value: 'FINGERBOARD', label: t('workoutTypes.fingerboard') || 'Fingerboard' },
+    { value: 'MENTAL_PRACTICE', label: t('workoutTypes.mentalPractice') || 'Mental Practice' },
   ]
 
   const trainingVolumes: { value: TrainingVolume; label: string }[] = [
@@ -157,12 +157,17 @@ export default function QuickLogModal({
       isOpen={isOpen}
       onClose={onClose}
       closeLabel={t('common.close') || 'Close'}
-      title={t('quickLog.title') || '⚡ Quick Log'}
+      title={
+        <span className="flex items-center gap-2">
+          <Icon name="quick-log" size={24} className="text-uc-accent-text" />
+          {t('quickLog.title') || 'Quick Log'}
+        </span>
+      }
       footer={
         <Button type="submit" form="quick-log-form" variant="accent" size="lg" isLoading={isSubmitting} className="w-full">
           {isSubmitting
             ? (t('quickLog.saving') || 'Saving...')
-            : (t('quickLog.markAsDone') || '⚡ Mark as Done')}
+            : <><Icon name="quick-log" /> {t('quickLog.markAsDone') || 'Mark as Done'}</>}
         </Button>
       }
     >
@@ -191,12 +196,11 @@ export default function QuickLogModal({
             {t('workouts.labels.type') || 'Workout Type'} *
           </Overline>
           <div className="grid grid-cols-2 gap-2">
-            {workoutTypes.map(({ value, label, emoji }) => (
+            {workoutTypes.map(({ value, label }) => (
               <WorkoutTypeChip
                 key={value}
                 workoutType={value}
                 selected={formData.type === value}
-                icon={emoji}
                 onClick={() => handleTypeChange(value)}
                 className="min-h-14 justify-start text-left"
               >

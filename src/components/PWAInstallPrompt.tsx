@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Button } from '@/components/ui';
+import { Button, Icon } from '@/components/ui';
 
 const DISMISS_KEY = 'pwa-install-dismissed';
 const DISMISS_DURATION_MS = 14 * 24 * 60 * 60 * 1000; // Don't ask again for 14 days
@@ -135,8 +135,8 @@ export const PWAInstallPrompt = () => {
     >
       <div className="bg-uc-elevated border border-uc-border rounded-uc-card shadow-uc p-4">
         <div className="flex items-start gap-3">
-          <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-2xl">
-            🦄
+          <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-uc-accent-text">
+            <Icon name="horn" size={26} />
           </span>
           <div className="min-w-0 flex-1">
             <h3 className="text-[17px] font-extrabold leading-6 text-uc-text">{t('pwaPrompt.title')}</h3>

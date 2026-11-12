@@ -2,7 +2,7 @@
 
 import { CycleInfo } from '@/lib/cycle-utils'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PhaseBadge, phaseSolidBg } from './ui'
+import { Icon, PhaseBadge, phaseSolidBg } from './ui'
 
 interface CycleInfoProps {
   cycleInfo: CycleInfo
@@ -17,8 +17,8 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
   return (
     <div className="space-y-3 text-uc-text">
       <div className="flex items-start justify-between gap-3">
-        <span className="font-bold uc-num">
-          <span aria-hidden>🌸 </span>
+        <span className="flex items-center gap-1.5 font-bold uc-num">
+          <Icon name="cycle" size={16} className="text-uc-primary" />
           {t('cycle.day') || 'Cycle Day'} {cycleInfo.currentDay}
         </span>
         <div className="flex flex-col items-end gap-1">
@@ -27,7 +27,7 @@ export default function CycleInfoComponent({ cycleInfo, showRecommendations = fa
           </PhaseBadge>
           {cycleInfo.isInFertileWindow && (
             <span className="text-xs font-semibold text-uc-text-muted">
-              💫 {t('cycle.fertileWindow') || 'Fertile window'}
+              {t('cycle.fertileWindow') || 'Fertile window'}
             </span>
           )}
         </div>

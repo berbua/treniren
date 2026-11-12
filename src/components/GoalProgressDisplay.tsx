@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Icon, WorkoutIcon } from './ui';
 
 interface Workout {
   id: string;
@@ -88,19 +89,6 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
     new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
   );
 
-  const getWorkoutTypeEmoji = (type: string) => {
-    const emojiMap: { [key: string]: string } = {
-      'GYM': '🏋️',
-      'BOULDERING': '🧗',
-      'CIRCUITS': '🔄',
-      'LEAD_ROCK': '🏔️',
-      'LEAD_ARTIFICIAL': '🧗‍♀️',
-      'MENTAL_PRACTICE': '🧘',
-      'FINGERBOARD': '🖐️',
-    };
-    return emojiMap[type] || '💪';
-  };
-
   const typeLabel = (type: string) =>
     typeLabelKey[type] ? t(`training.types.${typeLabelKey[type]}`) || type : type;
   const formatDate = (value: string) =>
@@ -114,7 +102,7 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
             key={workout.id}
             className="inline-flex min-h-7 items-center gap-1.5 rounded-uc-chip bg-uc-success-bg px-2.5 text-[13px] font-bold text-uc-success"
           >
-            <span aria-hidden>🏆</span>
+            <Icon name="achieved" size={16} />
             {t('strongMind.achieved') || 'Achieved!'} <span className="uc-num">{formatDate(workout.startTime)}</span>
             <span className="sr-only"> · {typeLabel(workout.type)}</span>
           </span>
@@ -133,7 +121,7 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
           const progress = workout.mentalState?.processGoals?.find(pg => pg.goalId === goalId)?.progress ?? 0;
           return (
             <li key={workout.id} className="flex items-center gap-2 py-1.5">
-              <span aria-hidden className="text-sm">{getWorkoutTypeEmoji(workout.type)}</span>
+              <WorkoutIcon workoutType={workout.type} size={16} className="text-uc-text-muted" />
               <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-uc-text">
                 <span className="uc-num">{formatDate(workout.startTime)}</span>
                 <span className="text-uc-text-muted"> · {typeLabel(workout.type)}</span>

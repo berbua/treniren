@@ -7,7 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { toLocalDateString } from '@/lib/date-utils';
 import { useCycle } from '@/contexts/CycleContext';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
-import { Button, Card, EmptyState } from '@/components/ui';
+import { Button, Card, EmptyState, Icon, IconName } from '@/components/ui';
 
 interface MessagesPanelProps {
   isOpen: boolean;
@@ -137,18 +137,27 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
     };
   }, [isOpen, onClose, isClearConfirmOpen]);
 
-  const getMessageIcon = (type: string) => {
-    switch (type) {
+  const getMessageIcon = (message: NotificationMessage): IconName => {
+    switch (message.type) {
       case 'cycle_reminder':
-        return '🔄';
+        return 'cycle';
       case 'cycle_overdue':
-        return '⚠️';
+        return 'period';
       case 'workout_reminder':
-        return '🏋️';
       case 'workout_inactivity':
-        return '🏋️';
+        return 'quick-log';
       default:
-        return '📢';
+        // General messages: pick by their action (test / mental / climbing reminders)
+        switch (message.actionButton?.action) {
+          case 'perform_test':
+            return 'test';
+          case 'create_mental_workout':
+            return 'type-mental';
+          case 'create_climbing_workout':
+            return 'falls';
+          default:
+            return 'bell';
+        }
     }
   };
 
@@ -215,7 +224,7 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             {messages.length === 0 ? (
               <EmptyState
-                icon="📭"
+                icon={<Icon name="bell" size={28} />}
                 title={t('messages.empty') || 'No messages yet'}
                 description={t('messages.emptyDesc') || 'You\'ll receive cycle reminders and other notifications here.'}
               />
@@ -225,8 +234,10 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
                   <li key={message.id}>
                     <Card className={message.priority === 'high' && !message.read ? 'border-uc-error/50' : ''}>
                       <div className="flex items-start gap-3">
-                        <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-elevated text-xl">
-                          {getMessageIcon(message.type)}
+                        <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-elevated ${
+                          message.type.startsWith('cycle') ? 'text-uc-phase-menstruation' : message.type.startsWith('workout') ? 'text-uc-accent-text' : 'text-uc-primary'
+                        }`}>
+                          <Icon name={getMessageIcon(message)} size={22} />
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

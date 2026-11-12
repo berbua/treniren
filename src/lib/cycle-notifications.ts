@@ -52,7 +52,7 @@ export function createCycleReminderNotification(
   if (check.shouldRemindBeforePeriod) {
     return {
       type: 'cycle_reminder',
-      title: '🔄 Period Reminder',
+      title: 'Period Reminder',
       message: `Your period is expected tomorrow (${formatDate(check.nextPeriodDate)}). Time to prepare for the menstrual phase!`,
       priority: 'medium',
       actionButton: {
@@ -67,7 +67,7 @@ export function createCycleReminderNotification(
   if (check.shouldRemindOverdue) {
     return {
       type: 'cycle_overdue',
-      title: '⚠️ Cycle Overdue',
+      title: 'Cycle Overdue',
       message: `Your period is ${check.daysOverdue} day${check.daysOverdue > 1 ? 's' : ''} overdue (cycle day ${cycleSettings.cycleLength + check.daysOverdue}). Your period should have started by now.`,
       priority: 'high',
       actionButton: {

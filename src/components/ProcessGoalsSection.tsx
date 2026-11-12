@@ -1,6 +1,7 @@
 'use client';
 
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Icon, WorkoutIcon } from './ui';
 
 interface ProcessGoal {
   id: string
@@ -45,8 +46,8 @@ export const ProcessGoalsSection = ({
 
   return (
     <div className="p-4 bg-uc-elevated rounded-uc-card border border-uc-border">
-      <h4 className="text-sm font-bold mb-3">
-        🎯 {t('strongMind.goalsProgress')}
+      <h4 className="flex items-center gap-2 text-sm font-bold mb-3">
+        <Icon name="goal" className="text-uc-primary" /> {t('strongMind.goalsProgress')}
       </h4>
 
       {/* Process goals: progress 1-3 */}
@@ -103,22 +104,24 @@ export const ProcessGoalsSection = ({
                   <div className="text-sm font-semibold">
                     {goal.routeGrade} {goal.routeName} - {goal.sectorLocation}
                   </div>
-                  <div className="text-xs text-uc-text-muted">
-                    {goal.climbingType === 'route' ? `🧗‍♀️ ${t('strongMind.route')}` : `🧗 ${t('strongMind.boulder')}`} • {goal.gradeSystem}
+                  <div className="flex items-center gap-1.5 text-xs text-uc-text-muted">
+                    <WorkoutIcon workoutType={goal.climbingType === 'route' ? 'LEAD_ROCK' : 'BOULDERING'} size={16} />
+                    {goal.climbingType === 'route' ? t('strongMind.route') : t('strongMind.boulder')} • {goal.gradeSystem}
                   </div>
                 </div>
                 <button
                   type="button"
                   aria-pressed={isCompleted}
                   title={t('strongMind.markAchieved')}
+                  aria-label={t('strongMind.markAchieved')}
                   onClick={() => onProjectGoalCompletion(goal.id)}
-                  className={`size-11 shrink-0 rounded-full border flex items-center justify-center text-lg transition-colors ${
+                  className={`size-11 shrink-0 rounded-full border flex items-center justify-center transition-colors ${
                     isCompleted
                       ? 'border-uc-accent bg-uc-accent text-uc-on-accent'
                       : 'border-uc-border hover:border-uc-accent'
                   }`}
                 >
-                  🏆
+                  <Icon name="achieved" />
                 </button>
               </div>
             )

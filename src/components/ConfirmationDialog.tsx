@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { Button, ButtonVariant } from '@/components/ui'
+import { Button, ButtonVariant, Icon, IconName } from '@/components/ui'
 
 interface ConfirmationDialogProps {
   isOpen: boolean
@@ -34,10 +34,10 @@ export function ConfirmationDialog({
 
   if (!isOpen) return null
 
-  const variantStyles: Record<NonNullable<ConfirmationDialogProps['variant']>, { button: ButtonVariant; icon: string; tile: string }> = {
-    danger: { button: 'destructive', icon: '🔴', tile: 'bg-uc-error-bg' },
-    warning: { button: 'accent', icon: '⚠️', tile: 'bg-uc-warning-bg' },
-    info: { button: 'primary', icon: 'ℹ️', tile: 'bg-uc-primary-container' },
+  const variantStyles: Record<NonNullable<ConfirmationDialogProps['variant']>, { button: ButtonVariant; icon: IconName; tile: string }> = {
+    danger: { button: 'destructive', icon: 'delete', tile: 'bg-uc-error-bg text-uc-error' },
+    warning: { button: 'accent', icon: 'warning', tile: 'bg-uc-warning-bg text-uc-warning' },
+    info: { button: 'primary', icon: 'info', tile: 'bg-uc-primary-container text-uc-on-primary-container' },
   }
 
   const styles = variantStyles[variant]
@@ -50,8 +50,8 @@ export function ConfirmationDialog({
         aria-modal="true"
         className="relative bg-uc-elevated text-uc-text rounded-[20px] shadow-uc border border-uc-border max-w-md w-full p-5"
       >
-        <div aria-hidden className={`mb-3 flex size-12 items-center justify-center rounded-uc-input text-xl ${styles.tile}`}>
-          {styles.icon}
+        <div aria-hidden className={`mb-3 flex size-12 items-center justify-center rounded-uc-input ${styles.tile}`}>
+          <Icon name={styles.icon} size={24} />
         </div>
         <h3 className="text-xl font-bold mb-2">{title}</h3>
         <div className="text-sm text-uc-text-muted">

@@ -2,21 +2,21 @@
 
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { buttonClasses } from '@/components/ui'
+import { Icon, IconName, buttonClasses } from '@/components/ui'
 
 type Text = [key: string, fallback: string]
 
 interface Feature {
-  icon: string
+  icon: IconName
   title: Text
   description: Text
   bullets: Text[]
 }
 
-// Same features, texts and order as before; icons stay emoji until the custom SVGs land
+// Same features, texts and order as before
 const FEATURES: Feature[] = [
   {
-    icon: '🌙',
+    icon: 'cycle',
     title: ['landingFeatures.cycleTracking', 'Cycle Tracking'],
     description: ['landingFeatures.cycleDescription', 'Menstrual cycle correlation'],
     bullets: [
@@ -26,7 +26,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '🧠',
+    icon: 'strong-mind',
     title: ['landingFeatures.strongMindGoals', 'Strong Mind Goals'],
     description: ['landingFeatures.strongMindGoalsDescription', 'Process & project goal tracking'],
     bullets: [
@@ -36,7 +36,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '🧘',
+    icon: 'type-mental',
     title: ['workoutTypes.mentalPractice', 'Mental Practice'],
     description: ['workoutTypes.mentalPracticeDescription', 'Mindfulness & training'],
     bullets: [
@@ -46,7 +46,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '🧗‍♀️',
+    icon: 'type-lead-rock',
     title: ['landingFeatures.leadClimbingStrongMind', 'Lead Climbing + Strong Mind'],
     description: ['landingFeatures.leadClimbingDescription', 'Advanced mental tracking & goal integration'],
     bullets: [
@@ -56,7 +56,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '🏋️',
+    icon: 'type-gym',
     title: ['workoutTypes.gym', 'Gym Training'],
     description: ['workoutTypes.gymDescription', 'Strength & conditioning'],
     bullets: [
@@ -66,7 +66,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '🧗',
+    icon: 'type-bouldering',
     title: ['workoutTypes.bouldering', 'Bouldering'],
     description: ['workoutTypes.boulderingDescription', 'Power & technique'],
     bullets: [
@@ -76,7 +76,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '🤕',
+    icon: 'event-injury',
     title: ['landingFeatures.eventsInjuries', 'Events & Injuries'],
     description: ['landingFeatures.eventsInjuriesDescription', 'Track injuries, competitions, and trips'],
     bullets: [
@@ -86,7 +86,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '📊',
+    icon: 'stats',
     title: ['landingFeatures.statisticsAnalytics', 'Statistics & Analytics'],
     description: ['landingFeatures.statisticsDescription', 'Advanced insights & patterns'],
     bullets: [
@@ -97,7 +97,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '📤',
+    icon: 'download',
     title: ['landingFeatures.dataExportBackup', 'Data Export & Backup'],
     description: ['landingFeatures.dataExportDescription', 'Full data portability'],
     bullets: [
@@ -107,7 +107,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '💪',
+    icon: 'library',
     title: ['landingFeatures.exercisesRoutines', 'Exercises & Routines'],
     description: ['landingFeatures.exercisesRoutinesDescription', 'Custom exercises & workout templates'],
     bullets: [
@@ -117,7 +117,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '🖐️',
+    icon: 'type-fingerboard',
     title: ['landingFeatures.fingerboardTraining', 'Fingerboard Training'],
     description: ['landingFeatures.fingerboardDescription', 'Protocols & strength testing'],
     bullets: [
@@ -127,7 +127,7 @@ const FEATURES: Feature[] = [
     ],
   },
   {
-    icon: '📱',
+    icon: 'install',
     title: ['landingFeatures.pwaOffline', 'PWA & Offline'],
     description: ['landingFeatures.pwaOfflineDescription', 'Works offline & installable'],
     bullets: [
@@ -165,7 +165,9 @@ function CycleRing() {
           />
         ))}
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-5xl sm:text-6xl">🦄</span>
+      <span className="absolute inset-0 flex items-center justify-center text-uc-accent-text">
+        <Icon name="horn" size={64} />
+      </span>
     </div>
   )
 }
@@ -181,7 +183,6 @@ export default function LandingPage() {
 
   const getStarted = (
     <Link href="/dashboard" className={buttonClasses('accent', 'lg')}>
-      <span aria-hidden>🚀</span>
       {t('landing.getStarted') || 'Get Started - Track Your Journey'}
     </Link>
   )
@@ -219,8 +220,8 @@ export default function LandingPage() {
           <ul className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {FEATURES.map((feature) => (
               <li key={feature.title[0]} className="bg-uc-surface border border-uc-border rounded-uc-card p-5">
-                <span aria-hidden className="flex size-11 items-center justify-center rounded-xl bg-uc-primary-container text-xl">
-                  {feature.icon}
+                <span aria-hidden className="flex size-11 items-center justify-center rounded-xl bg-uc-primary-container text-uc-on-primary-container">
+                  <Icon name={feature.icon} size={22} />
                 </span>
                 <h3 className="mt-4 text-[17px] font-extrabold leading-6">{text(feature.title)}</h3>
                 <p className="mt-1 text-sm text-uc-text-muted">{text(feature.description)}</p>

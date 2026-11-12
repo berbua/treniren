@@ -14,7 +14,7 @@ import WorkoutExerciseTracker from './WorkoutExerciseTracker';
 import FingerboardHangTracker from './FingerboardHangTracker';
 import { Tooltip } from './Tooltip';
 import { ConfirmationDialog } from './ConfirmationDialog';
-import { BottomSheet, Button, ChoiceChip, CollapsibleCard, FieldError, Input, Label, Overline, RatingDots, SegmentedControl, Textarea, WorkoutTypeChip, phaseBandBg } from './ui';
+import { BottomSheet, Button, ChoiceChip, CollapsibleCard, FieldError, Icon, Input, Label, Overline, RatingDots, SegmentedControl, Textarea, WorkoutIcon, WorkoutTypeChip, phaseBandBg } from './ui';
 
 // Extended Workout type that includes relations from API
 type WorkoutWithRelations = Workout & {
@@ -58,14 +58,14 @@ interface EnhancedWorkoutFormProps {
 }
 
 // Workout types will be generated dynamically with translations (mockup order: lead first)
-const getWorkoutTypes = (t: (key: string) => string): { value: WorkoutType; label: string; emoji: string; description: string }[] => [
-  { value: 'LEAD_ARTIFICIAL', label: t('workouts.workoutTypes.LEAD_ARTIFICIAL') || 'Lead Wall', emoji: '🧗‍♀️', description: t('workouts.workoutTypeDescriptions.LEAD_ARTIFICIAL') || 'Indoor lead climbing' },
-  { value: 'LEAD_ROCK', label: t('workouts.workoutTypes.LEAD_ROCK') || 'Lead Rock', emoji: '🏔️', description: t('workouts.workoutTypeDescriptions.LEAD_ROCK') || 'Outdoor lead climbing' },
-  { value: 'BOULDERING', label: t('workouts.workoutTypes.BOULDERING') || 'Bouldering', emoji: '🧗', description: t('workouts.workoutTypeDescriptions.BOULDERING') || 'Short, powerful climbs' },
-  { value: 'CIRCUITS', label: t('workouts.workoutTypes.CIRCUITS') || 'Circuits', emoji: '🔄', description: t('workouts.workoutTypeDescriptions.CIRCUITS') || 'Endurance training circuits' },
-  { value: 'GYM', label: t('workouts.workoutTypes.GYM') || 'Gym', emoji: '🏋️', description: t('workouts.workoutTypeDescriptions.GYM') || 'Strength training with weights' },
-  { value: 'FINGERBOARD', label: t('workouts.workoutTypes.FINGERBOARD') || 'Fingerboard', emoji: '🖐️', description: t('workouts.workoutTypeDescriptions.FINGERBOARD') || 'Finger strength training' },
-  { value: 'MENTAL_PRACTICE', label: t('workouts.workoutTypes.MENTAL_PRACTICE') || 'Mental Practice', emoji: '🧘', description: t('workouts.workoutTypeDescriptions.MENTAL_PRACTICE') || 'Mindfulness & mental training' },
+const getWorkoutTypes = (t: (key: string) => string): { value: WorkoutType; label: string; description: string }[] => [
+  { value: 'LEAD_ARTIFICIAL', label: t('workouts.workoutTypes.LEAD_ARTIFICIAL') || 'Lead Wall', description: t('workouts.workoutTypeDescriptions.LEAD_ARTIFICIAL') || 'Indoor lead climbing' },
+  { value: 'LEAD_ROCK', label: t('workouts.workoutTypes.LEAD_ROCK') || 'Lead Rock', description: t('workouts.workoutTypeDescriptions.LEAD_ROCK') || 'Outdoor lead climbing' },
+  { value: 'BOULDERING', label: t('workouts.workoutTypes.BOULDERING') || 'Bouldering', description: t('workouts.workoutTypeDescriptions.BOULDERING') || 'Short, powerful climbs' },
+  { value: 'CIRCUITS', label: t('workouts.workoutTypes.CIRCUITS') || 'Circuits', description: t('workouts.workoutTypeDescriptions.CIRCUITS') || 'Endurance training circuits' },
+  { value: 'GYM', label: t('workouts.workoutTypes.GYM') || 'Gym', description: t('workouts.workoutTypeDescriptions.GYM') || 'Strength training with weights' },
+  { value: 'FINGERBOARD', label: t('workouts.workoutTypes.FINGERBOARD') || 'Fingerboard', description: t('workouts.workoutTypeDescriptions.FINGERBOARD') || 'Finger strength training' },
+  { value: 'MENTAL_PRACTICE', label: t('workouts.workoutTypes.MENTAL_PRACTICE') || 'Mental Practice', description: t('workouts.workoutTypeDescriptions.MENTAL_PRACTICE') || 'Mindfulness & mental training' },
 ];
 
 // Training volumes will be generated dynamically with translations
@@ -527,11 +527,16 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
         onClose={onCancel}
         dismissible={false}
         closeLabel={t('common.close') || 'Close'}
-        title={isDuplicating
-          ? `📋 ${t('workouts.formDuplicateTitle') || 'Duplicate Workout'}`
-          : initialData
-          ? `✏️ ${t('workouts.formEditTitle') || 'Edit Workout'}`
-          : `➕ ${t('workouts.formTitle') || 'Add New Workout'}`}
+        title={
+          <span className="flex items-center gap-2">
+            <Icon name={isDuplicating ? 'duplicate' : initialData ? 'edit' : 'plus'} size={24} className="text-uc-primary" />
+            {isDuplicating
+              ? t('workouts.formDuplicateTitle') || 'Duplicate Workout'
+              : initialData
+              ? t('workouts.formEditTitle') || 'Edit Workout'
+              : t('workouts.formTitle') || 'Add New Workout'}
+          </span>
+        }
         footer={
           <div className="flex gap-3">
             <Button variant="ghost" size="lg" onClick={onCancel}>
@@ -540,7 +545,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             <Button type="submit" form="workout-form" variant="accent" size="lg" isLoading={isSubmitting} className="flex-1">
               {isSubmitting
                 ? `${t('common.save') || 'Save'}...`
-                : <><span aria-hidden>💾</span>{initialData
+                : <><Icon name="success" />{initialData
                   ? t('workouts.updateWorkout') || 'Update Workout'
                   : t('workouts.saveWorkout') || 'Save Workout'}</>}
             </Button>
@@ -570,7 +575,6 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                   key={type.value}
                   workoutType={type.value}
                   selected={formData.type === type.value}
-                  icon={type.emoji}
                   onClick={() => updateFormData('type', type.value)}
                 >
                   {type.label}
@@ -597,7 +601,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             <CollapsibleCard
               open={isCycleExpanded}
               onToggle={() => setIsCycleExpanded(!isCycleExpanded)}
-              icon="🌸"
+              icon={<Icon name="cycle" size={22} />}
               title={t('workouts.labels.cycleInfo') || 'Cycle Information'}
               description={t('workouts.labels.cycleInfoDescription') || 'View your cycle information and recommendations'}
               summary={`${t(`cycle.phases.${cycleInfoForSelectedDate.phaseDescription}`)} · ${t('cycle.day') || 'Cycle Day'} ${cycleInfoForSelectedDate.currentDay}`}
@@ -616,7 +620,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             <CollapsibleCard
               open={isGoalsExpanded}
               onToggle={() => setIsGoalsExpanded(!isGoalsExpanded)}
-              icon="🎯"
+              icon={<Icon name="goal" size={22} />}
               title={t('workouts.labels.goals') || 'Goals'}
               description={t('workouts.labels.goalsDescription') || 'Link this workout to your goals'}
               summary={linkedGoalsCount > 0 ? `${linkedGoalsCount} ${t('workouts.labels.selected') || 'selected'}` : undefined}
@@ -684,8 +688,9 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                             <div className="text-sm font-semibold">
                               {goal.routeGrade} {goal.routeName} - {goal.sectorLocation}
                             </div>
-                            <div className="text-xs text-uc-text-muted mt-0.5">
-                              {goal.climbingType === 'route' ? '🧗‍♀️ Route' : '🧗 Boulder'} • {goal.gradeSystem}
+                            <div className="flex items-center gap-1.5 text-xs text-uc-text-muted mt-0.5">
+                              <WorkoutIcon workoutType={goal.climbingType === 'route' ? 'LEAD_ROCK' : 'BOULDERING'} size={16} />
+                              {goal.climbingType === 'route' ? 'Route' : 'Boulder'} • {goal.gradeSystem}
                             </div>
                           </div>
                         </label>
@@ -796,15 +801,15 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             <div role="group" aria-labelledby="workout-time-of-day">
               <FieldHeading
                 id="workout-time-of-day"
-                tip={t('workouts.tooltips.timeOfDay') || 'When you did the mental practice: Morning (🌅), Midday (☀️), Evening (🌙). Track patterns in your practice timing.'}
+                tip={t('workouts.tooltips.timeOfDay') || 'When you did the mental practice: Morning, Midday, Evening. Track patterns in your practice timing.'}
               >
                 {t('workouts.timeOfDay') || 'Time of Day'}
               </FieldHeading>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { value: 'MORNING', label: t('workouts.timeOfDayOptions.MORNING') || 'Morning', emoji: '🌅' },
-                  { value: 'MIDDAY', label: t('workouts.timeOfDayOptions.MIDDAY') || 'Midday', emoji: '☀️' },
-                  { value: 'EVENING', label: t('workouts.timeOfDayOptions.EVENING') || 'Evening', emoji: '🌙' }
+                  { value: 'MORNING', label: t('workouts.timeOfDayOptions.MORNING') || 'Morning', icon: 'morning' as const },
+                  { value: 'MIDDAY', label: t('workouts.timeOfDayOptions.MIDDAY') || 'Midday', icon: 'midday' as const },
+                  { value: 'EVENING', label: t('workouts.timeOfDayOptions.EVENING') || 'Evening', icon: 'evening' as const }
                 ].map((time) => {
                   const currentTimes = formData.timeOfDay || [];
                   const isSelected = currentTimes.includes(time.value as TimeOfDay);
@@ -817,7 +822,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                         : [...currentTimes, time.value])}
                       className="px-2"
                     >
-                      <span aria-hidden>{time.emoji}</span> {time.label}
+                      <Icon name={time.icon} size={16} /> {time.label}
                     </ChoiceChip>
                   );
                 })}
@@ -860,7 +865,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
           <CollapsibleCard
             open={isGratitudeExpanded}
             onToggle={() => setIsGratitudeExpanded(!isGratitudeExpanded)}
-            icon="🙏"
+            icon={<Icon name="gratitude" size={22} />}
             title={t('workouts.gratitude') || 'Gratitude'}
             description={t('workouts.gratitudeDescription') || 'Reflect on what you\'re grateful for and what to improve'}
           >
@@ -910,7 +915,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             <CollapsibleCard
               open={isRecurringExpanded}
               onToggle={() => setIsRecurringExpanded(!isRecurringExpanded)}
-              icon="🔁"
+              icon={<Icon name="cycle" size={22} />}
               title={t('workouts.recurringTitle') || 'Create Recurring Workouts'}
               description={t('workouts.recurringDescription') || 'Create multiple copies of this workout at regular intervals'}
             >
@@ -1069,12 +1074,12 @@ const checkboxClass = 'mt-0.5 size-5 shrink-0 accent-uc-primary cursor-pointer';
 function InfoTip({ content }: { content: string }) {
   return (
     <Tooltip content={content}>
-      <span className="cursor-help text-sm leading-none">ℹ️</span>
+      <span className="inline-flex size-6 cursor-help items-center justify-center text-uc-text-muted hover:text-uc-text"><Icon name="info" size={16} /></span>
     </Tooltip>
   );
 }
 
-/** Overline field label with an optional ℹ️ tooltip and a right-aligned summary. */
+/** Overline field label with an optional info tooltip and a right-aligned summary. */
 function FieldHeading({ children, htmlFor, id, tip, aside }: {
   children: React.ReactNode;
   htmlFor?: string;

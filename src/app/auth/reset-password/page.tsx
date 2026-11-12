@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { AuthAlert, AuthShell, PasswordRules, authLinkClass, validatePassword } from '@/components/AuthLayout'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { Button, FieldError, Input, Label, buttonClasses } from '@/components/ui'
+import { Button, FieldError, Icon, Input, Label, buttonClasses } from '@/components/ui'
 
 function ResetPasswordFormContent() {
   const { t } = useLanguage()
@@ -91,8 +91,8 @@ function ResetPasswordFormContent() {
     return (
       <AuthShell>
         <div role="alert" className="flex flex-col items-center pt-10 text-center">
-          <span aria-hidden className="mb-4 flex size-14 items-center justify-center rounded-uc-card bg-uc-error-bg text-2xl">
-            🔗
+          <span aria-hidden className="mb-4 flex size-14 items-center justify-center rounded-uc-card bg-uc-error-bg text-uc-error">
+            <Icon name="link-expired" size={28} />
           </span>
           <h1 className="text-xl font-extrabold text-uc-text">{t('auth.invalidLinkTitle')}</h1>
           <p className="mt-1.5 max-w-xs text-sm text-uc-text-muted">{t('auth.invalidLinkMessage')}</p>

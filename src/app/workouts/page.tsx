@@ -13,7 +13,7 @@ import { extractApiError, ValidationError } from '@/lib/errors'
 import AuthGuard from '@/components/AuthGuard'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import { QuickLogData } from '@/components/QuickLogModal'
-import { BottomSheet, Button, EmptyState, SheetCloseButton, workoutBg, WorkoutTypeKey } from '@/components/ui'
+import { BottomSheet, Button, EmptyState, Icon, IconName, SheetCloseButton, workoutBg, WorkoutTypeKey } from '@/components/ui'
 
 // Dynamically import components to avoid SSR issues
 const WorkoutCard = dynamic(() => import('@/components/WorkoutCard'), { ssr: false })
@@ -607,7 +607,7 @@ function WorkoutsPageContent() {
               aria-label={t('goals.title') || 'Training Goals'}
               className="min-w-11 px-3"
             >
-              <span aria-hidden className="text-lg leading-none">🎯</span>
+              <Icon name="goal" />
               <span className="hidden sm:inline">{t('goals.button') || 'Cele'}</span>
             </Button>
             <Button
@@ -617,7 +617,7 @@ function WorkoutsPageContent() {
               title={showInfo ? t('common.close') : t('workouts.showInfo') || 'Show Info'}
               className={`min-w-11 px-3 ${showInfo ? 'bg-uc-primary-container text-uc-on-primary-container border-transparent' : ''}`}
             >
-              <span aria-hidden className="text-lg leading-none">ℹ️</span>
+              <Icon name="info" />
               <span className="hidden sm:inline">{showInfo ? t('common.close') : t('workouts.showInfo') || 'Show Info'}</span>
             </Button>
             <Button
@@ -626,7 +626,7 @@ function WorkoutsPageContent() {
               aria-label={t('common.add') || 'Add'}
               className="min-w-11 px-3 sm:px-4"
             >
-              <span aria-hidden className="text-lg leading-none">➕</span>
+              <Icon name="plus" />
               <span className="hidden sm:inline">{t('common.add') || 'Add'}</span>
             </Button>
           </div>
@@ -672,8 +672,9 @@ function WorkoutsPageContent() {
               <SheetCloseButton onClick={() => setShowInfo(false)} label={t('common.close')} />
             </div>
 
-            <p className="mt-4 rounded-xl bg-uc-bg/30 px-3 py-2.5 text-sm">
-              {t('events.tip') || '💡 Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.'}
+            <p className="mt-4 flex gap-2 rounded-xl bg-uc-bg/30 px-3 py-2.5 text-sm">
+              <Icon name="info" className="mt-px" />
+              {t('events.tip') || 'Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.'}
             </p>
           </div>
         )}
@@ -681,8 +682,8 @@ function WorkoutsPageContent() {
         {/* Tabs */}
         <div role="tablist" className="mb-5 flex border-b border-uc-border">
           {([
-            { key: 'workouts', label: `🏋️ ${t('nav.workouts')}`, count: workoutsPagination.total || (Array.isArray(workouts) ? workouts.length : 0) },
-            { key: 'events', label: `📅 ${t('events.title')}`, count: eventsPagination.total || (Array.isArray(events) ? events.length : 0) },
+            { key: 'workouts', icon: 'workouts', label: t('nav.workouts'), count: workoutsPagination.total || (Array.isArray(workouts) ? workouts.length : 0) },
+            { key: 'events', icon: 'calendar', label: t('events.title'), count: eventsPagination.total || (Array.isArray(events) ? events.length : 0) },
           ] as const).map((tab) => (
             <button
               key={tab.key}
@@ -696,7 +697,12 @@ function WorkoutsPageContent() {
                   : 'border-transparent text-uc-text-muted hover:text-uc-text'
               }`}
             >
-              {tab.label} <span className="uc-num">({tab.count})</span>
+              <span className="inline-flex items-center gap-2">
+                <Icon name={tab.icon} />
+                <span>
+                  {tab.label} <span className="uc-num">({tab.count})</span>
+                </span>
+              </span>
             </button>
           ))}
         </div>
@@ -705,13 +711,14 @@ function WorkoutsPageContent() {
         {activeTab === 'workouts' ? (
           !Array.isArray(workouts) || workouts.length === 0 ? (
             <EmptyState
-              icon="🏋️‍♀️"
+              icon={<Icon name="workouts" size={28} />}
               title={t('workouts.noWorkouts') || 'No workouts yet'}
               description={t('workouts.noWorkoutsDescription') || 'Start tracking your training sessions! Log your workouts to monitor progress, track exercises, and analyze your performance over time.'}
               action={
                 <div className="flex flex-col items-center gap-3">
                   <Button variant="accent" onClick={openAddChoice}>
-                    ➕ {t('workouts.addFirstWorkout') || 'Add Your First Workout'}
+                    <Icon name="plus" />
+                    {t('workouts.addFirstWorkout') || 'Add Your First Workout'}
                   </Button>
                   <p className="text-sm text-uc-text-muted">
                     {t('workouts.useQuickLog') || 'or use Quick Log for fast entry'}
@@ -750,13 +757,14 @@ function WorkoutsPageContent() {
         ) : (
           !Array.isArray(events) || events.length === 0 ? (
             <EmptyState
-              icon="📅"
+              icon={<Icon name="calendar" size={28} />}
               title={t('events.noEvents') || 'No events yet'}
               description={t('events.noEventsDescription') || 'Start tracking your injuries, physio visits, competitions, and climbing trips. This helps you understand patterns and plan better.'}
               action={
                 <div className="flex flex-col items-center gap-3">
                   <Button variant="accent" onClick={openAddChoice}>
-                    ➕ {t('events.addFirstEvent') || 'Add Your First Event'}
+                    <Icon name="plus" />
+                    {t('events.addFirstEvent') || 'Add Your First Event'}
                   </Button>
                   <p className="text-sm text-uc-text-muted">
                     {t('events.trackInjuries') || 'Track injuries to see patterns with your cycle'}
@@ -832,17 +840,17 @@ function WorkoutsPageContent() {
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {([
-              { onClick: handleQuickLog, emoji: '⚡', label: t('quickLog.button') || 'Quick Log', tone: 'bg-uc-primary-container text-uc-on-primary-container border-transparent' },
-              { onClick: handleAddWorkout, emoji: '🏋️', label: t('workouts.addNew') || 'Add Workout', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
-              { onClick: handleAddEvent, emoji: '📅', label: t('events.addNew') || 'Add Event', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
+              { onClick: handleQuickLog, icon: 'quick-log' as IconName, label: t('quickLog.button') || 'Quick Log', tone: 'bg-uc-primary-container text-uc-on-primary-container border-transparent' },
+              { onClick: handleAddWorkout, icon: 'workouts' as IconName, label: t('workouts.addNew') || 'Add Workout', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
+              { onClick: handleAddEvent, icon: 'calendar' as IconName, label: t('events.addNew') || 'Add Event', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
             ]).map((choice) => (
               <button
-                key={choice.emoji}
+                key={choice.icon}
                 type="button"
                 onClick={choice.onClick}
                 className={`flex min-h-28 flex-col items-center justify-center gap-2 rounded-uc-card border p-4 text-center text-sm font-bold transition-colors ${choice.tone}`}
               >
-                <span aria-hidden className="text-3xl leading-none">{choice.emoji}</span>
+                <Icon name={choice.icon} size={28} />
                 {choice.label}
               </button>
             ))}

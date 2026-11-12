@@ -10,7 +10,7 @@ import EventCard from '@/components/EventCard'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { useApiError } from '@/hooks/useApiError'
 import { extractApiError } from '@/lib/errors'
-import { Button, EmptyState, SkeletonRows } from '@/components/ui'
+import { Button, EmptyState, Icon, SkeletonRows } from '@/components/ui'
 
 export default function EventsPage() {
   const { t } = useLanguage()
@@ -232,7 +232,7 @@ export default function EventsPage() {
         ) : events.length === 0 ? (
           <div className="rounded-uc-card border border-dashed border-uc-border">
             <EmptyState
-              icon="📅"
+              icon={<Icon name="calendar" size={28} />}
               title={t('events.noEvents') || 'No events yet'}
               description={t('events.trackInjuries') || 'Track injuries to see patterns with your cycle'}
               action={

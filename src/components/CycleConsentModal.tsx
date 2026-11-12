@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from './ui'
+import { Button, Icon } from './ui'
 
 interface CycleConsentModalProps {
   onAccept: (latePeriodNotifications?: boolean) => void
@@ -35,8 +35,8 @@ export default function CycleConsentModal({ onAccept, onDecline }: CycleConsentM
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-uc-scrim" aria-hidden />
       <div role="dialog" aria-modal="true" aria-labelledby="cycle-consent-title" className="relative w-full max-w-md max-h-[92dvh] overflow-y-auto bg-uc-elevated text-uc-text shadow-uc rounded-[20px] p-6">
-        <div aria-hidden className="mb-4 flex size-14 items-center justify-center rounded-uc-card bg-uc-primary-container text-2xl">
-          🌸
+        <div aria-hidden className="mb-4 flex size-14 items-center justify-center rounded-uc-card bg-uc-primary-container text-uc-on-primary-container">
+          <Icon name="cycle" size={28} />
         </div>
         <h2 id="cycle-consent-title" className="text-[22px] leading-7 font-extrabold">
           Cycle Tracking
@@ -67,7 +67,7 @@ export default function CycleConsentModal({ onAccept, onDecline }: CycleConsentM
             className="mt-0.5 size-5 shrink-0 accent-uc-primary"
           />
           <span>
-            <span className="block text-sm font-bold">📱 Late period reminders</span>
+            <span className="flex items-center gap-1.5 text-sm font-bold"><Icon name="bell" size={16} /> Late period reminders</span>
             <span className="mt-0.5 block text-[13px] text-uc-text-muted">
               Get notified if your period is overdue (more than 32 days since last period)
             </span>

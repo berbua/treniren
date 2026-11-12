@@ -26,6 +26,7 @@ import {
   Input,
   Label,
   PhaseBadge,
+  Icon,
   phaseBandBg,
   phaseSolidBg,
   phaseTranslationKey,
@@ -239,7 +240,7 @@ function CyclePageContent() {
           </h1>
           <EmptyState
             className="min-h-[60vh] justify-center"
-            icon="🔄"
+            icon={<Icon name="cycle" size={28} />}
             title={t('cycle.tracking.notEnabled') || 'Cycle Tracking Not Enabled'}
             description={t('cycle.tracking.notEnabledDesc') || 'Please enable cycle tracking in your profile settings to use this feature.'}
             action={
@@ -301,7 +302,7 @@ function CyclePageContent() {
             {/* Injury Phase Warning */}
             {injuryStats && injuryStats.phaseWithMostInjuries && mostInjuriesPhase && (
               <div className="flex items-start gap-3 rounded-uc-card bg-uc-warning-bg p-4 text-uc-text">
-                <span aria-hidden className="text-xl leading-6 text-uc-warning">⚠️</span>
+                <Icon name="injury-risk" size={24} className="text-uc-warning" />
                 <div className="min-w-0">
                   <h3 className="font-extrabold">
                     {t('cycle.tracking.mostInjuriesInPhase', {
@@ -622,13 +623,13 @@ function CycleCalendar({
     <Card className="p-4 sm:p-5">
       <div className="mb-3 flex items-center gap-2">
         <Button variant="ghost" size="icon" className="border-transparent" onClick={() => shiftMonth(-1)} aria-label={t('common.previous')}>
-          <span aria-hidden>←</span>
+          <Icon name="chevron-left" />
         </Button>
         <h2 className="flex-1 text-center text-lg font-extrabold text-uc-text uc-num">
           {capitalize(currentMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' }))}
         </h2>
         <Button variant="ghost" size="icon" className="border-transparent" onClick={() => shiftMonth(1)} aria-label={t('common.next')}>
-          <span aria-hidden>→</span>
+          <Icon name="chevron-right" />
         </Button>
       </div>
 
@@ -677,7 +678,9 @@ function CycleCalendar({
               {/* Warning triangle for most injuries phase */}
               {isMostInjuriesPhase && (
                 <Tooltip content={injuryRiskText} position="top" tapToOpen={false}>
-                  <span className="absolute right-0.5 top-0.5 z-20 cursor-help text-[10px] leading-none opacity-80">⚠️</span>
+                  <span className="absolute right-0.5 top-0.5 z-20 cursor-help text-uc-warning">
+                    <Icon name="injury-risk" size={12} />
+                  </span>
                 </Tooltip>
               )}
               <span className="text-[16px] font-extrabold leading-tight uc-num">{date.getDate()}</span>
@@ -706,7 +709,7 @@ function CycleCalendar({
         <span>~ = {t('cycle.tracking.forecast') || 'Forecast'}</span>
         {injuryStats?.phaseWithMostInjuries && (
           <span className="inline-flex items-center gap-2">
-            <span aria-hidden className="text-xs">⚠️</span>
+            <Icon name="injury-risk" size={14} className="text-uc-warning" />
             {t('cycle.tracking.mostInjuriesPhase') || 'Phase with most injuries'}
           </span>
         )}
@@ -804,7 +807,7 @@ function TrainingCycleInsights({
                     isMostInjuriesPhase ? 'bg-uc-warning-bg text-uc-warning' : 'bg-uc-elevated text-uc-text-muted'
                   }`}
                 >
-                  <span aria-hidden className="text-xs">⚠️</span>
+                  <Icon name="injury-risk" size={14} />
                   {stripColon(t('cycle.tracking.injuries') || 'Injuries:')} {injuries}
                   {isMostInjuriesPhase && ` · ${t('cycle.tracking.most') || 'most'}`}
                 </span>
@@ -857,7 +860,9 @@ function PeriodFormModal({
       closeLabel={t('common.close') || 'Close'}
       title={
         <span className="flex items-center gap-3">
-          <span aria-hidden className="flex size-10 items-center justify-center rounded-uc-input bg-uc-band-menstruation text-lg">💧</span>
+          <span aria-hidden className="flex size-10 items-center justify-center rounded-uc-input bg-uc-band-menstruation text-uc-phase-menstruation">
+            <Icon name="period" size={22} />
+          </span>
           {period ? (t('cycle.tracking.editPeriod') || 'Edit Period') : (t('cycle.tracking.addPeriodTitle') || 'Add Period')}
         </span>
       }
@@ -872,7 +877,7 @@ function PeriodFormModal({
               aria-label={t('common.delete') || 'Delete'}
               title={t('common.delete') || 'Delete'}
             >
-              <span aria-hidden>🗑️</span>
+              <Icon name="delete" />
             </Button>
           )}
           <Button variant="ghost" className="min-h-12 flex-1" onClick={onClose}>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { toLocalDateString } from '@/lib/date-utils'
-import { Button, Input, Label, Select } from './ui'
+import { Button, Icon, Input, Label, Select } from './ui'
 // import { getDefaultCycleSettings } from '@/lib/cycle-utils'
 
 interface CycleSetupFormProps {
@@ -63,7 +63,7 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="flex-1 overflow-y-auto px-5 pt-4 pb-5 space-y-5">
             <div className="flex items-center gap-3">
-              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-xl">📅</span>
+              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-uc-on-primary-container"><Icon name="calendar" size={22} /></span>
               <div>
                 <h2 id="cycle-setup-title" className="text-[22px] leading-7 font-extrabold">
                   Set Up Cycle Tracking
@@ -128,7 +128,7 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
             {/* Notification Preferences */}
             <label htmlFor="latePeriodNotifications" className="flex cursor-pointer items-start justify-between gap-3 rounded-uc-input border border-uc-border bg-uc-surface p-3">
               <span>
-                <span className="block text-sm font-bold">📱 Late period reminders</span>
+                <span className="flex items-center gap-1.5 text-sm font-bold"><Icon name="bell" size={16} /> Late period reminders</span>
                 <span className="mt-0.5 block text-[13px] text-uc-text-muted">
                   Get notified if your period is overdue (more than 32 days since last period)
                 </span>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Exercise } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
-import { Button, Card, Chip, ChoiceChip, EmptyState, Input, Spinner } from '@/components/ui'
+import { Button, Card, Chip, ChoiceChip, EmptyState, Icon, IconName, Input, Spinner } from '@/components/ui'
 
 interface ExerciseQuickStats {
   lastUsed: string | null
@@ -125,7 +125,7 @@ export function ExerciseLibrary({
   )
   const isFiltered = !!searchQuery || selectedCategory !== 'all'
 
-  const viewToggle = (mode: 'grid' | 'list', icon: string, label: string) => (
+  const viewToggle = (mode: 'grid' | 'list', icon: IconName, label: string) => (
     <button
       type="button"
       onClick={() => setViewMode(mode)}
@@ -136,7 +136,7 @@ export function ExerciseLibrary({
         viewMode === mode ? 'bg-uc-primary text-uc-on-primary' : 'text-uc-text hover:bg-uc-elevated'
       }`}
     >
-      <span aria-hidden>{icon}</span>
+      <Icon name={icon} />
     </button>
   )
 
@@ -149,12 +149,12 @@ export function ExerciseLibrary({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           aria-label={t('common.search') || 'Search'}
-          placeholder={t('workouts.placeholders.searchExercises') || '🔍 Search exercises...'}
+          placeholder={t('workouts.placeholders.searchExercises') || 'Search exercises...'}
           className="flex-1 min-h-12"
         />
         <div className="flex shrink-0 gap-0.5 p-0.5 bg-uc-surface border border-uc-border rounded-uc-input">
-          {viewToggle('grid', '⏹️', t('exercises.gridView') || 'Grid view')}
-          {viewToggle('list', '☰', t('exercises.listView') || 'List view')}
+          {viewToggle('grid', 'view-grid', t('exercises.gridView') || 'Grid view')}
+          {viewToggle('list', 'view-list', t('exercises.listView') || 'List view')}
         </div>
       </div>
 
@@ -186,7 +186,7 @@ export function ExerciseLibrary({
           aria-expanded={showQuickAdd}
           className="flex w-full min-h-14 items-center gap-2 px-4 text-left font-extrabold"
         >
-          <span aria-hidden>⚡</span>
+          <Icon name="quick-log" className="text-uc-accent-text" />
           <span className="flex-1">
             {t('exercises.quickAdd') || 'Quick add'}
             {availableCommonExercises.length > 0 && (
@@ -252,7 +252,7 @@ export function ExerciseLibrary({
       {exercises.length === 0 ? (
         <div className="rounded-uc-card border border-dashed border-uc-border">
           <EmptyState
-            icon="💪"
+            icon={<Icon name="library" size={28} />}
             title={isFiltered
               ? (t('exercises.noExercisesFound') || 'No exercises found')
               : (t('exercises.noExercises') || 'No exercises yet')}
@@ -374,7 +374,7 @@ function ExerciseItem({
           title={t('common.edit') || 'Edit'}
           className="inline-flex size-11 items-center justify-center rounded-uc-input transition-colors hover:bg-uc-elevated"
         >
-          <span aria-hidden>✏️</span>
+          <Icon name="edit" />
         </button>
         <button
           type="button"
@@ -384,7 +384,7 @@ function ExerciseItem({
           title={t('common.delete') || 'Delete'}
           className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-error transition-colors hover:bg-uc-elevated disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isDeleting ? <Spinner /> : <span aria-hidden>🗑️</span>}
+          {isDeleting ? <Spinner /> : <Icon name="delete" />}
         </button>
       </div>
     </div>

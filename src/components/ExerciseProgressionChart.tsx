@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { Skeleton } from '@/components/ui'
+import { Icon, Skeleton } from '@/components/ui'
 
 // Dynamic import for Recharts to avoid SSR issues
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,7 +112,7 @@ export function ExerciseProgressionChart({
   if (error || !data || data.dataPoints.length === 0) {
     return (
       <div className="rounded-uc-input border border-dashed border-uc-border px-4 py-8 text-center">
-        <div aria-hidden className="text-3xl mb-3">📊</div>
+        <Icon name="stats" size={28} className="mx-auto mb-3 text-uc-text-muted" />
         <p className="text-sm font-semibold text-uc-text">
           {error || t('exercises.detail.noData') || 'No progression data available yet'}
         </p>
@@ -157,7 +157,7 @@ export function ExerciseProgressionChart({
   if (!RechartsComponents) {
     return (
       <div className="rounded-uc-input border border-uc-border p-6 text-center">
-        <div aria-hidden className="text-3xl mb-3">📊</div>
+        <Icon name="stats" size={28} className="mx-auto mb-3 text-uc-text-muted" />
         <p className="text-uc-text-muted mb-2">
           Chart library not installed
         </p>

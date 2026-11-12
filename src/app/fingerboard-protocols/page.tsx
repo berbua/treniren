@@ -9,7 +9,7 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import FingerboardProtocolForm from '@/components/FingerboardProtocolForm'
 import FingerboardTestModal from '@/components/FingerboardTestModal'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
-import { Button, Card, EmptyState, SkeletonRows, Spinner, WorkoutIconTile } from '@/components/ui'
+import { Button, Card, EmptyState, Icon, SkeletonRows, Spinner, WorkoutIconTile } from '@/components/ui'
 
 export default function FingerboardProtocolsPage() {
   return (
@@ -147,7 +147,7 @@ function FingerboardProtocolsPageContent() {
             onClick={handleCreateProtocol}
             aria-label={t('fingerboard.createProtocol') || 'Create Protocol'}
           >
-            +<span className="hidden sm:inline">{t('fingerboard.createProtocol') || 'Create Protocol'}</span>
+            <Icon name="plus" /><span className="hidden sm:inline">{t('fingerboard.createProtocol') || 'Create Protocol'}</span>
           </Button>
         </div>
 
@@ -158,7 +158,7 @@ function FingerboardProtocolsPageContent() {
           title={t('fingerboard.testYourselfTooltip')}
           className="mb-6 flex w-full min-h-16 items-center gap-3 rounded-uc-card bg-uc-primary-container px-4 py-3 text-left text-uc-on-primary-container transition-[filter] hover:brightness-110 lg:max-w-xl"
         >
-          <span aria-hidden className="inline-flex size-6 shrink-0 items-center justify-center text-lg">📊</span>
+          <Icon name="test" size={24} />
           <span className="min-w-0 flex-1">
             <span className="block text-base font-extrabold">{t('fingerboard.testYourself') || 'Test Yourself'}</span>
             <span className="block text-[13px] font-medium opacity-80">
@@ -176,7 +176,7 @@ function FingerboardProtocolsPageContent() {
         ) : protocols.length === 0 ? (
           <div className="rounded-uc-card border border-dashed border-uc-border">
             <EmptyState
-              icon="🖐️"
+              icon={<Icon name="type-fingerboard" size={28} />}
               title={t('fingerboard.noProtocols') || 'No protocols yet'}
               description={t('fingerboard.noProtocolsDescription') || 'Create reusable fingerboard training protocols to quickly add hangs to your workouts. Save time by defining your favorite hang combinations once.'}
               action={
@@ -195,7 +195,7 @@ function FingerboardProtocolsPageContent() {
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
             {protocols.map((protocol) => (
               <Card key={protocol.id} className="flex items-start gap-3">
-                <WorkoutIconTile workoutType="FINGERBOARD" icon="🖐️" />
+                <WorkoutIconTile workoutType="FINGERBOARD" />
                 <div className="min-w-0 flex-1">
                   <h3 className="text-[17px] font-extrabold leading-snug text-uc-text break-words">
                     {protocol.name}
@@ -217,7 +217,7 @@ function FingerboardProtocolsPageContent() {
                     title={t('fingerboard.edit') || 'Edit'}
                     className="inline-flex size-11 items-center justify-center rounded-uc-input transition-colors hover:bg-uc-elevated"
                   >
-                    <span aria-hidden>✏️</span>
+                    <Icon name="edit" />
                   </button>
                   <button
                     type="button"
@@ -227,7 +227,7 @@ function FingerboardProtocolsPageContent() {
                     title={t('fingerboard.delete') || 'Delete'}
                     className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-error transition-colors hover:bg-uc-elevated disabled:opacity-50"
                   >
-                    {deletingProtocolId === protocol.id ? <Spinner /> : <span aria-hidden>🗑️</span>}
+                    {deletingProtocolId === protocol.id ? <Spinner /> : <Icon name="delete" />}
                   </button>
                 </div>
               </Card>

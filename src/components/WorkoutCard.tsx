@@ -2,7 +2,7 @@
 
 import { WorkoutType, TrainingVolume, MentalState, Tag } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { Card, Chip, Spinner, WorkoutIconTile } from '@/components/ui'
+import { Card, Chip, Icon, IconName, Spinner, WorkoutIconTile } from '@/components/ui'
 
 interface WorkoutCardProps {
   workout: {
@@ -27,16 +27,6 @@ interface WorkoutCardProps {
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
   isDeleting?: boolean
-}
-
-const typeEmoji: Record<WorkoutType, string> = {
-  GYM: '🏋️',
-  BOULDERING: '🧗',
-  CIRCUITS: '🔄',
-  LEAD_ROCK: '🏔️',
-  LEAD_ARTIFICIAL: '🧗‍♀️',
-  MENTAL_PRACTICE: '🧘',
-  FINGERBOARD: '🖐️',
 }
 
 const getTrainingTypeLabel = (type: WorkoutType, t: (key: string) => string) =>
@@ -111,18 +101,19 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
       : time === 'MIDDAY'
       ? (t('workouts.timeOfDayOptions.MIDDAY') || 'Midday')
       : (t('workouts.timeOfDayOptions.EVENING') || 'Evening')
-  const timeEmoji = (time: string) => (time === 'MORNING' ? '🌅' : time === 'MIDDAY' ? '☀️' : '🌙')
+  const timeIcon = (time: string): IconName => (time === 'MORNING' ? 'morning' : time === 'MIDDAY' ? 'midday' : 'evening')
 
   return (
     <Card className="flex flex-col gap-3">
       <div className="flex items-start gap-3">
-        <WorkoutIconTile workoutType={workout.type} icon={<span className="text-xl leading-none">{typeEmoji[workout.type]}</span>} />
+        <WorkoutIconTile workoutType={workout.type} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h3 className="text-[17px] font-extrabold text-uc-text">{getTrainingTypeLabel(workout.type, t)}</h3>
             {details?.quickLog && (
               <span className="inline-flex items-center gap-1 min-h-6 px-2 rounded-uc-chip bg-uc-primary-container text-uc-on-primary-container text-xs font-bold">
-                ⚡ {t('quickLog.quickLogBadge') || 'Quick'}
+                <Icon name="quick-log" size={14} />
+                {t('quickLog.quickLogBadge') || 'Quick'}
               </span>
             )}
           </div>
@@ -131,7 +122,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
         <div className="-mr-2 -mt-1 flex shrink-0">
           {onEdit && (
             <button type="button" onClick={() => onEdit(workout.id)} className={iconButton} title={t('workouts.editWorkout')} aria-label={t('workouts.editWorkout')}>
-              ✏️
+              <Icon name="edit" />
             </button>
           )}
           {onDelete && (
@@ -143,7 +134,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
               title={isDeleting ? t('workouts.deleting') : t('workouts.deleteWorkout')}
               aria-label={isDeleting ? t('workouts.deleting') : t('workouts.deleteWorkout')}
             >
-              {isDeleting ? <Spinner className="size-4 text-uc-error" /> : '🗑️'}
+              {isDeleting ? <Spinner className="size-4 text-uc-error" /> : <Icon name="delete" />}
             </button>
           )}
         </div>
@@ -156,7 +147,8 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
           )}
           {workout.type === 'GYM' && details?.routineVariation && (
             <Chip title={t('workouts.labels.variation')}>
-              📦 {details.routineVariation.routineName} – {details.routineVariation.variationName}
+              <Icon name="library" size={16} />
+              {details.routineVariation.routineName} – {details.routineVariation.variationName}
             </Chip>
           )}
           {workout.sector && (
@@ -164,12 +156,14 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
           )}
           {isMental && workout.mentalPracticeType && (
             <Chip title={t('common.practiceType') || 'Practice type:'}>
-              🧘 {t(`workouts.mentalPracticeTypes.${workout.mentalPracticeType.toLowerCase()}`)}
+              <Icon name="type-mental" size={16} />
+              {t(`workouts.mentalPracticeTypes.${workout.mentalPracticeType.toLowerCase()}`)}
             </Chip>
           )}
           {isMental && workout.timeOfDay?.map((time, index) => (
             <Chip key={index} title={t('common.timeOfDay') || 'Time of day:'}>
-              {timeEmoji(time)} {timeLabel(time)}
+              <Icon name={timeIcon(time)} size={16} />
+              {timeLabel(time)}
             </Chip>
           ))}
           {tags.map((tag) => (
@@ -197,7 +191,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
           {hasMentalState && mentalState && (
             <>
               <p className="flex items-center gap-1.5 font-bold text-uc-primary">
-                <span aria-hidden>🧠</span>
+                <Icon name="strong-mind" size={16} />
                 {t('workouts.strongMind')}
               </p>
               {mentalState.beforeClimbing && (
@@ -246,15 +240,19 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
             </>
           )}
           {workout.gratitude && (
-            <p className="text-uc-text-muted">
-              <span aria-hidden>🙏 </span>
+            <p className="flex gap-1.5 text-uc-text-muted">
+              <Icon name="gratitude" size={16} className="mt-0.5" />
+              <span>
               <span className="font-bold text-uc-text">Gratitude:</span> {workout.gratitude}
+              </span>
             </p>
           )}
           {workout.improvements && (
-            <p className="text-uc-text-muted">
-              <span aria-hidden>🎯 </span>
+            <p className="flex gap-1.5 text-uc-text-muted">
+              <Icon name="improve" size={16} className="mt-0.5" />
+              <span>
               <span className="font-bold text-uc-text">Improvements:</span> {workout.improvements}
+              </span>
             </p>
           )}
         </div>

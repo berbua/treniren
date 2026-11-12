@@ -83,9 +83,9 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
       icons (step 5) come first.**
 
 ### 5. Icons (after the user delivers the custom SVGs)
-- [ ] Add the SVGs as React components behind one `Icon` wrapper (`currentColor`, 24px).
-- [ ] Map workout types, phases, nav tabs etc. to icons; replace the emoji icons screen by screen.
-- [ ] Search for leftover emoji icons.
+- [x] Add the SVGs as React components behind one `Icon` wrapper (`currentColor`, 24px).
+- [x] Map workout types, phases, nav tabs etc. to icons; replace the emoji icons screen by screen.
+- [x] Search for leftover emoji icons.
 
 ## Open points (decisions for the user)
 
@@ -336,3 +336,14 @@ note the answer.
   off in the logged-out header at 390px; the flag is hidden on phones and the paddings tightened (still "…" at 360px).
   Found, not fixed (bugs for the user): logged out, `NotificationProvider` fetches workouts → 401 + console error
   (Next dev overlay "1 Issue" on every logged-out page); `pl-custom.json` has "Mindfulness i bycie obecn_".
+- 2026-11-12: Step 5 · Icons done. User added 67 line icons (`public/icons/sprite.svg`, `svg/`, README). New
+  `ui/Icon.tsx` (`<Icon name size label />`, `IconName`): paths generated from the sprite and inlined (offline, no request;
+  regenerate if the sprite changes). `workoutIcon` / `WorkoutIcon`; `WorkoutIconTile` and `WorkoutTypeChip` default to the
+  type icon (`icon={null}` hides it); `EVENT_TYPE_META[].icon` replaces `emoji`. Every UI emoji in `src` replaced (~400 in
+  55 files) using the README table; hand/grip types, crimp 📏, field-label prefixes, 🚀 and 🦄 in texts dropped (text
+  only); 🦄 brand tiles use `horn`. Emoji removed from 7 EN/PL strings (`quickLog.title`, `markAsDone`,
+  `searchExercises`, `events.tip`, `stats.enableInjuryPhaseNotification`, `…AlreadyEnabled`, `tooltips.timeOfDay`) and
+  from notification titles in `lib/*-notifications.ts` (the messages panel shows a type icon, chosen by action for
+  general messages). Language picker flag → `globe`. `UserProfile` action rows got a `busy` spinner (was ⏳).
+  `tsc` clean, lint unchanged (177 warnings, same as before), all routes compile. Logged-in screens not checked in a
+  browser.

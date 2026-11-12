@@ -12,7 +12,7 @@ import { generateDummyData } from '@/lib/generate-dummy-data';
 import { useCsrfToken } from '@/hooks/useCsrfToken';
 import { toLocalDateString, toPeriodDateString } from '@/lib/date-utils';
 import { useToast } from '@/contexts/ToastContext';
-import { Button, Card, EmptyState, Input, Label, Overline, SegmentedControl, Select, inputClasses } from '@/components/ui';
+import { Button, Card, EmptyState, Icon, IconName, Input, Label, Overline, SegmentedControl, Select, Spinner, inputClasses } from '@/components/ui';
 
 interface UserProfileProps {
   onClose: () => void;
@@ -423,7 +423,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
             <Avatar photoUrl={profileData.photoUrl} initial={initial} className="size-20 text-3xl" />
             <div>
               <Button variant="ghost" onClick={() => fileInputRef.current?.click()}>
-                <span aria-hidden>📷</span> {t('profile.uploadPhoto') || 'Upload Photo'}
+                <Icon name="user" /> {t('profile.uploadPhoto') || 'Upload Photo'}
               </Button>
               <input
                 ref={fileInputRef}
@@ -499,7 +499,10 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
               isCycleTrackingEnabled ? 'bg-uc-success-bg text-uc-text' : 'bg-uc-surface border border-uc-border text-uc-text-muted'
             }`}
           >
-            <span aria-hidden>{isCycleTrackingEnabled ? '✅' : '❌'}</span>
+            <Icon
+              name={isCycleTrackingEnabled ? 'success' : 'close'}
+              className={isCycleTrackingEnabled ? 'text-uc-success' : undefined}
+            />
             {isCycleTrackingEnabled ? t('profile.cycleEnabled') : t('profile.cycleDisabled')}
           </div>
 
@@ -565,7 +568,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
           ) : (
             <div className="rounded-uc-card border border-dashed border-uc-border">
               <EmptyState
-                icon="🔄"
+                icon={<Icon name="cycle" size={28} />}
                 title={t('profile.enableCycleTracking')}
                 description={t('profile.cycleTrackingDescription')}
                 action={
@@ -752,7 +755,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
 
             {isPushBlocked && (
               <div role="alert" className="flex gap-3 rounded-uc-card bg-uc-warning-bg px-4 py-3 text-sm text-uc-text">
-                <span aria-hidden className="text-uc-warning">⚠️</span>
+                <Icon name="warning" className="mt-px text-uc-warning" />
                 <p>
                   <strong>{t('profile.pushBlockedTitle') || 'Notifications blocked.'}</strong>{' '}
                   {t('profile.pushNotificationsDenied') || 'Push notifications are blocked in your browser. Please enable them in browser settings.'}
@@ -770,14 +773,16 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
           </p>
 
           <ActionRow
-            icon={isExporting ? '⏳' : '📊'}
+            icon="download"
+            busy={isExporting}
             title={t('profile.exportJSON') || 'Export as JSON'}
             description={t('profile.exportJSONDesc') || 'Download all your data as JSON file'}
             onClick={() => handleExport('json')}
             disabled={isExporting}
           />
           <ActionRow
-            icon={isExporting ? '⏳' : '📈'}
+            icon="download"
+            busy={isExporting}
             title={t('profile.exportCSV') || 'Export as CSV'}
             description={t('profile.exportCSVDesc') || 'Download all your data as CSV file'}
             onClick={() => handleExport('csv')}
@@ -793,14 +798,14 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
           {/* Development Tools - Only visible in development */}
           {isDevelopment && (
             <div className="space-y-3 mt-6 pt-6 border-t border-uc-border">
-              <Overline>🛠️ Development Tools</Overline>
+              <Overline className="flex items-center gap-1.5"><Icon name="settings" size={14} /> Development Tools</Overline>
               <p className="text-sm text-uc-text-muted">
                 These tools are only available in development mode for testing purposes.
               </p>
 
               {/* Generate Dummy Data */}
               <ActionRow
-                icon="🎲"
+                icon="plus"
                 title="Generate Dummy Data"
                 description="Create and download sample data for testing"
                 onClick={() => {
@@ -831,7 +836,8 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
 
               {/* Import Dummy Data to Database */}
               <ActionRow
-                icon={isImporting ? '⏳' : '🚀'}
+                icon="install"
+                busy={isImporting}
                 title="Import Dummy Data to DB"
                 description={isImporting ? 'Importing...' : 'Import data directly to database (one-time)'}
                 disabled={isImporting}
@@ -895,7 +901,8 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
                   className="hidden"
                 />
                 <ActionRow
-                  icon={isImporting ? '⏳' : '📥'}
+                  icon="download"
+                  busy={isImporting}
                   title={importFile ? 'Import Selected File' : 'Import Data (Dev)'}
                   description={importFile ? importFile.name : 'Import JSON file (development only)'}
                   disabled={isImporting}
@@ -988,12 +995,15 @@ function Checkbox({
 
 function ActionRow({
   icon,
+  busy = false,
   title,
   description,
   onClick,
   disabled,
 }: {
-  icon: string;
+  icon: IconName;
+  /** Spinner instead of the icon while the action runs. */
+  busy?: boolean;
   title: string;
   description: string;
   onClick: () => void;
@@ -1006,7 +1016,9 @@ function ActionRow({
       disabled={disabled}
       className="flex w-full min-h-16 items-center gap-3 rounded-uc-card border border-uc-border bg-uc-surface px-4 py-3 text-left transition-colors hover:bg-uc-elevated disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      <span aria-hidden className="flex size-6 shrink-0 items-center justify-center text-lg">{icon}</span>
+      <span aria-hidden className="flex size-6 shrink-0 items-center justify-center text-uc-primary">
+        {busy ? <Spinner /> : <Icon name={icon} />}
+      </span>
       <span className="min-w-0">
         <span className="block font-bold text-uc-text">{title}</span>
         <span className="block text-xs text-uc-text-muted">{description}</span>

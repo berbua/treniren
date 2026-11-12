@@ -194,10 +194,10 @@
     "mostInjuriesPhaseTitle": "Najwięcej kontuzji w fazie",
     "mostInjuriesPhaseMessage": "Najwięcej kontuzji ({count}) przytrafiło się w dniach cyklu {dayRange}.",
     "injuryPhaseNotificationHint": "Czy chcesz otrzymać powiadomienie push dzień przed rozpoczęciem tej fazy, aby być świadomą zwiększonego ryzyka kontuzji?",
-    "enableInjuryPhaseNotification": "🔔 Włącz powiadomienie",
+    "enableInjuryPhaseNotification": "Włącz powiadomienie",
     "injuryPhaseNotificationEnabled": "Powiadomienie włączone! Otrzymasz przypomnienie dzień przed rozpoczęciem tej fazy.",
     "injuryPhaseNotificationError": "Nie udało się włączyć powiadomienia. Spróbuj ponownie.",
-    "injuryPhaseNotificationAlreadyEnabled": "✓ Powiadomienie już włączone",
+    "injuryPhaseNotificationAlreadyEnabled": "Powiadomienie już włączone",
     "logFirstWorkout": "Zapisz pierwszy trening",
     "noData": "Brak statystyk",
     "noDataDescription": "Zapisuj treningi, aby zobaczyć szczegółowe statystyki postępów, objętości i wyników w czasie.",
@@ -393,7 +393,7 @@
       "improvements": "Zanotuj 3 rzeczy, które chcesz poprawić lub zrobić lepiej następnym razem. Pomaga uczyć się i rozwijać z każdej sesji.",
       "sector": "Obszar wspinaczkowy lub lokalizacja, w której trenowałaś (np. 'Fontainebleau - Bas Cuvier'). Przydatne do śledzenia, gdzie się wspinasz.",
       "mentalPracticeType": "Rodzaj praktyki mentalnej: Meditation (mindfulness), Reflecting (auto-refleksja), Other (własna praktyka).",
-      "timeOfDay": "Kiedy wykonywałaś praktykę mentalną: Morning (🌅), Midday (☀️), Evening (🌙). Śledź wzorce w czasie praktyki.",
+      "timeOfDay": "Kiedy wykonywałaś praktykę mentalną: Morning, Midday, Evening. Śledź wzorce w czasie praktyki.",
       "showCountdown": "Włącz to, aby pokazać odliczanie do tego wyjazdu na stronie głównej. Świetne do budowania ekscytacji przed wyjazdem wspinaczkowym!",
       "injuryPhaseWarning": "Ta faza ma największą liczbę kontuzji w Twojej historii. Bądź szczególnie ostrożna i rozważ dostosowanie intensywności treningu podczas tej fazy."
     },
@@ -441,7 +441,7 @@
       "importDummyDataConfirm": "To zaimportuje dane testowe bezpośrednio do Twojej bazy danych. Kontynuować?"
     },
     "placeholders": {
-      "searchExercises": "🔍 Szukaj ćwiczeń...",
+      "searchExercises": "Szukaj ćwiczeń...",
       "reps": "Powtórzenia",
       "sets": "Serie",
       "weight": "Ciężar",
@@ -1291,7 +1291,7 @@
     },
     "trainingTypesTitle": "Rodzaje Treningów do Śledzenia",
     "eventTypesTitle": "Rodzaje Wydarzeń do Śledzenia",
-    "tip": "💡 Wskazówka: Śledź zarówno swoje sesje treningowe, jak i ważne wydarzenia, aby zrozumieć wzorce w swojej wydajności i regeneracji.",
+    "tip": "Wskazówka: Śledź zarówno swoje sesje treningowe, jak i ważne wydarzenia, aby zrozumieć wzorce w swojej wydajności i regeneracji.",
     "types": {
       "injury": "Kontuzja",
       "physio": "Fizjoterapia",
@@ -1432,10 +1432,10 @@
     "classifiedAs": "Klasyfikacja"
   },
   "quickLog": {
-    "title": "⚡ Szybki wpis",
+    "title": "Szybki wpis",
     "description": "Szybko zapisz trening. Szczegóły możesz dodać później.",
     "button": "Szybki wpis",
-    "markAsDone": "⚡ Zaznacz jako wykonane",
+    "markAsDone": "Zaznacz jako wykonane",
     "saving": "Zapisywanie...",
     "quickLogBadge": "Szybki",
     "noProtocols": "Brak dostępnych protokołów. Utwórz jeden w Protokołach Fingerboard.",

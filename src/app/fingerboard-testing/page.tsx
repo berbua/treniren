@@ -9,7 +9,7 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import FingerboardTestingProtocolForm from '@/components/FingerboardTestingProtocolForm'
 import Link from 'next/link'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
-import { Button, Card, EmptyState, SkeletonRows, Spinner } from '@/components/ui'
+import { Button, Card, EmptyState, Icon, SkeletonRows, Spinner } from '@/components/ui'
 
 export default function FingerboardTestingPage() {
   return (
@@ -143,7 +143,7 @@ function FingerboardTestingPageContent() {
             onClick={handleCreateProtocol}
             aria-label={t('fingerboardTesting.createProtocol')}
           >
-            +<span className="hidden sm:inline">{t('fingerboardTesting.createProtocol')}</span>
+            <Icon name="plus" /><span className="hidden sm:inline">{t('fingerboardTesting.createProtocol')}</span>
           </Button>
         </div>
 
@@ -152,7 +152,7 @@ function FingerboardTestingPageContent() {
         ) : protocols.length === 0 ? (
           <div className="rounded-uc-card border border-dashed border-uc-border">
             <EmptyState
-              icon="📊"
+              icon={<Icon name="test" size={28} />}
               title={t('fingerboardTesting.emptyTitle')}
               description={t('fingerboardTesting.emptyDescription')}
               action={
@@ -198,7 +198,7 @@ function FingerboardTestingPageContent() {
                       title={t('common.edit')}
                       className="inline-flex size-11 items-center justify-center rounded-uc-input transition-colors hover:bg-uc-elevated"
                     >
-                      <span aria-hidden>✏️</span>
+                      <Icon name="edit" />
                     </button>
                     <button
                       type="button"
@@ -208,7 +208,7 @@ function FingerboardTestingPageContent() {
                       title={t('common.delete')}
                       className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-error transition-colors hover:bg-uc-elevated disabled:opacity-50"
                     >
-                      {deletingProtocolId === protocol.id ? <Spinner /> : <span aria-hidden>🗑️</span>}
+                      {deletingProtocolId === protocol.id ? <Spinner /> : <Icon name="delete" />}
                     </button>
                   </div>
                 </Card>

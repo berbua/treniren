@@ -84,7 +84,7 @@ export function createTestReminderNotification(
   
   return {
     type: 'general',
-    title: '📊 Test Reminder',
+    title: 'Test Reminder',
     message: `You haven't tested in ${daysText}. Time to track your progress!`,
     priority: 'medium',
     actionButton: {

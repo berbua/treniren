@@ -8,7 +8,7 @@ import PerformTestModal from './PerformTestModal'
 import FingerboardTestChart from './FingerboardTestChart'
 import FingerboardTestResultsTable from './FingerboardTestResultsTable'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
-import { BottomSheet, Button, Card, EmptyState, Overline, SkeletonRows } from './ui'
+import { BottomSheet, Button, Card, EmptyState, Icon, Overline, SkeletonRows } from './ui'
 
 interface FingerboardTestModalProps {
   onClose: () => void
@@ -247,7 +247,7 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
         ) : testingProtocols.length === 0 ? (
           <div className="rounded-uc-card border border-dashed border-uc-border">
             <EmptyState
-              icon="📊"
+              icon={<Icon name="test" size={28} />}
               title={t('workouts.labels.noTestingProtocols') || 'No testing protocols yet'}
               description={t('fingerboard.testYourselfTooltip')}
               action={

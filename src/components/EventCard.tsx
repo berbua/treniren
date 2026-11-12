@@ -5,7 +5,7 @@ import { EventType, Tag, TripClimbingType } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useCycle } from '@/contexts/CycleContext'
 import { calculateCycleInfo } from '@/lib/cycle-utils'
-import { Card, Chip, EventIconTile, eventTypeMeta } from '@/components/ui'
+import { Card, Chip, EventIconTile, eventTypeMeta, Icon } from '@/components/ui'
 
 interface EventCardProps {
   event: {
@@ -139,7 +139,7 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
               aria-label={t('events.editEvent') || 'Edit event'}
               className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-elevated hover:text-uc-text"
             >
-              ✏️
+              <Icon name="edit" />
             </button>
           )}
           {onDelete && (
@@ -153,7 +153,7 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
               {isDeleting ? (
                 <span aria-hidden className="size-4 animate-spin rounded-full border-2 border-uc-error border-t-transparent" />
               ) : (
-                '🗑️'
+                <Icon name="delete" />
               )}
             </button>
           )}
@@ -193,7 +193,7 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
                   aria-label={t('common.save') || 'Save'}
                   className="inline-flex size-11 items-center justify-center rounded-uc-input bg-uc-primary font-bold text-uc-on-primary disabled:opacity-50"
                 >
-                  ✓
+                  <Icon name="success" />
                 </button>
                 <button
                   type="button"
@@ -205,7 +205,7 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
                   aria-label={t('common.cancel') || 'Cancel'}
                   className="inline-flex size-11 items-center justify-center rounded-uc-input border border-uc-border text-uc-text-muted disabled:opacity-50"
                 >
-                  ✕
+                  <Icon name="close" />
                 </button>
               </span>
             ) : (
@@ -222,9 +222,9 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
                     onClick={() => setIsEditingCycleDay(true)}
                     aria-label={t('events.editCycleDay') || 'Edit cycle day'}
                     title={event.cycleDayManuallySet ? (t('events.cycleDayManuallySet') || 'Manually set') : undefined}
-                    className="-my-1.5 inline-flex size-11 items-center justify-center text-xs"
+                    className="-my-1.5 inline-flex size-11 items-center justify-center text-uc-text-muted hover:text-uc-text"
                   >
-                    ✏️
+                    <Icon name="edit" size={16} />
                   </button>
                 )}
               </span>
@@ -251,7 +251,7 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
       {isTrip && (
         <>
           {event.destination && !event.title.includes(event.destination) && (
-            <p className="text-[13px] font-semibold text-uc-text-muted">📍 {event.destination}</p>
+            <p className="flex items-center gap-1.5 text-[13px] font-semibold text-uc-text-muted"><Icon name="event-trip" size={16} />{event.destination}</p>
           )}
           <div className="grid grid-cols-3 gap-2">
             <InfoTile label={t('events.dates') || 'Dates'} value={tripRange()} />
@@ -275,7 +275,7 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
             {formatDate(event.date, { weekday: 'short', day: 'numeric', month: 'short' })}
             {timeRange && <> · {timeRange}</>}
           </span>
-          {event.location && <span>📍 {event.location}</span>}
+          {event.location && <span className="inline-flex items-center gap-1"><Icon name="event-trip" size={16} />{event.location}</span>}
         </p>
       )}
       {isInjury && timeRange && (

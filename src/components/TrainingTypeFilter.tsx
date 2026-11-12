@@ -10,13 +10,13 @@ interface TrainingTypeFilterProps {
 }
 
 const workoutTypeConfig = {
-  BOULDERING: { labelKey: 'training.types.bouldering', emoji: '🧗' },
-  LEAD_ARTIFICIAL: { labelKey: 'training.types.leadArtificial', emoji: '🧗‍♀️' },
-  LEAD_ROCK: { labelKey: 'training.types.leadRock', emoji: '🏔️' },
-  CIRCUITS: { labelKey: 'training.types.circuits', emoji: '🔄' },
-  GYM: { labelKey: 'training.types.gym', emoji: '🏋️' },
-  FINGERBOARD: { labelKey: 'training.types.fingerboard', emoji: '🖐️' },
-  MENTAL_PRACTICE: { labelKey: 'training.types.mentalPractice', emoji: '🧘' },
+  BOULDERING: { labelKey: 'training.types.bouldering' },
+  LEAD_ARTIFICIAL: { labelKey: 'training.types.leadArtificial' },
+  LEAD_ROCK: { labelKey: 'training.types.leadRock' },
+  CIRCUITS: { labelKey: 'training.types.circuits' },
+  GYM: { labelKey: 'training.types.gym' },
+  FINGERBOARD: { labelKey: 'training.types.fingerboard' },
+  MENTAL_PRACTICE: { labelKey: 'training.types.mentalPractice' },
 };
 
 export default function TrainingTypeFilter({ selectedTypes, onTypesChange }: TrainingTypeFilterProps) {
@@ -66,7 +66,6 @@ export default function TrainingTypeFilter({ selectedTypes, onTypesChange }: Tra
             key={type}
             workoutType={type as WorkoutType}
             selected={selectedTypes.includes(type as WorkoutType)}
-            icon={config.emoji}
             onClick={() => handleTypeToggle(type as WorkoutType)}
           >
             {t(config.labelKey)}

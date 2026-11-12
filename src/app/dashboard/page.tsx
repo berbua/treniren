@@ -20,7 +20,7 @@ import { useCycle } from '@/contexts/CycleContext'
 import { CyclePhase, getPhaseRanges } from '@/lib/cycle-utils'
 import {
   Button, buttonClasses, Card, EmptyState, Overline, PhaseBadge, phaseBandBg, phaseSolidBg, phaseTranslationKey,
-  SessionRow, Skeleton, SkeletonRows, StatTile, TrBadge,
+  SessionRow, Skeleton, SkeletonRows, StatTile, TrBadge, Icon, IconName, eventTypeMeta,
 } from '@/components/ui'
 
 export default function Dashboard() {
@@ -174,29 +174,6 @@ function DashboardContent() {
   // Calculate days until trip (calendar days, so it's right at any time of day)
   const getDaysUntilTrip = (tripStartDate: string) => storedDayNumber(tripStartDate) - localDayNumber()
 
-  const getWorkoutTypeEmoji = (type: string) => {
-    const emojis: { [key: string]: string } = {
-      'GYM': '🏋️',
-      'BOULDERING': '🧗',
-      'CIRCUITS': '🔄',
-      'LEAD_ROCK': '🧗‍♀️',
-      'LEAD_ARTIFICIAL': '🧗‍♂️',
-      'MENTAL_PRACTICE': '🧘'
-    }
-    return emojis[type] || '🏃'
-  }
-
-  const getEventTypeEmoji = (type: string) => {
-    const emojis: { [key: string]: string } = {
-      'INJURY': '🤕',
-      'PHYSIO': '🏥',
-      'COMPETITION': '🏆',
-      'TRIP': '✈️',
-      'OTHER': '📅'
-    }
-    return emojis[type] || '📅'
-  }
-
   // Calculate trend percentage
   const calculateTrend = (current: number, previous: number) => {
     if (previous === 0) return current > 0 ? 100 : 0
@@ -210,8 +187,8 @@ function DashboardContent() {
   const goalPercent = (count: number, goal: number) => Math.min(Math.round((count / goal) * 100), 100)
 
   const trend = (current: number, previous: number) => previous > 0 && (
-    <span className={current >= previous ? 'text-uc-success' : 'text-uc-error'}>
-      {current >= previous ? '↑' : '↓'} {Math.abs(calculateTrend(current, previous))}%
+    <span className={`inline-flex items-center gap-0.5 ${current >= previous ? 'text-uc-success' : 'text-uc-error'}`}>
+      <Icon name={current >= previous ? 'chevron-up' : 'chevron-down'} size={14} /> {Math.abs(calculateTrend(current, previous))}%
     </span>
   )
 
@@ -225,25 +202,25 @@ function DashboardContent() {
     {
       label: t('dashboard.categories.training') || 'Trening',
       links: [
-        { href: '/workouts', icon: '🏋️', label: t('nav.workouts') || 'Workouts' },
-        { href: '/calendar', icon: '📅', label: t('nav.calendar') || 'Calendar' },
-        { href: '/cycle', icon: '🔄', label: t('nav.cycle') || 'Cycle' },
+        { href: '/workouts', icon: 'workouts' as IconName, label: t('nav.workouts') || 'Workouts' },
+        { href: '/calendar', icon: 'calendar' as IconName, label: t('nav.calendar') || 'Calendar' },
+        { href: '/cycle', icon: 'cycle' as IconName, label: t('nav.cycle') || 'Cycle' },
       ]
     },
     {
       label: t('dashboard.categories.library') || 'Biblioteka',
       links: [
-        { href: '/exercises', icon: '💪', label: t('nav.exercises') || 'Exercises' },
-        { href: '/routines', icon: '👯', label: t('nav.routines') || 'Routines' },
-        { href: '/fingerboard-protocols', icon: '🖐️', label: t('nav.fingerboardProtocols') || 'Fingerboard' },
+        { href: '/exercises', icon: 'library' as IconName, label: t('nav.exercises') || 'Exercises' },
+        { href: '/routines', icon: 'workouts' as IconName, label: t('nav.routines') || 'Routines' },
+        { href: '/fingerboard-protocols', icon: 'type-fingerboard' as IconName, label: t('nav.fingerboardProtocols') || 'Fingerboard' },
       ]
     },
     {
       label: t('dashboard.categories.analysis') || 'Analiza',
       links: [
-        { href: '/statistics', icon: '📊', label: t('nav.statistics') || 'Statistics' },
-        { href: '/strong-mind', icon: '🧠', label: t('strongMind.title') || 'Strong Mind' },
-        { href: '/profile', icon: '👤', label: t('nav.profile') || 'Profile' },
+        { href: '/statistics', icon: 'stats' as IconName, label: t('nav.statistics') || 'Statistics' },
+        { href: '/strong-mind', icon: 'strong-mind' as IconName, label: t('strongMind.title') || 'Strong Mind' },
+        { href: '/profile', icon: 'user' as IconName, label: t('nav.profile') || 'Profile' },
       ]
     },
   ]
@@ -262,14 +239,14 @@ function DashboardContent() {
           <div className="min-w-0">
             <Overline className="uc-num">{todayLabel}</Overline>
             <h1 className="mt-1 text-[28px] leading-[34px] lg:text-[34px] lg:leading-[40px] font-extrabold tracking-[-0.02em] text-uc-text">
-              {t('dashboard.hi') || 'Hi'} {userNickname || session?.user?.name?.split(' ')[0] || (t('dashboard.there') || 'there')}! 🦄
+              {t('dashboard.hi') || 'Hi'} {userNickname || session?.user?.name?.split(' ')[0] || (t('dashboard.there') || 'there')}!
             </h1>
             <p className="mt-1 text-sm text-uc-text-muted">
               {t('dashboard.subtitle') || 'Track your climbing journey and stay motivated'}
             </p>
           </div>
           <Button variant="accent" size="lg" onClick={() => setShowQuickLog(true)} className="hidden lg:inline-flex shrink-0">
-            <span aria-hidden>⚡</span>
+            <Icon name="quick-log" />
             {quickLogLabel}
           </Button>
         </div>
@@ -287,7 +264,7 @@ function DashboardContent() {
 
           {/* Mobile: main CTA right under the hero */}
           <Button variant="accent" size="lg" onClick={() => setShowQuickLog(true)} className="lg:hidden w-full min-h-16 text-lg">
-            <span aria-hidden>⚡</span>
+            <Icon name="quick-log" />
             {quickLogLabel}
           </Button>
 
@@ -296,11 +273,11 @@ function DashboardContent() {
               {/* Personalized Suggestions */}
               {hasSuggestion && streak >= 3 && (
                 <Card className="flex items-start gap-3">
-                  <IconTile>💪</IconTile>
+                  <IconTile><Icon name="streak" size={22} /></IconTile>
                   <div className="min-w-0">
                     <h3 className="text-[15px] font-extrabold">{t('dashboard.greatStreak') || 'Świetna passa!'}</h3>
                     <p className="text-[13px] text-uc-text-muted">
-                      {t('dashboard.keepGoing') || `Masz ${streak} dni z rzędu! Nie przerywaj swojego streaku 🔥`}
+                      {t('dashboard.keepGoing') || `Masz ${streak} dni z rzędu! Nie przerywaj swojego streaku`}
                     </p>
                   </div>
                 </Card>
@@ -308,7 +285,7 @@ function DashboardContent() {
               {hasSuggestion && streak === 0 && stats.thisWeekWorkouts === 0 && (
                 <Card className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <IconTile>👋</IconTile>
+                    <IconTile><Icon name="quick-log" size={22} /></IconTile>
                     <div className="min-w-0">
                       <h3 className="text-[15px] font-extrabold">{t('dashboard.timeToTrain') || 'Czas na trening!'}</h3>
                       <p className="text-[13px] text-uc-text-muted">
@@ -331,10 +308,10 @@ function DashboardContent() {
                       <span className="text-[22px] leading-6 font-extrabold uc-num">{daysUntil}</span>
                     </div>
                     <div className="min-w-0">
-                      <Overline>✈️ {t('dashboard.upcomingTrips') || 'Upcoming Trips'}</Overline>
+                      <Overline className="flex items-center gap-1.5"><Icon name="event-trip" size={16} />{t('dashboard.upcomingTrips') || 'Upcoming Trips'}</Overline>
                       <h3 className="text-[15px] font-extrabold truncate">{trip.destination}</h3>
                       <p className="text-[13px] text-uc-text-muted">
-                        {trip.climbingType === 'BOULDERING' ? '🧗 Bouldering' : '🧗‍♀️ Sport Climbing'}
+                        {trip.climbingType === 'BOULDERING' ? 'Bouldering' : 'Sport Climbing'}
                         {' · '}
                         <span className="uc-num">{daysUntil}</span>{' '}
                         {daysUntil === 1 ? (t('dashboard.dayToGo') || 'day to go') : (t('dashboard.daysToGo') || 'days to go')}
@@ -358,7 +335,7 @@ function DashboardContent() {
           <div className="grid grid-cols-3 lg:grid-cols-5 gap-3">
             <StatTile
               className="order-1"
-              icon="🔥"
+              icon={<Icon name="streak" size={16} />}
               label={t('dashboard.streak') || 'Day Streak'}
               value={streak}
             />
@@ -423,7 +400,6 @@ function DashboardContent() {
                     <Link key={workout.id} href="/workouts" className="block rounded-uc-card hover:brightness-110 transition">
                       <SessionRow
                         workoutType={workout.type}
-                        icon={<span className="text-xl">{getWorkoutTypeEmoji(workout.type)}</span>}
                         title={t(`workoutTypes.${workout.type.toLowerCase()}`) || workout.type}
                         meta={<span className="uc-num">{new Date(workout.startTime).toLocaleDateString()} · {detailsText}</span>}
                         trailing={workout.trainingVolume && <TrBadge>{workout.trainingVolume}</TrBadge>}
@@ -435,12 +411,12 @@ function DashboardContent() {
             ) : (
               <Card>
                 <EmptyState
-                  icon="🏋️"
+                  icon={<Icon name="workouts" size={28} />}
                   title={t('dashboard.noWorkouts') || 'No workouts yet'}
                   description={t('dashboard.noWorkoutsDescription') || 'Start tracking your training sessions to see your progress and statistics here.'}
                   action={
                     <Link href="/workouts" className={buttonClasses('tonal')}>
-                      <span aria-hidden>➕</span>
+                      <Icon name="plus" />
                       {t('dashboard.addFirst') || 'Add your first workout'}
                     </Link>
                   }
@@ -461,8 +437,8 @@ function DashboardContent() {
                     href="/calendar"
                     className="flex items-center gap-3 min-h-16 py-2.5 hover:opacity-80 transition-opacity"
                   >
-                    <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center rounded-xl border-[1.5px] bg-uc-elevated text-lg ${eventTone[event.type] ?? eventTone.OTHER}`}>
-                      {getEventTypeEmoji(event.type)}
+                    <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center rounded-xl border-[1.5px] bg-uc-elevated ${eventTone[event.type] ?? eventTone.OTHER}`}>
+                      <Icon name={eventTypeMeta(event.type).icon} size={22} />
                     </span>
                     <div className="min-w-0">
                       <div className="text-[15px] font-extrabold truncate">
@@ -478,11 +454,11 @@ function DashboardContent() {
             ) : (
               <Card className="border-dashed">
                 <EmptyState
-                  icon="📅"
+                  icon={<Icon name="calendar" size={28} />}
                   title={t('dashboard.noEvents') || 'No events yet'}
                   action={
                     <Link href="/calendar" className={buttonClasses('tonal')}>
-                      <span aria-hidden>➕</span>
+                      <Icon name="plus" />
                       {t('dashboard.addFirst') || 'Add your first event'}
                     </Link>
                   }
@@ -504,7 +480,7 @@ function DashboardContent() {
                     href={link.href}
                     className="flex min-h-[88px] flex-col justify-between gap-3 p-3 bg-uc-surface border border-uc-border rounded-uc-card hover:bg-uc-elevated transition-colors"
                   >
-                    <span aria-hidden className="text-xl leading-6">{link.icon}</span>
+                    <Icon name={link.icon} size={24} className="text-uc-primary" />
                     <span className="text-sm font-bold text-uc-text break-words">{link.label}</span>
                   </Link>
                 ))}
@@ -519,7 +495,7 @@ function DashboardContent() {
             <h3 className="text-[17px] font-extrabold">{t('dashboard.appStatus') || 'App Status'}</h3>
             {(!isOnline || unsyncedWorkouts.length > 0) && (
               <div className="flex items-start gap-3 rounded-uc-input bg-uc-warning-bg px-3 py-2.5">
-                <span aria-hidden className="text-lg leading-6">⚠️</span>
+                <Icon name="warning" className="mt-0.5 text-uc-warning" />
                 <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-extrabold text-uc-warning">
                     {!isOnline ? (t('dashboard.offlineMode') || 'Offline Mode') : (t('dashboard.unsyncedData') || 'Unsynced Data')}
@@ -576,7 +552,7 @@ function DashboardContent() {
                     className="py-0"
                   />
                   <Button variant="ghost" onClick={() => setShowOfflineForm(true)} className="w-full">
-                    <span aria-hidden>📱</span>
+                    <Icon name="offline" />
                     {t('pwaStatus.addOfflineTraining') || 'Add Offline Training'}
                   </Button>
                 </div>
@@ -655,7 +631,7 @@ const eventTone: Record<string, string> = {
 
 function IconTile({ children }: { children: React.ReactNode }) {
   return (
-    <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-xl">
+    <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-uc-on-primary-container">
       {children}
     </span>
   )

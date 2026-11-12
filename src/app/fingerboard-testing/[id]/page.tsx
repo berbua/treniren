@@ -10,7 +10,7 @@ import FingerboardTestResultsTable from '@/components/FingerboardTestResultsTabl
 import PerformTestModal from '@/components/PerformTestModal'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { Button, Card, ChoiceChip, EmptyState, Overline, SkeletonRows } from '@/components/ui'
+import { Button, Card, ChoiceChip, EmptyState, Icon, Overline, SkeletonRows } from '@/components/ui'
 
 export default function FingerboardTestResultsPage() {
   return (
@@ -100,7 +100,7 @@ function FingerboardTestResultsPageContent() {
       <div className="min-h-screen bg-uc-bg">
         <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
           {backLink}
-          <EmptyState icon="📊" title={t('fingerboardTesting.protocolNotFound')} />
+          <EmptyState icon={<Icon name="test" size={28} />} title={t('fingerboardTesting.protocolNotFound')} />
         </div>
       </div>
     )
@@ -168,7 +168,7 @@ function FingerboardTestResultsPageContent() {
             </Overline>
             {filteredResults.length === 0 ? (
               <EmptyState
-                icon="📊"
+                icon={<Icon name="test" size={28} />}
                 title={t('fingerboard.noTestResults') || 'No test results yet'}
                 description={t('fingerboard.noTestResultsDescription')}
                 action={

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { FingerboardProtocol, FingerboardProtocolFormData, FingerboardProtocolHang, HandType, GripType } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
-import { BottomSheet, Button, FieldError, Input, Label, Overline, SegmentedControl, Select, Textarea, UnitInput } from './ui'
+import { BottomSheet, Button, FieldError, Icon, Input, Label, Overline, SegmentedControl, Select, Textarea, UnitInput } from './ui'
 
 interface FingerboardProtocolFormProps {
   protocol?: FingerboardProtocol | null
@@ -202,7 +202,7 @@ export default function FingerboardProtocolForm({
                       aria-label={t('routines.form.moveUp') || 'Move up'}
                       className={iconButton}
                     >
-                      <span aria-hidden>↑</span>
+                      <Icon name="move-up" />
                     </button>
                     <button
                       type="button"
@@ -211,7 +211,7 @@ export default function FingerboardProtocolForm({
                       aria-label={t('routines.form.moveDown') || 'Move down'}
                       className={iconButton}
                     >
-                      <span aria-hidden>↓</span>
+                      <Icon name="move-down" />
                     </button>
                     <button
                       type="button"
@@ -220,7 +220,7 @@ export default function FingerboardProtocolForm({
                       title={t('common.edit')}
                       className={iconButton}
                     >
-                      <span aria-hidden>✏️</span>
+                      <Icon name="edit" />
                     </button>
                     <button
                       type="button"
@@ -229,7 +229,7 @@ export default function FingerboardProtocolForm({
                       title={t('protocolForm.remove')}
                       className={removeButton}
                     >
-                      <span aria-hidden>✕</span>
+                      <Icon name="close" />
                     </button>
                   </div>
                 ))}
@@ -332,7 +332,7 @@ function HangForm({
           <Label>{t('workouts.labels.handType')} *</Label>
           <SegmentedControl
             ariaLabel={t('workouts.labels.handType')}
-            options={HAND_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey), icon: opt.emoji }))}
+            options={HAND_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
             value={formData.handType}
             onChange={(value) => setFormData({ ...formData, handType: value as HandType })}
           />
@@ -342,7 +342,7 @@ function HangForm({
           <Label>{t('workouts.labels.gripType')} *</Label>
           <SegmentedControl
             ariaLabel={t('workouts.labels.gripType')}
-            options={GRIP_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey), icon: opt.emoji }))}
+            options={GRIP_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
             value={formData.gripType}
             onChange={(value) => {
               const newGripType = value as GripType
@@ -374,7 +374,7 @@ function HangForm({
               <option value="">{t('common.selectSize') || 'Select size...'}</option>
               {CRIMP_SIZE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.emoji} {opt.label}
+                  {opt.label}
                 </option>
               ))}
             </Select>

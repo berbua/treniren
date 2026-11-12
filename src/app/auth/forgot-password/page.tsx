@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { AuthAlert, AuthShell, authLinkClass } from '@/components/AuthLayout'
-import { Button, Input, Label } from '@/components/ui'
+import { Button, Icon, Input, Label } from '@/components/ui'
 
 export default function ForgotPasswordForm() {
   const { t } = useLanguage()
@@ -76,8 +76,8 @@ export default function ForgotPasswordForm() {
 
       {message ? (
         <div role="status" className="mt-6 pt-6 border-t border-uc-border flex flex-col items-center text-center">
-          <span aria-hidden className="mb-3 flex size-14 items-center justify-center rounded-uc-card bg-uc-success-bg text-2xl">
-            ✉️
+          <span aria-hidden className="mb-3 flex size-14 items-center justify-center rounded-uc-card bg-uc-success-bg text-uc-success">
+            <Icon name="mail" size={28} />
           </span>
           <p className="max-w-xs text-[15px] font-bold text-uc-text">{message}</p>
           <p className="mt-4 text-sm">{backLink}</p>

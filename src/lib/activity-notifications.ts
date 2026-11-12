@@ -50,7 +50,7 @@ export function createMentalSessionNotification(check: ActivityNotificationCheck
   
   return {
     type: 'general',
-    title: '🧘 Mental Practice Reminder',
+    title: 'Mental Practice Reminder',
     message: `It's been ${daysText} since your last mental practice session. Regular mental training is important for climbing performance and well-being.`,
     priority: 'medium',
     actionButton: {
@@ -69,7 +69,7 @@ export function createFallsTrackingNotification(check: ActivityNotificationCheck
   
   return {
     type: 'general',
-    title: '🧗‍♀️ Falls Tracking Reminder',
+    title: 'Falls Tracking Reminder',
     message: `It's been ${daysText} since you last took a fall while climbing. Taking falls is a normal part of pushing your limits and improving your climbing. Consider challenging yourself more!`,
     priority: 'low',
     actionButton: {

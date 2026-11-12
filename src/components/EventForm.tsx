@@ -7,7 +7,7 @@ import { useCycle } from '@/contexts/CycleContext';
 import { toLocalDateString } from '@/lib/date-utils';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import { Tooltip } from './Tooltip';
-import { BottomSheet, Button, FieldError, Input, Label, SegmentedControl, Textarea, eventTypeMeta } from '@/components/ui';
+import { BottomSheet, Button, FieldError, Input, Label, SegmentedControl, Textarea, eventTypeMeta, Icon } from '@/components/ui';
 
 interface EventFormProps {
   onSubmit: (event: EventFormData) => void | Promise<void>;
@@ -211,7 +211,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                     selected ? `${meta.border} ${meta.tint}` : 'border-uc-border bg-uc-surface hover:border-uc-text-muted'
                   }`}
                 >
-                  <span aria-hidden className="text-lg leading-none">{meta.emoji}</span>
+                  <Icon name={meta.icon} size={22} className={meta.text} />
                   <span className={`text-sm font-bold leading-tight ${meta.text}`}>
                     {t(`events.types.${meta.key}`) || type}
                   </span>
@@ -269,7 +269,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             <Label htmlFor="event-cycle-day" className="flex items-center gap-1.5">
               {t('events.cycleDay') || 'Cycle Day'}
               <Tooltip content={t('workouts.tooltips.cycleDay') || 'The day of your menstrual cycle (1-28+). Day 1 is the first day of your period. This helps correlate injuries and performance with your cycle phase.'}>
-                <span className="cursor-help">ℹ️</span>
+                <span className="inline-flex cursor-help text-uc-text-muted"><Icon name="info" size={16} /></span>
               </Tooltip>
             </Label>
             <div className="flex items-start gap-3">
@@ -299,7 +299,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                     title={t('events.clearCycleDay') || 'Clear and use calculated value'}
                     className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-surface hover:text-uc-text"
                   >
-                    ✕
+                    <Icon name="close" />
                   </button>
                 )}
               </div>
@@ -381,7 +381,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                 <span className="flex items-center gap-1.5 text-[15px] font-bold text-uc-text">
                   {t('events.showCountdown') || 'Show countdown on homepage'}
                   <Tooltip content={t('workouts.tooltips.showCountdown') || 'Enable this to show a countdown timer for this trip on the homepage. Great for building excitement before a climbing trip!'}>
-                    <span className="cursor-help text-sm">ℹ️</span>
+                    <span className="inline-flex cursor-help text-uc-text-muted"><Icon name="info" size={16} /></span>
                   </Tooltip>
                 </span>
                 <span className="mt-0.5 block text-[13px] text-uc-text-muted">

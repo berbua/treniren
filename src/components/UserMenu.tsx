@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { buttonClasses } from '@/components/ui'
+import { Icon, buttonClasses } from '@/components/ui'
 
 interface UserMenuProps {
   isOnline?: boolean
@@ -165,7 +165,7 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
             }}
             className="w-full flex items-center gap-3 text-left px-3 min-h-11 text-[15px] font-bold text-uc-text hover:bg-uc-primary-container hover:text-uc-on-primary-container transition-colors rounded-uc-input"
           >
-            <span aria-hidden className="inline-flex size-6 items-center justify-center">👤</span>
+            <Icon name="user" className="text-uc-text-muted" />
             {t('nav.profile') || 'Profile'}
           </button>
           
@@ -173,7 +173,7 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
           <div className="px-3 py-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[15px] font-bold text-uc-text flex items-center gap-3">
-                <span aria-hidden className="inline-flex size-6 items-center justify-center">{language === 'en' ? '🇺🇸' : '🇵🇱'}</span>
+                <Icon name="globe" className="text-uc-text-muted" />
                 <span>{t('common.language') || 'Language'}</span>
               </span>
               <div className="flex items-center p-0.5 rounded-uc-input border border-uc-border">
@@ -207,7 +207,10 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
             onClick={handleSignOut}
             className="w-full text-left px-3 min-h-11 text-[15px] font-bold text-uc-error hover:bg-uc-error-bg transition-colors rounded-uc-input"
           >
-            {t('auth.signOut') || 'Sign Out'}
+            <span className="flex items-center gap-3">
+              <Icon name="sign-out" />
+              {t('auth.signOut') || 'Sign Out'}
+            </span>
           </button>
         </div>
       )}

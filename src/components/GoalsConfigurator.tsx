@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { BottomSheet, Button, CollapsibleCard, Input, Overline, SegmentedControl, Select, workoutBg, WorkoutTypeKey } from '@/components/ui'
+import { BottomSheet, Button, CollapsibleCard, Icon, Input, Overline, SegmentedControl, Select, workoutBg, WorkoutIcon, WorkoutTypeKey } from '@/components/ui'
 
 type WorkoutTypeGoal = {
   type: string
@@ -24,13 +24,13 @@ interface GoalsConfiguratorProps {
 }
 
 const WORKOUT_TYPES = [
-  { value: 'GYM', label: 'Siłownia', emoji: '🏋️' },
-  { value: 'BOULDERING', label: 'Bouldering', emoji: '🧗' },
-  { value: 'CIRCUITS', label: 'Obwody', emoji: '🔄' },
-  { value: 'LEAD_ROCK', label: 'Prowadzenie - skała', emoji: '🏔️' },
-  { value: 'LEAD_ARTIFICIAL', label: 'Prowadzenie - ścianka', emoji: '🧗‍♀️' },
-  { value: 'FINGERBOARD', label: 'Chwytotablica', emoji: '🤏' },
-  { value: 'MENTAL_PRACTICE', label: 'Trening mentalny', emoji: '🧘' },
+  { value: 'GYM', label: 'Siłownia' },
+  { value: 'BOULDERING', label: 'Bouldering' },
+  { value: 'CIRCUITS', label: 'Obwody' },
+  { value: 'LEAD_ROCK', label: 'Prowadzenie - skała' },
+  { value: 'LEAD_ARTIFICIAL', label: 'Prowadzenie - ścianka' },
+  { value: 'FINGERBOARD', label: 'Chwytotablica' },
+  { value: 'MENTAL_PRACTICE', label: 'Trening mentalny' },
 ]
 
 export default function GoalsConfigurator({
@@ -108,7 +108,7 @@ export default function GoalsConfigurator({
       closeLabel={t('common.close')}
       title={
         <span className="flex items-center gap-2">
-          <span aria-hidden>🎯</span>
+          <Icon name="goal" size={24} className="text-uc-primary" />
           <span>{t('goals.title') || 'Cele Treningowe'}</span>
         </span>
       }
@@ -122,7 +122,7 @@ export default function GoalsConfigurator({
               <span>{t('common.saving') || 'Zapisywanie'}...</span>
             ) : (
               <>
-                <span aria-hidden>💾</span>
+                <Icon name="success" />
                 <span>{t('common.save') || 'Zapisz'}</span>
               </>
             )}
@@ -214,7 +214,7 @@ export default function GoalsConfigurator({
         <CollapsibleCard
           open={showDetailedGoals}
           onToggle={() => setShowDetailedGoals(!showDetailedGoals)}
-          icon="📊"
+          icon={<Icon name="stats" size={22} />}
           title={t('goals.detailedGoals') || 'Cele szczegółowe (opcjonalne)'}
           description={t('goals.detailedGoalsDesc') || 'Ustaw cele dla konkretnych typów treningów'}
           summary={workoutTypeGoals.length > 0 ? workoutTypeGoals.length : undefined}
@@ -233,7 +233,7 @@ export default function GoalsConfigurator({
                 >
                   {WORKOUT_TYPES.map(type => (
                     <option key={type.value} value={type.value}>
-                      {type.emoji} {type.label}
+                      {type.label}
                     </option>
                   ))}
                 </Select>
@@ -249,9 +249,10 @@ export default function GoalsConfigurator({
                 <button
                   type="button"
                   onClick={() => removeWorkoutTypeGoal(index)}
-                  className="inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input hover:bg-uc-surface transition-colors"
+                  aria-label={t('common.delete') || 'Delete'}
+                  className="inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text-muted hover:text-uc-error hover:bg-uc-surface transition-colors"
                 >
-                  🗑️
+                  <Icon name="delete" />
                 </button>
               </div>
             ))}
@@ -261,13 +262,14 @@ export default function GoalsConfigurator({
               onClick={addWorkoutTypeGoal}
               className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-uc-border text-sm font-bold text-uc-primary hover:border-uc-primary transition-colors"
             >
-              <span aria-hidden>➕</span>
+              <Icon name="plus" />
               <span>{t('goals.addWorkoutType') || 'Dodaj typ treningu'}</span>
             </button>
 
             {workoutTypeGoals.length > 0 && (
-              <p className="rounded-xl bg-uc-warning-bg px-3 py-2.5 text-[13px] text-uc-text">
-                💡 {t('goals.detailedGoalsHint', { total: totalTypeGoals, general: weeklyGoal })}
+              <p className="flex items-start gap-2 rounded-xl bg-uc-warning-bg px-3 py-2.5 text-[13px] text-uc-text">
+                <Icon name="info" size={16} className="mt-px text-uc-warning" />
+                <span>{t('goals.detailedGoalsHint', { total: totalTypeGoals, general: weeklyGoal })}</span>
               </p>
             )}
           </div>
@@ -298,7 +300,7 @@ export default function GoalsConfigurator({
                 const typeInfo = WORKOUT_TYPES.find(t => t.value === goal.type)
                 return (
                   <div key={index} className="flex justify-between gap-3">
-                    <span>{typeInfo?.emoji} {typeInfo?.label}:</span>
+                    <span className="flex items-center gap-1.5">{typeInfo && <WorkoutIcon workoutType={typeInfo.value} size={16} />}{typeInfo?.label}:</span>
                     <span className="font-bold uc-num">{goal.count}× tydz.</span>
                   </div>
                 )

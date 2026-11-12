@@ -28,6 +28,8 @@ import {
   ChoiceChip,
   EVENT_TYPE_META,
   eventTypeMeta,
+  Icon,
+  IconName,
   Overline,
   PhaseBadge,
   phaseBandBg,
@@ -35,19 +37,20 @@ import {
   phaseTranslationKey,
   SegmentedControl,
   workoutBg,
+  WorkoutIcon,
 } from '@/components/ui'
 
 type ViewMode = 'week' | 'month'
 type FilterType = 'workouts' | 'events'
 
-const WORKOUT_TYPES: { type: WorkoutType; key: string; emoji: string }[] = [
-  { type: 'BOULDERING', key: 'bouldering', emoji: '🧗' },
-  { type: 'LEAD_ARTIFICIAL', key: 'leadArtificial', emoji: '🧗‍♀️' },
-  { type: 'LEAD_ROCK', key: 'leadRock', emoji: '🏔️' },
-  { type: 'GYM', key: 'gym', emoji: '🏋️' },
-  { type: 'CIRCUITS', key: 'circuits', emoji: '🔄' },
-  { type: 'FINGERBOARD', key: 'fingerboard', emoji: '🖐️' },
-  { type: 'MENTAL_PRACTICE', key: 'mentalPractice', emoji: '🧘' },
+const WORKOUT_TYPES: { type: WorkoutType; key: string }[] = [
+  { type: 'BOULDERING', key: 'bouldering' },
+  { type: 'LEAD_ARTIFICIAL', key: 'leadArtificial' },
+  { type: 'LEAD_ROCK', key: 'leadRock' },
+  { type: 'GYM', key: 'gym' },
+  { type: 'CIRCUITS', key: 'circuits' },
+  { type: 'FINGERBOARD', key: 'fingerboard' },
+  { type: 'MENTAL_PRACTICE', key: 'mentalPractice' },
 ]
 
 const workoutMeta = (type: WorkoutType) => WORKOUT_TYPES.find(w => w.type === type)
@@ -73,13 +76,13 @@ const getTripDay = (event: Event, date: Date) => {
 }
 
 function EventBadge({ type, size = 'sm' }: { type: EventType; size?: 'sm' | 'md' }) {
-  const sizeClass = size === 'sm' ? 'size-5 rounded-md text-[10px]' : 'size-9 rounded-xl text-base'
+  const sizeClass = size === 'sm' ? 'size-5 rounded-md' : 'size-9 rounded-xl'
   return (
     <span
       aria-hidden
-      className={`inline-flex shrink-0 items-center justify-center border-[1.5px] bg-uc-elevated leading-none ${eventMeta(type).border} ${sizeClass}`}
+      className={`inline-flex shrink-0 items-center justify-center border-[1.5px] bg-uc-elevated ${eventMeta(type).border} ${eventMeta(type).text} ${sizeClass}`}
     >
-      {eventMeta(type).emoji}
+      <Icon name={eventMeta(type).icon} size={size === 'sm' ? 12 : 18} />
     </span>
   )
 }
@@ -93,7 +96,7 @@ function IconButton({ label, onClick, children }: { label: string; onClick: (e: 
       aria-label={label}
       className="inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-base text-uc-text-muted transition-colors hover:bg-uc-elevated hover:text-uc-text"
     >
-      <span aria-hidden>{children}</span>
+      {children}
     </button>
   )
 }
@@ -120,9 +123,9 @@ function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
     <div className="flex items-start gap-3 rounded-xl border border-uc-border bg-uc-surface py-1.5 pl-3 pr-1">
       <span
         aria-hidden
-        className={`mt-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-base text-uc-chip-ink ${workoutBg[workout.type]}`}
+        className={`mt-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-uc-chip-ink ${workoutBg[workout.type]}`}
       >
-        {meta?.emoji}
+        <WorkoutIcon workoutType={workout.type} size={18} />
       </span>
       <div className="min-w-0 flex-1 py-1.5">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -131,7 +134,7 @@ function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
           </span>
           {details?.quickLog && (
             <Chip className="min-h-6 px-2 text-xs">
-              <span aria-hidden>⚡</span>
+              <Icon name="quick-log" size={14} />
               {t('quickLog.quickLogBadge') || 'Quick'}
             </Chip>
           )}
@@ -147,7 +150,7 @@ function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
           onEdit(workout, e)
         }}
       >
-        ✏️
+        <Icon name="edit" />
       </IconButton>
       <IconButton
         label={t('workouts.duplicate') || 'Duplicate workout'}
@@ -156,7 +159,7 @@ function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
           onDuplicate(workout, e)
         }}
       >
-        📋
+        <Icon name="duplicate" />
       </IconButton>
     </div>
   )
@@ -180,8 +183,8 @@ function EventRow({ event, date, t, onClick }: { event: Event; date: Date; t: (k
         </span>
         {subtitle && <span className="mt-0.5 block line-clamp-2 text-[13px] text-uc-text-muted">{subtitle}</span>}
       </span>
-      <span aria-hidden className="inline-flex size-11 shrink-0 items-center justify-center text-base text-uc-text-muted">
-        ✏️
+      <span aria-hidden className="inline-flex size-11 shrink-0 items-center justify-center text-uc-text-muted">
+        <Icon name="edit" />
       </span>
     </button>
   )
@@ -724,7 +727,7 @@ function CalendarPageContent() {
               title={t('common.filter')}
               className="relative"
             >
-              <span aria-hidden className="text-lg leading-none">🔍</span>
+              <Icon name="filter" />
               {activeFilterCount > 0 && (
                 <span
                   aria-hidden
@@ -735,7 +738,7 @@ function CalendarPageContent() {
               )}
             </Button>
             <Button variant="accent" size="icon" onClick={openAddForToday} aria-label={t('common.add') || 'Add'} title={t('common.add') || 'Add'}>
-              <span aria-hidden className="text-lg leading-none">➕</span>
+              <Icon name="plus" />
             </Button>
           </div>
         </div>
@@ -762,13 +765,13 @@ function CalendarPageContent() {
             {/* Navigation */}
             <div className="my-4 flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={navigatePrevious} aria-label={t('common.previous')}>
-                <span aria-hidden>←</span>
+                <Icon name="chevron-left" />
               </Button>
               <h2 className="flex-1 text-center text-lg font-extrabold text-uc-text uc-num">
                 {formatDateRange()}
               </h2>
               <Button variant="ghost" size="icon" onClick={navigateNext} aria-label={t('common.next')}>
-                <span aria-hidden>→</span>
+                <Icon name="chevron-right" />
               </Button>
             </div>
 
@@ -819,7 +822,7 @@ function CalendarPageContent() {
                               {isToday && <span aria-hidden className="absolute inset-1 rounded-xl border-2 border-uc-text" />}
                               {hasTrip && <span aria-hidden className="absolute inset-x-0 bottom-0 h-[3px] bg-uc-success" />}
                               {isInjuryRiskDay(cycleInfo) && (
-                                <span aria-hidden className="absolute left-1 top-1 text-[10px] leading-none opacity-80">⚠️</span>
+                                <Icon name="injury-risk" size={12} className="absolute left-1 top-1 text-uc-warning" />
                               )}
                               {badgeEvent && (
                                 <span className="absolute right-0.5 top-0.5">
@@ -879,7 +882,7 @@ function CalendarPageContent() {
                         {isInjuryRiskDay(cycleInfo) && (
                           <Tooltip content={injuryRiskText} position="top" className="ml-auto" tapToOpen={false}>
                             <span className="inline-flex min-h-6 cursor-help items-center gap-1 rounded-lg bg-uc-warning-bg px-2 text-xs font-bold text-uc-warning">
-                              <span aria-hidden>⚠️</span>
+                              <Icon name="injury-risk" size={14} />
                               {t('calendar.injuryRiskPhase')}
                             </span>
                           </Tooltip>
@@ -940,7 +943,7 @@ function CalendarPageContent() {
               ))}
               {injuryStats?.phaseWithMostInjuries && (
                 <li className="flex items-center gap-2 text-sm text-uc-text-muted">
-                  <span aria-hidden className="inline-flex size-5 items-center justify-center rounded-md bg-uc-warning-bg text-[10px]">⚠️</span>
+                  <span aria-hidden className="inline-flex size-5 items-center justify-center rounded-md bg-uc-warning-bg text-uc-warning"><Icon name="injury-risk" size={12} /></span>
                   {t('calendar.injuryRiskPhase')}
                 </li>
               )}
@@ -967,8 +970,8 @@ function CalendarPageContent() {
               value={activeFilter}
               onChange={setActiveFilter}
               options={[
-                { value: 'workouts', label: t('nav.workouts'), icon: '🏋️' },
-                { value: 'events', label: t('nav.events'), icon: '📅' },
+                { value: 'workouts', label: t('nav.workouts'), icon: <Icon name="workouts" size={16} /> },
+                { value: 'events', label: t('nav.events'), icon: <Icon name="calendar" size={16} /> },
               ]}
             />
 
@@ -998,7 +1001,7 @@ function CalendarPageContent() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {EVENT_TYPES.map(({ type, key, emoji }) => (
+                  {EVENT_TYPES.map(({ type, key, icon }) => (
                     <ChoiceChip
                       key={type}
                       selected={selectedEventTypes.includes(type)}
@@ -1010,7 +1013,7 @@ function CalendarPageContent() {
                         }
                       }}
                     >
-                      <span aria-hidden>{emoji}</span>
+                      <Icon name={icon} size={16} />
                       {t(`events.types.${key}`)}
                     </ChoiceChip>
                   ))}
@@ -1041,7 +1044,7 @@ function CalendarPageContent() {
                   </PhaseBadge>
                   {isInjuryRiskDay(sheetCycleInfo) && (
                     <p className="flex gap-2 rounded-xl bg-uc-warning-bg p-3 text-[13px] text-uc-text">
-                      <span aria-hidden>⚠️</span>
+                      <Icon name="injury-risk" className="text-uc-warning" />
                       {injuryRiskText}
                     </p>
                   )}
@@ -1072,17 +1075,17 @@ function CalendarPageContent() {
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   {([
-                    { onClick: handleQuickLog, emoji: '⚡', label: t('quickLog.button') || 'Quick Log', tone: 'bg-uc-primary-container text-uc-on-primary-container border-transparent' },
-                    { onClick: handleAddWorkout, emoji: '🏋️', label: t('workouts.addNew') || 'Add Workout', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
-                    { onClick: handleAddEvent, emoji: '📅', label: t('events.addNew') || 'Add Event', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
+                    { onClick: handleQuickLog, icon: 'quick-log' as IconName, label: t('quickLog.button') || 'Quick Log', tone: 'bg-uc-primary-container text-uc-on-primary-container border-transparent' },
+                    { onClick: handleAddWorkout, icon: 'workouts' as IconName, label: t('workouts.addNew') || 'Add Workout', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
+                    { onClick: handleAddEvent, icon: 'calendar' as IconName, label: t('events.addNew') || 'Add Event', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
                   ]).map((choice) => (
                     <button
-                      key={choice.emoji}
+                      key={choice.icon}
                       type="button"
                       onClick={choice.onClick}
                       className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-uc-card border p-3 text-center text-sm font-bold transition-colors ${choice.tone}`}
                     >
-                      <span aria-hidden className="text-2xl leading-none">{choice.emoji}</span>
+                      <Icon name={choice.icon} size={24} />
                       {choice.label}
                     </button>
                   ))}

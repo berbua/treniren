@@ -10,21 +10,11 @@ import { useCycle } from '@/contexts/CycleContext';
 import { CyclePhase, getPhaseDisplayName, getPhaseDayRange } from '@/lib/cycle-utils';
 import { useNotifications } from '@/contexts/NotificationContext';
 import {
-  Button, Card, EmptyState, Overline, SegmentedControl, SkeletonRows, StatTile, WorkoutIconTile,
+  Button, Card, EmptyState, Icon, Overline, SegmentedControl, SkeletonRows, StatTile, WorkoutIconTile,
   buttonClasses, phaseBandBg, phaseTranslationKey, workoutBg,
 } from '@/components/ui';
 
 type FrequencyPeriod = 'week' | 'month' | 'quarter' | 'year';
-
-const typeEmoji: Record<WorkoutType, string> = {
-  GYM: '🏋️',
-  BOULDERING: '🧗',
-  CIRCUITS: '🔄',
-  LEAD_ROCK: '🏔️',
-  LEAD_ARTIFICIAL: '🧗‍♀️',
-  MENTAL_PRACTICE: '🧘',
-  FINGERBOARD: '🖐️',
-};
 
 const typeLabelKey: Record<WorkoutType, string> = {
   GYM: 'gym',
@@ -317,12 +307,12 @@ export const StatisticsContent = () => {
       ) : statsData.overall.totalWorkouts === 0 ? (
         <Card>
           <EmptyState
-            icon="📊"
+            icon={<Icon name="stats" size={28} />}
             title={t('stats.noData') || 'No statistics available yet'}
             description={t('stats.noDataDescription') || 'Start logging workouts to see detailed statistics about your training progress, volume, and performance over time.'}
             action={
               <Link href="/workouts" className={buttonClasses('accent', 'lg')}>
-                ➕ {t('stats.logFirstWorkout') || 'Log Your First Workout'}
+                <Icon name="plus" /> {t('stats.logFirstWorkout') || 'Log Your First Workout'}
               </Link>
             }
           />
@@ -344,10 +334,7 @@ export const StatisticsContent = () => {
               {statsData.workoutTypes.map((typeStats) => (
                 <Card key={typeStats.type}>
                   <div className="flex items-center gap-3">
-                    <WorkoutIconTile
-                      workoutType={typeStats.type}
-                      icon={<span className="text-xl leading-none">{typeEmoji[typeStats.type]}</span>}
-                    />
+                    <WorkoutIconTile workoutType={typeStats.type} />
                     <div className="min-w-0 flex-1">
                       <p className="font-extrabold text-uc-text">{getTrainingTypeLabel(typeStats.type)}</p>
                       <p className="text-[13px] font-semibold text-uc-text-muted uc-num">
@@ -421,7 +408,7 @@ export const StatisticsContent = () => {
 
               {/* Mental & Falls Statistics Info */}
               <Card className="flex items-center gap-3">
-                <span aria-hidden className="text-xl">🧠</span>
+                <Icon name="strong-mind" size={24} className="text-uc-primary" />
                 <p className="text-sm text-uc-text-muted">
                   {t('stats.mentalFallsStatsInfo') || 'Mental practice statistics and falls tracking are available in the Strong Mind section.'}{' '}
                   <Link href="/strong-mind" className="font-bold text-uc-primary hover:underline">
@@ -484,7 +471,7 @@ export const StatisticsContent = () => {
                   {mostInjuriesPhase && injuryCycle.phaseWithMostInjuries && (
                     <div className="mt-4 rounded-uc-card bg-uc-warning-bg p-4 text-uc-text">
                       <div className="flex items-start gap-3">
-                        <span aria-hidden className="text-xl leading-6 text-uc-warning">⚠️</span>
+                        <Icon name="injury-risk" size={24} className="text-uc-warning" />
                         <div className="min-w-0">
                           <h3 className="font-extrabold">
                             {t('stats.mostInjuriesPhaseTitle') || 'Most injuries in a phase'}:{' '}
@@ -507,9 +494,10 @@ export const StatisticsContent = () => {
                         isLoading={isEnablingNotification}
                         disabled={notificationEnabled}
                       >
+                        <Icon name={notificationEnabled ? 'success' : 'bell'} />
                         {notificationEnabled
-                          ? (t('stats.injuryPhaseNotificationAlreadyEnabled') || '✓ Notification already enabled')
-                          : (t('stats.enableInjuryPhaseNotification') || '🔔 Enable notification')}
+                          ? (t('stats.injuryPhaseNotificationAlreadyEnabled') || 'Notification already enabled')
+                          : (t('stats.enableInjuryPhaseNotification') || 'Enable notification')}
                       </Button>
                     </div>
                   )}
@@ -536,7 +524,7 @@ export const StatisticsContent = () => {
               />
               {gratitudeRows.length === 0 ? (
                 <EmptyState
-                  icon={gratitudeFilter === 'improvements' ? '📈' : '🙏'}
+                  icon={<Icon name={gratitudeFilter === 'improvements' ? 'improve' : 'gratitude'} size={28} />}
                   title={gratitudeFilter === 'improvements'
                     ? (t('strongMind.noImprovements') || 'No improvement notes yet')
                     : (t('strongMind.noGratitude') || 'No gratitude entries yet')}
@@ -552,15 +540,16 @@ export const StatisticsContent = () => {
                         aria-label={row.kind === 'gratitude'
                           ? (t('strongMind.gratefulFor') || 'Gratitude')
                           : (t('strongMind.improvements') || 'Improvements')}
-                        className={`text-base leading-6 ${row.kind === 'gratitude' ? 'text-uc-accent-text' : 'text-uc-primary'}`}
+                        role="img"
+                        className={`flex h-6 shrink-0 items-center ${row.kind === 'gratitude' ? 'text-uc-accent-text' : 'text-uc-primary'}`}
                       >
-                        {row.kind === 'gratitude' ? '✨' : '📈'}
+                        <Icon name={row.kind === 'gratitude' ? 'gratitude' : 'improve'} />
                       </span>
                       <div className="min-w-0">
                         <p className="whitespace-pre-wrap text-[15px] font-semibold text-uc-text">{row.text}</p>
                         <p className="mt-0.5 text-[13px] font-semibold text-uc-text-muted">
                           {getTrainingTypeLabel(row.workout.type)}
-                          {row.workout.sector && <> · 📍 {row.workout.sector}</>}
+                          {row.workout.sector && <> · <Icon name="event-trip" size={14} className="inline -mt-0.5" /> {row.workout.sector}</>}
                           {' · '}
                           {formatShortDate(new Date(row.workout.startTime), true)}
                         </p>

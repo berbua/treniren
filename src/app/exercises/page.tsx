@@ -10,7 +10,7 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import ExerciseForm from '@/components/ExerciseForm'
 import { ExerciseLibrary } from '@/components/ExerciseLibrary'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
-import { Button, SkeletonRows, buttonClasses } from '@/components/ui'
+import { Button, Icon, SkeletonRows, buttonClasses } from '@/components/ui'
 
 export default function ExercisesPage() {
   return (
@@ -158,11 +158,11 @@ function ExercisesPageContent() {
               aria-label={t('exercises.addRoutine') || 'Add Routine'}
               className={buttonClasses('ghost', 'md')}
             >
-              <span aria-hidden>👯</span>
+              <Icon name="workouts" />
               <span className="hidden sm:inline">{t('exercises.addRoutine') || 'Add Routine'}</span>
             </Link>
             <Button variant="accent" onClick={handleCreateExercise} aria-label={t('exercises.addExercise') || 'Add Exercise'}>
-              +<span className="hidden sm:inline">{t('exercises.addExercise') || 'Add Exercise'}</span>
+              <Icon name="plus" /><span className="hidden sm:inline">{t('exercises.addExercise') || 'Add Exercise'}</span>
             </Button>
           </div>
         </div>

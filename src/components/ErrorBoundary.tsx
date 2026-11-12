@@ -1,7 +1,7 @@
 'use client';
 
 import { Component, ReactNode } from 'react';
-import { buttonClasses } from '@/components/ui';
+import { Icon, buttonClasses } from '@/components/ui';
 
 interface Props {
   children: ReactNode;
@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-uc-bg flex items-center justify-center p-4">
           <div className="bg-uc-surface rounded-uc-sheet shadow-uc p-8 max-w-md w-full border border-uc-border text-center">
-            <div aria-hidden className="mx-auto mb-5 flex size-16 items-center justify-center rounded-uc-card bg-uc-error-bg text-3xl">😵</div>
+            <div aria-hidden className="mx-auto mb-5 flex size-16 items-center justify-center rounded-uc-card bg-uc-error-bg text-uc-error"><Icon name="error" size={32} /></div>
             <h2 className="text-[22px] font-extrabold text-uc-text mb-2">
               Oops! Something went wrong
             </h2>
@@ -49,13 +49,15 @@ export class ErrorBoundary extends Component<Props, State> {
                 onClick={() => window.location.reload()}
                 className={buttonClasses('accent', 'lg', 'w-full')}
               >
-                🔄 Refresh Page
+                <Icon name="cycle" />
+                Refresh Page
               </button>
               <button
                 onClick={() => this.setState({ hasError: false })}
                 className={buttonClasses('ghost', 'lg', 'w-full')}
               >
-                🔙 Try Again
+                <Icon name="chevron-left" />
+                Try Again
               </button>
             </div>
             {process.env.NODE_ENV === 'development' && this.state.error && (

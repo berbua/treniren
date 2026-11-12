@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react'
+import { Icon, IconName } from './Icon'
 
 export type WorkoutTypeKey =
   | 'GYM'
@@ -30,10 +31,25 @@ export const workoutText: Record<WorkoutTypeKey, string> = {
   FINGERBOARD: 'text-uc-workout-fingerboard',
 }
 
+export const workoutIcon: Record<WorkoutTypeKey, IconName> = {
+  GYM: 'type-gym',
+  BOULDERING: 'type-bouldering',
+  CIRCUITS: 'type-circuits',
+  LEAD_ROCK: 'type-lead-rock',
+  LEAD_ARTIFICIAL: 'type-lead-wall',
+  MENTAL_PRACTICE: 'type-mental',
+  FINGERBOARD: 'type-fingerboard',
+}
+
+/** The workout type's icon, or the gym icon for an unknown type. */
+export function WorkoutIcon({ workoutType, size = 20, className }: { workoutType: string; size?: number; className?: string }) {
+  return <Icon name={workoutIcon[workoutType as WorkoutTypeKey] ?? 'type-gym'} size={size} className={className} />
+}
+
 interface WorkoutTypeChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   workoutType: WorkoutTypeKey
   selected?: boolean
-  /** 24px icon slot; keeps the current emoji until the custom SVGs arrive. */
+  /** Defaults to the workout type's icon; `null` hides it. */
   icon?: ReactNode
 }
 
@@ -57,9 +73,9 @@ export function WorkoutTypeChip({
       } ${className}`}
       {...props}
     >
-      {icon && (
+      {icon !== null && (
         <span aria-hidden className={`inline-flex size-6 items-center justify-center ${selected ? '' : workoutText[workoutType]}`}>
-          {icon}
+          {icon ?? <WorkoutIcon workoutType={workoutType} />}
         </span>
       )}
       {children}
@@ -67,14 +83,14 @@ export function WorkoutTypeChip({
   )
 }
 
-/** 44px rounded tile in the workout colour with the icon in chip ink (session rows, lists). */
+/** 44px rounded tile in the workout colour with the icon in chip ink (session rows, lists). Defaults to the type's icon. */
 export function WorkoutIconTile({ workoutType, icon, className = '' }: { workoutType: WorkoutTypeKey; icon?: ReactNode; className?: string }) {
   return (
     <span
       aria-hidden
       className={`inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-uc-chip-ink ${workoutBg[workoutType]} ${className}`}
     >
-      {icon}
+      {icon ?? <WorkoutIcon workoutType={workoutType} size={22} />}
     </span>
   )
 }

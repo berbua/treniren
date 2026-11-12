@@ -10,12 +10,12 @@ import { useOffline } from '@/hooks/useOffline';
 import { NotificationBell } from './NotificationBell';
 import UserMenu from './UserMenu';
 import LanguageSwitcher from './LanguageSwitcher';
-import { BottomSheet, Overline, buttonClasses, phaseBandBg, phaseSolidBg, phaseTranslationKey } from './ui';
+import { BottomSheet, Icon, IconName, Overline, buttonClasses, phaseBandBg, phaseSolidBg, phaseTranslationKey } from './ui';
 
 interface NavItem {
   name: string;
   href: string;
-  icon: string;
+  icon: IconName;
 }
 
 interface NavGroup {
@@ -36,24 +36,24 @@ export const NavigationHeader = () => {
 
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
 
-  const item = (key: string, fallback: string, href: string, icon: string): NavItem => ({
+  const item = (key: string, fallback: string, href: string, icon: IconName): NavItem => ({
     name: t(key) || fallback,
     href,
     icon,
   });
 
-  const dashboard = item('nav.dashboard', 'Dashboard', '/dashboard', '📊');
-  const workouts = item('nav.workouts', 'Workouts', '/workouts', '🏋️');
-  const calendar = item('nav.calendar', 'Calendar', '/calendar', '📅');
-  const exercises = item('nav.exercises', 'Exercises', '/exercises', '💪');
-  const routines = item('nav.routines', 'Routines', '/routines', '👯');
-  const fingerboard = item('nav.fingerboardProtocols', 'Fingerboard', '/fingerboard-protocols', '🖐️');
-  const statistics = item('nav.statistics', 'Statistics', '/statistics', '📈');
-  const strongMind = item('strongMind.title', 'Strong Mind', '/strong-mind', '🧠');
-  const cycle = item('nav.cycle', 'Cycle', '/cycle', '🔴');
-  const events = item('nav.events', 'Events', '/events', '📍');
-  const fingerboardTesting = item('nav.fingerboardTesting', 'Fingerboard testing', '/fingerboard-testing', '🧪');
-  const profile = item('nav.profile', 'Profile', '/profile', '👤');
+  const dashboard = item('nav.dashboard', 'Dashboard', '/dashboard', 'home');
+  const workouts = item('nav.workouts', 'Workouts', '/workouts', 'workouts');
+  const calendar = item('nav.calendar', 'Calendar', '/calendar', 'calendar');
+  const exercises = item('nav.exercises', 'Exercises', '/exercises', 'type-gym');
+  const routines = item('nav.routines', 'Routines', '/routines', 'library');
+  const fingerboard = item('nav.fingerboardProtocols', 'Fingerboard', '/fingerboard-protocols', 'type-fingerboard');
+  const statistics = item('nav.statistics', 'Statistics', '/statistics', 'stats');
+  const strongMind = item('strongMind.title', 'Strong Mind', '/strong-mind', 'strong-mind');
+  const cycle = item('nav.cycle', 'Cycle', '/cycle', 'cycle');
+  const events = item('nav.events', 'Events', '/events', 'event-other');
+  const fingerboardTesting = item('nav.fingerboardTesting', 'Fingerboard testing', '/fingerboard-testing', 'test');
+  const profile = item('nav.profile', 'Profile', '/profile', 'user');
 
   const trainingLabel = t('dashboard.categories.training') || 'Training';
   const libraryLabel = t('dashboard.categories.library') || 'Library';
@@ -78,8 +78,8 @@ export const NavigationHeader = () => {
 
   const logo = (
     <Link href="/" className="flex min-w-0 items-center gap-2.5 min-h-11">
-      <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-xl">
-        🦄
+      <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-uc-accent-text">
+        <Icon name="horn" size={22} />
       </span>
       <span className="truncate font-extrabold text-uc-text">{t('app.name') || 'Unicorn Climb'}</span>
     </Link>
@@ -155,7 +155,7 @@ export const NavigationHeader = () => {
                             : 'text-uc-text font-semibold hover:bg-uc-elevated'
                         }`}
                       >
-                        <span aria-hidden className="inline-flex size-6 items-center justify-center">{navItem.icon}</span>
+                        <Icon name={navItem.icon} size={22} />
                         <span>{navItem.name}</span>
                       </Link>
                     </li>
@@ -205,15 +205,15 @@ export const NavigationHeader = () => {
                   className="flex flex-col items-center gap-0.5 min-h-11 px-0.5"
                 >
                   {isCenter ? (
-                    <span aria-hidden className="flex size-12 -mt-1 items-center justify-center rounded-[14px] bg-uc-accent text-uc-on-accent text-2xl font-bold">
-                      +
+                    <span aria-hidden className="flex size-12 -mt-1 items-center justify-center rounded-[14px] bg-uc-accent text-uc-on-accent">
+                      <Icon name="plus" size={26} strokeWidth={2.25} />
                     </span>
                   ) : (
                     <span
                       aria-hidden
-                      className={`flex size-10 items-center justify-center rounded-xl text-lg ${active ? 'bg-uc-primary-container' : ''}`}
+                      className={`flex size-10 items-center justify-center rounded-xl ${active ? 'bg-uc-primary-container text-uc-on-primary-container' : 'text-uc-text-muted'}`}
                     >
-                      {tab.icon}
+                      <Icon name={tab.icon} size={24} />
                     </span>
                   )}
                   <span
@@ -235,8 +235,8 @@ export const NavigationHeader = () => {
               aria-expanded={isMoreOpen}
               className="w-full flex flex-col items-center gap-0.5 min-h-11 px-0.5"
             >
-              <span aria-hidden className={`flex size-10 items-center justify-center rounded-xl text-lg ${isMoreActive ? 'bg-uc-primary-container' : ''}`}>
-                ⋯
+              <span aria-hidden className={`flex size-10 items-center justify-center rounded-xl ${isMoreActive ? 'bg-uc-primary-container text-uc-on-primary-container' : 'text-uc-text-muted'}`}>
+                <Icon name="menu" size={24} />
               </span>
               <span
                 className={`max-w-full truncate text-[11px] leading-[14px] ${
@@ -270,7 +270,7 @@ export const NavigationHeader = () => {
                             : 'bg-uc-surface border-uc-border text-uc-text hover:border-uc-primary'
                         }`}
                       >
-                        <span aria-hidden className="text-xl leading-none">{navItem.icon}</span>
+                        <Icon name={navItem.icon} size={24} className={active ? '' : 'text-uc-primary'} />
                         <span className="text-[13px] font-bold leading-tight break-words">{navItem.name}</span>
                       </Link>
                     </li>

@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { toLocalDateString } from '@/lib/date-utils'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
-import { BottomSheet, Button, Input, Label, Overline, SegmentedControl, Select, Spinner, UnitInput } from './ui'
+import { BottomSheet, Button, Icon, Input, Label, Overline, SegmentedControl, Select, Spinner, UnitInput } from './ui'
 
 interface PerformTestModalProps {
   protocol: FingerboardTestingProtocol
@@ -171,7 +171,7 @@ export default function PerformTestModal({
                 aria-label={t('common.save') || 'Save'}
                 className={`${smallIconButton} text-uc-success`}
               >
-                {isSavingName ? <Spinner /> : <span aria-hidden>✓</span>}
+                {isSavingName ? <Spinner /> : <Icon name="success" />}
               </button>
               <button
                 type="button"
@@ -180,7 +180,7 @@ export default function PerformTestModal({
                 aria-label={t('common.cancel') || 'Cancel'}
                 className={smallIconButton}
               >
-                <span aria-hidden>✕</span>
+                <Icon name="close" />
               </button>
             </span>
           ) : (
@@ -193,7 +193,7 @@ export default function PerformTestModal({
                 title={t('fingerboardTesting.editName') || 'Edit protocol name'}
                 className={`${smallIconButton} text-base`}
               >
-                <span aria-hidden>✏️</span>
+                <Icon name="edit" />
               </button>
             </span>
           )}

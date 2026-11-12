@@ -17,6 +17,7 @@ import {
   EmptyState,
   Input,
   Label,
+  Icon,
   Overline,
   SegmentedControl,
   Select,
@@ -419,7 +420,7 @@ function StrongMindPageContent() {
 
   const header = (
     <h1 className="flex items-center gap-2.5 text-[28px] font-extrabold leading-tight text-uc-text">
-      <span aria-hidden className="text-2xl">🧠</span>
+      <Icon name="strong-mind" size={28} className="text-uc-primary" />
       {t('strongMind.title') || 'Strong Mind'}
     </h1>
   )
@@ -444,7 +445,7 @@ function StrongMindPageContent() {
         aria-label={t('common.edit') || 'Edit'}
         className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-elevated hover:text-uc-text"
       >
-        ✏️
+        <Icon name="edit" />
       </button>
       <button
         type="button"
@@ -452,7 +453,7 @@ function StrongMindPageContent() {
         aria-label={t('common.delete') || 'Delete'}
         className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-elevated hover:text-uc-error"
       >
-        🗑️
+        <Icon name="delete" />
       </button>
     </div>
   )
@@ -490,18 +491,16 @@ function StrongMindPageContent() {
 
   const gratitudeCard = (workout: typeof gratitudeWorkouts[number], kind: 'gratitude' | 'improvements') => (
     <Card key={`${kind}-${workout.id}`} className="flex flex-col gap-2">
-      <span
-        aria-hidden
-        className={`text-base leading-6 ${kind === 'gratitude' ? 'text-uc-accent-text' : 'text-uc-primary'}`}
-      >
-        {kind === 'gratitude' ? '✨' : '📈'}
-      </span>
+      <Icon
+        name={kind === 'gratitude' ? 'gratitude' : 'improve'}
+        className={kind === 'gratitude' ? 'text-uc-accent-text' : 'text-uc-primary'}
+      />
       <p className="flex-1 whitespace-pre-wrap text-[15px] font-semibold leading-snug text-uc-text">
         {kind === 'gratitude' ? workout.gratitude : workout.improvements}
       </p>
       <p className="text-[12px] font-semibold text-uc-text-muted">
         {formatShortDate(workout.startTime)} · {workoutTypeLabel(workout.type)}
-        {workout.sector && <> · 📍 {workout.sector}</>}
+        {workout.sector && <> · <Icon name="event-trip" size={13} className="inline -mt-0.5" /> {workout.sector}</>}
       </p>
     </Card>
   )
@@ -512,7 +511,7 @@ function StrongMindPageContent() {
     return (
       <section>
         <Overline className="mb-2 flex items-center gap-1.5">
-          <span aria-hidden>{isGratitude ? '✨' : '📈'}</span>
+          <Icon name={isGratitude ? 'gratitude' : 'improve'} size={16} />
           {isGratitude
             ? (t('strongMind.gratefulFor') || '3 things I am grateful for')
             : (t('strongMind.improvements') || '3 things to do better next time')}
@@ -520,7 +519,7 @@ function StrongMindPageContent() {
         {entries.length === 0 ? (
           <Card className="border-dashed">
             <EmptyState
-              icon={isGratitude ? '🙏' : '📈'}
+              icon={<Icon name={isGratitude ? 'gratitude' : 'improve'} size={28} />}
               title={isGratitude
                 ? (t('strongMind.noGratitude') || 'No gratitude entries yet')
                 : (t('strongMind.noImprovements') || 'No improvement notes yet')}
@@ -660,10 +659,10 @@ function StrongMindPageContent() {
                 {t('common.all') || 'All'}
               </ChoiceChip>
               <ChoiceChip selected={gratitudeFilter === 'gratitude'} onClick={() => setGratitudeFilter('gratitude')}>
-                ✨ {t('strongMind.gratitude') || 'Gratitude'}
+                <Icon name="gratitude" size={16} /> {t('strongMind.gratitude') || 'Gratitude'}
               </ChoiceChip>
               <ChoiceChip selected={gratitudeFilter === 'improvements'} onClick={() => setGratitudeFilter('improvements')}>
-                📈 {t('stats.improvementsShort') || 'Improvements'}
+                <Icon name="improve" size={16} /> {t('stats.improvementsShort') || 'Improvements'}
               </ChoiceChip>
             </div>
             {gratitudeFilter !== 'improvements' && renderGratitudeSection('gratitude')}
@@ -698,7 +697,7 @@ function StrongMindPageContent() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <Card>
                   <h3 className="mb-3 flex items-center gap-2 text-[17px] font-extrabold text-uc-text">
-                    <span aria-hidden>🧘</span>
+                    <Icon name="type-mental" className="text-uc-workout-mental" />
                     {t('stats.mentalSessions')}
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
@@ -717,7 +716,7 @@ function StrongMindPageContent() {
 
                 <Card>
                   <h3 className="mb-3 flex items-center gap-2 text-[17px] font-extrabold text-uc-text">
-                    <span aria-hidden>🧗‍♀️</span>
+                    <Icon name="falls" className="text-uc-primary" />
                     {t('stats.fallsTracking')}
                   </h3>
                   <div className="grid grid-cols-2 gap-3">

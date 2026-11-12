@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestingProtocolFormData, FingerboardTestHang, HandType, GripType, FingerboardProtocol } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
-import { BottomSheet, Button, EmptyState, FieldError, Input, Label, Overline, SegmentedControl, Select, Textarea, UnitInput } from './ui'
+import { BottomSheet, Button, EmptyState, FieldError, Icon, Input, Label, Overline, SegmentedControl, Select, Textarea, UnitInput } from './ui'
 
 interface FingerboardTestingProtocolFormProps {
   protocol?: FingerboardTestingProtocol | null
@@ -227,7 +227,7 @@ export default function FingerboardTestingProtocolForm({
             </Overline>
 
             <Button variant="tonal" className="mb-2 w-full" onClick={handleLoadFromProtocol}>
-              <span aria-hidden>📦</span> {t('fingerboardTesting.loadFromProtocol') || 'Load from protocol'}
+              <Icon name="download" /> {t('fingerboardTesting.loadFromProtocol') || 'Load from protocol'}
             </Button>
 
             {formData.testHangs.length > 0 && (
@@ -252,7 +252,7 @@ export default function FingerboardTestingProtocolForm({
                       aria-label={t('routines.form.moveUp') || 'Move up'}
                       className={iconButton}
                     >
-                      <span aria-hidden>↑</span>
+                      <Icon name="move-up" />
                     </button>
                     <button
                       type="button"
@@ -261,7 +261,7 @@ export default function FingerboardTestingProtocolForm({
                       aria-label={t('routines.form.moveDown') || 'Move down'}
                       className={iconButton}
                     >
-                      <span aria-hidden>↓</span>
+                      <Icon name="move-down" />
                     </button>
                     <button
                       type="button"
@@ -270,7 +270,7 @@ export default function FingerboardTestingProtocolForm({
                       title={t('common.edit')}
                       className={iconButton}
                     >
-                      <span aria-hidden>✏️</span>
+                      <Icon name="edit" />
                     </button>
                     <button
                       type="button"
@@ -279,7 +279,7 @@ export default function FingerboardTestingProtocolForm({
                       title={t('protocolForm.remove')}
                       className={removeButton}
                     >
-                      <span aria-hidden>✕</span>
+                      <Icon name="close" />
                     </button>
                   </div>
                 ))}
@@ -321,7 +321,7 @@ export default function FingerboardTestingProtocolForm({
       >
         {existingProtocols.length === 0 ? (
           <EmptyState
-            icon="🖐️"
+            icon={<Icon name="type-fingerboard" size={28} />}
             title={t('workouts.labels.noProtocolsAvailableCreate') || 'No protocols available. Create one first!'}
           />
         ) : (
@@ -413,7 +413,7 @@ function TestHangForm({
           <Label>{t('workouts.labels.handType')} *</Label>
           <SegmentedControl
             ariaLabel={t('workouts.labels.handType')}
-            options={HAND_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey), icon: opt.emoji }))}
+            options={HAND_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
             value={formData.handType}
             onChange={(value) => setFormData({ ...formData, handType: value as HandType })}
           />
@@ -423,7 +423,7 @@ function TestHangForm({
           <Label>{t('workouts.labels.gripType')} *</Label>
           <SegmentedControl
             ariaLabel={t('workouts.labels.gripType')}
-            options={GRIP_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey), icon: opt.emoji }))}
+            options={GRIP_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
             value={formData.gripType}
             onChange={(value) => {
               const newGripType = value as GripType
@@ -454,7 +454,7 @@ function TestHangForm({
               <option value="">{t('common.selectSize') || 'Select size...'}</option>
               {CRIMP_SIZE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.emoji} {opt.label}
+                  {opt.label}
                 </option>
               ))}
             </Select>

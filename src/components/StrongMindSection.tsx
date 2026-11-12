@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { MentalState, ClimbSection, FocusState, ComfortZone } from '@/types/workout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tooltip } from './Tooltip';
-import { CollapsibleCard, Label, SegmentedControl, Textarea } from './ui';
+import { CollapsibleCard, Icon, Label, SegmentedControl, Textarea } from './ui';
 
 interface StrongMindSectionProps {
   mentalState: MentalState;
@@ -75,7 +75,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
     <CollapsibleCard
       open={isExpanded}
       onToggle={() => setIsExpanded(!isExpanded)}
-      icon="🧠"
+      icon={<Icon name="strong-mind" size={22} />}
       title={t('workouts.strongMind') || 'Strong Mind'}
       description={t('workouts.mentalStateTracking') || 'Track your mental state and climbing mindset'}
       summary={mentalState.beforeClimbing ? `${mentalState.beforeClimbing} · ${beforeLabel(mentalState.beforeClimbing)}` : undefined}
@@ -119,7 +119,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Label className="mb-0">{t('workouts.focusState') || 'Focus State'}</Label>
                     <Tooltip content={t('workouts.tooltips.focusState') || 'Your mental state during climbing: Choke (panic), Distraction (unfocused), Present (aware), Focused (concentrated), Clutch (performing under pressure), Flow (optimal state).'}>
-                      <span className="cursor-help text-sm leading-none">ℹ️</span>
+                      <span className="inline-flex size-6 cursor-help items-center justify-center text-uc-text-muted hover:text-uc-text"><Icon name="info" size={16} /></span>
                     </Tooltip>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -155,7 +155,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Label className="mb-0">{t('workouts.comfortZone') || 'Comfort Zone'}</Label>
                     <Tooltip content={t('workouts.tooltips.comfortZone') || 'How comfortable you felt on the climb: Comfort (easy), Stretch 1 (slightly challenging), Stretch 2 (very challenging), Panic (too hard).'}>
-                      <span className="cursor-help text-sm leading-none">ℹ️</span>
+                      <span className="inline-flex size-6 cursor-help items-center justify-center text-uc-text-muted hover:text-uc-text"><Icon name="info" size={16} /></span>
                     </Tooltip>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">

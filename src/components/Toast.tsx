@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { Icon, IconName } from '@/components/ui'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -43,18 +44,16 @@ export function ToastItem({ toast, onClose }: ToastProps) {
     }
   }
 
-  const getIcon = () => {
+  const getIcon = (): IconName => {
     switch (toast.type) {
       case 'success':
-        return '✅'
+        return 'success'
       case 'error':
-        return '❌'
+        return 'error'
       case 'warning':
-        return '⚠️'
-      case 'info':
-        return 'ℹ️'
+        return 'warning'
       default:
-        return '📢'
+        return 'info'
     }
   }
 
@@ -64,7 +63,7 @@ export function ToastItem({ toast, onClose }: ToastProps) {
       role="alert"
     >
       <div className="flex items-center gap-3 py-2 min-w-0">
-        <span aria-hidden className="text-lg leading-none">{getIcon()}</span>
+        <Icon name={getIcon()} />
         <p className="text-sm font-bold">{toast.message}</p>
       </div>
       <button

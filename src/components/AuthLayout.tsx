@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { Button } from '@/components/ui'
+import { Button, Icon } from '@/components/ui'
 
 /** Single-column auth screen under the logged-out header: optional logo tile, title, subtitle, content, footer. */
 export function AuthShell({ title, subtitle, showLogo = false, footer, children }: {
@@ -27,8 +27,8 @@ export function AuthShell({ title, subtitle, showLogo = false, footer, children 
 
 export function LogoTile({ className = '' }: { className?: string }) {
   return (
-    <span aria-hidden className={`flex size-14 items-center justify-center rounded-uc-card bg-uc-primary-container text-[28px] ${className}`}>
-      🦄
+    <span aria-hidden className={`flex size-14 items-center justify-center rounded-uc-card bg-uc-primary-container text-uc-accent-text ${className}`}>
+      <Icon name="horn" size={28} />
     </span>
   )
 }
@@ -90,7 +90,7 @@ export const validatePassword = (password: string) => {
   }
 }
 
-/** Live password rules: ✓ in success when met, ○ muted when not. */
+/** Live password rules: check in success when met, empty circle muted when not. */
 export function PasswordRules({ password }: { password: string }) {
   const { t } = useLanguage()
   const { errors } = validatePassword(password)
@@ -108,7 +108,7 @@ export function PasswordRules({ password }: { password: string }) {
           key={rule.label}
           className={`flex items-center gap-1.5 text-[13px] font-semibold ${rule.failed ? 'text-uc-text-muted' : 'text-uc-success'}`}
         >
-          <span aria-hidden className="inline-flex size-4 shrink-0 items-center justify-center">{rule.failed ? '○' : '✓'}</span>
+          {rule.failed ? <span aria-hidden className="size-3.5 shrink-0 rounded-full border-[1.75px] border-current mx-px" /> : <Icon name="success" size={16} />}
           {rule.label}
         </li>
       ))}

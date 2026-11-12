@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { FingerboardWorkoutHang, FingerboardProtocol, HandType, GripType } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, getHandTypeLabel, getHandTypeEmoji, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
+import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, getHandTypeLabel, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
 import Link from 'next/link'
-import { BottomSheet, Button, Card, EmptyState, Input, Label, Overline, SegmentedControl, Select, Textarea, UnitInput } from './ui'
+import { BottomSheet, Button, Card, EmptyState, Icon, Input, Label, Overline, SegmentedControl, Select, Textarea, UnitInput, WorkoutIcon } from './ui'
 
 interface FingerboardHangTrackerProps {
   hangs: FingerboardWorkoutHang[]
@@ -123,14 +123,14 @@ export default function FingerboardHangTracker({
 
   return (
     <div className="space-y-3">
-      <Overline>🖐️ Hangs</Overline>
+      <Overline>Hangs</Overline>
 
       <div className="grid grid-cols-2 gap-2">
         <Button variant="tonal" onClick={() => setShowProtocolSelector(true)}>
-          <span aria-hidden>📦</span> {t('workouts.labels.loadProtocol') || 'Load Protocol'}
+          <Icon name="library" /> {t('workouts.labels.loadProtocol') || 'Load Protocol'}
         </Button>
         <Button variant="ghost" onClick={handleAddHang}>
-          <span aria-hidden>+</span> {t('workouts.labels.addHang') || 'Add Hang'}
+          <Icon name="plus" /> {t('workouts.labels.addHang') || 'Add Hang'}
         </Button>
       </div>
 
@@ -138,7 +138,7 @@ export default function FingerboardHangTracker({
       {hangs.length === 0 ? (
         <div className="rounded-uc-card border border-dashed border-uc-border">
           <EmptyState
-            icon="🖐️"
+            icon={<WorkoutIcon workoutType="FINGERBOARD" size={28} />}
             title={t('workouts.labels.noHangsAdded') || 'No hangs added yet'}
             description={t('workouts.labels.noHangsDescription') || 'Add individual hangs or load a saved protocol to quickly set up your fingerboard training session.'}
           />
@@ -151,7 +151,7 @@ export default function FingerboardHangTracker({
               <div className="flex items-center gap-1 mb-3">
                 <h4 className="flex-1 min-w-0 font-bold text-uc-text">
                   <span className="text-uc-text-muted uc-num">#{index + 1}</span>{' '}
-                  {getHandTypeEmoji(hang.handType)} {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize)}
+                  {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize)}
                   {hang.customDescription && ` • ${hang.customDescription}`}
                 </h4>
                 <button
@@ -162,7 +162,7 @@ export default function FingerboardHangTracker({
                   title="Move up"
                   aria-label="Move up"
                 >
-                  ↑
+                  <Icon name="move-up" />
                 </button>
                 <button
                   type="button"
@@ -172,7 +172,7 @@ export default function FingerboardHangTracker({
                   title="Move down"
                   aria-label="Move down"
                 >
-                  ↓
+                  <Icon name="move-down" />
                 </button>
                 <button
                   type="button"
@@ -181,7 +181,7 @@ export default function FingerboardHangTracker({
                   title="Remove hang"
                   aria-label="Remove hang"
                 >
-                  🗑️
+                  <Icon name="delete" />
                 </button>
               </div>
 
@@ -191,7 +191,7 @@ export default function FingerboardHangTracker({
                   <Label>{t('workouts.labels.handType') || 'Hand Type'}</Label>
                   <SegmentedControl
                     ariaLabel={t('workouts.labels.handType') || 'Hand Type'}
-                    options={HAND_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey), icon: opt.emoji }))}
+                    options={HAND_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
                     value={hang.handType}
                     onChange={(value) => handleHangChange(index, 'handType', value as HandType)}
                   />
@@ -201,7 +201,7 @@ export default function FingerboardHangTracker({
                   <Label>{t('workouts.labels.gripType') || 'Grip Type'}</Label>
                   <SegmentedControl
                     ariaLabel={t('workouts.labels.gripType') || 'Grip Type'}
-                    options={GRIP_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey), icon: opt.emoji }))}
+                    options={GRIP_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
                     value={hang.gripType}
                     onChange={(value) => {
                       const newGripType = value as GripType
@@ -233,7 +233,7 @@ export default function FingerboardHangTracker({
                         <option value="">{t('common.selectSize') || 'Select size...'}</option>
                         {CRIMP_SIZE_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
-                            {opt.emoji} {opt.label}
+                            {opt.label}
                           </option>
                         ))}
                       </Select>
@@ -335,8 +335,8 @@ export default function FingerboardHangTracker({
           <EmptyState
             title={t('workouts.labels.noProtocolsAvailable') || 'No protocols available'}
             action={
-              <Link href="/fingerboard-protocols" className="text-sm font-bold text-uc-primary hover:underline">
-                Create your first protocol →
+              <Link href="/fingerboard-protocols" className="inline-flex items-center gap-1 text-sm font-bold text-uc-primary hover:underline">
+                Create your first protocol <Icon name="chevron-right" size={16} />
               </Link>
             }
           />

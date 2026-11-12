@@ -10,7 +10,7 @@ import { extractApiError } from '@/lib/errors'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import RoutineForm from '@/components/RoutineForm'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
-import { Button, Card, Chip, EmptyState, SkeletonRows, Spinner, WorkoutIconTile } from '@/components/ui'
+import { Button, Card, Chip, EmptyState, Icon, SkeletonRows, Spinner, WorkoutIconTile } from '@/components/ui'
 
 export default function RoutinesPage() {
   return (
@@ -174,7 +174,7 @@ function RoutinesPageContent() {
         ) : routines.length === 0 ? (
           <div className="rounded-uc-card border border-dashed border-uc-border">
             <EmptyState
-              icon="💪"
+              icon={<Icon name="workouts" size={28} />}
               title={t('routines.noRoutines') || 'No routines yet'}
               description={t('routines.noRoutinesDescription') || 'Create your first routine to quickly add exercises to workouts'}
               action={
@@ -193,7 +193,7 @@ function RoutinesPageContent() {
               return (
                 <Card key={routine.id} className="flex flex-col gap-3">
                   <div className="flex items-start gap-3">
-                    <WorkoutIconTile workoutType="GYM" icon="🏋️" />
+                    <WorkoutIconTile workoutType="GYM" />
                     <div className="min-w-0 flex-1">
                       <h3 className="text-[17px] font-extrabold leading-snug text-uc-text break-words">
                         {routine.name}
@@ -210,7 +210,7 @@ function RoutinesPageContent() {
                         title={t('routines.edit') || 'Edit'}
                         className="inline-flex size-11 items-center justify-center rounded-uc-input transition-colors hover:bg-uc-elevated"
                       >
-                        <span aria-hidden>✏️</span>
+                        <Icon name="edit" />
                       </button>
                       <button
                         type="button"
@@ -220,7 +220,7 @@ function RoutinesPageContent() {
                         title={t('routines.delete') || 'Delete'}
                         className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-error transition-colors hover:bg-uc-elevated disabled:opacity-50"
                       >
-                        {deletingRoutineId === routine.id ? <Spinner /> : <span aria-hidden>🗑️</span>}
+                        {deletingRoutineId === routine.id ? <Spinner /> : <Icon name="delete" />}
                       </button>
                     </div>
                   </div>

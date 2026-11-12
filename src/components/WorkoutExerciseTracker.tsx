@@ -5,7 +5,7 @@ import { Exercise, WorkoutExerciseData, WorkoutSet, Routine } from '@/types/work
 import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
 import { Tooltip } from './Tooltip'
-import { BottomSheet, Button, Card, EmptyState, Input, Overline } from './ui'
+import { BottomSheet, Button, Card, EmptyState, Icon, Input, Overline, WorkoutIcon } from './ui'
 
 interface WorkoutExerciseTrackerProps {
   exercises: WorkoutExerciseData[]
@@ -214,14 +214,14 @@ export default function WorkoutExerciseTracker({
 
   return (
     <div className="space-y-3">
-      <Overline>📋 Exercises & Sets</Overline>
+      <Overline>Exercises & Sets</Overline>
 
       <div className="grid grid-cols-2 gap-2">
         <Button variant="tonal" onClick={() => setShowRoutineSelector(true)}>
-          <span aria-hidden>👯</span> {t('workouts.labels.loadRoutine') || 'Load Routine'}
+          <Icon name="library" /> {t('workouts.labels.loadRoutine') || 'Load Routine'}
         </Button>
         <Button variant="ghost" onClick={() => setShowExerciseSelector(!showExerciseSelector)} aria-expanded={showExerciseSelector}>
-          <span aria-hidden>+</span> {t('workouts.labels.addExercise') || t('exercises.addExercise') || 'Add Exercise'}
+          <Icon name="plus" /> {t('workouts.labels.addExercise') || t('exercises.addExercise') || 'Add Exercise'}
         </Button>
       </div>
 
@@ -232,7 +232,7 @@ export default function WorkoutExerciseTracker({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('workouts.placeholders.searchExercises') || '🔍 Search exercises...'}
+            placeholder={t('workouts.placeholders.searchExercises') || 'Search exercises...'}
             autoFocus
           />
 
@@ -284,7 +284,7 @@ export default function WorkoutExerciseTracker({
       {exercises.length === 0 ? (
         <div className="rounded-uc-card border border-dashed border-uc-border">
           <EmptyState
-            icon="💪"
+            icon={<WorkoutIcon workoutType="GYM" size={28} />}
             title={t('workouts.labels.noExercisesAdded') || 'No exercises added yet'}
             description={
               <>
@@ -314,10 +314,10 @@ export default function WorkoutExerciseTracker({
                   </div>
                   <Link
                     href={`/exercises/${exercise.exerciseId}`}
-                    className="min-h-11 inline-flex items-center text-sm font-bold text-uc-primary hover:underline"
+                    className="min-h-11 inline-flex items-center gap-1 text-sm font-bold text-uc-primary hover:underline"
                     target="_blank"
                   >
-                    View Progress →
+                    View Progress <Icon name="chevron-right" size={16} />
                   </Link>
                   <button
                     type="button"
@@ -326,7 +326,7 @@ export default function WorkoutExerciseTracker({
                     title="Remove exercise"
                     aria-label="Remove exercise"
                   >
-                    🗑️
+                    <Icon name="delete" />
                   </button>
                 </div>
 
@@ -339,7 +339,7 @@ export default function WorkoutExerciseTracker({
                     <span className="flex items-center justify-center gap-1">
                       <Overline>{t('workouts.placeholders.rir') || 'RIR'}</Overline>
                       <Tooltip content={t('workouts.tooltips.RIR') || 'Reps in Reserve (RIR) is how many more reps you could have done. RIR 0 = maximum effort, RIR 3 = you could do 3 more reps. Helps track training intensity.'}>
-                        <span className="cursor-help text-xs leading-none">ℹ️</span>
+                        <span className="inline-flex size-6 cursor-help items-center justify-center text-uc-text-muted hover:text-uc-text"><Icon name="info" size={16} /></span>
                       </Tooltip>
                     </span>
                     <span />
@@ -428,8 +428,8 @@ export default function WorkoutExerciseTracker({
           <EmptyState
             title={t('workouts.labels.noRoutinesAvailable') || 'No routines available'}
             action={
-              <Link href="/routines" className="text-sm font-bold text-uc-primary hover:underline">
-                Create your first routine →
+              <Link href="/routines" className="inline-flex items-center gap-1 text-sm font-bold text-uc-primary hover:underline">
+                Create your first routine <Icon name="chevron-right" size={16} />
               </Link>
             }
           />
