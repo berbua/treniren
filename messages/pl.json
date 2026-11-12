@@ -218,8 +218,8 @@
       "quarter": "kwartał",
       "year": "rok"
     },
-    "mentalFallsStatsInfo": "Statystyki praktyk mentalnych oraz śledzenie lotów znajdują się w sekcji Strong Mind.",
-    "goToStrongMind": "Przejdź do Strong Mind →",
+    "mentalFallsStatsInfo": "Statystyki praktyk mentalnych oraz śledzenie lotów znajdują się w sekcji Silny mental.",
+    "goToStrongMind": "Przejdź do Silny mental →",
     "injuryPhaseDescription": "Każda faza pokazuje liczbę kontuzji w określonym zakresie dni cyklu",
     "mostInjuriesPhaseTitle": "Najwięcej kontuzji w fazie",
     "mostInjuriesPhaseMessage": "Najwięcej kontuzji ({count}) przytrafiło się w dniach cyklu {dayRange}.",
@@ -351,7 +351,7 @@
     "deleteConfirm": "Czy na pewno chcesz usunąć ten trening? Tej operacji nie można cofnąć.",
     "deleteConfirmTitle": "Usuń Trening",
     "showInfo": "Pokaż Info",
-    "strongMind": "Silny Umysł",
+    "strongMind": "Silny mental",
     "mentalStateTracking": "Śledź swój stan psychiczny i nastawienie podczas wspinaczki",
     "howFeltBefore": "Jak się czułaś przed wspinaczką?",
     "howFeltDuring": "Jak się czułaś podczas wspinaczki?",
@@ -565,7 +565,7 @@
       "goals": "Cele",
       "goalsDescription": "Zaznacz cele które wspiera ten trening",
       "selected": "wybrane",
-      "noGoalsAvailable": "Brak dostępnych celów. Utwórz cele w sekcji Silny Umysł.",
+      "noGoalsAvailable": "Brak dostępnych celów. Utwórz cele w sekcji Silny mental.",
       "cycleInfo": "Informacje o Cyklu",
       "cycleInfoDescription": "Zobacz informacje o swoim cyklu i rekomendacje",
       "mentalPracticeType": "Typ Praktyki",
@@ -1239,7 +1239,7 @@
     "tripCountdown": "Odliczanie do Wyjazdu i Planowanie"
   },
   "landingFeatures": {
-    "leadClimbingStrongMind": "Prowadzenie + Silny Umysł",
+    "leadClimbingStrongMind": "Prowadzenie + Silny mental",
     "leadClimbingDescription": "Zaawansowane śledzenie mentalne i integracja celów",
     "mentalStateTracking": "Śledzenie Stanu Psychicznego (skala 1-5)",
     "focusStatesComfortZones": "Stany Skupienia i Strefy Komfortu",
@@ -1250,7 +1250,7 @@
     "injuryTracking": "Śledzenie Kontuzji (Część Ciała i Opis)",
     "competitionPhysio": "Wyniki Zawodów i Wizyty Fizjoterapeutyczne",
     "tripCountdownCycle": "Odliczanie do Wyjazdu i Korelacja z Cyklem",
-    "strongMindGoals": "Cele Silnego Umysłu",
+    "strongMindGoals": "Cele Silnego mentalu",
     "strongMindGoalsDescription": "Śledzenie celów procesowych i projektowych",
     "processGoals": "Cele Procesowe (Długoterminowe i Krótkoterminowe)",
     "projectGoals": "Cele Projektowe (Drogi i Buldery)",
@@ -1473,7 +1473,7 @@
     "deletedUndo": "Wydarzenie usunięte"
   },
   "strongMind": {
-    "title": "Silny Umysł",
+    "title": "Silny mental",
     "description": "Ustaw swoje cele wspinaczkowe i śledź swoją mentalną podróż",
     "goals": "Cele",
     "statistics": "Statystyki",
