@@ -59,7 +59,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Log workout (other types, tags, recurring, dialogs) —
       `Log workout — gym, fingerboard, mental, tags, recurring, dialogs.png`
 - [x] Workouts list & goals — `Workouts list & goals.png`
-- [ ] Calendar — `Calendar — month.png`, `Calendar month — light.png`, `Calendar — week view & filters.png`
+- [x] Calendar — `Calendar — month.png`, `Calendar month — light.png`, `Calendar — week view & filters.png`
 - [ ] Cycle — `Cycle.png`, `Cycle — disabled, period form.png`
 - [ ] Statistics — `Statistics.png`
 - [ ] Strong Mind — `Strong Mind.png`
@@ -173,3 +173,15 @@ note the answer.
 - 2026-11-12: User approved: Workouts/Events tab counts now show the API total (`pagination.total`, falls back to the
   list length for the old API format); pagination is ‹ first … current±1 … last › with 44px buttons (current in
   `--uc-primary`) and a "1–20 of 214" line (new key `common.pageRange`).
+- 2026-11-12: Step 3 · Calendar done. `/calendar`: title + ghost 🔍 filter button (accent count badge) + accent ➕ (add for
+  today); Week/Month `SegmentedControl` + ghost Today; ← range → row (dates via `toLocaleDateString`, EN/PL).
+  Month: Mon-first 62px cells with no column gap, phase band behind (`--uc-band-*`, rounded at phase change / week
+  edge, future days at 50%), today ring, up to 3 workout dots, outlined event badge, trip line, ⚠️ on injury-risk days.
+  User decision: tapping a day opens the Add sheet, which now also lists the day's events/workouts with edit and
+  duplicate (the actions that lived on the month chips). Week: stacked day cards on the phase band with
+  "Phase · dN", injury-risk chip, event rows and workout rows (icon tile, Quick chip, 44px ✏️ 📋). Filters moved to a
+  `BottomSheet` (Workouts/Events segments, `TrainingTypeFilter` now `WorkoutTypeChip`s, event `ChoiceChip`s). Legend
+  card (phase swatches, workout dots, event badges, injury risk, hint) sits right of the calendar on `lg`.
+  Fix: the injury-risk marker never showed for early/late luteal (`'earlyLuteal'` vs `'early-luteal'`); now compared
+  via `phaseTranslationKey`. New keys `calendar.cycleDayShort`, `calendar.injuryRiskPhase`; `calendar.clickDateHint`
+  reworded. Not checked logged-in in a browser.

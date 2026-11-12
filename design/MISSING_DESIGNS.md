@@ -113,10 +113,23 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Events tab cards (`EventCard`) are untouched here — they're the Events step.
 
 ### Calendar
-- **Selected-day detail panel** and **Upcoming events list** — not implemented.
-- **Workout dots** — the app shows **full chips per workout** (type + label, sector, ⚡ quick-log badge,
-  edit and duplicate buttons). Dots are fine in month view only if the chips' info/actions live somewhere.
-- **Phase as a continuous band** — fine visually; today it's a small dot. "Predicted" days aren't marked separately.
+- **Upcoming events list** — not implemented.
+- **Selected-day detail** — user decision 2026-11-12: month cells show dots like the mock; tapping a day opens the
+  existing Add sheet, which now lists that day's events (tap = edit) and workouts (edit, duplicate) above the
+  Quick log / Add workout / Add event tiles. The mock shows the detail as an inline panel; ours is a sheet.
+- Built 2026-11-12. Remaining differences:
+  - **Filters**: mock has "Show workouts / Show events" checkboxes, a Reset link and "Show results". The app has a
+    Workouts / Events switch that only picks which filter list is shown, filters apply instantly, no reset — kept,
+    footer button is "Close". Mock's "All workouts are hidden" warning: the app's "None" means *show all*, so the
+    app's own note ("No training types selected. All workouts will be shown.") stays.
+  - **Today** button (jump to current week/month) is kept next to the Week/Month switch; the mock has none.
+  - **Event badges**: one badge per day cell (first non-trip event); all events are in the day sheet. Trips are a
+    green line along the bottom of each trip day (as in the mock) rather than a badge.
+  - **Injury-risk phase**: the app marks every day of the phase (small ⚠️ in month cells, "Injury-risk phase" chip
+    in week view, warning text in the day sheet); the mock shows a single badge.
+  - **Week view** on desktop stays one stacked column (mock is mobile only). Empty days show only their header.
+  - Week card meta: routine — variation, sector, notes (no TR / Strong Mind count like the mock; the old chips
+    didn't show them either). Injury severity dots aren't shown.
 
 ### Cycle
 - **Log symptoms** — doesn't exist.
@@ -212,14 +225,6 @@ Order in the app: Date → Type (7) → Tags → Cycle information (collapsible)
   gratitude/improvements.
 - **Goals configurator**: weekly goal (1–10), auto monthly (×4) or manual monthly (1–40),
   per-type goals ("Bouldering × 2 per week"), preview.
-
-### Calendar extras
-- **Week view** (it's the default) incl. mobile stacked layout and richer chips (routine variation, notes).
-- **Filters panel**: Workouts / Events toggle, training-type multi-select (All / None, "everything hidden" warning),
-  event-type filter.
-- **Injury-risk marker** (⚠️ phase with most injuries).
-- **Trip spanning several days** ("Destination 2/5").
-- Phase legend includes Ovulation.
 
 ### Cycle extras
 - **Cycle-tracking-disabled** state ("enable in profile").

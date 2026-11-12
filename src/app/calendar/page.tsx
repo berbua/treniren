@@ -7,7 +7,7 @@ import { useApiError } from '@/hooks/useApiError'
 import { useConfirmation } from '@/hooks/useConfirmation'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { extractApiError } from '@/lib/errors'
-import { calculateCycleInfo } from '@/lib/cycle-utils'
+import { calculateCycleInfo, CycleInfo, CyclePhase } from '@/lib/cycle-utils'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Tooltip } from '@/components/Tooltip'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
@@ -20,139 +20,176 @@ import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
 import { toLocalDateString } from '@/lib/date-utils'
 import EventForm from '@/components/EventForm'
 import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
+import {
+  BottomSheet,
+  Button,
+  Card,
+  Chip,
+  ChoiceChip,
+  Overline,
+  PhaseBadge,
+  phaseBandBg,
+  phaseSolidBg,
+  phaseTranslationKey,
+  SegmentedControl,
+  workoutBg,
+} from '@/components/ui'
 
 type ViewMode = 'week' | 'month'
 type FilterType = 'workouts' | 'events'
 
-const getTrainingTypeColor = (type: WorkoutType) => {
-  switch (type) {
-    case 'GYM':
-      return 'bg-training-gym'
-    case 'BOULDERING':
-      return 'bg-training-bouldering'
-    case 'CIRCUITS':
-      return 'bg-training-circuits'
-    case 'LEAD_ROCK':
-      return 'bg-training-leadRock'
-    case 'LEAD_ARTIFICIAL':
-      return 'bg-training-leadArtificial'
-    case 'MENTAL_PRACTICE':
-      return 'bg-training-mentalPractice'
-    case 'FINGERBOARD':
-      return 'bg-training-fingerboard'
-    default:
-      return 'bg-gray-500'
-  }
+const WORKOUT_TYPES: { type: WorkoutType; key: string; emoji: string }[] = [
+  { type: 'BOULDERING', key: 'bouldering', emoji: '🧗' },
+  { type: 'LEAD_ARTIFICIAL', key: 'leadArtificial', emoji: '🧗‍♀️' },
+  { type: 'LEAD_ROCK', key: 'leadRock', emoji: '🏔️' },
+  { type: 'GYM', key: 'gym', emoji: '🏋️' },
+  { type: 'CIRCUITS', key: 'circuits', emoji: '🔄' },
+  { type: 'FINGERBOARD', key: 'fingerboard', emoji: '🖐️' },
+  { type: 'MENTAL_PRACTICE', key: 'mentalPractice', emoji: '🧘' },
+]
+
+const workoutMeta = (type: WorkoutType) => WORKOUT_TYPES.find(w => w.type === type)
+
+// Full class strings so Tailwind can see them. Outlined badge in the event colour (DESIGN.md "Event markers").
+const EVENT_TYPES: { type: EventType; key: string; emoji: string; border: string }[] = [
+  { type: 'INJURY', key: 'injury', emoji: '🤕', border: 'border-uc-error' },
+  { type: 'PHYSIO', key: 'physio', emoji: '🏥', border: 'border-uc-primary' },
+  { type: 'COMPETITION', key: 'competition', emoji: '🏆', border: 'border-uc-accent-text' },
+  { type: 'TRIP', key: 'trip', emoji: '✈️', border: 'border-uc-success' },
+  { type: 'OTHER', key: 'other', emoji: '📅', border: 'border-uc-text-muted' },
+]
+
+const eventMeta = (type: EventType) => EVENT_TYPES.find(e => e.type === type) ?? EVENT_TYPES[4]
+
+const PHASES: CyclePhase[] = ['menstrual', 'follicular', 'ovulation', 'early-luteal', 'late-luteal']
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+// Day N of M for a trip spanning several days (null for other events)
+const getTripDay = (event: Event, date: Date) => {
+  if (event.type !== 'TRIP' || !event.destination || !event.tripStartDate || !event.tripEndDate) return null
+  const tripStart = new Date(event.tripStartDate)
+  const tripEnd = new Date(event.tripEndDate)
+  // Calculate total trip days (inclusive of both start and end dates)
+  const totalDays = Math.floor((tripEnd.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  // Calculate current day of trip (1-based)
+  const currentDay = Math.floor((date.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  return { currentDay, totalDays }
 }
 
-const getTrainingTypeEmoji = (type: WorkoutType) => {
-  switch (type) {
-    case 'GYM':
-      return '🏋️'
-    case 'BOULDERING':
-      return '🧗'
-    case 'CIRCUITS':
-      return '🔄'
-    case 'LEAD_ROCK':
-      return '🏔️'
-    case 'LEAD_ARTIFICIAL':
-      return '🧗‍♀️'
-    case 'MENTAL_PRACTICE':
-      return '🧘'
-    case 'FINGERBOARD':
-      return '🖐️'
-    default:
-      return '📅'
-  }
+function EventBadge({ type, size = 'sm' }: { type: EventType; size?: 'sm' | 'md' }) {
+  const sizeClass = size === 'sm' ? 'size-5 rounded-md text-[10px]' : 'size-9 rounded-xl text-base'
+  return (
+    <span
+      aria-hidden
+      className={`inline-flex shrink-0 items-center justify-center border-[1.5px] bg-uc-elevated leading-none ${eventMeta(type).border} ${sizeClass}`}
+    >
+      {eventMeta(type).emoji}
+    </span>
+  )
 }
 
-const getTrainingTypeLabel = (type: WorkoutType, t: (key: string) => string) => {
-  switch (type) {
-    case 'GYM':
-      return t('training.types.gym')
-    case 'BOULDERING':
-      return t('training.types.bouldering')
-    case 'CIRCUITS':
-      return t('training.types.circuits')
-    case 'LEAD_ROCK':
-      return t('training.types.leadRock')
-    case 'LEAD_ARTIFICIAL':
-      return t('training.types.leadArtificial')
-    case 'MENTAL_PRACTICE':
-      return t('training.types.mentalPractice')
-    case 'FINGERBOARD':
-      return t('training.types.fingerboard')
-    default:
-      return type
-  }
+function IconButton({ label, onClick, children }: { label: string; onClick: (e: React.MouseEvent) => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className="inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-base text-uc-text-muted transition-colors hover:bg-uc-elevated hover:text-uc-text"
+    >
+      <span aria-hidden>{children}</span>
+    </button>
+  )
 }
 
-const getEventTypeColor = (type: EventType) => {
-  switch (type) {
-    case 'INJURY':
-      return 'bg-red-500'
-    case 'PHYSIO':
-      return 'bg-blue-500'
-    case 'COMPETITION':
-      return 'bg-yellow-500'
-    case 'TRIP':
-      return 'bg-purple-500'
-    case 'OTHER':
-      return 'bg-gray-500'
-    default:
-      return 'bg-gray-500'
-  }
+interface WorkoutRowProps {
+  workout: Workout
+  t: (key: string) => string
+  onEdit: (workout: Workout, e: React.MouseEvent) => void
+  onDuplicate: (workout: Workout, e: React.MouseEvent) => void
 }
 
-const getEventTypeEmoji = (type: EventType) => {
-  switch (type) {
-    case 'INJURY':
-      return '🤕'
-    case 'PHYSIO':
-      return '🏥'
-    case 'COMPETITION':
-      return '🏆'
-    case 'TRIP':
-      return '✈️'
-    case 'OTHER':
-      return '📅'
-    default:
-      return '📅'
-  }
+function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
+  const details = workout.details as any
+  const meta = workoutMeta(workout.type)
+  const info = [
+    workout.type === 'GYM' && details?.routineVariation
+      ? `${details.routineVariation.routineName} — ${details.routineVariation.variationName}`
+      : null,
+    workout.sector ? `${t('workouts.sector') || 'Sector'}: ${workout.sector}` : null,
+    workout.notes || null,
+  ].filter(Boolean)
+
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-uc-border bg-uc-surface py-1.5 pl-3 pr-1">
+      <span
+        aria-hidden
+        className={`mt-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-base text-uc-chip-ink ${workoutBg[workout.type]}`}
+      >
+        {meta?.emoji}
+      </span>
+      <div className="min-w-0 flex-1 py-1.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-[15px] font-extrabold text-uc-text">
+            {meta ? t(`training.types.${meta.key}`) : workout.type}
+          </span>
+          {details?.quickLog && (
+            <Chip className="min-h-6 px-2 text-xs">
+              <span aria-hidden>⚡</span>
+              {t('quickLog.quickLogBadge') || 'Quick'}
+            </Chip>
+          )}
+        </div>
+        {info.length > 0 && (
+          <p className="mt-0.5 line-clamp-2 text-[13px] text-uc-text-muted">{info.join(' · ')}</p>
+        )}
+      </div>
+      <IconButton
+        label={t('common.edit') || 'Edit'}
+        onClick={(e) => {
+          e.stopPropagation()
+          onEdit(workout, e)
+        }}
+      >
+        ✏️
+      </IconButton>
+      <IconButton
+        label={t('workouts.duplicate') || 'Duplicate workout'}
+        onClick={(e) => {
+          e.stopPropagation()
+          onDuplicate(workout, e)
+        }}
+      >
+        📋
+      </IconButton>
+    </div>
+  )
 }
 
-const getEventTypeLabel = (type: EventType, t: (key: string) => string) => {
-  switch (type) {
-    case 'INJURY':
-      return 'Injury'
-    case 'PHYSIO':
-      return 'Physio Visit'
-    case 'COMPETITION':
-      return 'Competition'
-    case 'TRIP':
-      return 'Trip'
-    case 'OTHER':
-      return 'Other'
-    default:
-      return type
-  }
-}
+function EventRow({ event, date, t, onClick }: { event: Event; date: Date; t: (key: string) => string; onClick: (event: Event, e: React.MouseEvent) => void }) {
+  const tripDay = getTripDay(event, date)
+  const title = tripDay ? `${event.destination} ${tripDay.currentDay}/${tripDay.totalDays}` : event.title
+  const subtitle = event.type === 'TRIP' ? (tripDay ? event.title : event.destination) : event.description
 
-const getCyclePhaseColor = (phase: string) => {
-  switch (phase) {
-    case 'menstrual':
-      return 'bg-red-500'
-    case 'follicular':
-      return 'bg-green-500'
-    case 'ovulation':
-      return 'bg-yellow-500'
-    case 'early-luteal':
-      return 'bg-blue-500'
-    case 'late-luteal':
-      return 'bg-purple-500'
-    default:
-      return 'bg-gray-400'
-  }
+  return (
+    <button
+      type="button"
+      onClick={(e) => onClick(event, e)}
+      className="flex w-full items-center gap-3 rounded-xl border border-uc-border bg-uc-surface py-2 pl-3 pr-1 text-left transition-colors hover:border-uc-primary"
+    >
+      <EventBadge type={event.type} size="md" />
+      <span className="min-w-0 flex-1 py-1">
+        <span className="block text-[15px] font-extrabold text-uc-text">
+          {t(`events.types.${eventMeta(event.type).key}`)} · <span className="uc-num">{title}</span>
+        </span>
+        {subtitle && <span className="mt-0.5 block line-clamp-2 text-[13px] text-uc-text-muted">{subtitle}</span>}
+      </span>
+      <span aria-hidden className="inline-flex size-11 shrink-0 items-center justify-center text-base text-uc-text-muted">
+        ✏️
+      </span>
+    </button>
+  )
 }
 
 export default function CalendarPage() {
@@ -165,7 +202,7 @@ export default function CalendarPage() {
 
 function CalendarPageContent() {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { handleError, showSuccess } = useApiError()
   const confirmation = useConfirmation()
   const { getToken } = useCsrfToken()
@@ -595,559 +632,470 @@ function CalendarPageContent() {
     setSelectedDate(null)
   }
 
+
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
+
+  const weekdayLabels = useMemo(
+    // 1 Jan 2024 was a Monday
+    () => Array.from({ length: 7 }, (_, i) => capitalize(new Date(2024, 0, 1 + i).toLocaleDateString(locale, { weekday: 'short' }))),
+    [locale],
+  )
+
   const formatDateRange = () => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const monthsFull = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    
     if (viewMode === 'week') {
       const start = calendarDates[0]
       const end = calendarDates[6]
-      return `${months[start.getMonth()]} ${start.getDate()} - ${months[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`
+      const sameYear = end.getFullYear() === new Date().getFullYear()
+      return `${start.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} – ${end.toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'short',
+        ...(sameYear ? {} : { year: 'numeric' }),
+      })}`
     } else {
-      return `${monthsFull[currentDate.getMonth()]} ${currentDate.getFullYear()}`
+      return capitalize(currentDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' }))
     }
   }
+
+  const cycleLabel = (info: CycleInfo) =>
+    `${t(`cycle.phases.${phaseTranslationKey[info.phase]}`)} · ${t('calendar.cycleDayShort', { day: info.currentDay })}`
+
+  // statisticsService names phases in camelCase ('earlyLuteal'), cycle info in kebab-case ('early-luteal')
+  const isInjuryRiskDay = (info: CycleInfo | null) =>
+    !!info && !!injuryStats?.phaseWithMostInjuries && phaseTranslationKey[info.phase] === injuryStats.phaseWithMostInjuries
+
+  const injuryRiskText =
+    t('workouts.tooltips.injuryPhaseWarning') ||
+    'This phase has the highest number of injuries in your history. Be extra cautious and consider adjusting training intensity during this phase.'
+
+  const activeFilterCount = selectedTypes.length + selectedEventTypes.length
 
   if (loading) {
     return <LoadingSpinner message={t('calendar.loading')} fullScreen />
   }
 
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const isTodayDate = (date: Date) => typeof window !== 'undefined' && date.toDateString() === new Date().toDateString()
+
+  const openAddForToday = () => {
+    setSelectedDate(new Date())
+    setEditingWorkout(null)
+    setEditingEvent(null)
+    setDuplicatingWorkout(null)
+    setShowAddChoice(true)
+  }
+
+  const closeDaySheet = () => {
+    setShowAddChoice(false)
+    setSelectedDate(null)
+  }
+
+  // Actions from the day sheet close it first, then open the form
+  const editFromSheet = (workout: Workout, e: React.MouseEvent) => {
+    setShowAddChoice(false)
+    handleWorkoutClick(workout, e)
+  }
+  const duplicateFromSheet = (workout: Workout, e: React.MouseEvent) => {
+    setShowAddChoice(false)
+    handleDuplicateWorkout(workout, e)
+  }
+  const editEventFromSheet = (event: Event, e: React.MouseEvent) => {
+    setShowAddChoice(false)
+    handleEventClick(event, e)
+  }
+
+  const weeks = Array.from({ length: Math.ceil(calendarDates.length / 7) }, (_, i) => calendarDates.slice(i * 7, i * 7 + 7))
+
+  const sheetDate = showAddChoice ? selectedDate : null
+  const sheetCycleInfo = sheetDate ? getCycleInfoForDate(sheetDate) : null
+  const sheetWorkouts = sheetDate ? getWorkoutsForDate(sheetDate) : []
+  const sheetEvents = sheetDate ? getEventsForDate(sheetDate) : []
+
   return (
-    <div className="min-h-screen bg-uc-black">
-      <div className="container mx-auto px-4 py-8">
-        
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+
         {/* Header */}
-        <div className="mb-8">
-          {/* Title - separate row */}
-          <div className="mb-4">
-            <h1 className="text-3xl font-bold text-uc-text-light mb-2">
-              📅 {t('calendar.title')}
-            </h1>
-            <p className="text-sm text-uc-text-muted">
-              {t('calendar.clickDateHint') || '💡 Click on any date to add a workout, event, or quick log'}
-            </p>
-          </div>
-
-          {/* Buttons and filters - separate row with wrapping */}
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <button
-              onClick={() => {
-                setSelectedDate(new Date())
-                setEditingWorkout(null)
-                setEditingEvent(null)
-                setDuplicatingWorkout(null)
-                setShowAddChoice(true)
-              }}
-              className="px-4 py-2 rounded-xl font-medium transition-colors bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light border border-uc-purple/20 whitespace-nowrap"
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <h1 className="min-w-0 text-[28px] font-extrabold leading-tight text-uc-text">
+            {t('calendar.title')}
+          </h1>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowFilters(true)}
+              aria-label={`${t('common.filter')}${activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}`}
+              title={t('common.filter')}
+              className="relative"
             >
-              ➕ {t('events.addNew') || 'Add Event'}
-            </button>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors whitespace-nowrap ${
-                showFilters || selectedTypes.length > 0 || selectedEventTypes.length > 0
-                  ? 'bg-uc-mustard text-uc-black shadow-lg'
-                  : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
-              }`}
-            >
-              🔍 Filters {(selectedTypes.length + selectedEventTypes.length) > 0 && `(${selectedTypes.length + selectedEventTypes.length})`}
-            </button>
-            <button
-              onClick={() => setViewMode('week')}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors whitespace-nowrap ${
-                viewMode === 'week'
-                  ? 'bg-uc-mustard text-uc-black shadow-lg'
-                  : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
-              }`}
-            >
-              {t('common.week')}
-            </button>
-            <button
-              onClick={() => setViewMode('month')}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors whitespace-nowrap ${
-                viewMode === 'month'
-                  ? 'bg-uc-mustard text-uc-black shadow-lg'
-                  : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
-              }`}
-            >
-              {t('common.month')}
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={navigatePrevious}
-                className="p-2 rounded-xl bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20 transition-colors"
-              >
-                ←
-              </button>
-              <button
-                onClick={navigateNext}
-                className="p-2 rounded-xl bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20 transition-colors"
-              >
-                →
-              </button>
-              <button
-                onClick={goToToday}
-                className="px-4 py-2 rounded-xl bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black font-medium transition-colors shadow-lg"
-              >
-                {t('common.today')}
-              </button>
-            </div>
-            <h2 className="text-xl font-semibold text-uc-text-light">
-              {formatDateRange()}
-            </h2>
+              <span aria-hidden className="text-lg leading-none">🔍</span>
+              {activeFilterCount > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute -right-1.5 -top-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-uc-pill bg-uc-accent px-1 text-[11px] font-extrabold text-uc-on-accent uc-num"
+                >
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+            <Button variant="accent" size="icon" onClick={openAddForToday} aria-label={t('common.add') || 'Add'} title={t('common.add') || 'Add'}>
+              <span aria-hidden className="text-lg leading-none">➕</span>
+            </Button>
           </div>
         </div>
 
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="mb-6 p-4 bg-uc-dark-bg rounded-xl shadow-lg border border-uc-purple/20">
-            <div className="space-y-4">
-              {/* Filter Type Toggle */}
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setActiveFilter('workouts')}
-                  className={`px-3 py-1 rounded-xl text-sm font-medium transition-colors ${
-                    activeFilter === 'workouts'
-                      ? 'bg-uc-purple text-uc-text-light'
-                      : 'bg-uc-black/50 text-uc-text-muted hover:text-uc-text-light'
-                  }`}
-                >
-                  🏋️ Workouts
-                </button>
-                <button
-                  onClick={() => setActiveFilter('events')}
-                  className={`px-3 py-1 rounded-xl text-sm font-medium transition-colors ${
-                    activeFilter === 'events'
-                      ? 'bg-uc-purple text-uc-text-light'
-                      : 'bg-uc-black/50 text-uc-text-muted hover:text-uc-text-light'
-                  }`}
-                >
-                  📅 Events
-                </button>
-              </div>
-              
-              {/* Training Type Filter */}
-              {activeFilter === 'workouts' && (
-                <TrainingTypeFilter
-                  selectedTypes={selectedTypes}
-                  onTypesChange={setSelectedTypes}
-                />
-              )}
-              
-              {/* Event Type Filter */}
-              {activeFilter === 'events' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      🔍 {t('calendar.filterByEventType')}
-                    </label>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => setSelectedEventTypes(['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'OTHER'])}
-                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        {t('calendar.filterAll')}
-                      </button>
-                      <button
-                        onClick={() => setSelectedEventTypes([])}
-                        className="text-xs text-uc-text-muted hover:text-uc-mustard transition-colors"
-                      >
-                        {t('calendar.filterNone')}
-                      </button>
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6">
+          <div>
+            {/* View + Today */}
+            <div className="flex items-center gap-2">
+              <SegmentedControl<ViewMode>
+                className="flex-1"
+                ariaLabel={t('calendar.title')}
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  { value: 'week', label: t('common.week') },
+                  { value: 'month', label: t('common.month') },
+                ]}
+              />
+              <Button variant="ghost" onClick={goToToday} className="min-h-[54px]">
+                {t('common.today')}
+              </Button>
+            </div>
+
+            {/* Navigation */}
+            <div className="my-4 flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={navigatePrevious} aria-label={t('common.previous')}>
+                <span aria-hidden>←</span>
+              </Button>
+              <h2 className="flex-1 text-center text-lg font-extrabold text-uc-text uc-num">
+                {formatDateRange()}
+              </h2>
+              <Button variant="ghost" size="icon" onClick={navigateNext} aria-label={t('common.next')}>
+                <span aria-hidden>→</span>
+              </Button>
+            </div>
+
+            {viewMode === 'month' ? (
+              <div>
+                {/* Day headers */}
+                <div className="mb-1 grid grid-cols-7">
+                  {weekdayLabels.map((day) => (
+                    <div key={day} className="py-1 text-center text-[13px] font-semibold text-uc-text-muted">
+                      {day}
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { type: 'INJURY' as EventType, label: t('events.types.injury'), emoji: '🤕', color: 'bg-red-500' },
-                      { type: 'PHYSIO' as EventType, label: t('events.types.physio'), emoji: '🏥', color: 'bg-blue-500' },
-                      { type: 'COMPETITION' as EventType, label: t('events.types.competition'), emoji: '🏆', color: 'bg-yellow-500' },
-                      { type: 'TRIP' as EventType, label: t('events.types.trip'), emoji: '✈️', color: 'bg-purple-500' },
-                      { type: 'OTHER' as EventType, label: t('events.types.other'), emoji: '📅', color: 'bg-gray-500' }
-                    ].map(({ type, label, emoji, color }) => {
-                      const isSelected = selectedEventTypes.includes(type)
-                      return (
-                        <button
-                          key={type}
-                          onClick={() => {
-                            if (selectedEventTypes.includes(type)) {
-                              setSelectedEventTypes(selectedEventTypes.filter(t => t !== type))
-                            } else {
-                              setSelectedEventTypes([...selectedEventTypes, type])
-                            }
-                          }}
-                          className={`flex items-center space-x-2 p-2 rounded-xl border-2 text-left transition-all ${
-                            isSelected
-                              ? 'border-uc-purple bg-uc-purple/20'
-                              : 'border-uc-purple/20 bg-uc-black/50 hover:bg-uc-dark-bg/50'
-                          }`}
-                        >
-                          <div className={`w-3 h-3 rounded-full ${color}`} />
-                          <span className="text-sm">{emoji}</span>
-                          <span className="text-xs font-medium text-uc-text-light">
-                            {label}
+                  ))}
+                </div>
+
+                {/* Weeks: no horizontal gap so the phase band reads as one strip */}
+                <div className="space-y-1.5">
+                  {weeks.map((week, weekIndex) => {
+                    const infos = week.map(getCycleInfoForDate)
+                    const phaseAt = (i: number) => infos[i]?.phase ?? null
+                    return (
+                      <div key={weekIndex} className="grid grid-cols-7">
+                        {week.map((date, i) => {
+                          const cycleInfo = infos[i]
+                          const phase = phaseAt(i)
+                          const roundLeft = i === 0 || phaseAt(i - 1) !== phase
+                          const roundRight = i === 6 || phaseAt(i + 1) !== phase
+                          const predicted = !!phase && date > todayStart
+                          const dayWorkouts = getWorkoutsForDate(date)
+                          const dayEvents = getEventsForDate(date)
+                          const badgeEvent = dayEvents.find(e => e.type !== 'TRIP')
+                          const hasTrip = dayEvents.some(e => e.type === 'TRIP')
+                          const isToday = isTodayDate(date)
+                          const isCurrentMonth = date.getMonth() === currentDate.getMonth()
+
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => handleDateClick(date)}
+                              aria-label={date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}
+                              aria-current={isToday ? 'date' : undefined}
+                              className="relative flex min-h-[62px] flex-col items-center focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-uc-primary"
+                            >
+                              <span
+                                aria-hidden
+                                className={`absolute inset-0 ${phase ? phaseBandBg[phase] : 'bg-uc-surface'} ${predicted ? 'opacity-50' : ''} ${roundLeft ? 'rounded-l-xl' : ''} ${roundRight ? 'rounded-r-xl' : ''}`}
+                              />
+                              {isToday && <span aria-hidden className="absolute inset-1 rounded-xl border-2 border-uc-text" />}
+                              {hasTrip && <span aria-hidden className="absolute inset-x-0 bottom-0 h-[3px] bg-uc-success" />}
+                              {isInjuryRiskDay(cycleInfo) && (
+                                <span aria-hidden className="absolute left-1 top-1 text-[10px] leading-none opacity-80">⚠️</span>
+                              )}
+                              {badgeEvent && (
+                                <span className="absolute right-0.5 top-0.5">
+                                  <EventBadge type={badgeEvent.type} />
+                                </span>
+                              )}
+                              <span
+                                className={`relative mt-2 text-[17px] uc-num ${
+                                  isCurrentMonth ? 'font-extrabold text-uc-text' : 'font-semibold text-uc-text-muted'
+                                }`}
+                              >
+                                {date.getDate()}
+                              </span>
+                              <span aria-hidden className="relative mb-2.5 mt-auto flex h-[7px] items-center gap-[3px]">
+                                {dayWorkouts.slice(0, 3).map((workout) => (
+                                  <span key={workout.id} className={`size-[7px] rounded-full ${workoutBg[workout.type]}`} />
+                                ))}
+                                {dayWorkouts.length > 3 && (
+                                  <span className="text-[9px] font-extrabold leading-none text-uc-text-muted">+</span>
+                                )}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* Week: one card per day, stacked */
+              <div className="space-y-3">
+                {calendarDates.map((date, index) => {
+                  const cycleInfo = getCycleInfoForDate(date)
+                  const dayWorkouts = getWorkoutsForDate(date)
+                  const dayEvents = getEventsForDate(date)
+                  const isToday = isTodayDate(date)
+
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => handleDateClick(date)}
+                      className={`cursor-pointer rounded-uc-card p-3 transition-colors ${
+                        cycleInfo ? phaseBandBg[cycleInfo.phase] : 'border border-uc-border bg-uc-surface hover:border-uc-primary'
+                      } ${isToday ? 'ring-2 ring-uc-text' : ''}`}
+                    >
+                      <div className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 px-1">
+                        <span className="text-[15px] font-extrabold text-uc-text uc-num">
+                          {capitalize(date.toLocaleDateString(locale, { weekday: 'short', day: 'numeric' }))}
+                        </span>
+                        {cycleInfo && (
+                          <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-uc-text-muted uc-num">
+                            <span aria-hidden className={`size-2 rounded-full ${phaseSolidBg[cycleInfo.phase]}`} />
+                            {cycleLabel(cycleInfo)}
                           </span>
-                        </button>
-                      )
-                    })}
+                        )}
+                        {isInjuryRiskDay(cycleInfo) && (
+                          <Tooltip content={injuryRiskText} position="top" className="ml-auto">
+                            <span className="inline-flex min-h-6 cursor-help items-center gap-1 rounded-lg bg-uc-warning-bg px-2 text-xs font-bold text-uc-warning">
+                              <span aria-hidden>⚠️</span>
+                              {t('calendar.injuryRiskPhase')}
+                            </span>
+                          </Tooltip>
+                        )}
+                      </div>
+                      {(dayWorkouts.length > 0 || dayEvents.length > 0) && (
+                        <div className="mt-2 space-y-2">
+                          {dayEvents.map((event) => (
+                            <EventRow key={event.id} event={event} date={date} t={t} onClick={handleEventClick} />
+                          ))}
+                          {dayWorkouts.map((workout) => (
+                            <WorkoutRow
+                              key={workout.id}
+                              workout={workout}
+                              t={t}
+                              onEdit={handleWorkoutClick}
+                              onDuplicate={handleDuplicateWorkout}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Legend */}
+          <Card className="mt-5 space-y-4 p-5 lg:mt-0">
+            <h2 className="sr-only">{t('calendar.legend')}</h2>
+            {isCycleTrackingEnabled && (
+              <ul aria-label={t('calendar.cyclePhases')} className="flex flex-wrap gap-x-4 gap-y-2">
+                {PHASES.map((phase) => (
+                  <li key={phase} className="flex items-center gap-2 text-sm font-bold text-uc-text">
+                    <span aria-hidden className={`relative h-3.5 w-6 overflow-hidden rounded ${phaseBandBg[phase]}`}>
+                      <span className={`absolute inset-x-0 top-0 h-0.5 ${phaseSolidBg[phase]}`} />
+                    </span>
+                    {t(`cycle.phases.${phaseTranslationKey[phase]}`)}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <ul aria-label={t('nav.workouts')} className="flex flex-wrap gap-x-4 gap-y-2">
+              {WORKOUT_TYPES.map(({ type, key }) => (
+                <li key={type} className="flex items-center gap-2 text-sm text-uc-text-muted">
+                  <span aria-hidden className={`size-2.5 rounded-full ${workoutBg[type]}`} />
+                  {t(`training.types.${key}`)}
+                </li>
+              ))}
+            </ul>
+            <ul aria-label={t('events.title')} className="flex flex-wrap gap-x-4 gap-y-2">
+              {EVENT_TYPES.map(({ type, key }) => (
+                <li key={type} className="flex items-center gap-2 text-sm text-uc-text-muted">
+                  <EventBadge type={type} />
+                  {t(`events.types.${key}`)}
+                </li>
+              ))}
+              {injuryStats?.phaseWithMostInjuries && (
+                <li className="flex items-center gap-2 text-sm text-uc-text-muted">
+                  <span aria-hidden className="inline-flex size-5 items-center justify-center rounded-md bg-uc-warning-bg text-[10px]">⚠️</span>
+                  {t('calendar.injuryRiskPhase')}
+                </li>
+              )}
+            </ul>
+            <p className="text-[13px] text-uc-text-muted">{t('calendar.clickDateHint')}</p>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <BottomSheet
+          isOpen={showFilters}
+          onClose={() => setShowFilters(false)}
+          title={t('common.filter')}
+          closeLabel={t('common.close')}
+          footer={
+            <Button variant="primary" size="lg" className="w-full" onClick={() => setShowFilters(false)}>
+              {t('common.close')}
+            </Button>
+          }
+        >
+          <div className="space-y-5">
+            <SegmentedControl<FilterType>
+              ariaLabel={t('common.filter')}
+              value={activeFilter}
+              onChange={setActiveFilter}
+              options={[
+                { value: 'workouts', label: t('nav.workouts'), icon: '🏋️' },
+                { value: 'events', label: t('nav.events'), icon: '📅' },
+              ]}
+            />
+
+            {activeFilter === 'workouts' && (
+              <TrainingTypeFilter selectedTypes={selectedTypes} onTypesChange={setSelectedTypes} />
+            )}
+
+            {activeFilter === 'events' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <Overline>{t('calendar.filterByEventType')}</Overline>
+                  <div className="flex shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedEventTypes(['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'OTHER'])}
+                      className="min-h-11 px-2 text-sm font-bold text-uc-primary hover:underline"
+                    >
+                      {t('calendar.filterAll')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedEventTypes([])}
+                      className="min-h-11 px-2 text-sm font-bold text-uc-primary hover:underline"
+                    >
+                      {t('calendar.filterNone')}
+                    </button>
                   </div>
-                  {selectedEventTypes.length === 0 && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {t('calendar.noEventTypesSelected')}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {EVENT_TYPES.map(({ type, key, emoji }) => (
+                    <ChoiceChip
+                      key={type}
+                      selected={selectedEventTypes.includes(type)}
+                      onClick={() => {
+                        if (selectedEventTypes.includes(type)) {
+                          setSelectedEventTypes(selectedEventTypes.filter(t => t !== type))
+                        } else {
+                          setSelectedEventTypes([...selectedEventTypes, type])
+                        }
+                      }}
+                    >
+                      <span aria-hidden>{emoji}</span>
+                      {t(`events.types.${key}`)}
+                    </ChoiceChip>
+                  ))}
+                </div>
+                {selectedEventTypes.length === 0 && (
+                  <p className="text-[13px] text-uc-text-muted">
+                    {t('calendar.noEventTypesSelected')}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </BottomSheet>
+
+        {/* Day sheet: the day's workouts and events, then add choices */}
+        <BottomSheet
+          isOpen={!!sheetDate}
+          onClose={closeDaySheet}
+          title={sheetDate ? capitalize(sheetDate.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })) : undefined}
+          closeLabel={t('common.close')}
+        >
+          {sheetDate && (
+            <div className="space-y-4">
+              {sheetCycleInfo && (
+                <div className="space-y-2">
+                  <PhaseBadge phase={sheetCycleInfo.phase} variant="soft" size="sm">
+                    {cycleLabel(sheetCycleInfo)}
+                  </PhaseBadge>
+                  {isInjuryRiskDay(sheetCycleInfo) && (
+                    <p className="flex gap-2 rounded-xl bg-uc-warning-bg p-3 text-[13px] text-uc-text">
+                      <span aria-hidden>⚠️</span>
+                      {injuryRiskText}
                     </p>
                   )}
                 </div>
               )}
-            </div>
-          </div>
-        )}
 
-        {/* Calendar Grid */}
-        <div className="bg-uc-dark-bg rounded-xl shadow-lg overflow-hidden border border-uc-purple/20">
-          {/* Day headers */}
-          {viewMode === 'month' && (
-            <div className="grid grid-cols-7 border-b border-uc-purple/20">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                <div
-                  key={day}
-                  className="p-4 text-center font-semibold text-uc-text-muted bg-uc-black/50 text-sm"
-                >
-                  {day}
+              {(sheetWorkouts.length > 0 || sheetEvents.length > 0) && (
+                <div className="space-y-2">
+                  {sheetEvents.map((event) => (
+                    <EventRow key={event.id} event={event} date={sheetDate} t={t} onClick={editEventFromSheet} />
+                  ))}
+                  {sheetWorkouts.map((workout) => (
+                    <WorkoutRow
+                      key={workout.id}
+                      workout={workout}
+                      t={t}
+                      onEdit={editFromSheet}
+                      onDuplicate={duplicateFromSheet}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
 
-          {/* Calendar cells */}
-          <div className={`grid ${viewMode === 'week' ? 'grid-cols-1 md:grid-cols-7' : 'grid-cols-7'}`}>
-            {calendarDates.map((date, index) => {
-              const dayWorkouts = getWorkoutsForDate(date)
-              const dayEvents = getEventsForDate(date)
-              const cycleInfo = getCycleInfoForDate(date)
-              const isToday = typeof window !== 'undefined' && date.toDateString() === new Date().toDateString()
-              const isCurrentMonth = date.getMonth() === currentDate.getMonth()
-
-              return (
-                <div
-                  key={index}
-                  onClick={() => handleDateClick(date)}
-                  className={`${
-                    viewMode === 'week' 
-                      ? 'min-h-[80px] md:min-h-[120px] p-3 md:p-2 border-b md:border-r border-uc-purple/20' 
-                      : 'min-h-[120px] p-2 border-r border-b border-uc-purple/20'
-                  } ${
-                    !isCurrentMonth ? 'bg-uc-black/30' : ''
-                  } cursor-pointer hover:bg-uc-purple/5 transition-colors relative group`}
-                >
-                  {/* Date number */}
-                  <div className={`flex items-center justify-between ${viewMode === 'week' ? 'mb-3 md:mb-2' : 'mb-2'}`}>
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className={`${viewMode === 'week' ? 'text-base md:text-sm' : 'text-sm'} font-medium ${
-                          isToday
-                            ? 'bg-uc-mustard text-uc-black rounded-full w-7 h-7 md:w-6 md:h-6 flex items-center justify-center'
-                            : isCurrentMonth
-                            ? 'text-uc-text-light'
-                            : 'text-uc-text-muted'
-                        }`}
-                      >
-                        {date.getDate()}
-                      </span>
-                      {viewMode === 'week' && (
-                        <span className="text-sm text-uc-text-muted hidden md:block">
-                          {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()]}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center space-x-1">
-                      {/* Cycle indicator */}
-                      {cycleInfo && (
-                        <div
-                          className={`w-2 h-2 rounded-full ${getCyclePhaseColor(cycleInfo.phase)}`}
-                          title={`Cycle Day ${cycleInfo.currentDay} - ${cycleInfo.phaseDescription}`}
-                        />
-                      )}
-                      {/* Warning triangle for most injuries phase */}
-                      {injuryStats?.phaseWithMostInjuries && cycleInfo && cycleInfo.phase === injuryStats.phaseWithMostInjuries && (
-                        <Tooltip content={t('workouts.tooltips.injuryPhaseWarning') || 'This phase has the highest number of injuries in your history. Be extra cautious and consider adjusting training intensity during this phase.'} position="top">
-                          <div className="text-yellow-500 opacity-70 text-xs cursor-help">
-                            ⚠️
-                          </div>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Workouts */}
-                  <div className={`${viewMode === 'week' ? 'space-y-2' : 'space-y-1'}`}>
-                    {getWorkoutsForDate(date).map((workout) => (
-                      <div
-                        key={workout.id}
-                        className={`${viewMode === 'week' ? 'text-sm md:text-xs p-2 md:p-1' : 'text-xs p-1'} rounded ${getTrainingTypeColor(workout.type)} text-white ${viewMode === 'week' ? '' : 'truncate'} relative`}
-                        title={`${getTrainingTypeEmoji(workout.type)} ${workout.type}${workout.sector ? ` - ${workout.sector}` : ''}${workout.notes ? ` - ${workout.notes}` : ''}`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="flex-1 truncate flex items-center gap-1">
-                            {getTrainingTypeEmoji(workout.type)} {getTrainingTypeLabel(workout.type, t)}
-                            {workout.sector && viewMode === 'month' && (
-                              <span className="opacity-80">({workout.sector})</span>
-                            )}
-                            {workout.details && (workout.details as any)?.quickLog && (
-                              <span className="text-xs bg-yellow-500/30 text-yellow-200 px-1 rounded" title={t('quickLog.quickLogBadge') || 'Quick'}>
-                                ⚡
-                              </span>
-                            )}
-                          </span>
-                          <div className="flex gap-1 flex-shrink-0">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleWorkoutClick(workout, e)
-                              }}
-                              className="text-xs bg-white/20 hover:bg-white/30 active:bg-white/40 rounded px-1.5 py-0.5 transition-colors"
-                              title="Edit workout"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDuplicateWorkout(workout, e)
-                              }}
-                              className="text-xs bg-white/20 hover:bg-white/30 active:bg-white/40 rounded px-1.5 py-0.5 transition-colors"
-                              title={t('workouts.duplicate') || 'Duplicate workout'}
-                            >
-                              📋
-                            </button>
-                          </div>
-                        </div>
-                        {viewMode === 'week' && (
-                          <>
-                            {workout.type === 'GYM' && workout.details && (workout.details as any)?.routineVariation && (
-                              <div className="text-xs opacity-90 mt-1 truncate">
-                                📦 {(workout.details as any).routineVariation.routineName} - {(workout.details as any).routineVariation.variationName}
-                              </div>
-                            )}
-                            {workout.sector && (
-                              <div className="text-xs opacity-90 mt-1 truncate">
-                                🏔️ {t('workouts.sector') || 'Sector'}: {workout.sector}
-                              </div>
-                            )}
-                            {workout.notes && (
-                              <div className="text-xs opacity-90 mt-1 truncate">
-                                {workout.notes}
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  
-                      {/* Events */}
-                      <div className={`${viewMode === 'week' ? 'space-y-2' : 'space-y-1'}`}>
-                        {getEventsForDate(date).map((event) => {
-                          // For trip events, show destination with day counter
-                          let displayText = `${getEventTypeEmoji(event.type)} ${event.title}`
-
-                          if (event.type === 'TRIP' && event.destination && event.tripStartDate && event.tripEndDate) {
-                            // Calculate trip day
-                            const tripStart = new Date(event.tripStartDate)
-                            const tripEnd = new Date(event.tripEndDate)
-                            const currentDate = new Date(date)
-
-                            // Calculate total trip days (inclusive of both start and end dates)
-                            const totalDays = Math.floor((tripEnd.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
-
-                            // Calculate current day of trip (1-based)
-                            const currentDay = Math.floor((currentDate.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
-
-                            displayText = `${getEventTypeEmoji(event.type)} ${event.destination} (${currentDay}/${totalDays})`
-                          }
-
-                          const tooltipText = event.type === 'TRIP'
-                            ? `${getEventTypeEmoji(event.type)} ${event.title} - ${event.destination || 'No destination'}`
-                            : `${getEventTypeEmoji(event.type)} ${event.title} - ${event.description || 'No description'}`
-
-                          return (
-                            <div
-                              key={event.id}
-                              onClick={(e) => handleEventClick(event, e)}
-                              className={`${viewMode === 'week' ? 'text-sm md:text-xs p-2 md:p-1' : 'text-xs p-1'} rounded ${getEventTypeColor(event.type)} text-white ${viewMode === 'week' ? '' : 'truncate'} cursor-pointer hover:opacity-80 transition-opacity`}
-                              title={tooltipText}
-                            >
-                              {displayText}
-                              {viewMode === 'week' && event.type === 'TRIP' && event.destination && (
-                                <div className="text-xs opacity-90 mt-1 truncate">
-                                  {event.destination}
-                                </div>
-                              )}
-                              {viewMode === 'week' && event.type !== 'TRIP' && event.description && (
-                                <div className="text-xs opacity-90 mt-1 truncate">
-                                  {event.description}
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Legend */}
-        <div className="mt-8 bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
-          <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-            {t('calendar.legend')}
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-training-gym"></div>
-              <span className="text-sm text-uc-text-muted">🏋️ {t('training.types.gym')}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-training-bouldering"></div>
-              <span className="text-sm text-uc-text-muted">🧗 {t('training.types.bouldering')}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-training-circuits"></div>
-              <span className="text-sm text-uc-text-muted">🔄 {t('training.types.circuits')}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-training-leadRock"></div>
-              <span className="text-sm text-uc-text-muted">🏔️ {t('training.types.leadRock')}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-training-leadArtificial"></div>
-              <span className="text-sm text-uc-text-muted">🧗‍♀️ {t('training.types.leadArtificial')}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-training-mentalPractice"></div>
-              <span className="text-sm text-uc-text-muted">🧘 {t('training.types.mentalPractice')}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-training-fingerboard"></div>
-              <span className="text-sm text-uc-text-muted">🖐️ {t('training.types.fingerboard')}</span>
-            </div>
-          </div>
-          
-          {/* Events Legend */}
-          <div className="mt-4 pt-4 border-t border-uc-purple/20">
-            <h4 className="text-sm font-medium text-uc-text-light mb-2">
-              {t('events.title')}
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded bg-red-500"></div>
-                <span className="text-sm text-uc-text-muted">🤕 {t('events.types.injury')}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded bg-blue-500"></div>
-                <span className="text-sm text-uc-text-muted">🏥 {t('events.types.physio')}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded bg-yellow-500"></div>
-                <span className="text-sm text-uc-text-muted">🏆 {t('events.types.competition')}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded bg-purple-500"></div>
-                <span className="text-sm text-uc-text-muted">✈️ {t('events.types.trip')}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded bg-gray-500"></div>
-                <span className="text-sm text-uc-text-muted">📅 {t('events.types.other')}</span>
-              </div>
-            </div>
-          </div>
-          
-          {isCycleTrackingEnabled && (
-            <div className="mt-4 pt-4 border-t border-uc-purple/20">
-              <h4 className="text-sm font-medium text-uc-text-light mb-2">
-                {t('calendar.cyclePhases')}
-              </h4>
-              <div className="flex flex-wrap gap-3">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                  <span className="text-xs text-uc-text-muted">{t('cycle.phases.menstrual')}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-xs text-uc-text-muted">{t('cycle.phases.follicular')}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                  <span className="text-xs text-uc-text-muted">{t('cycle.phases.ovulation')}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span className="text-xs text-uc-text-muted">{t('cycle.phases.earlyLuteal')}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                  <span className="text-xs text-uc-text-muted">{t('cycle.phases.lateLuteal')}</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Add Choice Modal */}
-        {showAddChoice && selectedDate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-uc-dark-bg rounded-2xl shadow-xl w-full max-w-md border border-uc-purple/20">
-              <div className="p-6 border-b border-uc-purple/20">
-                <h2 className="text-2xl font-bold text-uc-text-light mb-2">
-                  Add to {selectedDate.toLocaleDateString()}
-                </h2>
-                <p className="text-sm text-uc-text-muted">
-                  What would you like to add?
+              <div>
+                <Overline className="mb-1">{t('common.add') || 'Add'}</Overline>
+                <p className="mb-3 text-sm text-uc-text-muted">
+                  {t('workouts.addChoiceDescription') || 'What would you like to add?'}
                 </p>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={handleQuickLog}
-                    className="flex flex-col items-center p-6 bg-gradient-to-br from-uc-purple/30 to-uc-mustard/30 rounded-xl border-2 border-uc-purple/40 hover:border-uc-purple/60 hover:from-uc-purple/40 hover:to-uc-mustard/40 transition-all"
-                  >
-                    <span className="text-4xl mb-3">⚡</span>
-                    <span className="font-medium text-uc-text-light">{t('quickLog.button') || 'Quick Log'}</span>
-                  </button>
-                  <button
-                    onClick={handleAddWorkout}
-                    className="flex flex-col items-center p-6 bg-uc-black/50 rounded-xl border-2 border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black transition-all"
-                  >
-                    <span className="text-4xl mb-3">🏋️</span>
-                    <span className="font-medium text-uc-text-light">{t('workouts.addNew') || 'Add Workout'}</span>
-                  </button>
-                  <button
-                    onClick={handleAddEvent}
-                    className="flex flex-col items-center p-6 bg-uc-black/50 rounded-xl border-2 border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black transition-all"
-                  >
-                    <span className="text-4xl mb-3">📅</span>
-                    <span className="font-medium text-uc-text-light">{t('events.addNew') || 'Add Event'}</span>
-                  </button>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { onClick: handleQuickLog, emoji: '⚡', label: t('quickLog.button') || 'Quick Log', tone: 'bg-uc-primary-container text-uc-on-primary-container border-transparent' },
+                    { onClick: handleAddWorkout, emoji: '🏋️', label: t('workouts.addNew') || 'Add Workout', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
+                    { onClick: handleAddEvent, emoji: '📅', label: t('events.addNew') || 'Add Event', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
+                  ]).map((choice) => (
+                    <button
+                      key={choice.emoji}
+                      type="button"
+                      onClick={choice.onClick}
+                      className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-uc-card border p-3 text-center text-sm font-bold transition-colors ${choice.tone}`}
+                    >
+                      <span aria-hidden className="text-2xl leading-none">{choice.emoji}</span>
+                      {choice.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="p-6 border-t border-uc-purple/20 flex justify-end">
-                <button
-                  onClick={() => {
-                    setShowAddChoice(false)
-                    setSelectedDate(null)
-                  }}
-                  className="px-4 py-2 text-uc-text-muted hover:text-uc-text-light transition-colors bg-uc-dark-bg/50 hover:bg-uc-dark-bg rounded-xl border border-uc-purple/20"
-                >
-                  {t('common.cancel')}
-                </button>
-              </div>
             </div>
-          </div>
-        )}
+          )}
+        </BottomSheet>
 
         {/* Workout Form Modal */}
         {showWorkoutForm && (

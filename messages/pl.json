@@ -642,13 +642,15 @@
     "legend": "Legenda",
     "cyclePhases": "Fazy Cyklu",
     "noWorkoutsToday": "Brak treningów dzisiaj",
-    "clickDateHint": "💡 Kliknij na dowolną datę, aby dodać trening, wydarzenie lub szybki wpis",
+    "clickDateHint": "Dotknij dnia, aby zobaczyć jego treningi i wydarzenia, edytować je, zduplikować lub dodać nowe.",
     "filterByTrainingType": "Filtruj według rodzaju treningu",
     "filterByEventType": "Filtruj według rodzaju wydarzenia",
     "filterAll": "Wszystkie",
     "filterNone": "Żadne",
     "noTrainingTypesSelected": "Nie wybrano rodzajów treningu. Wyświetlane są wszystkie treningi.",
-    "noEventTypesSelected": "Nie wybrano rodzajów wydarzeń. Wyświetlane są wszystkie wydarzenia."
+    "noEventTypesSelected": "Nie wybrano rodzajów wydarzeń. Wyświetlane są wszystkie wydarzenia.",
+    "cycleDayShort": "dz. {{day}}",
+    "injuryRiskPhase": "Faza ryzyka kontuzji"
   },
   "cycle": {
     "title": "Śledzić Cykl Miesiączkowy?",

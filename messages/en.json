@@ -639,7 +639,7 @@
   "calendar": {
     "title": "Training Calendar",
     "loading": "Loading calendar...",
-    "clickDateHint": "💡 Click on any date to add a workout, event, or quick log",
+    "clickDateHint": "Tap a day to see its workouts and events, edit or duplicate them, or add new ones.",
     "legend": "Legend",
     "cyclePhases": "Cycle Phases",
     "noWorkoutsToday": "No workouts today",
@@ -648,7 +648,9 @@
     "filterAll": "All",
     "filterNone": "None",
     "noTrainingTypesSelected": "No training types selected. All workouts will be shown.",
-    "noEventTypesSelected": "No event types selected. All events will be shown."
+    "noEventTypesSelected": "No event types selected. All events will be shown.",
+    "cycleDayShort": "d{{day}}",
+    "injuryRiskPhase": "Injury-risk phase"
   },
   "cycle": {
     "title": "Track Your Menstrual Cycle?",
