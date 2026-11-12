@@ -9,6 +9,7 @@ import { Event } from '@/types/event';
 import { useCycle } from '@/contexts/CycleContext';
 import { CyclePhase, getPhaseDisplayName, getPhaseDayRange } from '@/lib/cycle-utils';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { STREAK_MIN_SESSIONS } from '@/lib/streak';
 import {
   Button, Card, EmptyState, Icon, Overline, SegmentedControl, SkeletonRows, StatTile, WorkoutIconTile,
   buttonClasses, phaseBandBg, phaseTranslationKey, workoutBg,
@@ -52,7 +53,7 @@ const Bar = ({ percent, className }: { percent: number; className: string }) => 
 );
 
 export const StatisticsContent = () => {
-  const { t, language } = useLanguage();
+  const { t, tPlural, language } = useLanguage();
   const locale = language === 'pl' ? 'pl-PL' : 'en-GB';
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { settings: notificationSettings, updateSettings } = useNotifications();
@@ -323,7 +324,12 @@ export const StatisticsContent = () => {
             <StatTile label={t('stats.totalWorkouts')} value={statsData.overall.totalWorkouts} />
             <StatTile label={t('stats.thisMonth') || 'This month'} value={statsData.overall.averageWorkoutsThisMonth} />
             <StatTile label={t('stats.avgPerWeek')} value={statsData.overall.averageWorkoutsPerWeek} />
-            <StatTile label={t('stats.currentStreak')} value={statsData.overall.currentStreak} />
+            <StatTile
+              label={t('stats.currentStreak')}
+              value={statsData.overall.currentStreak}
+              unit={tPlural('dashboard.weeksUnit', statsData.overall.currentStreak)}
+              footer={t('dashboard.streakRule', { min: STREAK_MIN_SESSIONS })}
+            />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2 lg:items-start">

@@ -15,7 +15,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 
 ### Today / Dashboard
 - **"Log again" chips** — no such feature. (Closest: *Duplicate workout*, which exists on the calendar only.)
-- **Streak = "weeks with ≥3 sessions"** — the app counts **consecutive days** ("N days streak").
+- **Streak = "weeks with ≥3 sessions"** — built 2026-11-12 (decision 7): weeks in a row (Mon–Sun) with 3+ workouts;
+  the current week counts once it has 3 and doesn't break the streak before that. Shown on Today ("Streak · N weeks ·
+  3+ sessions a week") and as Statistics' Current streak (from all workouts, not the selected range). The "Great streak"
+  card shows from 2 weeks. Today computes it from the newest 100 workouts it loads (enough for ~30 weeks).
 - **"This week 3 / 4 sessions" with an M–S day strip** — the app's "this week" is a **rolling 7 days**, with a
   % trend vs last week and a progress bar to the weekly goal (default 3). It also has a **This month** tile
   (count, trend %, bar to monthly goal), **Total workouts** and **Events count** tiles.

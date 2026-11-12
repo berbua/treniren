@@ -403,3 +403,8 @@ note the answer.
 - 2026-11-12: Decision 62 built (user approved). `disableCycleTracking` sends only `lastPeriodDate: null` (timezone and
   cycle length are no longer overwritten); the profile form keeps the cycle length after disabling;
   `profile.disableCycleConfirm` is the mock's text (EN + PL).
+- 2026-11-12: Decision 7 built. New `lib/streak.ts` (`weeklyStreaks(workouts, min = 3)` → current / longest, Mon–Sun weeks
+  via day numbers; quick tsx check of 5 cases passed). Dashboard tile: label "Streak", unit weeks (plural), footer
+  "3+ sessions a week"; "Great streak" card at ≥ 2 weeks with "N weeks in a row with 3+ sessions"; `statistics-service`
+  streaks use it on all workouts (were consecutive days within the range). New keys `dashboard.streakLabel`, `weeksUnit`,
+  `streakRule`, `streakWeeksInRow`. Old keys `dashboard.streak` / `keepGoing` kept, unused.

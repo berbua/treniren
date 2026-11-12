@@ -1254,7 +1254,17 @@
     "noUpcomingTrips": "No upcoming trips with countdown",
     "noUpcomingTripsDescription": "Create a trip event and enable the 'Show countdown on homepage' option",
     "addTrip": "Add Trip",
-    "recommendations": "Recommendations"
+    "recommendations": "Recommendations",
+    "streakLabel": "Streak",
+    "weeksUnit": {
+      "one": "week",
+      "other": "weeks"
+    },
+    "streakRule": "{{min}}+ sessions a week",
+    "streakWeeksInRow": {
+      "one": "{{count}} week with {{min}}+ sessions. Keep it going!",
+      "other": "{{count}} weeks in a row with {{min}}+ sessions. Keep it going!"
+    }
   },
   "goals": {
     "title": "Training Goals",

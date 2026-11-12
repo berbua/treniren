@@ -1262,7 +1262,21 @@
     "noUpcomingTrips": "Brak nadchodzących wyjazdów z odliczaniem",
     "noUpcomingTripsDescription": "Utwórz wydarzenie wyjazdu i włącz opcję \"Pokaż odliczanie na stronie głównej\"",
     "addTrip": "Dodaj Wyjazd",
-    "recommendations": "Rekomendacje"
+    "recommendations": "Rekomendacje",
+    "streakLabel": "Seria",
+    "weeksUnit": {
+      "one": "tydzień",
+      "few": "tygodnie",
+      "many": "tygodni",
+      "other": "tygodnia"
+    },
+    "streakRule": "{{min}}+ treningi w tygodniu",
+    "streakWeeksInRow": {
+      "one": "{{count}} tydzień z {{min}}+ treningami. Tak trzymaj!",
+      "few": "{{count}} tygodnie z rzędu z {{min}}+ treningami. Tak trzymaj!",
+      "many": "{{count}} tygodni z rzędu z {{min}}+ treningami. Tak trzymaj!",
+      "other": "{{count}} tygodnia z rzędu z {{min}}+ treningami. Tak trzymaj!"
+    }
   },
   "goals": {
     "title": "Cele Treningowe",

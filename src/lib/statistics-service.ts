@@ -2,6 +2,7 @@
 import { dayNumberToLocalDate, localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from './date-utils';
 import { Workout, WorkoutType, TrainingVolume, Tag } from '@/types/workout';
 import { Event } from '@/types/event';
+import { weeklyStreaks } from './streak';
 import { calculateCycleInfo, CycleSettings, getPhaseRanges } from '@/lib/cycle-utils';
 
 export type TimeFrame = '1week' | '4weeks' | '1month' | '3months' | '6months' | '1year' | 'all' | 'custom';
@@ -81,7 +82,7 @@ export interface OverallStats {
   averageWorkoutsThisMonth: number;
   mostActiveDay: string;
   mostActiveTime: string;
-  currentStreak: number; // consecutive days with workouts
+  currentStreak: number; // weeks in a row with 3+ workouts (lib/streak)
   longestStreak: number;
   lastWorkout?: Date;
 }
@@ -232,7 +233,8 @@ class StatisticsService {
 
     // Calculate streaks
     const sortedWorkouts = [...workouts].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-    const { currentStreak, longestStreak } = this.calculateStreaks(sortedWorkouts);
+    // Streaks look at all workouts, not only the selected range
+    const { currentStreak, longestStreak } = this.calculateStreaks(allWorkouts);
 
     const lastWorkout = sortedWorkouts.length > 0 ? new Date(sortedWorkouts[sortedWorkouts.length - 1].startTime) : undefined;
 
@@ -575,31 +577,9 @@ class StatisticsService {
   /**
    * Calculate workout streaks
    */
-  private calculateStreaks(sortedWorkouts: Workout[]): { currentStreak: number; longestStreak: number } {
-    if (sortedWorkouts.length === 0) {
-      return { currentStreak: 0, longestStreak: 0 };
-    }
-
-    // Calendar day numbers: sort numerically and step by whole days (no DST or string-sort issues)
-    const workoutDays = new Set(sortedWorkouts.map(w => storedDayNumber(w.startTime)));
-    const today = localDayNumber();
-
-    // Current streak: consecutive days from today backwards
-    let currentStreak = 0;
-    while (workoutDays.has(today - currentStreak)) {
-      currentStreak++;
-    }
-
-    // Longest streak: longest run of consecutive days
-    const sortedDays = Array.from(workoutDays).sort((a, b) => a - b);
-    let longestStreak = 0;
-    let tempStreak = 0;
-    sortedDays.forEach((day, i) => {
-      tempStreak = i > 0 && day - sortedDays[i - 1] === 1 ? tempStreak + 1 : 1;
-      longestStreak = Math.max(longestStreak, tempStreak);
-    });
-
-    return { currentStreak, longestStreak };
+  private calculateStreaks(workouts: Workout[]): { currentStreak: number; longestStreak: number } {
+    const { current, longest } = weeklyStreaks(workouts);
+    return { currentStreak: current, longestStreak: longest };
   }
 
   /**

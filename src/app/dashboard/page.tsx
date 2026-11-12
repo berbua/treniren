@@ -16,6 +16,7 @@ import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { OFFLINE_WORKOUTS_SYNCED_EVENT } from '@/lib/offline-sync'
 import { localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils'
+import { STREAK_MIN_SESSIONS, weeklyStreaks } from '@/lib/streak'
 import { useCycle } from '@/contexts/CycleContext'
 import { CyclePhase, getPhaseRanges } from '@/lib/cycle-utils'
 import {
@@ -33,7 +34,7 @@ export default function Dashboard() {
 
 function DashboardContent() {
   const { data: session } = useSession()
-  const { t, language } = useLanguage()
+  const { t, tPlural, language } = useLanguage()
   const { cycleInfo, cycleSettings, isCycleTrackingEnabled } = useCycle()
   const { isOnline, unsyncedWorkouts, storageSize } = useOffline()
   const { isMessagesPanelOpen, setIsMessagesPanelOpen } = useNotifications()
@@ -60,20 +61,6 @@ function DashboardContent() {
   const [dataVersion, setDataVersion] = useState(0)
   const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
   
-  // Calculate workout streak: consecutive calendar days with a workout, ending today or yesterday
-  const calculateStreak = (workouts: Workout[]) => {
-    // Workout dates are stored as UTC midnight of the calendar day; compare plain day numbers
-    const workoutDays = new Set(workouts.map(w => storedDayNumber(w.startTime)))
-    const today = localDayNumber()
-
-    let day = workoutDays.has(today) ? today : today - 1
-    let currentStreak = 0
-    while (workoutDays.has(day)) {
-      currentStreak++
-      day--
-    }
-    return currentStreak
-  }
 
   // Auto-show PWA status ONLY if there are issues (offline or unsynced workouts)
   useEffect(() => {
@@ -159,7 +146,8 @@ function DashboardContent() {
           })
           
           // Calculate streak
-          setStreak(calculateStreak(workouts))
+          // Weeks in a row with 3+ sessions (from the newest 100 workouts loaded here)
+          setStreak(weeklyStreaks(workouts).current)
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
@@ -209,7 +197,7 @@ function DashboardContent() {
   ]
 
   const showHero = isCycleTrackingEnabled && cycleInfo
-  const hasSuggestion = !isLoading && recentWorkouts.length > 0 && (streak >= 3 || (streak === 0 && stats.thisWeekWorkouts === 0))
+  const hasSuggestion = !isLoading && recentWorkouts.length > 0 && (streak >= 2 || (streak === 0 && stats.thisWeekWorkouts === 0))
   const hasSideCards = hasSuggestion || upcomingTrips.length > 0
 
   return (
@@ -254,13 +242,13 @@ function DashboardContent() {
           {hasSideCards && (
             <div className={`grid gap-4 content-start ${showHero ? '' : 'lg:grid-cols-2'}`}>
               {/* Personalized Suggestions */}
-              {hasSuggestion && streak >= 3 && (
+              {hasSuggestion && streak >= 2 && (
                 <Card className="flex items-start gap-3">
                   <IconTile><Icon name="streak" size={22} /></IconTile>
                   <div className="min-w-0">
                     <h3 className="text-[15px] font-extrabold">{t('dashboard.greatStreak') || 'Świetna passa!'}</h3>
                     <p className="text-[13px] text-uc-text-muted">
-                      {t('dashboard.keepGoing') || `Masz ${streak} dni z rzędu! Nie przerywaj swojego streaku`}
+                      {tPlural('dashboard.streakWeeksInRow', streak, { min: STREAK_MIN_SESSIONS })}
                     </p>
                   </div>
                 </Card>
@@ -319,8 +307,10 @@ function DashboardContent() {
             <StatTile
               className="order-1"
               icon={<Icon name="streak" size={16} />}
-              label={t('dashboard.streak') || 'Day Streak'}
+              label={t('dashboard.streakLabel') || 'Streak'}
               value={streak}
+              unit={tPlural('dashboard.weeksUnit', streak)}
+              footer={t('dashboard.streakRule', { min: STREAK_MIN_SESSIONS }) || `${STREAK_MIN_SESSIONS}+ sessions a week`}
             />
             <StatTile
               className="order-2 lg:order-4"
