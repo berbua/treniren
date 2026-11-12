@@ -290,6 +290,25 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - ℹ️ tooltip triggers are still the 14px emoji; tooltips on calendar / cycle day cells stay hover-only so tapping the
     day keeps opening it.
 
+### Auth & landing
+- Built 2026-11-12 against `Sign in, sign up, password, sign out.png` and `Landing page.png`. Kept where the mock differs:
+  - Titles keep the app's strings ("Sign In", "Create Account", "Forgot Password?", "Reset Password", "Successfully logged
+    out"), not "Welcome back" / "Reset your password" / "Choose a new password" / "You're signed out · See you at the wall".
+  - Placeholders, the signup "Full name" field and the "Or continue with" divider on sign up are kept; the Google button
+    keeps its colour logo and "Sign in / Sign up with Google" label.
+  - Forgot password: the form stays visible after sending; the sent block shows the app's message (no "Check your inbox"
+    heading or "expires in 1 hour" line — the app doesn't know the expiry).
+  - Reset: an **expired** token isn't detected on load (only a missing one); an expired/used token shows the server's
+    error in the alert on submit. The "invalid link" screen title is new copy (`auth.invalidLinkTitle`); the button stays
+    "Request new reset link" → forgot-password.
+  - Reset success keeps the success alert + automatic redirect to sign in after 3 s.
+  - Sign out keeps "Redirecting you to the home page…" and "Go to Home Page" (mock: "Sign in again"); it still redirects
+    to `/` after 2 s.
+  - **Landing**: copy stays the app's (tagline, "What You Can Track", feature texts); the mock's pill "Training diary for
+    climbers" shows the app name; "Your next session is the first entry." band uses the existing "Ready to Start Your
+    Journey?" texts. Feature cards keep their bullet lists (mock: one line each) and emoji icons; order kept.
+  - Get started still links to /dashboard (with the 🚀).
+
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event

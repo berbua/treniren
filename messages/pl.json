@@ -94,7 +94,31 @@
     "backToSignIn": "Powrót do logowania",
     "sendResetEmail": "Wyślij email resetujący",
     "forgotPasswordDescription": "Wprowadź swój adres email, a wyślemy Ci link do resetowania hasła.",
-    "resetPasswordDescription": "Wprowadź swoje nowe hasło poniżej."
+    "resetPasswordDescription": "Wprowadź swoje nowe hasło poniżej.",
+    "errors": {
+      "invalidCredentials": "Nieprawidłowy e-mail lub hasło",
+      "generic": "Wystąpił błąd. Spróbuj ponownie.",
+      "googleFailed": "Nie udało się zalogować przez Google",
+      "passwordsMismatch": "Hasła nie są takie same",
+      "passwordWeak": "Hasło musi mieć co najmniej 8 znaków i zawierać wielką literę, małą literę i cyfrę",
+      "signInAfterSignupFailed": "Konto zostało utworzone, ale logowanie się nie udało. Zaloguj się ręcznie.",
+      "createAccountFailed": "Nie udało się utworzyć konta",
+      "resetEmailFailed": "Nie udało się wysłać e-maila z linkiem",
+      "resetFailed": "Nie udało się zresetować hasła",
+      "invalidToken": "Nieprawidłowy token resetu"
+    },
+    "passwordRules": {
+      "title": "Wymagania hasła",
+      "minLength": "Co najmniej 8 znaków",
+      "uppercase": "Jedna wielka litera",
+      "lowercase": "Jedna mała litera",
+      "number": "Jedna cyfra"
+    },
+    "resetEmailSent": "Wysłaliśmy e-mail z linkiem do resetu hasła. Sprawdź skrzynkę.",
+    "resetSuccess": "Hasło zostało zmienione. Możesz zalogować się nowym hasłem.",
+    "invalidLinkTitle": "Ten link jest nieprawidłowy",
+    "invalidLinkMessage": "Brak tokenu resetu lub jest nieprawidłowy. Poproś o nowy link.",
+    "requestNewLink": "Poproś o nowy link"
   },
   "messages": {
     "title": "Wiadomości",

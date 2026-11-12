@@ -94,7 +94,31 @@
     "backToSignIn": "Back to sign in",
     "sendResetEmail": "Send reset email",
     "forgotPasswordDescription": "Enter your email address and we'll send you a link to reset your password.",
-    "resetPasswordDescription": "Enter your new password below."
+    "resetPasswordDescription": "Enter your new password below.",
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "generic": "An error occurred. Please try again.",
+      "googleFailed": "Failed to sign in with Google",
+      "passwordsMismatch": "Passwords do not match",
+      "passwordWeak": "Password must be at least 8 characters long and contain uppercase, lowercase, and number",
+      "signInAfterSignupFailed": "Account created but failed to sign in. Please try signing in manually.",
+      "createAccountFailed": "Failed to create account",
+      "resetEmailFailed": "Failed to send reset email",
+      "resetFailed": "Failed to reset password",
+      "invalidToken": "Invalid reset token"
+    },
+    "passwordRules": {
+      "title": "Password requirements",
+      "minLength": "At least 8 characters",
+      "uppercase": "One uppercase letter",
+      "lowercase": "One lowercase letter",
+      "number": "One number"
+    },
+    "resetEmailSent": "Password reset email sent! Check your inbox.",
+    "resetSuccess": "Password reset successfully! You can now sign in with your new password.",
+    "invalidLinkTitle": "This reset link isn’t valid",
+    "invalidLinkMessage": "Invalid or missing reset token. Please request a new password reset.",
+    "requestNewLink": "Request new reset link"
   },
   "messages": {
     "title": "Messages",

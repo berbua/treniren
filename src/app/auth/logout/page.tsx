@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { AuthShell, LogoTile } from '@/components/AuthLayout'
+import { Button } from '@/components/ui'
 
 export default function LogoutPage() {
   const { t } = useLanguage()
@@ -35,54 +37,30 @@ export default function LogoutPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <div className="text-center">
+      <AuthShell>
+        <div role="status" className="flex flex-col items-center gap-4 pt-16 text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-slate-600 dark:text-slate-300">
-            {t('auth.signingOut') || 'Signing out...'}
-          </p>
+          <p className="text-[15px] font-semibold text-uc-text-muted">{t('auth.signingOut') || 'Signing out...'}</p>
         </div>
-      </div>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-      <div className="max-w-md mx-auto text-center space-y-6 p-8">
-        {/* Success Icon */}
-        <div className="flex justify-center">
-          <div className="w-20 h-20 bg-uc-success/20 rounded-full flex items-center justify-center">
-            <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Message */}
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            {t('auth.loggedOut') || 'Successfully logged out'}
-          </h1>
-          <p className="text-slate-600 dark:text-slate-300">
-            {t('auth.logoutMessage') || 'You have been successfully signed out of your account.'}
-          </p>
-        </div>
-
-        {/* Redirect Message */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            {t('auth.redirecting') || 'Redirecting you to the home page...'}
-          </p>
-        </div>
-
-        {/* Manual Redirect Button */}
-        <button
-          onClick={() => router.push('/')}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-        >
+    <AuthShell>
+      <div className="flex flex-col items-center pt-16 text-center">
+        <LogoTile className="mb-5" />
+        <h1 className="text-[22px] font-extrabold text-uc-text">{t('auth.loggedOut') || 'Successfully logged out'}</h1>
+        <p className="mt-1.5 max-w-xs text-[15px] text-uc-text-muted">
+          {t('auth.logoutMessage') || 'You have been successfully signed out of your account.'}
+        </p>
+        <p className="mt-1 text-[13px] font-semibold text-uc-text-muted" role="status">
+          {t('auth.redirecting') || 'Redirecting you to the home page...'}
+        </p>
+        <Button variant="accent" size="lg" onClick={() => router.push('/')} className="mt-6">
           {t('auth.goHome') || 'Go to Home Page'}
-        </button>
+        </Button>
       </div>
-    </div>
+    </AuthShell>
   )
 }

@@ -70,7 +70,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Profile & settings — `Profile & settings.png`
 - [x] Global UI (More, messages, menus, banners, install, loading) —
       `Global UI — More, messages, menus, banners, install, loading.png`
-- [ ] Auth & landing — `Sign in, sign up, password, sign out.png`, `Landing page.png`
+- [x] Auth & landing — `Sign in, sign up, password, sign out.png`, `Landing page.png`
 
 ### 4. Finish
 - [ ] Search for leftover hard-coded colors (`#`, `slate-`, `pink-`, …) and Montserrat.
@@ -311,3 +311,16 @@ note the answer.
   header and the Add choice sheet were already built (step 2 / Workouts / Calendar). New keys `common.yesterday`,
   `messages.priorityHigh`. Not checked in a browser.
 - 2026-11-12: User approved tap-to-open tooltips (outside tap / Esc close); calendar / cycle day cells stay hover-only.
+- 2026-11-12: Step 3 · Auth & landing done. New `components/AuthLayout` (`AuthShell` 400px column under the logged-out
+  header, `LogoTile`, `AuthAlert` error/success, `AuthDivider`, `GoogleButton` (ghost, Google logo kept), shared
+  `validatePassword` + live `PasswordRules` 2×2 ✓ / ○ grid). Sign in: logo tile, 28px title, `Input`s, "Forgot password?"
+  beside the Password label, accent Sign in, divider, Google, "Don't have an account? Sign up" footer. Sign up / reset:
+  same fields, live rules while typing, mismatch as `FieldError`, accent submit disabled until valid (as before).
+  Forgot: success shows a ✉️ "sent" block under the form (form stays). Reset without a token: 🔗 error tile, title,
+  message, primary "Request new reset link". Sign out: spinner + "Signing out...", then 🦄 tile, texts, accent "Go to Home
+  Page" (auto-redirect kept). All hard-coded English errors / rules / messages now translated (`auth.errors.*`,
+  `auth.passwordRules.*`, `resetEmailSent`, `resetSuccess`, `invalidLinkTitle`, `invalidLinkMessage`, `requestNewLink`).
+  Landing (`/`): app-name pill, tagline split at " - " into headline + lead, accent Get started + "Free to use…", decorative
+  phase ring (5 arcs in `--uc-phase-*`, 🦄 centre), the same 12 feature cards (now a data list: icon tile, title,
+  description, bullets) in 1/2/4 columns, closing primary-container band with the existing unused `landing.readyToStart` /
+  `ctaDescription` / `startTracking` texts → /dashboard. Same links and handlers. Not checked in a browser.
