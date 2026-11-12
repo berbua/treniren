@@ -150,6 +150,12 @@ async function networkFirstStrategy(request, fallbackUrl = null) {
     
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
+      if (new URL(request.url).pathname === '/api/auth/session' && await isExpiredSession(cachedResponse)) {
+        // The session ran out while offline: answer "signed out" ({}) instead of showing the previous user
+        const cache = await caches.open(DYNAMIC_CACHE_NAME);
+        await cache.delete(request);
+        return new Response('{}', { headers: { 'Content-Type': 'application/json' } });
+      }
       return cachedResponse;
     }
     
@@ -173,6 +179,16 @@ async function networkFirstStrategy(request, fallbackUrl = null) {
         headers: { 'Content-Type': 'application/json' }
       }
     );
+  }
+}
+
+// A cached next-auth session whose `expires` time has passed
+async function isExpiredSession(response) {
+  try {
+    const session = await response.clone().json();
+    return !!session?.expires && new Date(session.expires).getTime() < Date.now();
+  } catch {
+    return false;
   }
 }
 
