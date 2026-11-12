@@ -65,7 +65,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Strong Mind — `Strong Mind.png`
 - [x] Events — `Events.png`
 - [x] Exercises — `Exercises.png`
-- [ ] Routines — `Routines.png`
+- [x] Routines — `Routines.png`
 - [ ] Fingerboard protocols & testing — `Fingerboard protocols & testing.png`
 - [ ] Profile & settings — `Profile & settings.png`
 - [ ] Global UI (More, messages, menus, banners, install, loading) —
@@ -248,3 +248,14 @@ note the answer.
   (new keys `exercises.gridView`, `listView`, `categories`, `quickAdd`, `quickAddCount`, `quickAddGroups.*`, `matching`,
   `inCategory`, `usedTimes`, `lastShort`, `lastSetShort`, `viewProgress`, `form.*`, `detail.*`). Same data, handlers and
   API calls. Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Routines done. `/routines`: 28px title + subtitle, accent "+ Create Routine" (label from `sm`),
+  `SkeletonRows` while loading, dashed `EmptyState` + accent CTA, card grid 1/2/3 columns. Card: gym `WorkoutIconTile`,
+  name, description, 44px ✏️ 🗑️ (were text Edit/Delete buttons; spinner while deleting), "5 exercises · 2 variations",
+  first three exercise names as text "+N more" (were chips), variation `Chip`s with the rep range. `RoutineForm` is a
+  `BottomSheet` (`dismissible={false}`): `Input`/`Textarea` with overline labels, `FieldError`, Exercises / Variations
+  overlines with counts and "+ Add …" text buttons, numbered exercise rows with 44px ↑ ↓ ✕ (was "Remove" text),
+  variation rows with ✏️ ✕, dashed empty notes, Cancel + accent Save footer (Cancel still clears the draft). Exercise
+  picker and variation form are their own `BottomSheet`s (picker closes on Esc/scrim; variation form doesn't): picker has
+  search, one Select all / Deselect all checkbox row, checkbox rows with category on the right, primary "Add Selected (N)";
+  variation form has Min / Max / Sets in one row and an inline name error (was `alert()`). New keys
+  `routines.form.moveUp`, `moveDown`. Same data, draft saving and API calls. Not checked logged-in in a browser.

@@ -720,7 +720,9 @@
         "maxReps": "Max Reps",
         "defaultSets": "Default Sets (optional)",
         "save": "Save"
-      }
+      },
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     }
   },
   "calendar": {

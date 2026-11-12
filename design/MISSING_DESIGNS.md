@@ -219,6 +219,20 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Recent workouts list every set ("5×10kg, 5×10kg, …") plus "N sets", not the compact "3 × 5 @ 10 kg"; rows still link
     to /workouts.
 
+### Routines
+- Built 2026-11-12 against `Routines.png`. Kept where the mock differs:
+  - **Variations are edited in their own sheet** (Add / Edit Variation, listed as rows with ✏️ ✕), not inline cards
+    inside the routine form. The variation sheet puts Min reps / Max reps / Default sets in one row as in the mock.
+  - **Load routine → variation** (third panel): the in-workout picker (restyled in the Log workout step) still loads on
+    one tap of a variation; the mock's two steps (radio "choose variation", "Step 2 of 2", then "Load into workout") would
+    change the flow, so it's not built.
+  - Exercise picker keeps Cancel next to "Add Selected (N)"; the footer appears only once something is selected (as
+    before). Select all / Deselect all became one checkbox row ("Select All (N)").
+  - Header keeps "My Routines" + subtitle; the accent "+" shows "Create Routine" from `sm`. Variation chips on the cards
+    keep the rep range ("Strength 3–5 reps"). Every card uses the gym icon tile (🏋️), as routines have no type.
+  - Save button keeps "Create Routine" / "Update Routine" (mock: "Save routine"); field labels keep the app texts
+    ("Routine Name", "Description (optional)").
+
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event
@@ -422,6 +436,8 @@ Still open — bug review 2026-11-11 (✔ = re-checked by hand, rest traced in c
 - Register + Google sign-in: someone can pre-register your email with a password and later read your data.
 - Login and forgot-password are case-sensitive (register lowercases) — "Kasia@…" from a phone keyboard fails.
 - Routines accept other users' exercise ids; workouts accept any `planId`.
+- Routine exercise picker: "Select All" also selects exercises already in the routine (their checkboxes are disabled),
+  so "Add Selected" adds them a second time.
 - Pagination params unvalidated/unbounded (500s, huge responses); one shared rate-limit counter for all limiters.
 - Some routes skip zod validation and return raw error messages; duplicate tag name → 500.
 - Tag selector strings are hard-coded English ("Tags", "Create new tag", "Color:", "Create", "Cancel") — also in the event form.

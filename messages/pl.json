@@ -720,7 +720,9 @@
         "maxReps": "Max Powtórzeń",
         "defaultSets": "Domyślna Liczba Serii (opcjonalnie)",
         "save": "Zapisz"
-      }
+      },
+      "moveUp": "Przesuń w górę",
+      "moveDown": "Przesuń w dół"
     }
   },
   "calendar": {
