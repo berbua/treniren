@@ -91,7 +91,8 @@ export async function PUT(
         where: { id },
         data: {
           name: name?.trim() || existingProtocol.name,
-          description: description?.trim() || null,
+          // Left out of the request = keep it; an empty value clears it
+          description: description === undefined ? undefined : description?.trim() || null,
         },
       })
 

@@ -125,7 +125,8 @@ export async function PUT(
         where: { id },
         data: {
           name: name?.trim() || existingRoutine.name,
-          description: description?.trim() || null,
+          // Left out of the request = keep it; an empty value clears it
+          description: description === undefined ? undefined : description?.trim() || null,
         },
       })
 
@@ -149,11 +150,14 @@ export async function PUT(
         })
       }
 
-      // Create new variations
+      // Create new variations. They're listed by createdAt, and createMany would give them all the same
+      // timestamp, so each one gets its own (1 ms apart) to keep the order they were sent in
       if (variations && variations.length > 0) {
+        const createdAt = Date.now()
         await tx.routineVariation.createMany({
-          data: variations.map((variation) => ({
+          data: variations.map((variation, index) => ({
             routineId: id,
+            createdAt: new Date(createdAt + index),
             name: variation.name,
             description: variation.description || null,
             defaultSets: variation.defaultSets || null,

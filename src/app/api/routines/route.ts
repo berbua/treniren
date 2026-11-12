@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create routine with exercises and variations
+    const createdAt = Date.now()
     const routine = await prisma.routine.create({
       data: {
         userId: user.id,
@@ -103,7 +104,9 @@ export async function POST(request: NextRequest) {
           })),
         } : undefined,
         variations: variations && variations.length > 0 ? {
-          create: variations.map((variation) => ({
+          // Listed by createdAt: give each its own timestamp (1 ms apart) so they keep the order they were sent in
+          create: variations.map((variation, index) => ({
+            createdAt: new Date(createdAt + index),
             name: variation.name,
             description: variation.description || null,
             defaultSets: variation.defaultSets || null,
