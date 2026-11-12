@@ -183,8 +183,8 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 
 ### Events
 - Built 2026-11-12 against `Events.png`. Kept where the mock differs:
-  - **Trip countdown "23 days"** — the card shows "Countdown · Enabled" (as before); the days-to-go number lives on the
-    dashboard. Showing it on the card too is the user's call.
+  - **Trip countdown "23 days"** — the card shows "Countdown · Enabled" (as before). User decision 2026-11-12: the
+    days-to-go number is shown only on the dashboard, not repeated on the event card.
   - **"Delete event" inside the edit form** and the trip-specific delete text ("Delete “Frankenjura”? … Keep") don't
     exist; delete stays on the card with the existing "Delete Event" confirmation.
   - Trip card title stays the saved title ("Frankenjura Trip"); the destination is printed separately only when the
