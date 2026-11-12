@@ -410,3 +410,7 @@ note the answer.
   `streakRule`, `streakWeeksInRow`. Old keys `dashboard.streak` / `keepGoing` kept, unused.
 - 2026-11-12: Decision 9 changed to "Keep the app" (user): Recent workouts (last 3) stays; "This week's sessions" won't be
   built.
+- 2026-11-12: Bigger features paused while the user tests; remaining list in `design/BIG_FEATURES_TODO.md`. Fix: Today's
+  recent workouts showed raw keys for Lead Rock / Lead Wall / Mental practice (`workoutTypes.lead_rock` built from the
+  enum in lower case); now `workouts.workoutTypes.<TYPE>`. Row meta "N exercises / N hangs" uses the plural keys (hangs
+  were hard-coded English).

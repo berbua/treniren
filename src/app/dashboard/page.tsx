@@ -365,15 +365,15 @@ function DashboardContent() {
                   // Get workout details summary
                   const exercisesCount = (workout as any).workoutExercises?.length || 0
                   const hangsCount = (workout as any).fingerboardHangs?.length || 0
-                  const detailsText = exercisesCount > 0 ? `${exercisesCount} ${t('dashboard.exercises') || 'exercises'}`
-                    : hangsCount > 0 ? `${hangsCount} hangs`
+                  const detailsText = exercisesCount > 0 ? tPlural('workouts.exercisesCount', exercisesCount)
+                    : hangsCount > 0 ? tPlural('workouts.hangsCount', hangsCount)
                     : t('dashboard.quickLog') || 'Quick log'
 
                   return (
                     <Link key={workout.id} href="/workouts" className="block rounded-uc-card hover:brightness-110 transition">
                       <SessionRow
                         workoutType={workout.type}
-                        title={t(`workoutTypes.${workout.type.toLowerCase()}`) || workout.type}
+                        title={t(`workouts.workoutTypes.${workout.type}`) || workout.type}
                         meta={<span className="uc-num">{new Date(workout.startTime).toLocaleDateString()} · {detailsText}</span>}
                         trailing={workout.trainingVolume && <TrBadge>{workout.trainingVolume}</TrBadge>}
                       />
