@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { syncLastPeriodDate } from '@/lib/period-utils'
 import { requireAuth } from '@/lib/auth-helpers'
 import { applySecurity } from '@/lib/api-security'
 import { z } from 'zod'
@@ -108,7 +109,7 @@ export async function PUT(
           }
           
           const { calculateCycleInfo } = await import('@/lib/cycle-utils')
-          const cycleInfo = calculateCycleInfo(cycleSettings, new Date(startDate))
+          const cycleInfo = calculateCycleInfo(cycleSettings, startDate)
           cycleDay = cycleInfo.currentDay
         }
       } catch (error) {
@@ -125,6 +126,14 @@ export async function PUT(
         ...(cycleDay !== undefined && { cycleDay: cycleDay || null }),
       },
     })
+
+    if (updatedPeriod.startDate.getTime() !== period.startDate.getTime()) {
+      try {
+        await syncLastPeriodDate(user.id, { removedStart: period.startDate, addedStart: updatedPeriod.startDate })
+      } catch (error) {
+        console.error('Error updating last period date:', error)
+      }
+    }
 
     return NextResponse.json(updatedPeriod)
   } catch (error) {
@@ -169,6 +178,13 @@ export async function DELETE(
     await prisma.period.delete({
       where: { id },
     })
+
+    // If the cycle anchor came from this period, fall back to the latest remaining one
+    try {
+      await syncLastPeriodDate(user.id, { removedStart: period.startDate })
+    } catch (error) {
+      console.error('Error updating last period date:', error)
+    }
 
     return NextResponse.json({ message: 'Period deleted successfully' })
   } catch (error) {

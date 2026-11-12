@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { syncLastPeriodDate } from '@/lib/period-utils'
 import { requireAuth } from '@/lib/auth-helpers'
 import { applySecurity } from '@/lib/api-security'
 import { z } from 'zod'
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
         }
         
         const { calculateCycleInfo } = await import('@/lib/cycle-utils')
-        const cycleInfo = calculateCycleInfo(cycleSettings, new Date(startDate))
+        const cycleInfo = calculateCycleInfo(cycleSettings, startDate)
         cycleDay = cycleInfo.currentDay
       }
     } catch (error) {
@@ -103,18 +104,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update lastPeriodDate in user profile
+    // Move the cycle anchor forward if this is the newest period
     try {
-      await prisma.userProfile.upsert({
-        where: { userId: user.id },
-        create: {
-          userId: user.id,
-          lastPeriodDate: new Date(startDate),
-        },
-        update: {
-          lastPeriodDate: new Date(startDate),
-        },
-      })
+      await syncLastPeriodDate(user.id, { addedStart: period.startDate })
     } catch (error) {
       console.error('Error updating user profile:', error)
     }

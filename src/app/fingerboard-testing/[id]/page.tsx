@@ -72,14 +72,14 @@ function FingerboardTestResultsPageContent() {
     : testResults
 
   if (loading) {
-    return <LoadingSpinner message="Loading test results..." fullScreen />
+    return <LoadingSpinner message={t('fingerboardTesting.loadingResults')} fullScreen />
   }
 
   if (!protocol) {
     return (
       <div className="min-h-screen bg-uc-black flex items-center justify-center">
         <div className="text-center">
-          <p className="text-uc-text-muted">Protocol not found</p>
+          <p className="text-uc-text-muted">{t('fingerboardTesting.protocolNotFound')}</p>
         </div>
       </div>
     )
@@ -102,7 +102,7 @@ function FingerboardTestResultsPageContent() {
               onClick={() => setShowPerformTest(true)}
               className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
             >
-              + Perform Test
+              + {t('fingerboardTesting.performTest')}
             </button>
           </div>
         </div>
@@ -110,17 +110,17 @@ function FingerboardTestResultsPageContent() {
         {/* Filter by hang type */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-uc-text-light mb-2">
-            Filter by Hang Type
+            {t('fingerboardTesting.filterByHang')}
           </label>
           <select
             value={selectedHangId || ''}
             onChange={(e) => setSelectedHangId(e.target.value || null)}
             className="bg-uc-dark-bg border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
           >
-            <option value="">All Hangs</option>
+            <option value="">{t('fingerboardTesting.allHangs')}</option>
             {protocol.testHangs.map((hang) => (
               <option key={hang.id || `hang-${hang.order}`} value={hang.id || `hang-${hang.order}`}>
-                {formatHangDescription(hang.handType, hang.gripType, hang.crimpSize, hang.customDescription)}
+                {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize, hang.customDescription)}
               </option>
             ))}
           </select>
@@ -137,7 +137,7 @@ function FingerboardTestResultsPageContent() {
         <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 overflow-hidden">
           <div className="p-6 border-b border-uc-purple/20">
             <h2 className="text-xl font-semibold text-uc-text-light">
-              Test Results ({filteredResults.length})
+              {t('fingerboardTesting.testResults')} ({filteredResults.length})
             </h2>
           </div>
           {filteredResults.length === 0 ? (
@@ -162,22 +162,22 @@ function FingerboardTestResultsPageContent() {
                 <thead className="bg-uc-black/50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      Date
+                      {t('fingerboardTesting.columns.date')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      Hang Type
+                      {t('fingerboardTesting.columns.hangType')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      Load (kg)
+                      {t('fingerboardTesting.columns.load')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      Time (s)
+                      {t('fingerboardTesting.columns.time')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      Success
+                      {t('fingerboardTesting.columns.success')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      Notes
+                      {t('fingerboardTesting.columns.notes')}
                     </th>
                   </tr>
                 </thead>
@@ -191,6 +191,7 @@ function FingerboardTestResultsPageContent() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-uc-text-light">
                           {formatHangDescription(
+                            t,
                             result.handType,
                             result.gripType,
                             result.crimpSize,

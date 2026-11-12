@@ -32,7 +32,7 @@ export const CreateEventSchema = z.object({
   climbingType: TripClimbingTypeSchema,
   showCountdown: z.boolean().optional(),
   // Cycle tracking for injuries
-  cycleDay: z.number().int().min(1).max(35).nullable().optional(),
+  cycleDay: z.number().int().min(1).max(50).nullable().optional(), // late cycles can run past day 35; matches the 1-50 input
   cycleDayManuallySet: z.boolean().optional(),
 }).refine(
   (data) => {
@@ -81,7 +81,7 @@ const BaseEventSchema = z.object({
   destination: z.string().max(200).trim().nullable().optional(),
   climbingType: TripClimbingTypeSchema,
   showCountdown: z.boolean().optional(),
-  cycleDay: z.number().int().min(1).max(35).nullable().optional(),
+  cycleDay: z.number().int().min(1).max(50).nullable().optional(), // late cycles can run past day 35; matches the 1-50 input
   cycleDayManuallySet: z.boolean().optional(),
 })
 
@@ -115,7 +115,7 @@ export const UpdateEventSchema = BaseEventSchema.partial().refine(
 
 // PATCH schema for cycle day updates
 export const UpdateCycleDaySchema = z.object({
-  cycleDay: z.number().int().min(1).max(35).nullable().optional(),
+  cycleDay: z.number().int().min(1).max(50).nullable().optional(), // late cycles can run past day 35; matches the 1-50 input
   cycleDayManuallySet: z.boolean().optional(),
 })
 

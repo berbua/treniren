@@ -36,6 +36,8 @@ export default function FingerboardTestingProtocolForm({
         name: protocol.name,
         description: protocol.description || '',
         testHangs: protocol.testHangs.map((h) => ({
+          // Keep the id so the update keeps this hang (and its test results)
+          id: h.id,
           order: h.order,
           handType: h.handType,
           gripType: h.gripType,
@@ -118,7 +120,8 @@ export default function FingerboardTestingProtocolForm({
   const handleSaveHang = (hang: FingerboardTestHang) => {
     if (editingHangIndex !== null) {
       const newHangs = [...formData.testHangs]
-      newHangs[editingHangIndex] = { ...hang, order: editingHangIndex }
+      // Keep the original id so this hang's test results stay linked
+      newHangs[editingHangIndex] = { ...hang, id: newHangs[editingHangIndex].id, order: editingHangIndex }
       setFormData({ ...formData, testHangs: newHangs })
     } else {
       setFormData({
@@ -231,7 +234,7 @@ export default function FingerboardTestingProtocolForm({
                     <div className="flex items-center gap-3 flex-1">
                       <span className="text-uc-text-muted text-sm w-6">{index + 1}.</span>
                       <span className="text-uc-text-light font-medium">
-                        {getHandTypeEmoji(hang.handType)} {formatHangDescription(hang.handType, hang.gripType, hang.crimpSize)}
+                        {getHandTypeEmoji(hang.handType)} {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize)}
                         {hang.customDescription && ` • ${hang.customDescription}`}
                       </span>
                       {hang.targetLoad !== undefined && (
@@ -411,7 +414,7 @@ function TestHangForm({
             >
               {HAND_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.emoji} {opt.label}
+                  {opt.emoji} {t(opt.labelKey)}
                 </option>
               ))}
             </select>
@@ -435,7 +438,7 @@ function TestHangForm({
             >
               {GRIP_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.emoji} {opt.label}
+                  {opt.emoji} {t(opt.labelKey)}
                 </option>
               ))}
             </select>

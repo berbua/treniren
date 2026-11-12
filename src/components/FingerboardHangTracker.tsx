@@ -96,8 +96,13 @@ export default function FingerboardHangTracker({
     field: keyof FingerboardWorkoutHang,
     value: string | number | undefined
   ) => {
+    updateHang(index, { [field]: value })
+  }
+
+  // Apply several field changes at once - two separate calls would both start from the same `hangs` prop
+  const updateHang = (index: number, changes: Partial<FingerboardWorkoutHang>) => {
     const newHangs = [...hangs]
-    newHangs[index] = { ...newHangs[index], [field]: value }
+    newHangs[index] = { ...newHangs[index], ...changes }
     onHangsChange(newHangs)
   }
 
@@ -179,7 +184,7 @@ export default function FingerboardHangTracker({
                 <div className="flex items-center gap-2">
                   <span className="text-uc-text-muted text-sm">#{index + 1}</span>
                   <span className="font-semibold text-uc-text-light">
-                    {getHandTypeEmoji(hang.handType)} {formatHangDescription(hang.handType, hang.gripType, hang.crimpSize)}
+                    {getHandTypeEmoji(hang.handType)} {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize)}
                     {hang.customDescription && ` • ${hang.customDescription}`}
                   </span>
                 </div>
@@ -225,7 +230,7 @@ export default function FingerboardHangTracker({
                     >
                       {HAND_TYPE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.emoji} {opt.label}
+                          {opt.emoji} {t(opt.labelKey)}
                         </option>
                       ))}
                     </select>
@@ -237,17 +242,16 @@ export default function FingerboardHangTracker({
                       value={hang.gripType}
                       onChange={(e) => {
                         const newGripType = e.target.value as GripType
-                        handleHangChange(index, 'gripType', newGripType)
                         // Clear crimp size only if switching to sloper
-                        if (newGripType === 'SLOPER') {
-                          handleHangChange(index, 'crimpSize', undefined)
-                        }
+                        updateHang(index, newGripType === 'SLOPER'
+                          ? { gripType: newGripType, crimpSize: undefined }
+                          : { gripType: newGripType })
                       }}
                       className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
                     >
                       {GRIP_TYPE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.emoji} {opt.label}
+                          {opt.emoji} {t(opt.labelKey)}
                         </option>
                       ))}
                     </select>
@@ -304,12 +308,10 @@ export default function FingerboardHangTracker({
                         const value = e.target.value ? parseFloat(e.target.value) : undefined
                         if (value !== undefined && value < 0) {
                           // Negative value means unload
-                          handleHangChange(index, 'load', undefined)
-                          handleHangChange(index, 'unload', Math.abs(value))
+                          updateHang(index, { load: undefined, unload: Math.abs(value) })
                         } else {
                           // Positive value means load
-                          handleHangChange(index, 'load', value)
-                          handleHangChange(index, 'unload', undefined)
+                          updateHang(index, { load: value, unload: undefined })
                         }
                       }}
                       placeholder={t('workouts.placeholders.load') || '0'}

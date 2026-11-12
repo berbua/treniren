@@ -8,10 +8,13 @@ import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import EventForm from '@/components/EventForm'
 import EventCard from '@/components/EventCard'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { useApiError } from '@/hooks/useApiError'
+import { extractApiError } from '@/lib/errors'
 
 export default function EventsPage() {
   const { t } = useLanguage()
   const confirmation = useConfirmation()
+  const { handleError } = useApiError()
   const { getToken } = useCsrfToken()
   const [events, setEvents] = useState<Event[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -26,13 +29,14 @@ export default function EventsPage() {
     const fetchData = async () => {
       try {
         const [eventsResponse, tagsResponse] = await Promise.all([
-          fetch('/api/events', { credentials: 'include' }),
+          fetch('/api/events?page=1&limit=1000', { credentials: 'include' }),
           fetch('/api/tags', { credentials: 'include' })
         ])
 
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json()
-          setEvents(eventsData)
+          // API returns { events, pagination }
+          setEvents(Array.isArray(eventsData.events) ? eventsData.events : [])
         }
 
         if (tagsResponse.ok) {
@@ -68,10 +72,10 @@ export default function EventsPage() {
         setEvents(prev => [newEvent, ...prev])
         setShowForm(false)
       } else {
-        console.error('Failed to create event')
+        handleError(await extractApiError(response), 'Failed to create event')
       }
     } catch (error) {
-      console.error('Error creating event:', error)
+      handleError(error, 'Failed to create event')
     } finally {
       setIsSubmitting(false)
     }
@@ -99,10 +103,10 @@ export default function EventsPage() {
         ))
         setEditingEvent(undefined)
       } else {
-        console.error('Failed to update event')
+        handleError(await extractApiError(response), 'Failed to update event')
       }
     } catch (error) {
-      console.error('Error updating event:', error)
+      handleError(error, 'Failed to update event')
     } finally {
       setIsSubmitting(false)
     }

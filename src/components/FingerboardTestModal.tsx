@@ -370,6 +370,7 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
                               </td>
                               <td className="px-4 py-3 text-sm text-uc-text-light">
                                 {formatHangDescription(
+                                  t,
                                   result.handType,
                                   result.gripType,
                                   result.crimpSize,

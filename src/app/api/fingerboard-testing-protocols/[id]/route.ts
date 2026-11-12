@@ -100,16 +100,28 @@ export async function PUT(
         },
       })
 
-      // Delete existing test hangs
-      await tx.fingerboardTestHang.deleteMany({
-        where: { protocolId: id },
-      })
+      // Sync test hangs in place: test results reference hangs and are deleted with them (cascade),
+      // so hangs that still exist are updated rather than recreated. Omitting testHangs leaves them untouched.
+      if (Array.isArray(testHangs)) {
+        const existingHangs = await tx.fingerboardTestHang.findMany({
+          where: { protocolId: id },
+          select: { id: true },
+        })
+        const existingIds = new Set(existingHangs.map((h) => h.id))
+        const keptIds = new Set(
+          testHangs.map((hang: any) => hang.id).filter((hangId: unknown) => typeof hangId === 'string' && existingIds.has(hangId))
+        )
 
-      // Create new test hangs
-      if (testHangs && testHangs.length > 0) {
-        await tx.fingerboardTestHang.createMany({
-          data: testHangs.map((hang: any, index: number) => ({
-            protocolId: id,
+        // Only hangs the user removed are deleted (together with their results)
+        const removedIds = [...existingIds].filter((hangId) => !keptIds.has(hangId))
+        if (removedIds.length > 0) {
+          await tx.fingerboardTestHang.deleteMany({
+            where: { protocolId: id, id: { in: removedIds } },
+          })
+        }
+
+        for (const [index, hang] of testHangs.entries()) {
+          const hangData = {
             order: hang.order !== undefined ? hang.order : index,
             handType: hang.handType,
             gripType: hang.gripType,
@@ -118,8 +130,13 @@ export async function PUT(
             targetLoad: hang.targetLoad || null,
             targetTimeSeconds: hang.targetTimeSeconds || null,
             notes: hang.notes || null,
-          })),
-        })
+          }
+          if (keptIds.has(hang.id)) {
+            await tx.fingerboardTestHang.update({ where: { id: hang.id }, data: hangData })
+          } else {
+            await tx.fingerboardTestHang.create({ data: { ...hangData, protocolId: id } })
+          }
+        }
       }
 
       // Return updated protocol with relations

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestResultFormData } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { toLocalDateString } from '@/lib/date-utils'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
 
 interface PerformTestModalProps {
@@ -21,7 +22,7 @@ export default function PerformTestModal({
 }: PerformTestModalProps) {
   const { t } = useLanguage()
   const { getToken } = useCsrfToken()
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(toLocalDateString())
   const [results, setResults] = useState<Record<string, any>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [protocolName, setProtocolName] = useState(protocol.name)
@@ -53,19 +54,10 @@ export default function PerformTestModal({
       const response = await fetch(`/api/fingerboard-testing-protocols/${protocol.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        // Rename only - test hangs are left untouched
         body: JSON.stringify({
           name: protocolName.trim(),
           description: protocol.description,
-          testHangs: protocol.testHangs.map((h) => ({
-            order: h.order,
-            handType: h.handType,
-            gripType: h.gripType,
-            crimpSize: h.crimpSize || undefined,
-            customDescription: h.customDescription || undefined,
-            targetLoad: h.targetLoad || undefined,
-            targetTimeSeconds: h.targetTimeSeconds || undefined,
-            notes: h.notes || undefined,
-          })),
         }),
       })
 
@@ -227,7 +219,7 @@ export default function PerformTestModal({
                   <div className="mb-4">
                     <span className="text-uc-text-muted text-sm">#{index + 1}</span>
                     <h4 className="text-uc-text-light font-medium mt-1">
-                      {formatHangDescription(hang.handType, hang.gripType, hang.crimpSize, hang.customDescription)}
+                      {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize, hang.customDescription)}
                     </h4>
                     {hang.targetLoad !== undefined && (
                       <p className="text-xs text-uc-text-muted mt-1">
