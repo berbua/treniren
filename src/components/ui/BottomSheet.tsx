@@ -10,14 +10,16 @@ interface BottomSheetProps {
   /** Sticky footer (e.g. the full-width Save button). */
   footer?: ReactNode
   closeLabel?: string
+  /** false: Esc and scrim tap don't close it (long forms); only the ✕ or a footer button do. */
+  dismissible?: boolean
   className?: string
 }
 
-/** Sheet from the bottom on phones, centred card from `sm` up. Esc and scrim tap close it. */
-export function BottomSheet({ isOpen, onClose, title, children, footer, closeLabel = 'Close', className = '' }: BottomSheetProps) {
+/** Sheet from the bottom on phones, centred card from `sm` up. Esc and scrim tap close it unless `dismissible` is false. */
+export function BottomSheet({ isOpen, onClose, title, children, footer, closeLabel = 'Close', dismissible = true, className = '' }: BottomSheetProps) {
   useEffect(() => {
     if (!isOpen) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => dismissible && e.key === 'Escape' && onClose()
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     document.addEventListener('keydown', onKey)
@@ -25,13 +27,13 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, closeLab
       document.body.style.overflow = overflow
       document.removeEventListener('keydown', onKey)
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, dismissible])
 
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-uc-scrim" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-uc-scrim" onClick={dismissible ? onClose : undefined} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"

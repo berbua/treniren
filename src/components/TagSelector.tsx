@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Tag } from '@/types/workout';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Button, Chip, Input, Overline } from './ui';
 
 interface TagSelectorProps {
   selectedTagIds: string[];
@@ -11,6 +12,7 @@ interface TagSelectorProps {
   onCreateTag?: (name: string, color: string) => void;
 }
 
+// Stored on the tag itself (data, not theme colours)
 const predefinedColors = [
   '#3b82f6', // blue
   '#ef4444', // red
@@ -52,40 +54,36 @@ export default function TagSelector({
   };
 
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-        🏷️ Tags
-      </label>
-      
+    <div className="space-y-2">
+      <Overline>Tags</Overline>
+
       {/* Selected Tags */}
       {selectedTagIds.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-x-2">
           {selectedTagIds.map(tagId => {
             const tag = availableTags.find(t => t.id === tagId);
             if (!tag) return null;
-            
+
             return (
-              <span
+              <button
+                type="button"
                 key={tagId}
-                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
-                style={{ backgroundColor: tag.color }}
+                onClick={() => handleTagToggle(tagId)}
+                aria-label={`${tag.name} ×`}
+                className="min-h-11 inline-flex items-center"
               >
-                {tag.name}
-                <button
-                  type="button"
-                  onClick={() => handleTagToggle(tagId)}
-                  className="ml-1 hover:bg-black/20 rounded-full p-0.5"
-                >
-                  ×
-                </button>
-              </span>
+                <Chip color={tag.color} className="pr-2">
+                  {tag.name}
+                  <span aria-hidden className="text-base leading-none opacity-70">×</span>
+                </Chip>
+              </button>
             );
           })}
         </div>
       )}
 
       {/* Available Tags */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-x-2">
         {availableTags
           .filter(tag => !selectedTagIds.includes(tag.id))
           .map(tag => (
@@ -93,13 +91,12 @@ export default function TagSelector({
               type="button"
               key={tag.id}
               onClick={() => handleTagToggle(tag.id)}
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+              className="group min-h-11 inline-flex items-center"
             >
-              <span
-                className="w-2 h-2 rounded-full mr-1"
-                style={{ backgroundColor: tag.color }}
-              />
-              {tag.name}
+              <span className="inline-flex items-center gap-1.5 min-h-7 px-2.5 rounded-uc-chip border border-uc-border text-[13px] font-bold text-uc-text group-hover:border-uc-primary transition-colors">
+                <span aria-hidden className="size-2 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                {tag.name}
+              </span>
             </button>
           ))}
       </div>
@@ -111,57 +108,53 @@ export default function TagSelector({
             <button
               type="button"
               onClick={() => setShowCreateForm(true)}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="min-h-11 inline-flex items-center gap-1.5 text-sm font-bold text-uc-primary hover:underline"
             >
-              + Create new tag
+              <span aria-hidden className="text-lg leading-none">+</span>
+              Create new tag
             </button>
           ) : (
-            <div className="space-y-2 p-3 border border-slate-300 dark:border-slate-600 rounded-lg">
-              <input
+            <div className="space-y-3 p-3 bg-uc-elevated border border-uc-border rounded-uc-card">
+              <Input
                 type="text"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 placeholder={t('workouts.placeholders.tagName') || 'Tag name'}
-                className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
                 autoFocus
               />
-              
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-slate-600 dark:text-slate-400">Color:</span>
-                <div className="flex space-x-1">
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[13px] font-semibold text-uc-text-muted">Color:</span>
+                <div className="flex flex-wrap gap-1.5">
                   {predefinedColors.map(color => (
                     <button
                       type="button"
                       key={color}
                       onClick={() => setNewTagColor(color)}
-                      className={`w-4 h-4 rounded-full border-2 ${
-                        newTagColor === color ? 'border-slate-900 dark:border-white' : 'border-slate-300'
+                      aria-label={color}
+                      aria-pressed={newTagColor === color}
+                      className={`size-8 rounded-full ${
+                        newTagColor === color ? 'ring-2 ring-uc-text ring-offset-2 ring-offset-uc-elevated' : ''
                       }`}
                       style={{ backgroundColor: color }}
                     />
                   ))}
                 </div>
               </div>
-              
-              <div className="flex space-x-2">
-                <button
-                  type="button"
-                  onClick={handleCreateTag}
-                  disabled={!newTagName.trim()}
-                  className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                >
+
+              <div className="flex gap-2">
+                <Button variant="tonal" onClick={handleCreateTag} disabled={!newTagName.trim()}>
                   Create
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => {
                     setShowCreateForm(false);
                     setNewTagName('');
                   }}
-                  className="px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:underline"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}

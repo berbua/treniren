@@ -55,7 +55,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Today / Dashboard — `Dashboard — dark.png`, `Dashboard — light.png`,
       `Dashboard — cycle onboarding, alt states, offline.png`, `Desktop — Dashboard.png`
 - [x] Quick log — `Quick log sheet.png`
-- [ ] Log workout (lead) — `Log workout — lead climbing (full form).png`
+- [x] Log workout (lead) — `Log workout — lead climbing (full form).png`
 - [ ] Log workout (other types, tags, recurring, dialogs) —
       `Log workout — gym, fingerboard, mental, tags, recurring, dialogs.png`
 - [ ] Workouts list & goals — `Workouts list & goals.png`
@@ -125,3 +125,13 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
   multi-select `ChoiceChip`s, full-width accent "Mark as done" (spinner while saving). The Cancel button was dropped;
   the sheet's ✕, Esc and scrim tap still close it. Description line, "(Optional)" labels, emoji and smart defaults kept.
   `Overline` got `as="label"`. Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Log workout (lead) done. `EnhancedWorkoutForm` is a `BottomSheet` (`dismissible={false}`, new
+  prop: Esc/scrim don't close it, as before) with Cancel + accent Save footer (`form="workout-form"`). Overline labels
+  (`FieldHeading` with ℹ️ tooltip + right summary), type chips in mockup order, TR as `SegmentedControl`, `Input` /
+  `Textarea`, new `CollapsibleCard` primitive for Cycle (phase band background), Goals, Gratitude, Strong Mind and
+  Recurring. `StrongMindSection`: 1–5 segments with end captions, focus/comfort chips in the `--uc-focus-*` /
+  `--uc-zone-*` colours, falls as No/Yes segments, dashed "Add climb" under the climbs. `TagSelector` (also event form),
+  `ProcessGoalsSection`, `CycleInfo` (content only now, callers give the band) restyled. Mental-practice fields
+  (focus level → shared `RatingDots`, moved out of `OfflineWorkoutForm`; practice type → segments; time of day →
+  chips) and the incomplete-data dialog (now `ConfirmationDialog`) were tokenised too. Still old: `WorkoutExerciseTracker`
+  and `FingerboardHangTracker` — next step. Not checked logged-in in a browser.

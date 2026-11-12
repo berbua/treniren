@@ -55,6 +55,19 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   (phase + recommendations for the chosen date). A pill is fine as a summary of it.
 - **"Save session" + one-line summary sticky footer** — the app has Cancel + Save/Update.
 - Wall angle (slab/overhang/roof…) and style (powerful/technical) — enums exist in the DB but **no UI** uses them; don't show.
+- Built 2026-11-12 against `Log workout — lead climbing (full form).png`. Kept where the mock differs:
+  - No footer in the mock; the app keeps a sticky **Cancel + Save/Update** footer. Esc and scrim tap don't close
+    this sheet (they never did; a stray tap would lose a long form).
+  - **Mental state summary** in the mock is a text field; in the app it's a read-only summary built from the
+    before-climbing rating and each climb (focus state, fall, comfort zone). Styled as a summary card.
+  - The mock's climb notes show "[object Object]" (mock bug); built as a normal text area.
+  - Climb **remove** is a trash icon in the mock; stays the text button "Remove Climb" until the custom icons land.
+  - **Recurring** in the mock is one checkbox row; the app's is a collapsible card (enable checkbox, dates,
+    frequency, preview) — the gym/fingerboard/recurring mock is the reference for its insides.
+  - Section headers keep their one-line descriptions (not in the mock) and show a summary on the right
+    (phase · cycle day, "N selected" goals, "3 · Neutral", TR label).
+  - Before-climbing rating shows 1–5 with "Very Nervous" / "Very Confident" under the ends, as in the mock; the
+    label of the chosen value shows in the Strong Mind header.
 
 ### Calendar
 - **Selected-day detail panel** and **Upcoming events list** — not implemented.
@@ -293,6 +306,7 @@ Still open — bug review 2026-11-11 (✔ = re-checked by hand, rest traced in c
 - Routines accept other users' exercise ids; workouts accept any `planId`.
 - Pagination params unvalidated/unbounded (500s, huge responses); one shared rate-limit counter for all limiters.
 - Some routes skip zod validation and return raw error messages; duplicate tag name → 500.
+- Tag selector strings are hard-coded English ("Tags", "Create new tag", "Color:", "Create", "Cancel") — also in the event form.
 
 - **Password reset never sends an email.** `src/app/api/auth/forgot-password/route.ts` creates the reset token
   but has `// TODO: Send email with reset link`, while telling the user a link "has been sent". Needs an email

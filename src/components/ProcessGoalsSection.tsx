@@ -44,27 +44,27 @@ export const ProcessGoalsSection = ({
   }
 
   return (
-    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
-      <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
+    <div className="p-4 bg-uc-elevated rounded-uc-card border border-uc-border">
+      <h4 className="text-sm font-bold mb-3">
         🎯 {t('strongMind.goalsProgress')}
       </h4>
 
       {/* Process goals: progress 1-3 */}
       {processGoals.length > 0 && (
         <div className="mb-4 space-y-3">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-uc-text-muted">
             {t('strongMind.progressHint')}
           </p>
           {processGoals.map(goal => {
             const currentProgress = getProcessGoalProgress(goal.id)
             return (
-              <div key={goal.id} className="flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600">
+              <div key={goal.id} className="flex items-center justify-between gap-3 p-3 bg-uc-surface rounded-uc-input border border-uc-border">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <div className="text-sm font-semibold">
                     {goal.timeframeValue} {t(`strongMind.${goal.timeframeUnit}`)}: {goal.goalDescription}
                   </div>
                 </div>
-                <div className="flex space-x-2 shrink-0" role="radiogroup" aria-label={t('strongMind.goalsProgress')}>
+                <div className="flex gap-1.5 shrink-0" role="radiogroup" aria-label={t('strongMind.goalsProgress')}>
                   {[1, 2, 3].map(level => (
                     <button
                       key={level}
@@ -73,10 +73,10 @@ export const ProcessGoalsSection = ({
                       aria-checked={currentProgress === level}
                       title={t(`strongMind.progressLevels.${level}`)}
                       onClick={() => onProcessGoalProgress(goal.id, level as 1 | 2 | 3)}
-                      className={`w-11 h-11 rounded-full border-2 flex items-center justify-center text-xs font-medium transition-all ${
+                      className={`size-11 rounded-full border flex items-center justify-center text-sm font-extrabold uc-num transition-colors ${
                         currentProgress === level
-                          ? 'border-purple-500 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-200'
-                          : 'border-slate-300 dark:border-slate-600 hover:border-purple-300 text-slate-600 dark:text-slate-400'
+                          ? 'border-uc-primary bg-uc-primary text-uc-on-primary'
+                          : 'border-uc-border text-uc-text hover:border-uc-primary'
                       }`}
                     >
                       {level}
@@ -92,18 +92,18 @@ export const ProcessGoalsSection = ({
       {/* Project goals: achieved on this workout */}
       {projectGoals.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-uc-text-muted">
             {t('strongMind.achievedHint')}
           </p>
           {projectGoals.map(goal => {
             const isCompleted = isProjectGoalCompleted(goal.id)
             return (
-              <div key={goal.id} className="flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600">
+              <div key={goal.id} className="flex items-center justify-between gap-3 p-3 bg-uc-surface rounded-uc-input border border-uc-border">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <div className="text-sm font-semibold">
                     {goal.routeGrade} {goal.routeName} - {goal.sectorLocation}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                  <div className="text-xs text-uc-text-muted">
                     {goal.climbingType === 'route' ? `🧗‍♀️ ${t('strongMind.route')}` : `🧗 ${t('strongMind.boulder')}`} • {goal.gradeSystem}
                   </div>
                 </div>
@@ -112,10 +112,10 @@ export const ProcessGoalsSection = ({
                   aria-pressed={isCompleted}
                   title={t('strongMind.markAchieved')}
                   onClick={() => onProjectGoalCompletion(goal.id)}
-                  className={`w-11 h-11 shrink-0 rounded-full border-2 flex items-center justify-center text-lg transition-all ${
+                  className={`size-11 shrink-0 rounded-full border flex items-center justify-center text-lg transition-colors ${
                     isCompleted
-                      ? 'border-yellow-500 bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-200'
-                      : 'border-slate-300 dark:border-slate-600 hover:border-yellow-300 text-slate-600 dark:text-slate-400'
+                      ? 'border-uc-accent bg-uc-accent text-uc-on-accent'
+                      : 'border-uc-border hover:border-uc-accent'
                   }`}
                 >
                   🏆
