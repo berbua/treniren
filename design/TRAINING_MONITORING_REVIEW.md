@@ -65,3 +65,11 @@ Stats could compare fingerboard tests and sends by phase and show whether a stre
 - **Left / right hand asymmetry** on one-arm hangs, if not already visible in the test chart.
 - **Rock conditions** (temperature, humidity) on Lead Rock sessions — conditions often explain a bad day at the crag.
 - **Rest days between hard sessions** — e.g. typical days between TR4–5 sessions, shown next to the streak.
+
+## Added after the review
+
+### Training plan import
+
+> **Built 2026-11-13** (merged to `main`): import next week's plan as a CSV (e.g. made with Claude — the import sheet
+> has a "Copy instructions for Claude" button with the format). Planned sessions show on the Calendar and Today, don't
+> count as training, and "Log" opens the workout form prefilled and linked to the plan. See `design/REDESIGN_PLAN.md`.
