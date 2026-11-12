@@ -15,6 +15,7 @@ import { localDayNumber, storedDayNumber } from '@/lib/date-utils';
 import { WeeklyVolumeChart } from './WeeklyVolumeChart';
 import { StatsFingerboardTests } from './StatsFingerboardTests';
 import { StatsGrades } from './StatsGrades';
+import { StatsSectors } from './StatsSectors';
 import {
   Button, Card, EmptyState, Icon, Overline, SegmentedControl, SkeletonRows, StatTile, WorkoutIconTile,
   buttonClasses, phaseBandBg, phaseTranslationKey, workoutBg,
@@ -466,6 +467,11 @@ export const StatisticsContent = () => {
               workouts={workoutsInRange}
               start={statsData.timeRange.start}
               end={statsData.timeRange.end}
+              renderSection={(title, subtitle, body) => <Section title={title} subtitle={subtitle}>{body}</Section>}
+            />
+            {/* Most visited sectors */}
+            <StatsSectors
+              workouts={workoutsInRange}
               renderSection={(title, subtitle, body) => <Section title={title} subtitle={subtitle}>{body}</Section>}
             />
           </div>

@@ -213,6 +213,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   volume, hidden without test results. Reuses `FingerboardTestChart` (new `plain` prop: no inner card) for one test
   protocol — the most recently tested; a select switches when there are several. Shows **all** tests, not only the
   stats range (tests are weeks apart). Link "Open test protocol →".
+- **Sectors card** (built 2026-11-13, no mock): "Sectors" card after Grades. Top sector name + its days + number of
+  sectors in the range, then the top 5 as bars (styled like the grade pyramid). A visit = a day with a workout in that
+  sector; free-text sectors are grouped ignoring case/extra spaces, shown in the most used spelling. Dashed empty state.
 - Tiles that exist: **Total workouts, This month, Avg per week, Current streak**.
 - Mock's **"Current streak · 5 days"** unit and **"11 climbing workouts with a TR value"** subtitle aren't shown (no
   keys / not computed); the app's extra lines are kept: Strong Mind link card, "Each phase shows…" note, notification
