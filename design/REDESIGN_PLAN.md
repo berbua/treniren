@@ -384,3 +384,7 @@ note the answer.
 - 2026-11-12: Decision 57 built. `FingerboardTestModal`: Clone opens a sheet with the copy's name (`fingerboardTesting.copyName`
   "{{name}} (Copy)" / "(kopia)", editable, required) and Cancel / Clone; it was a one-tap POST named "… (Copy)". New keys
   `cloneSheetTitle`, `cloneSheetDescription`, `cloneNameLabel`.
+- 2026-11-12: Decision 65 built. New `GET /api/auth/reset-password?token=` → `{ valid, expired }` (public, like the POST).
+  Reset page: spinner while checking, then the form, the invalid-link screen, or the expired variant (new keys
+  `auth.expiredLinkTitle`, `expiredLinkMessage`; button stays "Request new reset link"). Not tried against a running
+  server.

@@ -307,8 +307,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     keeps its colour logo and "Sign in / Sign up with Google" label.
   - Forgot password: the form stays visible after sending; the sent block shows the app's message (no "Check your inbox"
     heading or "expires in 1 hour" line — the app doesn't know the expiry).
-  - Reset: an **expired** token isn't detected on load (only a missing one); an expired/used token shows the server's
-    error in the alert on submit. The "invalid link" screen title is new copy (`auth.invalidLinkTitle`); the button stays
+  - Reset: the link is checked on open since 2026-11-12 (decision 65, `GET /api/auth/reset-password?token=`): expired →
+    "This link has expired" + "Reset links work once and for 1 hour. Request a new one."; unknown / used / missing →
+    the invalid-link screen. If the check fails, the form shows and the server checks the token on submit. The "invalid link" screen title is new copy (`auth.invalidLinkTitle`); the button stays
     "Request new reset link" → forgot-password.
   - Reset success keeps the success alert + automatic redirect to sign in after 3 s.
   - Sign out: accent "Sign in again" → sign in, as in the mock (decision 64); the 2 s auto-redirect to `/` and the

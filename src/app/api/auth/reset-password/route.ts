@@ -2,6 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, validatePassword } from '@/lib/auth-utils'
 
+// GET /api/auth/reset-password?token=… - Check a reset link when the page opens: { valid, expired }
+export async function GET(request: NextRequest) {
+  try {
+    const token = request.nextUrl.searchParams.get('token')
+    if (!token) {
+      return NextResponse.json({ valid: false, expired: false })
+    }
+
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      select: { expires: true },
+    })
+
+    if (!resetToken) {
+      return NextResponse.json({ valid: false, expired: false })
+    }
+
+    const expired = resetToken.expires < new Date()
+    return NextResponse.json({ valid: !expired, expired })
+  } catch (error) {
+    console.error('Error checking reset token:', error)
+    return NextResponse.json({ error: 'Failed to check reset token' }, { status: 500 })
+  }
+}
+
 // POST /api/auth/reset-password - Reset password with token
 export async function POST(request: NextRequest) {
   try {

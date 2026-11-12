@@ -119,7 +119,9 @@
     "invalidLinkTitle": "This reset link isn’t valid",
     "invalidLinkMessage": "Invalid or missing reset token. Please request a new password reset.",
     "requestNewLink": "Request new reset link",
-    "signInAgain": "Sign in again"
+    "signInAgain": "Sign in again",
+    "expiredLinkTitle": "This link has expired",
+    "expiredLinkMessage": "Reset links work once and for 1 hour. Request a new one."
   },
   "messages": {
     "title": "Messages",

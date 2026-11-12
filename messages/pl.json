@@ -119,7 +119,9 @@
     "invalidLinkTitle": "Ten link jest nieprawidłowy",
     "invalidLinkMessage": "Brak tokenu resetu lub jest nieprawidłowy. Poproś o nowy link.",
     "requestNewLink": "Poproś o nowy link",
-    "signInAgain": "Zaloguj się ponownie"
+    "signInAgain": "Zaloguj się ponownie",
+    "expiredLinkTitle": "Ten link wygasł",
+    "expiredLinkMessage": "Linki resetujące działają raz i przez 1 godzinę. Poproś o nowy."
   },
   "messages": {
     "title": "Wiadomości",

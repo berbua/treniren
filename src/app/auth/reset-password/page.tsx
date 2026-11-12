@@ -21,12 +21,29 @@ function ResetPasswordFormContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  // Link checked on open (decision 65): used / unknown tokens are invalid, old ones expired
+  const [linkState, setLinkState] = useState<'checking' | 'valid' | 'invalid' | 'expired'>(token ? 'checking' : 'invalid')
 
   useEffect(() => {
     if (!token) {
-      setError(t('auth.invalidLinkMessage'))
+      setLinkState('invalid')
+      return
     }
-  }, [token, t])
+    let cancelled = false
+    fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { valid?: boolean; expired?: boolean } | null) => {
+        if (cancelled) return
+        // If the check itself fails, show the form; the server still checks the token on submit
+        setLinkState(!data || data.valid ? 'valid' : data.expired ? 'expired' : 'invalid')
+      })
+      .catch(() => {
+        if (!cancelled) setLinkState('valid')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [token])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,15 +104,30 @@ function ResetPasswordFormContent() {
 
   const passwordsMismatch = !!formData.confirmPassword && formData.password !== formData.confirmPassword
 
-  if (!token) {
+  if (linkState === 'checking') {
+    return (
+      <AuthShell>
+        <div role="status" className="flex justify-center pt-16">
+          <LoadingSpinner size="lg" />
+        </div>
+      </AuthShell>
+    )
+  }
+
+  if (linkState !== 'valid' && !message) {
+    const expired = linkState === 'expired'
     return (
       <AuthShell>
         <div role="alert" className="flex flex-col items-center pt-10 text-center">
           <span aria-hidden className="mb-4 flex size-14 items-center justify-center rounded-uc-card bg-uc-error-bg text-uc-error">
             <Icon name="link-expired" size={28} />
           </span>
-          <h1 className="text-xl font-extrabold text-uc-text">{t('auth.invalidLinkTitle')}</h1>
-          <p className="mt-1.5 max-w-xs text-sm text-uc-text-muted">{t('auth.invalidLinkMessage')}</p>
+          <h1 className="text-xl font-extrabold text-uc-text">
+            {expired ? t('auth.expiredLinkTitle') || 'This link has expired' : t('auth.invalidLinkTitle')}
+          </h1>
+          <p className="mt-1.5 max-w-xs text-sm text-uc-text-muted">
+            {expired ? t('auth.expiredLinkMessage') || 'Reset links work once and for 1 hour. Request a new one.' : t('auth.invalidLinkMessage')}
+          </p>
           <Link href="/auth/forgot-password" className={buttonClasses('primary', 'md', 'mt-5')}>
             {t('auth.requestNewLink')}
           </Link>
