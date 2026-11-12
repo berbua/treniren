@@ -80,6 +80,8 @@ function WorkoutsPageContent() {
             setWorkouts(workoutsArray)
           }
           setWorkoutsPagination(data.pagination)
+          // Keep the pager on the page that was actually loaded
+          if (!append) setWorkoutsPage(page)
         } else {
           // Fallback for old API format
           setWorkouts(Array.isArray(data) ? data : [])
@@ -111,6 +113,8 @@ function WorkoutsPageContent() {
             setEvents(eventsArray)
           }
           setEventsPagination(data.pagination)
+          // Keep the pager on the page that was actually loaded
+          if (!append) setEventsPage(page)
         } else {
           // Fallback for old API format
           setEvents(Array.isArray(data) ? data : [])
@@ -725,7 +729,6 @@ function WorkoutsPageContent() {
                   hasMore={workoutsPagination.hasMore}
                   pageSize={ITEMS_PER_PAGE}
                   onPage={(newPage) => {
-                    setWorkoutsPage(newPage)
                     fetchWorkouts(newPage, false)
                   }}
                 />
@@ -771,7 +774,6 @@ function WorkoutsPageContent() {
                   hasMore={eventsPagination.hasMore}
                   pageSize={ITEMS_PER_PAGE}
                   onPage={(newPage) => {
-                    setEventsPage(newPage)
                     fetchEvents(newPage, false)
                   }}
                 />

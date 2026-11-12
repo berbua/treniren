@@ -34,7 +34,7 @@ Line numbers are from the review and may have shifted.
 20. ⬜ Strong Mind project goals get duplicate ids after reload (counter seeded only from process goals) — `src/app/strong-mind/page.tsx:118-124, 325`
 21. ⬜ Injury-by-phase stats ignore the user-entered `cycleDay` / `cycleDayManuallySet` — `src/lib/statistics-service.ts:442-445`
 22. ✅ Dashboard Events tile capped at 50 (uses page length, not `pagination.total`) — `src/app/dashboard/page.tsx:148`
-23. ⬜ Workouts page: after adding a workout, list shows page 1 but pager keeps the old page — `src/app/workouts/page.tsx:259, 272, 857` (events: `:415`)
+23. ✅ Workouts page: after adding a workout, list shows page 1 but pager keeps the old page — `src/app/workouts/page.tsx:259, 272, 857` (events: `:415`)
 
 ## Smaller issues (all open)
 - ⬜ Fingerboard test results saved with `Promise.all`, no transaction → partial save + duplicates on retry; reminder upsert unvalidated — `src/app/api/fingerboard-test-results/route.ts:136-185`
