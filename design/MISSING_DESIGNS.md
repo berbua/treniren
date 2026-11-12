@@ -24,8 +24,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **Goals card with goals like "Max hang 20 mm +10 kg" / "Present or better on 80%"** — no such measurable goals.
   The goals that exist: weekly/monthly session goals (+ optional per-type "× per week"), and Strong Mind
   process/project goals (see B).
-- **Shortcuts 3×2** — the app has 9 links in 3 groups: Training (Workouts, Calendar, Cycle),
-  Library (Exercises, Routines, Fingerboard), Analysis (Statistics, Strong Mind, Profile).
+- **Shortcuts 3×2** — built 2026-11-12 (decision 12): one 3×2 grid (6 in a row on `lg`) without group headings:
+  Cycle, Exercises, Routines, Fingerboard, Strong Mind, Profile. Workouts, Calendar and Statistics were dropped (they're
+  on the tab bar / sidebar).
 - **Phase hero card** — OK to keep (cycle day/phase/recommendations exist), but note the app's phase day ranges
   are **Menstrual 1–7, Follicular 8–12, Ovulation 13–16, Early luteal 17–20, Late luteal 21–end of cycle**
   (design says 1–5 / 6–12 / 13–16 / 17–22 / 23–28). Cycle length is configurable 21–35 days.

@@ -198,31 +198,14 @@ function DashboardContent() {
 
   const quickLogLabel = t('quickLog.button') || 'Quick Log'
 
-  const shortcutGroups = [
-    {
-      label: t('dashboard.categories.training') || 'Trening',
-      links: [
-        { href: '/workouts', icon: 'workouts' as IconName, label: t('nav.workouts') || 'Workouts' },
-        { href: '/calendar', icon: 'calendar' as IconName, label: t('nav.calendar') || 'Calendar' },
-        { href: '/cycle', icon: 'cycle' as IconName, label: t('nav.cycle') || 'Cycle' },
-      ]
-    },
-    {
-      label: t('dashboard.categories.library') || 'Biblioteka',
-      links: [
-        { href: '/exercises', icon: 'library' as IconName, label: t('nav.exercises') || 'Exercises' },
-        { href: '/routines', icon: 'workouts' as IconName, label: t('nav.routines') || 'Routines' },
-        { href: '/fingerboard-protocols', icon: 'type-fingerboard' as IconName, label: t('nav.fingerboardProtocols') || 'Fingerboard' },
-      ]
-    },
-    {
-      label: t('dashboard.categories.analysis') || 'Analiza',
-      links: [
-        { href: '/statistics', icon: 'stats' as IconName, label: t('nav.statistics') || 'Statistics' },
-        { href: '/strong-mind', icon: 'strong-mind' as IconName, label: t('strongMind.title') || 'Strong Mind' },
-        { href: '/profile', icon: 'user' as IconName, label: t('nav.profile') || 'Profile' },
-      ]
-    },
+  // 3×2 shortcuts (decision 12): everything that isn't already on the tab bar / "+" sheet
+  const shortcuts: { href: string; icon: IconName; label: string }[] = [
+    { href: '/cycle', icon: 'cycle', label: t('nav.cycle') || 'Cycle' },
+    { href: '/exercises', icon: 'type-gym', label: t('nav.exercises') || 'Exercises' },
+    { href: '/routines', icon: 'library', label: t('nav.routines') || 'Routines' },
+    { href: '/fingerboard-protocols', icon: 'type-fingerboard', label: t('nav.fingerboardProtocols') || 'Fingerboard' },
+    { href: '/strong-mind', icon: 'strong-mind', label: t('strongMind.title') || 'Strong Mind' },
+    { href: '/profile', icon: 'user', label: t('nav.profile') || 'Profile' },
   ]
 
   const showHero = isCycleTrackingEnabled && cycleInfo
@@ -469,23 +452,16 @@ function DashboardContent() {
         </div>
 
         {/* Shortcuts */}
-        <div className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0">
-          {shortcutGroups.map((group) => (
-            <section key={group.label}>
-              <Overline className="mb-2">{group.label}</Overline>
-              <div className="grid grid-cols-3 gap-2.5">
-                {group.links.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex min-h-[88px] flex-col justify-between gap-3 p-3 bg-uc-surface border border-uc-border rounded-uc-card hover:bg-uc-elevated transition-colors"
-                  >
-                    <Icon name={link.icon} size={24} className="text-uc-primary" />
-                    <span className="text-sm font-bold text-uc-text break-words">{link.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </section>
+        <div className="grid grid-cols-3 gap-2.5 lg:grid-cols-6">
+          {shortcuts.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex min-h-[88px] flex-col justify-between gap-3 p-3 bg-uc-surface border border-uc-border rounded-uc-card hover:bg-uc-elevated transition-colors"
+            >
+              <Icon name={link.icon} size={24} className="text-uc-primary" />
+              <span className="text-sm font-bold text-uc-text break-words">{link.label}</span>
+            </Link>
           ))}
         </div>
 

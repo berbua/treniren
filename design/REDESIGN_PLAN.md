@@ -356,4 +356,6 @@ note the answer.
   `tPlural(key, count)` in `LanguageContext` (`Intl.PluralRules`, keys `.one/.few/.many/.other`). Gym `WorkoutCard`
   shows an "N exercises" chip (`workouts.exercisesCount`). Fingerboard test chart defaults to Load. Sign out: "Sign in
   again" → `/auth/signin` (`auth.signInAgain`), no auto-redirect. 12 (shortcuts 3×2) waits for the user: which 6 links.
+- 2026-11-12: Decision 12 built (user picked the links): dashboard shortcuts are one 3×2 grid (6 across on `lg`, no group
+  headings) — Cycle, Exercises, Routines, Fingerboard, Strong Mind, Profile; icons now match the nav.
   Not checked logged-in in a browser.
