@@ -444,3 +444,13 @@ note the answer.
 - 2026-11-12: Deload behaviour: `lib/deload.ts` (`deloadDayNumbers`, `currentDeload`); `weeklyStreaks(…, deloadDays)`
   bridges deload weeks; statistics-service `weeksInRange` / frequencies skip deload days; `WeeklyVolumeChart`
   `deloadDays` prop; Today deload card (`dashboard.deloadDay`, `deloadHint`); `stats.deloadWeeksNote`.
+- 2026-11-12: Climb grades (training monitoring review #1, branch `feat/climb-grades`), no migration — stored on
+  `mentalState.climbSections[]`: `gradeSystem`, `grade`, `style` (`SendStyle`: onsight / flash / redpoint / repeat /
+  not sent; no onsight for boulders), `tries` (onsight / flash set 1 and hide the field). The climb list (inside Strong
+  Mind) now shows for Bouldering too, with boulder grades and "Boulder N" placeholders. `lib/grades.ts` holds the grade
+  lists (the project-goal form uses them too; YDS now goes to 5.15d) and a common rank (French equivalent) for comparing
+  systems; a new climb starts with the previous climb's system, else the last one picked (localStorage). Stats
+  `StatsGrades` card: hardest send, sends / graded climbs, avg tries per redpoint, hardest send per month (line),
+  grade pyramid (top 6 grades, style counts), Routes / Boulders toggle; grades show in the system used most. Keys
+  `workouts.boulderNumber / sendStyle / sendStyles.* / climbTries / triesCount`, `stats.grades …`. Not checked in a
+  browser yet. No mockup — needs a design.

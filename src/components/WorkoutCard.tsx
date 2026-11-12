@@ -95,6 +95,8 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
   const isMental = workout.type === 'MENTAL_PRACTICE'
   const exercisesCount = workout.type === 'GYM' ? workout.workoutExercises?.length ?? 0 : 0
   const isLead = workout.type === 'LEAD_ROCK' || workout.type === 'LEAD_ARTIFICIAL'
+  const hasClimbList = isLead || workout.type === 'BOULDERING'
+  const climbNumberKey = workout.type === 'BOULDERING' ? 'workouts.boulderNumber' : 'workouts.climbNumber'
   const mentalState = workout.mentalState
   const hasMentalState = !!mentalState && (!!mentalState.beforeClimbing || (mentalState.climbSections?.length ?? 0) > 0)
   const timeLabel = (time: string) =>
@@ -216,13 +218,22 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
                   </span>
                 </p>
               )}
-              {isLead && mentalState.climbSections && mentalState.climbSections.length > 0 && (
+              {hasClimbList && mentalState.climbSections && mentalState.climbSections.length > 0 && (
                 <>
                   <p className="sr-only">{t('workouts.climbs')}</p>
                   {mentalState.climbSections.map((section, index) => (
                     <p key={section.id} className="font-semibold text-uc-text">
-                      {section.name || t('workouts.climbNumber', { number: index + 1 })}:{' '}
+                      {section.name || t(climbNumberKey, { number: index + 1 })}:{' '}
                       {[
+                        section.grade && (
+                          <span key="grade" className="font-bold uc-num">{section.grade}</span>
+                        ),
+                        section.style && (
+                          <span key="style">
+                            {t(`workouts.sendStyles.${section.style}`)}
+                            {section.tries && section.tries > 1 && ` (${tPlural('workouts.triesCount', section.tries)})`}
+                          </span>
+                        ),
                         section.focusState && (
                           <span key="focus" className={`font-bold ${focusText[section.focusState] ?? ''}`}>
                             {t(`workouts.focusStates.${section.focusState}`)}

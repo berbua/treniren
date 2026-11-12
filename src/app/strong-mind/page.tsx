@@ -9,6 +9,7 @@ import { Workout } from '@/types/workout'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import { toLocalDateString } from '@/lib/date-utils'
 import { GoalKind, ProcessGoal, ProjectGoal, isGoalAchieved, nextGoalId, saveGoals } from '@/lib/strong-mind-goals'
+import { gradeOptions } from '@/lib/grades'
 import {
   BottomSheet,
   Button,
@@ -406,30 +407,7 @@ function StrongMindPageContent() {
     }
   }
 
-  // Generate grade options based on system and climbing type
-  const getGradeOptions = (system: string, type: string) => {
-    if (type === 'boulder') {
-      switch (system) {
-        case 'french':
-          return ['3', '4', '5a', '5a+', '5b', '5b+', '5c', '5c+', '6a', '6a+', '6b', '6b+', '6c', '6c+', '7a', '7a+', '7b', '7b+', '7c', '7c+', '8a', '8a+', '8b', '8b+', '8c', '8c+', '9a', '9a+', '9b', '9b+', '9c', '9c+']
-        case 'american':
-          return ['V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17']
-        default:
-          return []
-      }
-    } else { // route
-      switch (system) {
-        case 'french':
-          return ['3', '4', '5a', '5a+', '5b', '5b+', '5c', '5c+', '6a', '6a+', '6b', '6b+', '6c', '6c+', '7a', '7a+', '7b', '7b+', '7c', '7c+', '8a', '8a+', '8b', '8b+', '8c', '8c+', '9a', '9a+', '9b', '9b+', '9c', '9c+']
-        case 'polish':
-          return ['III', 'III+', 'IV', 'IV+', 'V', 'V+', 'VI', 'VI+', 'VI.1', 'VI.1+', 'VI.2', 'VI.2+', 'VI.3', 'VI.3+', 'VI.4', 'VI.4+', 'VI.5', 'VI.5+', 'VI.6', 'VI.6+', 'VI.7', 'VI.7+', 'VI.8', 'VI.8+']
-        case 'american':
-          return ['5.0', '5.1', '5.2', '5.3', '5.4', '5.5', '5.6', '5.7', '5.8', '5.9', '5.10a', '5.10b', '5.10c', '5.10d', '5.11a', '5.11b', '5.11c', '5.11d', '5.12a', '5.12b', '5.12c', '5.12d', '5.13a', '5.13b', '5.13c', '5.13d']
-        default:
-          return []
-      }
-    }
-  }
+  const getGradeOptions = (system: string, type: string) => gradeOptions(system, type === 'boulder' ? 'boulder' : 'route')
 
   const formatShortDate = (value: string) =>
     new Date(value).toLocaleDateString(locale, { day: 'numeric', month: 'short' })

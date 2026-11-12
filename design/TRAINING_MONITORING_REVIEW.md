@@ -10,6 +10,9 @@ depends on #2 below.
 
 ## 1. No grades or ticks on individual climbs (biggest gap)
 
+> **Built 2026-11-12** on branch `feat/climb-grades`: grade, send style and tries per climb (lead + bouldering), and a
+> Grades card on Stats (hardest send per month, grade pyramid). See `design/REDESIGN_PLAN.md`.
+
 Each climb logged in a lead or bouldering session stores a name, focus state, whether you fell, comfort zone and
 notes (`ClimbSection` in `src/types/workout.ts`). There's no grade, number of attempts or send style (onsight /
 flash / redpoint / repeat). Grades only exist on Strong Mind project goals. So you can't see:

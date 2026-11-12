@@ -169,6 +169,18 @@
     "log": "Log"
   },
   "stats": {
+    "grades": "Grades",
+    "gradesSubtitle": "Lead and bouldering sends in the selected range",
+    "noGradedClimbs": "Add grades to climbs in Lead or Bouldering sessions to see your progress",
+    "noSends": "No sends in this range yet",
+    "climbKind": "Climb type",
+    "routes": "Routes",
+    "boulders": "Boulders",
+    "hardestSend": "Hardest send",
+    "sends": "Sends",
+    "avgRedpointTries": "Avg tries per redpoint",
+    "hardestSendPerMonth": "Hardest send per month",
+    "gradePyramid": "Grade pyramid",
     "deloadWeeksNote": "Deload weeks — not counted in the average",
     "weeklyVolume": "Weekly volume",
     "weeklyVolumeSubtitle": "TR points per week: TR1 = 1 … TR5 = 5",
@@ -632,6 +644,20 @@
     "hangsCount": {
       "one": "{{count}} hang",
       "other": "{{count}} hangs"
+    },
+    "boulderNumber": "Boulder {{number}}",
+    "sendStyle": "Send style",
+    "sendStyles": {
+      "ONSIGHT": "Onsight",
+      "FLASH": "Flash",
+      "REDPOINT": "Redpoint",
+      "REPEAT": "Repeat",
+      "NOT_SENT": "Not sent"
+    },
+    "climbTries": "Tries",
+    "triesCount": {
+      "one": "{{count}} try",
+      "other": "{{count}} tries"
     },
     "climbsCount": {
       "one": "{{count}} climb",

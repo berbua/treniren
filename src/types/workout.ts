@@ -15,9 +15,15 @@ export const BOULDER_STYLES: ClimbStyle[] = ['POWERFUL', 'TECHNICAL', 'COMPSTYLE
 export const wallAnglesFor = (type: WorkoutType): WallAngle[] =>
   type === 'BOULDERING' ? BOULDER_WALL_ANGLES : type === 'LEAD_ROCK' || type === 'LEAD_ARTIFICIAL' ? LEAD_WALL_ANGLES : []
 
+export type SendStyle = 'ONSIGHT' | 'FLASH' | 'REDPOINT' | 'REPEAT' | 'NOT_SENT'
+
 export interface ClimbSection {
   id: string
   name?: string // Empty = "Climb N"
+  gradeSystem?: string // 'french' | 'polish' | 'american' (see lib/grades)
+  grade?: string
+  style?: SendStyle
+  tries?: number // Attempts on this climb in the session
   focusState?: FocusState
   tookFall?: boolean
   comfortZone?: ComfortZone

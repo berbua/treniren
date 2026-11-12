@@ -169,6 +169,18 @@
     "log": "Dodaj"
   },
   "stats": {
+    "grades": "Stopnie",
+    "gradesSubtitle": "Przejścia z prowadzenia i boulderingu w wybranym okresie",
+    "noGradedClimbs": "Dodaj stopnie do dróg w treningach prowadzenia lub boulderingu, aby zobaczyć postępy",
+    "noSends": "Brak przejść w tym okresie",
+    "climbKind": "Rodzaj wspinania",
+    "routes": "Drogi",
+    "boulders": "Bouldery",
+    "hardestSend": "Najtrudniejsze przejście",
+    "sends": "Przejścia",
+    "avgRedpointTries": "Śr. liczba prób na RP",
+    "hardestSendPerMonth": "Najtrudniejsze przejście w miesiącu",
+    "gradePyramid": "Piramida stopni",
     "deloadWeeksNote": "Tygodnie deloadu — nie wliczają się do średniej",
     "weeklyVolume": "Objętość tygodniowa",
     "weeklyVolumeSubtitle": "Punkty TR na tydzień: TR1 = 1 … TR5 = 5",
@@ -638,6 +650,22 @@
       "few": "{{count}} zwisy",
       "many": "{{count}} zwisów",
       "other": "{{count}} zwisu"
+    },
+    "boulderNumber": "Boulder {{number}}",
+    "sendStyle": "Styl przejścia",
+    "sendStyles": {
+      "ONSIGHT": "OS",
+      "FLASH": "Flash",
+      "REDPOINT": "RP",
+      "REPEAT": "Powtórka",
+      "NOT_SENT": "Bez przejścia"
+    },
+    "climbTries": "Próby",
+    "triesCount": {
+      "one": "{{count}} próba",
+      "few": "{{count}} próby",
+      "many": "{{count}} prób",
+      "other": "{{count}} próby"
     },
     "climbsCount": {
       "one": "{{count}} droga",

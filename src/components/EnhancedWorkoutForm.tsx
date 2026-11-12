@@ -1002,8 +1002,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             </div>
           </CollapsibleCard>
 
-          {/* Strong Mind Section - Only for Lead Climbing */}
-          {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL') && (
+          {/* Strong Mind Section - lead climbing and bouldering (climb list with grades) */}
+          {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING') && (
             <StrongMindSection
               mentalState={formData.mentalState}
               onChange={(mentalState) => updateFormData('mentalState', mentalState)}

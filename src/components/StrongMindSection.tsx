@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MentalState, ClimbSection, FocusState, ComfortZone } from '@/types/workout';
+import { MentalState, ClimbSection, SendStyle, FocusState, ComfortZone } from '@/types/workout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Tooltip } from './Tooltip';
-import { CollapsibleCard, Icon, Label, SegmentedControl, Textarea } from './ui';
+import { ChoiceChip, CollapsibleCard, Icon, Input, Label, SegmentedControl, Select, Textarea } from './ui';
+import {
+  SEND_STYLES, FIRST_TRY_STYLES, GradeSystem, climbKindFor, getLastGradeSystem, gradeOptions, gradeSystemsFor,
+  setLastGradeSystem,
+} from '@/lib/grades';
 
 interface StrongMindSectionProps {
   mentalState: MentalState;
@@ -43,15 +47,22 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
   };
 
 
+  const climbKind = climbKindFor(workoutType);
+  // Onsight is a route style; boulders are flashed
+  const sendStyles = climbKind === 'boulder' ? SEND_STYLES.filter(style => style !== 'ONSIGHT') : SEND_STYLES;
+
   const addClimbSection = () => {
+    const sections = mentalState.climbSections || [];
     const newSection: ClimbSection = {
       id: `climb-${Date.now()}`,
+      // Same system as the climb before, else the one picked last time
+      gradeSystem: sections[sections.length - 1]?.gradeSystem || getLastGradeSystem(climbKind),
       focusState: undefined,
       tookFall: undefined,
       comfortZone: undefined,
       notes: ''
     };
-    const updatedSections = [...(mentalState.climbSections || []), newSection];
+    const updatedSections = [...sections, newSection];
     updateMentalState({ climbSections: updatedSections });
   };
 
@@ -68,6 +79,21 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
   };
 
   const isLeadClimbing = workoutType === 'LEAD_ROCK' || workoutType === 'LEAD_ARTIFICIAL';
+  const hasClimbList = isLeadClimbing || workoutType === 'BOULDERING';
+  const climbPlaceholder = (index: number) =>
+    t(climbKind === 'boulder' ? 'workouts.boulderNumber' : 'workouts.climbNumber', { number: index + 1 });
+
+  const gradeSystemLabel = (system: GradeSystem) =>
+    system === 'polish'
+      ? t('strongMind.polishGrades') || 'Polish (VI.1, VI.2, etc.)'
+      : system === 'american'
+      ? climbKind === 'boulder'
+        ? t('strongMind.americanBoulderGrades') || 'American (V0, V8, etc.)'
+        : t('strongMind.americanRouteGrades') || 'American (5.10a, 5.12b, etc.)'
+      : t('strongMind.frenchGrades') || 'French (6a, 7b, etc.)';
+
+  const setStyle = (section: ClimbSection, style: SendStyle) =>
+    updateClimbSection(section.id, FIRST_TRY_STYLES.includes(style) ? { style, tries: 1 } : { style });
 
   const beforeLabel = (value: number) => t(`workouts.beforeClimbingLabels.${value}`);
 
@@ -96,8 +122,8 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
           </div>
         </div>
 
-        {/* Climb Sections (only for lead climbing) */}
-        {isLeadClimbing && (
+        {/* Climb Sections (lead climbing and bouldering) */}
+        {hasClimbList && (
           <div className="space-y-3">
             {(mentalState.climbSections || []).map((section, index) => (
               <div key={section.id} className="bg-uc-elevated rounded-uc-card p-4 border border-uc-border space-y-4">
@@ -109,7 +135,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                       value={section.name || ''}
                       onChange={(e) => updateClimbSection(section.id, { name: e.target.value })}
                       onBlur={(e) => updateClimbSection(section.id, { name: e.target.value.trim() || undefined })}
-                      placeholder={t('workouts.climbNumber', { number: index + 1 })}
+                      placeholder={climbPlaceholder(index)}
                       aria-label={t('workouts.climbName') || 'Climb name'}
                       maxLength={100}
                       className="min-w-0 flex-1 bg-transparent text-base font-bold text-uc-text placeholder:text-uc-text focus:outline-none"
@@ -124,6 +150,75 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                     {t('workouts.removeClimb') || 'Remove'}
                   </button>
                 </div>
+
+                {/* Grade */}
+                <div className="grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-3">
+                  <div>
+                    <Label htmlFor={`climb-system-${section.id}`}>{t('strongMind.gradeSystem') || 'Grade System'}</Label>
+                    <Select
+                      id={`climb-system-${section.id}`}
+                      value={section.gradeSystem || 'french'}
+                      onChange={(e) => {
+                        const system = e.target.value as GradeSystem;
+                        setLastGradeSystem(climbKind, system);
+                        // The grade belongs to the old system
+                        updateClimbSection(section.id, { gradeSystem: system, grade: undefined });
+                      }}
+                    >
+                      {gradeSystemsFor(climbKind).map(system => (
+                        <option key={system} value={system}>{gradeSystemLabel(system)}</option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor={`climb-grade-${section.id}`}>{t('strongMind.grade') || 'Grade'}</Label>
+                    <Select
+                      id={`climb-grade-${section.id}`}
+                      value={section.grade || ''}
+                      onChange={(e) => updateClimbSection(section.id, { grade: e.target.value || undefined })}
+                      className="uc-num"
+                    >
+                      <option value="">{t('strongMind.selectGrade') || 'Select grade...'}</option>
+                      {gradeOptions(section.gradeSystem || 'french', climbKind).map(grade => (
+                        <option key={grade} value={grade}>{grade}</option>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Style + tries */}
+                <div>
+                  <Label id={`climb-style-${section.id}`}>{t('workouts.sendStyle') || 'Send style'}</Label>
+                  <div role="group" aria-labelledby={`climb-style-${section.id}`} className="flex flex-wrap gap-2">
+                    {sendStyles.map(style => (
+                      <ChoiceChip
+                        key={style}
+                        selected={section.style === style}
+                        onClick={() => setStyle(section, style)}
+                      >
+                        {t(`workouts.sendStyles.${style}`)}
+                      </ChoiceChip>
+                    ))}
+                  </div>
+                </div>
+                {!(section.style && FIRST_TRY_STYLES.includes(section.style)) && (
+                  <div className="max-w-40">
+                    <Label htmlFor={`climb-tries-${section.id}`}>{t('workouts.climbTries') || 'Tries'}</Label>
+                    <Input
+                      id={`climb-tries-${section.id}`}
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={999}
+                      value={section.tries ?? ''}
+                      onChange={(e) => {
+                        const tries = parseInt(e.target.value, 10);
+                        updateClimbSection(section.id, { tries: tries > 0 ? Math.min(tries, 999) : undefined });
+                      }}
+                      className="uc-num"
+                    />
+                  </div>
+                )}
 
                 {/* Focus State */}
                 <div>
@@ -233,12 +328,14 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   <span className="font-semibold">{beforeLabel(mentalState.beforeClimbing)}</span>
                 </div>
               )}
-              {isLeadClimbing && mentalState.climbSections && mentalState.climbSections.length > 0 && (
+              {hasClimbList && mentalState.climbSections && mentalState.climbSections.length > 0 && (
                 <div className="space-y-1.5">
                   <span className="text-uc-text-muted">{t('workouts.climbs') || 'Climbs'}:</span>
                   {mentalState.climbSections.map((section, index) => (
                     <div key={section.id} className="ml-4 flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="text-uc-text-muted">{section.name || t('workouts.climbNumber', { number: index + 1 })}:</span>
+                      <span className="text-uc-text-muted">{section.name || climbPlaceholder(index)}:</span>
+                      {section.grade && <span className="font-bold uc-num">{section.grade}</span>}
+                      {section.style && <span className="font-semibold">{t(`workouts.sendStyles.${section.style}`)}</span>}
                       {section.focusState && (
                         <SummaryItem color={focusStateLabels[section.focusState].color}>
                           {t(`workouts.focusStates.${section.focusState}`) || focusStateLabels[section.focusState].label}

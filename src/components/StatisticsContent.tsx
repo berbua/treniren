@@ -14,6 +14,7 @@ import { deloadDayNumbers } from '@/lib/deload';
 import { localDayNumber, storedDayNumber } from '@/lib/date-utils';
 import { WeeklyVolumeChart } from './WeeklyVolumeChart';
 import { StatsFingerboardTests } from './StatsFingerboardTests';
+import { StatsGrades } from './StatsGrades';
 import {
   Button, Card, EmptyState, Icon, Overline, SegmentedControl, SkeletonRows, StatTile, WorkoutIconTile,
   buttonClasses, phaseBandBg, phaseTranslationKey, workoutBg,
@@ -444,7 +445,7 @@ export const StatisticsContent = () => {
             </div>
           </div>
 
-          {/* Weekly volume in TR points (decision 43) and fingerboard tests (decision 45) */}
+          {/* Weekly volume in TR points (decision 43), fingerboard tests (decision 45) and grades */}
           <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
             <Section
               title={t('stats.weeklyVolume') || 'Weekly volume'}
@@ -458,6 +459,13 @@ export const StatisticsContent = () => {
               />
             </Section>
             <StatsFingerboardTests
+              renderSection={(title, subtitle, body) => <Section title={title} subtitle={subtitle}>{body}</Section>}
+            />
+            {/* Grades of logged lead and bouldering climbs */}
+            <StatsGrades
+              workouts={workoutsInRange}
+              start={statsData.timeRange.start}
+              end={statsData.timeRange.end}
               renderSection={(title, subtitle, body) => <Section title={title} subtitle={subtitle}>{body}</Section>}
             />
           </div>
