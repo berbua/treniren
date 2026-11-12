@@ -85,13 +85,10 @@ export default function GoalsConfigurator({
   }
 
   const updateWorkoutTypeGoal = (index: number, field: 'type' | 'count', value: string | number) => {
-    const updated = [...workoutTypeGoals]
-    if (field === 'type') {
-      updated[index].type = value as string
-    } else {
-      updated[index].count = value as number
-    }
-    setWorkoutTypeGoals(updated)
+    // Replace the goal rather than changing it: the objects are shared with the profile until Save
+    setWorkoutTypeGoals(workoutTypeGoals.map((goal, i) =>
+      i !== index ? goal : field === 'type' ? { ...goal, type: value as string } : { ...goal, count: value as number }
+    ))
   }
 
   const calculatedMonthly = weeklyGoal * 4
