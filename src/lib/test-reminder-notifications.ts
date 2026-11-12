@@ -117,13 +117,7 @@ export function processTestReminderNotifications(
   
   if (check.shouldRemind) {
     // Check if we already sent a notification today
-    const existingReminder = notificationService.getMessages().find(
-      msg => msg.type === 'general' && 
-             msg.title.includes('Test Reminder') &&
-             msg.timestamp.toDateString() === new Date().toDateString()
-    );
-    
-    if (!existingReminder) {
+    if (notificationService.claimDailyReminder('test_reminder')) {
       const notification = createTestReminderNotification(
         check, 
         settings.testReminderInterval, 

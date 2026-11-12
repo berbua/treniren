@@ -84,12 +84,7 @@ export function processWorkoutInactivityNotifications(
   
   if (check.shouldRemind) {
     // Check if we already sent a notification today
-    const existingReminder = notificationService.getMessages().find(
-      msg => msg.type === 'workout_inactivity' && 
-             msg.timestamp.toDateString() === new Date().toDateString()
-    );
-    
-    if (!existingReminder) {
+    if (notificationService.claimDailyReminder('workout_inactivity')) {
       const notification = createWorkoutInactivityNotification(check);
       const sentNotification = notificationService.addMessage(notification);
       notifications.push(sentNotification);

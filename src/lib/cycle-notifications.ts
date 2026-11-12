@@ -103,12 +103,7 @@ export function processCycleNotifications(cycleSettings: CycleSettings, settings
   
   // Check if we should send before period reminder
   if (check.shouldRemindBeforePeriod && notificationSettings.cycleRemindersEnabled) {
-    const existingReminder = notificationService.getMessages().find(
-      msg => msg.type === 'cycle_reminder' && 
-             msg.timestamp.toDateString() === new Date().toDateString()
-    );
-    
-    if (!existingReminder) {
+    if (notificationService.claimDailyReminder('cycle_reminder')) {
       const notification = createCycleReminderNotification(cycleSettings, check);
       const sentNotification = notificationService.addMessage(notification);
       notifications.push(sentNotification);
@@ -117,12 +112,7 @@ export function processCycleNotifications(cycleSettings: CycleSettings, settings
   
   // Check if we should send overdue reminder (only if late period notifications are enabled)
   if (check.shouldRemindOverdue && notificationSettings.latePeriodNotificationsEnabled) {
-    const existingOverdue = notificationService.getMessages().find(
-      msg => msg.type === 'cycle_overdue' && 
-             msg.timestamp.toDateString() === new Date().toDateString()
-    );
-    
-    if (!existingOverdue) {
+    if (notificationService.claimDailyReminder('cycle_overdue')) {
       const notification = createCycleReminderNotification(cycleSettings, check);
       const sentNotification = notificationService.addMessage(notification);
       notifications.push(sentNotification);

@@ -29,6 +29,9 @@ export interface NotificationSettings {
   injuryPhaseNotificationPhase?: 'menstrual' | 'follicular' | 'ovulation' | 'earlyLuteal' | 'lateLuteal';
 }
 
+// Day each reminder kind was last sent on this device (see claimDailyReminder)
+export const SENT_REMINDERS_KEY = 'notification-reminders-sent';
+
 class NotificationService {
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
   private messages: NotificationMessage[] = [];
@@ -185,6 +188,24 @@ class NotificationService {
     this.messages = this.messages.filter(msg => msg.id !== messageId);
     this.saveMessages();
     this.notifyListeners();
+  }
+
+  /**
+   * True the first time a reminder kind is checked on a given day on this device, then false until tomorrow.
+   * Kept apart from the messages, so deleting a reminder doesn't make it come back (and push again).
+   */
+  claimDailyReminder(kind: string): boolean {
+    if (typeof window === 'undefined') return false;
+    const today = new Date().toDateString();
+    try {
+      const sent: Record<string, string> = JSON.parse(localStorage.getItem(SENT_REMINDERS_KEY) || '{}');
+      if (sent[kind] === today) return false;
+      localStorage.setItem(SENT_REMINDERS_KEY, JSON.stringify({ ...sent, [kind]: today }));
+      return true;
+    } catch (error) {
+      console.error('Failed to read sent reminders:', error);
+      return false;
+    }
   }
 
   // Clear all messages

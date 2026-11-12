@@ -1,11 +1,11 @@
 // Per-account data the browser keeps between visits. The service worker caches API responses by URL and
 // several features keep state in localStorage, none of it keyed by user, so it has to be dropped whenever
 // the signed-in account goes away or changes - otherwise the next person on the device sees it.
-import { notificationService } from './notification-service';
+import { notificationService, SENT_REMINDERS_KEY } from './notification-service';
 
 const LAST_USER_KEY = 'treniren_last_user';
 // localStorage entries that belong to one account (offline workouts are tagged with their user instead)
-const ACCOUNT_STORAGE_KEYS = ['notification-messages', 'cycle-settings'];
+const ACCOUNT_STORAGE_KEYS = ['notification-messages', 'cycle-settings', SENT_REMINDERS_KEY];
 // Service worker cache holding API responses (see public/sw.js)
 const API_CACHE_PREFIX = 'treniren-dynamic-';
 

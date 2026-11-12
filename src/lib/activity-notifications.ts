@@ -89,13 +89,7 @@ export function processActivityNotifications(workouts: Workout[]): NotificationM
   
   // Check if we should send mental session reminder
   if (check.shouldRemindMentalSession) {
-    const existingReminder = notificationService.getMessages().find(
-      msg => msg.type === 'general' && 
-             msg.title.includes('Mental Practice Reminder') &&
-             msg.timestamp.toDateString() === new Date().toDateString()
-    );
-    
-    if (!existingReminder) {
+    if (notificationService.claimDailyReminder('mental_practice_reminder')) {
       const notification = createMentalSessionNotification(check);
       const sentNotification = notificationService.addMessage(notification);
       notifications.push(sentNotification);
@@ -104,13 +98,7 @@ export function processActivityNotifications(workouts: Workout[]): NotificationM
   
   // Check if we should send falls tracking reminder
   if (check.shouldRemindFalls) {
-    const existingReminder = notificationService.getMessages().find(
-      msg => msg.type === 'general' && 
-             msg.title.includes('Falls Tracking Reminder') &&
-             msg.timestamp.toDateString() === new Date().toDateString()
-    );
-    
-    if (!existingReminder) {
+    if (notificationService.claimDailyReminder('falls_tracking_reminder')) {
       const notification = createFallsTrackingNotification(check);
       const sentNotification = notificationService.addMessage(notification);
       notifications.push(sentNotification);
