@@ -312,9 +312,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Get started still links to /dashboard (with the 🚀).
 
 ### Navigation
-- **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
-  (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event
-  choice sheet) would need a decision, since that's new behaviour.
+- **Centre "+ Log" tab** — built 2026-11-12 (decision 1): the accent "+" ("Log" / "Dodaj") opens the shared
+  `AddChoiceSheet` (Quick log / Add workout / Add event); each choice goes to `/workouts?add=…`, which opens that form.
+  Workouts left the tab bar (still in More and the sidebar). Desktop has no "+" (the sidebar has no add action).
 - **Tab labels** — the phone tab bar says "Today" / "Stats" (PL "Dziś" / "Statystyki"), as in the mock (decision 2);
   the desktop sidebar keeps Dashboard / Statistics like the desktop mock.
 

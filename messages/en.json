@@ -152,7 +152,8 @@
     "mainNavigation": "Main navigation",
     "today": "Today",
     "stats": "Stats",
-    "cycleDayOf": "Day {{day}} of {{length}}"
+    "cycleDayOf": "Day {{day}} of {{length}}",
+    "log": "Log"
   },
   "stats": {
     "title": "Statistics",

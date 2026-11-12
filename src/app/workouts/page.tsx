@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Workout, WorkoutFormData, Tag, Exercise } from '@/types/workout'
@@ -13,7 +14,8 @@ import { extractApiError, ValidationError } from '@/lib/errors'
 import AuthGuard from '@/components/AuthGuard'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import { QuickLogData } from '@/components/QuickLogModal'
-import { BottomSheet, Button, EmptyState, Icon, IconName, SheetCloseButton, workoutBg, WorkoutTypeKey } from '@/components/ui'
+import { AddChoice, AddChoiceSheet } from '@/components/AddChoiceSheet'
+import { Button, EmptyState, Icon, SheetCloseButton, workoutBg, WorkoutTypeKey } from '@/components/ui'
 
 // Dynamically import components to avoid SSR issues
 const WorkoutCard = dynamic(() => import('@/components/WorkoutCard'), { ssr: false })
@@ -399,6 +401,12 @@ function WorkoutsPageContent() {
     setShowForm(true)
     setEditingWorkout(null)
     setEditingEvent(null)
+  }
+
+  const handleAddChoice = (choice: AddChoice) => {
+    if (choice === 'quicklog') handleQuickLog()
+    else if (choice === 'workout') handleAddWorkout()
+    else handleAddEvent()
   }
 
   // Event management functions
@@ -829,33 +837,16 @@ function WorkoutsPageContent() {
         )}
 
         {/* Add Choice Sheet */}
-        <BottomSheet
+        <AddChoiceSheet
           isOpen={showAddChoice}
           onClose={() => setShowAddChoice(false)}
-          title={t('common.add') || 'Add'}
-          closeLabel={t('common.close')}
-        >
-          <p className="mb-4 text-sm text-uc-text-muted">
-            {t('workouts.addChoiceDescription') || 'What would you like to add?'}
-          </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {([
-              { onClick: handleQuickLog, icon: 'quick-log' as IconName, label: t('quickLog.button') || 'Quick Log', tone: 'bg-uc-primary-container text-uc-on-primary-container border-transparent' },
-              { onClick: handleAddWorkout, icon: 'workouts' as IconName, label: t('workouts.addNew') || 'Add Workout', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
-              { onClick: handleAddEvent, icon: 'calendar' as IconName, label: t('events.addNew') || 'Add Event', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
-            ]).map((choice) => (
-              <button
-                key={choice.icon}
-                type="button"
-                onClick={choice.onClick}
-                className={`flex min-h-28 flex-col items-center justify-center gap-2 rounded-uc-card border p-4 text-center text-sm font-bold transition-colors ${choice.tone}`}
-              >
-                <Icon name={choice.icon} size={28} />
-                {choice.label}
-              </button>
-            ))}
-          </div>
-        </BottomSheet>
+          onChoose={handleAddChoice}
+        />
+
+        {/* Opened from the centre "+" tab: /workouts?add=quicklog|workout|event */}
+        <Suspense>
+          <AddParamHandler onAdd={handleAddChoice} />
+        </Suspense>
 
         {/* Quick Log Modal */}
         {showQuickLog && (
@@ -952,6 +943,23 @@ const INFO_EVENT_TYPES = [
 ]
 
 /** Pages to show: first, last and the current one ±1, with gaps as null ("1 2 … 11"). */
+/** Runs the `?add=` action once, then drops the param so a reload doesn't reopen the form. */
+function AddParamHandler({ onAdd }: { onAdd: (choice: AddChoice) => void }) {
+  const router = useRouter()
+  const add = useSearchParams().get('add')
+  const onAddRef = useRef(onAdd)
+  onAddRef.current = onAdd
+
+  useEffect(() => {
+    if (add === 'quicklog' || add === 'workout' || add === 'event') {
+      onAddRef.current(add)
+      router.replace('/workouts', { scroll: false })
+    }
+  }, [add, router])
+
+  return null
+}
+
 function pageItems(page: number, totalPages: number): (number | null)[] {
   const items: (number | null)[] = []
   for (let p = 1; p <= totalPages; p++) {

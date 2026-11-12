@@ -152,7 +152,8 @@
     "mainNavigation": "Nawigacja główna",
     "today": "Dziś",
     "stats": "Statystyki",
-    "cycleDayOf": "Dzień {{day}} z {{length}}"
+    "cycleDayOf": "Dzień {{day}} z {{length}}",
+    "log": "Dodaj"
   },
   "stats": {
     "title": "Statystyki",

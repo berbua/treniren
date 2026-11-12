@@ -98,7 +98,7 @@ note the answer.
       only the incomplete-data dialog on save?
 - [ ] **Collapsible hangs** (one-line "Hang 2 · Both · open · 20 mm · +4 kg · 6 × 10 s" row): add collapse/expand?
 - [ ] **Crimp size**: keep the fixed 6–30 mm list, or allow any number (mock shows a free "mm" field)?
-- [ ] **Centre "+" tab**: today it opens Workouts. Should it open a Quick log / Add workout / Add event choice sheet?
+- [x] **Centre "+" tab**: today it opens Workouts. Should it open a Quick log / Add workout / Add event choice sheet? → Yes, built.
 - [x] **Tab labels**: keep Dashboard / Statistics or switch to the mock's Today / Stats? → Today / Stats on the phone tab bar, built.
 - [x] **Workouts tab counts**: show the total from the API ("Workouts (214)") instead of the items on this page? → Yes, built.
 - [x] **Numbered pagination** ("1 2 … 11", "1–20 of 214"): add jump-to-page, or keep Previous / Next? → Yes, built.
@@ -359,3 +359,7 @@ note the answer.
 - 2026-11-12: Decision 12 built (user picked the links): dashboard shortcuts are one 3×2 grid (6 across on `lg`, no group
   headings) — Cycle, Exercises, Routines, Fingerboard, Strong Mind, Profile; icons now match the nav.
   Not checked logged-in in a browser.
+- 2026-11-12: Decision 1 built. New `components/AddChoiceSheet` (the Workouts page's Add sheet, moved out and shared).
+  Phone tab bar: Today, Calendar, accent "+" (`nav.log` "Log" / "Dodaj"), Stats, More; "+" opens the sheet and a choice
+  pushes `/workouts?add=quicklog|workout|event`, where `AddParamHandler` (in `Suspense`) opens the form and replaces the
+  URL. Workouts is reached via More / sidebar. Not checked logged-in in a browser.

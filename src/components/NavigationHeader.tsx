@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCycle } from '@/contexts/CycleContext';
@@ -10,6 +10,7 @@ import { useOffline } from '@/hooks/useOffline';
 import { NotificationBell } from './NotificationBell';
 import UserMenu from './UserMenu';
 import LanguageSwitcher from './LanguageSwitcher';
+import { AddChoice, AddChoiceSheet } from './AddChoiceSheet';
 import { BottomSheet, Icon, IconName, Overline, buttonClasses, phaseBandBg, phaseSolidBg, phaseTranslationKey } from './ui';
 
 interface NavItem {
@@ -30,7 +31,9 @@ export const NavigationHeader = () => {
   const { data: session } = useSession();
   const { cycleInfo, cycleSettings, isCycleTrackingEnabled } = useCycle();
   const pathname = usePathname();
+  const router = useRouter();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   const isLoggedIn = !!session?.user;
 
@@ -66,11 +69,10 @@ export const NavigationHeader = () => {
     { label: analysisLabel, items: [statistics, strongMind, cycle] },
   ];
 
-  // Mobile: four tabs (short labels, as in the mockup) + "More" sheet with everything else
+  // Mobile: Today, Calendar, centre "+" (Add sheet), Stats + "More" sheet with everything else
   const tabs: NavItem[] = [
     { ...dashboard, name: t('nav.today') || 'Today' },
     calendar,
-    workouts,
     { ...statistics, name: t('nav.stats') || 'Stats' },
   ];
   const moreGroups: NavGroup[] = [
@@ -79,7 +81,13 @@ export const NavigationHeader = () => {
     { label: analysisLabel, items: [strongMind, fingerboardTesting, profile] },
   ];
   const tabHrefs = [dashboard.href, calendar.href, statistics.href];
-  const isMoreActive = !tabHrefs.some(isActive) && !isActive(workouts.href);
+  const isMoreActive = !tabHrefs.some(isActive);
+
+  // Quick log / workout / event forms live on the Workouts page; it opens the one asked for via ?add=
+  const handleAddChoice = (choice: AddChoice) => {
+    setIsAddOpen(false);
+    router.push(`/workouts?add=${choice}`);
+  };
 
   const logo = (
     <Link href="/" className="flex min-w-0 items-center gap-2.5 min-h-11">
@@ -201,35 +209,48 @@ export const NavigationHeader = () => {
         <ul className="flex items-stretch justify-between px-1 py-1.5">
           {tabs.map((tab, index) => {
             const active = isActive(tab.href);
-            const isCenter = index === 2;
             return (
-              <li key={tab.href} className="flex-1 min-w-0">
-                <Link
-                  href={tab.href}
-                  aria-current={active ? 'page' : undefined}
-                  className="flex flex-col items-center gap-0.5 min-h-11 px-0.5"
-                >
-                  {isCenter ? (
-                    <span aria-hidden className="flex size-12 -mt-1 items-center justify-center rounded-[14px] bg-uc-accent text-uc-on-accent">
-                      <Icon name="plus" size={26} strokeWidth={2.25} />
-                    </span>
-                  ) : (
+              <Fragment key={tab.href}>
+                <li className="flex-1 min-w-0">
+                  <Link
+                    href={tab.href}
+                    aria-current={active ? 'page' : undefined}
+                    className="flex flex-col items-center gap-0.5 min-h-11 px-0.5"
+                  >
                     <span
                       aria-hidden
                       className={`flex size-10 items-center justify-center rounded-xl ${active ? 'bg-uc-primary-container text-uc-on-primary-container' : 'text-uc-text-muted'}`}
                     >
                       <Icon name={tab.icon} size={24} />
                     </span>
-                  )}
-                  <span
-                    className={`max-w-full truncate text-[11px] leading-[14px] ${
-                      active ? 'font-extrabold text-uc-text' : 'font-semibold text-uc-text-muted'
-                    }`}
-                  >
-                    {tab.name}
-                  </span>
-                </Link>
-              </li>
+                    <span
+                      className={`max-w-full truncate text-[11px] leading-[14px] ${
+                        active ? 'font-extrabold text-uc-text' : 'font-semibold text-uc-text-muted'
+                      }`}
+                    >
+                      {tab.name}
+                    </span>
+                  </Link>
+                </li>
+                {index === 1 && (
+                  <li className="flex-1 min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddOpen(true)}
+                      aria-haspopup="dialog"
+                      aria-expanded={isAddOpen}
+                      className="w-full flex flex-col items-center gap-0.5 min-h-11 px-0.5"
+                    >
+                      <span aria-hidden className="flex size-12 -mt-1 items-center justify-center rounded-[14px] bg-uc-accent text-uc-on-accent">
+                        <Icon name="plus" size={26} strokeWidth={2.25} />
+                      </span>
+                      <span className="max-w-full truncate text-[11px] leading-[14px] font-semibold text-uc-text-muted">
+                        {t('nav.log') || 'Log'}
+                      </span>
+                    </button>
+                  </li>
+                )}
+              </Fragment>
             );
           })}
           <li className="flex-1 min-w-0">
@@ -254,6 +275,8 @@ export const NavigationHeader = () => {
           </li>
         </ul>
       </nav>
+
+      <AddChoiceSheet isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onChoose={handleAddChoice} />
 
       <BottomSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} closeLabel={t('common.close') || 'Close'}>
         <div className="space-y-4 pb-2">
