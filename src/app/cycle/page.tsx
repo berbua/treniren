@@ -201,6 +201,13 @@ function CyclePageContent() {
   }
 
   const openAddPeriod = (date: Date) => {
+    // A day inside a logged period opens that period instead of adding a second one
+    const day = localDayNumber(date)
+    const logged = periods.find(p => day >= storedDayNumber(p.startDate) && day <= storedDayNumber(p.endDate || p.startDate))
+    if (logged) {
+      openEditPeriod(logged)
+      return
+    }
     setEditingPeriod(null)
     setSelectedDate(date)
     setShowPeriodForm(true)
@@ -364,7 +371,12 @@ function CyclePageContent() {
         {/* Period Form Sheet */}
         {showPeriodForm && (
           <PeriodFormModal
+            // Remount when "Edit that period" swaps the period, so the form takes its dates
+            key={editingPeriod?.id ?? 'new'}
             period={editingPeriod}
+            otherPeriods={periods.filter(p => p.id !== editingPeriod?.id)}
+            onEditExisting={openEditPeriod}
+            locale={locale}
             defaultDate={selectedDate}
             onClose={closePeriodForm}
             onDelete={editingPeriod ? () => setDeletingPeriod(editingPeriod) : undefined}
@@ -671,6 +683,14 @@ function CycleCalendar({
     })
   }
 
+  // A predicted menstrual day is dropped once a period is logged within a week of it: that cycle's
+  // period is known, so the forecast would only leave dashed days next to (or instead of) the real ones
+  const loggedStartDays = periods.map(period => storedDayNumber(period.startDate))
+  const isCoveredByLoggedPeriod = (date: Date) => {
+    const day = localDayNumber(date)
+    return loggedStartDays.some(start => Math.abs(start - day) <= 7)
+  }
+
   // Check if date is before last confirmed period date (should show forecast)
   const isForecast = (date: Date) => localDayNumber(date) < lastConfirmedDay
 
@@ -714,7 +734,7 @@ function CycleCalendar({
           const isForecastDate = isForecast(date)
 
           // Only show colors for menstrual and ovulation phases
-          const isMenstrual = cycleInfo.phase === 'menstrual'
+          const isMenstrual = cycleInfo.phase === 'menstrual' && !isCoveredByLoggedPeriod(date)
           const isOvulation = cycleInfo.phase === 'ovulation'
 
           // statisticsService names phases in camelCase ('earlyLuteal'), cycle info in kebab-case ('early-luteal')
@@ -889,12 +909,19 @@ function TrainingCycleInsights({
 // Period Form Sheet Component
 function PeriodFormModal({
   period,
+  otherPeriods,
+  onEditExisting,
+  locale,
   defaultDate,
   onClose,
   onSave,
   onDelete,
 }: {
   period?: Period | null
+  /** Logged periods other than the one being edited, to catch overlapping dates. */
+  otherPeriods: Period[]
+  onEditExisting: (period: Period) => void
+  locale: string
   defaultDate?: Date
   onClose: () => void
   onSave: (data: PeriodFormData) => Promise<void>
@@ -910,8 +937,25 @@ function PeriodFormModal({
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // One period per day: the server refuses overlaps too, this just says so before saving
+  const overlapping = useMemo(() => {
+    if (!formData.startDate) return null
+    const from = storedDayNumber(formData.startDate)
+    const to = storedDayNumber(formData.endDate || formData.startDate)
+    return otherPeriods.find(p => storedDayNumber(p.startDate) <= to && storedDayNumber(p.endDate || p.startDate) >= from) ?? null
+  }, [formData.startDate, formData.endDate, otherPeriods])
+
+  const formatStored = (value: Date | string) =>
+    new Date(value).toLocaleDateString(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' })
+  const overlapDates = overlapping
+    ? storedDayNumber(overlapping.startDate) === storedDayNumber(overlapping.endDate || overlapping.startDate)
+      ? formatStored(overlapping.startDate)
+      : `${formatStored(overlapping.startDate)} – ${formatStored(overlapping.endDate!)}`
+    : ''
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (overlapping) return
     setIsSubmitting(true)
     try {
       await onSave(formData)
@@ -950,7 +994,7 @@ function PeriodFormModal({
           <Button variant="ghost" className="min-h-12 flex-1" onClick={onClose}>
             {t('cycle.tracking.cancel') || 'Cancel'}
           </Button>
-          <Button type="submit" form="period-form" variant="accent" className="min-h-12 flex-[1.4]" isLoading={isSubmitting}>
+          <Button type="submit" form="period-form" variant="accent" className="min-h-12 flex-[1.4]" isLoading={isSubmitting} disabled={!!overlapping}>
             {isSubmitting ? (t('cycle.tracking.saving') || 'Saving...') : period ? (t('cycle.tracking.update') || 'Update') : (t('cycle.tracking.add') || 'Add')}
           </Button>
         </div>
@@ -978,6 +1022,19 @@ function PeriodFormModal({
             />
           </div>
         </div>
+
+        {overlapping && (
+          <div role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-uc-error">
+            <span>{t('cycle.tracking.overlapError', { dates: overlapDates })}</span>
+            <button
+              type="button"
+              onClick={() => onEditExisting(overlapping)}
+              className="font-bold text-uc-primary hover:underline"
+            >
+              {t('cycle.tracking.editExisting')}
+            </button>
+          </div>
+        )}
 
         {/* Flow intensity: optional, tap again to clear */}
         <div role="group" aria-labelledby="period-flow">

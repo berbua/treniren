@@ -1,4 +1,24 @@
 import { prisma } from '@/lib/prisma'
+import { DAY_MS } from '@/lib/date-utils'
+
+// Calendar day of a stored period date. Rounds so older values saved as local midnight keep their day.
+const periodDay = (date: Date) => Math.round(date.getTime() / DAY_MS)
+
+/** A logged period of the user sharing at least one day with start–end (end defaults to start), or null. */
+export async function findOverlappingPeriod(
+  userId: string,
+  start: Date,
+  end: Date | null,
+  excludeId?: string
+) {
+  const periods = await prisma.period.findMany({
+    where: { userId, ...(excludeId && { id: { not: excludeId } }) },
+    select: { id: true, startDate: true, endDate: true },
+  })
+  const from = periodDay(start)
+  const to = periodDay(end ?? start)
+  return periods.find(p => periodDay(p.startDate) <= to && periodDay(p.endDate ?? p.startDate) >= from) ?? null
+}
 
 // Keeps UserProfile.lastPeriodDate (the date every cycle calculation counts from) in step with logged periods.
 //

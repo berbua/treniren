@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { syncLastPeriodDate } from '@/lib/period-utils'
+import { findOverlappingPeriod, syncLastPeriodDate } from '@/lib/period-utils'
 import { requireAuth } from '@/lib/auth-helpers'
 import { applySecurity } from '@/lib/api-security'
 import { z } from 'zod'
@@ -72,6 +72,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { startDate, endDate, notes, flow } = validationResult.data
+
+    if (await findOverlappingPeriod(user.id, new Date(startDate), endDate ? new Date(endDate) : null)) {
+      return NextResponse.json(
+        { error: 'A period is already logged on these dates', code: 'PERIOD_OVERLAP' },
+        { status: 409 }
+      )
+    }
 
     // Calculate cycle day if cycle settings exist
     let cycleDay: number | undefined
