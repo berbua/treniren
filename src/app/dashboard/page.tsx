@@ -14,7 +14,10 @@ import { Workout } from '@/types/workout'
 import AuthGuard from '@/components/AuthGuard'
 import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
-import { OFFLINE_WORKOUTS_SYNCED_EVENT } from '@/lib/offline-sync'
+import { OFFLINE_WORKOUTS_CHANGED_EVENT, OFFLINE_WORKOUTS_SYNCED_EVENT } from '@/lib/offline-sync'
+import { deleteOfflineWorkout } from '@/lib/offline-storage'
+import { useConfirmation } from '@/hooks/useConfirmation'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import { localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils'
 import { STREAK_MIN_SESSIONS, weeklyStreaks } from '@/lib/streak'
 import { currentDeload, deloadDayNumbers } from '@/lib/deload'
@@ -40,6 +43,7 @@ function DashboardContent() {
   const { isOnline, unsyncedWorkouts, storageSize } = useOffline()
   const { isMessagesPanelOpen, setIsMessagesPanelOpen } = useNotifications()
   const { getToken } = useCsrfToken()
+  const confirmation = useConfirmation()
   const [showOfflineForm, setShowOfflineForm] = useState(false)
   const [userNickname, setUserNickname] = useState<string | null>(null)
   const [upcomingTrips, setUpcomingTrips] = useState<Event[]>([])
@@ -508,6 +512,40 @@ function DashboardContent() {
               </div>
             )}
 
+            {/* Offline workouts the server refused: no longer retried, the user can only discard them */}
+            {unsyncedWorkouts.some(w => w.rejected) && (
+              <ul className="space-y-2">
+                {unsyncedWorkouts.filter(w => w.rejected).map(workout => (
+                  <li key={workout.id} className="flex items-start gap-3 rounded-uc-input bg-uc-error-bg px-3 py-2.5">
+                    <Icon name="warning" className="mt-0.5 text-uc-error" />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-extrabold text-uc-error">
+                        {t('offlineSync.rejectedTitle')} · {new Date(workout.startTime).toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB')}
+                      </h4>
+                      {workout.syncError && <p className="text-[13px] text-uc-text">{workout.syncError}</p>}
+                    </div>
+                    <button
+                      onClick={() => confirmation.showConfirmation(
+                        {
+                          title: t('offlineSync.discardTitle'),
+                          message: t('offlineSync.discardMessage'),
+                          confirmText: t('offlineSync.discard'),
+                          variant: 'danger',
+                        },
+                        () => {
+                          deleteOfflineWorkout(workout.id)
+                          window.dispatchEvent(new CustomEvent(OFFLINE_WORKOUTS_CHANGED_EVENT))
+                        }
+                      )}
+                      className="-my-1 min-h-11 shrink-0 px-2 text-sm font-bold text-uc-error"
+                    >
+                      {t('offlineSync.discard')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
             {showPWAStatus && (
               <div className="divide-y divide-uc-border">
                 {/* Connection Status */}
@@ -557,6 +595,17 @@ function DashboardContent() {
       {showOfflineForm && (
         <OfflineWorkoutForm onClose={() => setShowOfflineForm(false)} />
       )}
+
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        title={confirmation.title}
+        message={confirmation.message}
+        confirmText={confirmation.confirmText}
+        cancelText={confirmation.cancelText}
+        variant={confirmation.variant}
+      />
 
       <QuickLogModal
         isOpen={showQuickLog}

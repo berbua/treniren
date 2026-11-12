@@ -1718,7 +1718,12 @@
   },
   "offlineSync": {
     "uploaded": "Uploaded {{count}} workout(s) saved offline",
-    "failed": "{{count}} workout(s) saved offline couldn't be uploaded. We'll try again later."
+    "failed": "{{count}} workout(s) saved offline couldn't be uploaded. We'll try again later.",
+    "rejected": "{{count}} workout(s) saved offline were refused by the server. See the dashboard to review or discard them.",
+    "rejectedTitle": "Couldn't be saved",
+    "discard": "Discard",
+    "discardTitle": "Discard this workout?",
+    "discardMessage": "It was only saved on this device and will be deleted. This can't be undone."
   },
   "offlineBanner": {
     "offline": "You're offline",

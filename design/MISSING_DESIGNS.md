@@ -421,6 +421,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **Recent events** (last 3) with empty state.
 - **PWA / offline status**: alert bar (Offline / Unsynced data), Connection, Storage (KB + bar),
   Sync status (N waiting) + "Add offline training".
+  - **Refused offline workouts** (added 2026-11-12, no design): one red row per offline workout the server refused,
+    under the alert bar: "Couldn't be saved · <date>", the server's error, and a "Discard" text button that asks
+    for confirmation (danger dialog) before deleting it from the device.
 - **Offline workout form**.
 
 ### Quick log (modal/sheet)

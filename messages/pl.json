@@ -1730,7 +1730,12 @@
   },
   "offlineSync": {
     "uploaded": "Przesłano treningi zapisane offline: {{count}}",
-    "failed": "Nie udało się przesłać treningów zapisanych offline: {{count}}. Spróbujemy ponownie później."
+    "failed": "Nie udało się przesłać treningów zapisanych offline: {{count}}. Spróbujemy ponownie później.",
+    "rejected": "Serwer odrzucił treningi zapisane offline: {{count}}. Sprawdź je lub odrzuć na pulpicie.",
+    "rejectedTitle": "Nie udało się zapisać",
+    "discard": "Odrzuć",
+    "discardTitle": "Odrzucić ten trening?",
+    "discardMessage": "Był zapisany tylko na tym urządzeniu i zostanie usunięty. Tej operacji nie można cofnąć."
   },
   "offlineBanner": {
     "offline": "Jesteś offline",

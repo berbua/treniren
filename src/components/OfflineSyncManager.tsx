@@ -36,6 +36,9 @@ export const OfflineSyncManager = () => {
       if (result.failed > 0) {
         showError(t('offlineSync.failed', { count: result.failed }));
       }
+      if (result.rejected > 0) {
+        showError(t('offlineSync.rejected', { count: result.rejected }));
+      }
     };
 
     // Upload anything left over from earlier sessions

@@ -17,6 +17,8 @@ const SYNC_LOCK_NAME = 'treniren-offline-sync';
 export interface SyncResult {
   uploaded: number;
   failed: number;
+  // Refused by the server; kept until the user discards them (see OfflineWorkout.rejected)
+  rejected: number;
   // True when sync was skipped because another sync (this tab or another) is already running
   skipped: boolean;
 }
@@ -51,6 +53,11 @@ export const toCreateWorkoutPayload = (workout: OfflineWorkout) => {
 };
 
 class AuthRequiredError extends Error {}
+// The server refused the workout itself (e.g. invalid data), so sending it again won't help
+class RejectedError extends Error {}
+
+// 4xx answers that are about this workout, not about the session, timing or rate limits
+const isRejection = (status: number) => status >= 400 && status < 500 && ![401, 403, 408, 429].includes(status);
 
 const postWorkout = async (workout: OfflineWorkout, tokens: TokenProvider): Promise<string> => {
   const body = JSON.stringify(toCreateWorkoutPayload(workout));
@@ -81,21 +88,24 @@ const postWorkout = async (workout: OfflineWorkout, tokens: TokenProvider): Prom
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
-    throw new Error(errorData?.error || `Upload failed with status ${response.status}`);
+    const message = errorData?.error || `Upload failed with status ${response.status}`;
+    throw isRejection(response.status) ? new RejectedError(message) : new Error(message);
   }
 
   const created = await response.json();
   return created.id as string;
 };
 
-// Workouts the signed-in user may upload: their own, plus untagged ones (see OfflineWorkout.userId)
+// Workouts the signed-in user may upload: their own, plus untagged ones (see OfflineWorkout.userId).
+// Rejected ones wait for the user to discard them.
 const getUploadableWorkouts = (userId: string) =>
-  getPendingUploadWorkouts().filter(workout => !workout.userId || workout.userId === userId);
+  getPendingUploadWorkouts().filter(workout => !workout.rejected && (!workout.userId || workout.userId === userId));
 
 const uploadPending = async (tokens: TokenProvider, userId: string): Promise<SyncResult> => {
   const pending = getUploadableWorkouts(userId);
   let uploaded = 0;
   let failed = 0;
+  let rejected = 0;
 
   for (const workout of pending) {
     // Stop if the connection dropped mid-sync; the rest stays queued
@@ -111,8 +121,10 @@ const uploadPending = async (tokens: TokenProvider, userId: string): Promise<Syn
         break;
       }
       console.error('Failed to upload offline workout:', workout.id, error);
-      markWorkoutSyncError(workout.id, error instanceof Error ? error.message : 'Upload failed');
-      failed++;
+      const isRejected = error instanceof RejectedError;
+      markWorkoutSyncError(workout.id, error instanceof Error ? error.message : 'Upload failed', isRejected);
+      if (isRejected) rejected++;
+      else failed++;
     }
   }
 
@@ -120,21 +132,21 @@ const uploadPending = async (tokens: TokenProvider, userId: string): Promise<Syn
     setLastSyncTime(new Date().toISOString());
   }
 
-  return { uploaded, failed, skipped: false };
+  return { uploaded, failed, rejected, skipped: false };
 };
 
 let inFlight: Promise<SyncResult> | null = null;
 
 export const syncOfflineWorkouts = async (tokens: TokenProvider, userId: string): Promise<SyncResult> => {
   if (typeof window === 'undefined' || !navigator.onLine) {
-    return { uploaded: 0, failed: 0, skipped: true };
+    return { uploaded: 0, failed: 0, rejected: 0, skipped: true };
   }
   if (getUploadableWorkouts(userId).length === 0) {
-    return { uploaded: 0, failed: 0, skipped: false };
+    return { uploaded: 0, failed: 0, rejected: 0, skipped: false };
   }
   // Already running in this tab
   if (inFlight) {
-    return { uploaded: 0, failed: 0, skipped: true };
+    return { uploaded: 0, failed: 0, rejected: 0, skipped: true };
   }
 
   inFlight = (async () => {
@@ -146,7 +158,7 @@ export const syncOfflineWorkouts = async (tokens: TokenProvider, userId: string)
           { ifAvailable: true },
           async (lock) => (lock ? uploadPending(tokens, userId) : null)
         );
-        return result ?? { uploaded: 0, failed: 0, skipped: true };
+        return result ?? { uploaded: 0, failed: 0, rejected: 0, skipped: true };
       }
       return await uploadPending(tokens, userId);
     } finally {

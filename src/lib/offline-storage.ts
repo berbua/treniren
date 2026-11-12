@@ -26,6 +26,8 @@ export interface OfflineWorkout {
   // being uploaded, so a missing serverId (not `synced`) is what marks a workout as pending upload.
   serverId?: string;
   syncError?: string;
+  // The server refused it (e.g. invalid data): no longer retried; the user can only discard it
+  rejected?: boolean;
 }
 
 export interface OfflineExercise {
@@ -153,10 +155,10 @@ export const markWorkoutAsUploaded = (id: string, serverId: string): void => {
   }
 };
 
-export const markWorkoutSyncError = (id: string, syncError: string): void => {
+export const markWorkoutSyncError = (id: string, syncError: string, rejected = false): void => {
   try {
     const workouts = getOfflineWorkouts();
-    const updatedWorkouts = workouts.map(w => (w.id === id ? { ...w, syncError } : w));
+    const updatedWorkouts = workouts.map(w => (w.id === id ? { ...w, syncError, rejected } : w));
     localStorage.setItem(STORAGE_KEYS.OFFLINE_WORKOUTS, JSON.stringify(updatedWorkouts));
   } catch (error) {
     console.error('Failed to save workout sync error:', error);
