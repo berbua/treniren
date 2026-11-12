@@ -23,7 +23,7 @@ MISSING_DESIGNS.md, commit. Tick an item here when it's built.
 - [ ] **26 Wall angle / style**: UI for the enums that already exist in the DB.
 
 ## Calendar
-- [ ] **33 Upcoming events list**.
+- [x] **33 Upcoming events list**.
 
 ## Statistics
 - [ ] **43 TR-points volume + weekly bar charts**.

@@ -800,6 +800,11 @@
     }
   },
   "calendar": {
+    "upcoming": "Upcoming events",
+    "noUpcoming": "No upcoming events",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "inDays": "In {{count}} days",
     "title": "Training Calendar",
     "loading": "Loading calendar...",
     "clickDateHint": "Tap a day to see its workouts and events, edit or duplicate them, or add new ones.",

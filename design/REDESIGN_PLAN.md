@@ -417,3 +417,5 @@ note the answer.
 - 2026-11-12: Profile 59 + 60. `/api/user` (via `getCurrentUser`) returns `nickname` and `createdAt`. Header: "Member
   since …" (`profile.memberSince`). Display name editable → `nickname` (POST /api/user-profile trims, max 50, empty =
   null = Google first name); hint text changed; user menu updates via a `display-name-changed` window event.
+- 2026-11-12: Calendar 33 Upcoming events: `upcomingEvents` (memo, next 5, trips until their end date, event filters
+  apply) + `UpcomingEventRow` under the legend. New keys `calendar.upcoming / noUpcoming / today / tomorrow / inDays`.

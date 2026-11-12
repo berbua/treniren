@@ -190,6 +190,47 @@ function EventRow({ event, date, t, onClick }: { event: Event; date: Date; t: (k
   )
 }
 
+// "Today" / "Tomorrow" / "In N days"; a trip already under way counts as today
+function daysUntil(start: string, end: string, t: (key: string, params?: Record<string, string | number>) => string) {
+  const todayStr = toLocalDateString(new Date())
+  if (start <= todayStr && todayStr <= end) return t('calendar.today')
+  const days = Math.round((new Date(`${start}T00:00:00`).getTime() - new Date(`${todayStr}T00:00:00`).getTime()) / 86400000)
+  return days === 1 ? t('calendar.tomorrow') : t('calendar.inDays', { count: days })
+}
+
+interface UpcomingEventRowProps {
+  event: Event
+  start: string
+  end: string
+  t: (key: string, params?: Record<string, string | number>) => string
+  locale: string
+  onClick: (event: Event, e: React.MouseEvent) => void
+}
+
+function UpcomingEventRow({ event, start, end, t, locale, onClick }: UpcomingEventRowProps) {
+  const formatDay = (value: string) =>
+    new Date(`${value}T00:00:00`).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
+  const dates = start === end ? formatDay(start) : `${formatDay(start)} – ${formatDay(end)}`
+  const title = event.type === 'TRIP' && event.destination ? event.destination : event.title
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => onClick(event, e)}
+      className="flex w-full items-center gap-3 rounded-xl border border-uc-border bg-uc-surface py-2 pl-3 pr-3 text-left transition-colors hover:border-uc-primary"
+    >
+      <EventBadge type={event.type} size="md" />
+      <span className="min-w-0 flex-1 py-1">
+        <span className="block truncate text-[15px] font-extrabold text-uc-text">
+          {t(`events.types.${eventMeta(event.type).key}`)} · {title}
+        </span>
+        <span className="mt-0.5 block text-[13px] text-uc-text-muted uc-num">{dates}</span>
+      </span>
+      <span className="shrink-0 text-[13px] font-bold text-uc-primary uc-num">{daysUntil(start, end, t)}</span>
+    </button>
+  )
+}
+
 export default function CalendarPage() {
   return (
     <AuthGuard>
@@ -364,6 +405,26 @@ function CalendarPageContent() {
     
     return filteredEvents
   }
+
+  // Next events from today on (trips while they last), with the same filters as the calendar
+  const upcomingEvents = useMemo(() => {
+    if (!showEvents) return []
+    const todayStr = toLocalDateString(new Date())
+    const day = (value?: string) => (value ? value.slice(0, 10) : '')
+    return events
+      .map(event => {
+        const isTrip = event.type === 'TRIP' && event.tripStartDate && event.tripEndDate
+        return {
+          event,
+          start: isTrip ? day(event.tripStartDate) : day(event.date),
+          end: isTrip ? day(event.tripEndDate) : day(event.date),
+        }
+      })
+      .filter(({ event, end }) =>
+        end >= todayStr && (selectedEventTypes.length === 0 || selectedEventTypes.includes(event.type)))
+      .sort((a, b) => a.start.localeCompare(b.start))
+      .slice(0, 5)
+  }, [events, showEvents, selectedEventTypes])
 
   // Get cycle info for a specific date
   const getCycleInfoForDate = (date: Date) => {
@@ -982,6 +1043,24 @@ function CalendarPageContent() {
             </ul>
             <p className="text-[13px] text-uc-text-muted">{t('calendar.clickDateHint')}</p>
           </Card>
+
+          {/* Upcoming events */}
+          <section className="mt-5">
+            <h2 className="mb-2 text-[17px] font-extrabold text-uc-text">{t('calendar.upcoming')}</h2>
+            {upcomingEvents.length === 0 ? (
+              <p className="rounded-uc-card border border-dashed border-uc-border px-4 py-5 text-center text-sm text-uc-text-muted">
+                {t('calendar.noUpcoming')}
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {upcomingEvents.map(({ event, start, end }) => (
+                  <li key={event.id}>
+                    <UpcomingEventRow event={event} start={start} end={end} t={t} locale={locale} onClick={handleEventClick} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
 
         {/* Filters */}

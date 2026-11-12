@@ -808,6 +808,11 @@
     }
   },
   "calendar": {
+    "upcoming": "Nadchodzące wydarzenia",
+    "noUpcoming": "Brak nadchodzących wydarzeń",
+    "today": "Dziś",
+    "tomorrow": "Jutro",
+    "inDays": "Za {{count}} dni",
     "title": "Kalendarz Treningowy",
     "loading": "Ładowanie kalendarza...",
     "legend": "Legenda",

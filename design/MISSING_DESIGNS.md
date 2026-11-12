@@ -123,7 +123,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Events tab cards (`EventCard`) are untouched here — they're the Events step.
 
 ### Calendar
-- **Upcoming events list** — not implemented.
+- **Upcoming events list** (decision 33, built 2026-11-12, no mock): "Upcoming events" section under the legend card
+  (right column on `lg`): the next 5 events from today, trips while they last; follows the event filters. Row = event
+  badge, "Type · title" (trips: destination), date or date range, and "Today / Tomorrow / In N days" on the right; tap
+  opens the event form. Empty: dashed "No upcoming events".
 - **Selected-day detail** — user decision 2026-11-12: month cells show dots like the mock; tapping a day opens the
   existing Add sheet, which now lists that day's events (tap = edit) and workouts (edit, duplicate) above the
   Quick log / Add workout / Add event tiles. The mock shows the detail as an inline panel; ours is a sheet.
