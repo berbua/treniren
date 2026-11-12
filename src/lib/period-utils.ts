@@ -1,17 +1,33 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { DAY_MS } from '@/lib/date-utils'
 
 // Calendar day of a stored period date. Rounds so older values saved as local midnight keep their day.
 const periodDay = (date: Date) => Math.round(date.getTime() / DAY_MS)
 
+/** True when the end date falls on an earlier calendar day than the start. */
+export const endsBeforeStart = (start: Date, end: Date | null) => end !== null && periodDay(end) < periodDay(start)
+
+/**
+ * Runs fn in a transaction holding a lock on the user's periods, so two saves sent at once
+ * (e.g. a double tap) can't both pass the overlap check and log the same days twice.
+ */
+export function withPeriodLock<T>(userId: string, fn: (tx: Prisma.TransactionClient) => Promise<T>) {
+  return prisma.$transaction(async tx => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`periods:${userId}`}::text))`
+    return fn(tx)
+  })
+}
+
 /** A logged period of the user sharing at least one day with start–end (end defaults to start), or null. */
 export async function findOverlappingPeriod(
   userId: string,
   start: Date,
   end: Date | null,
-  excludeId?: string
+  excludeId?: string,
+  db: Prisma.TransactionClient = prisma
 ) {
-  const periods = await prisma.period.findMany({
+  const periods = await db.period.findMany({
     where: { userId, ...(excludeId && { id: { not: excludeId } }) },
     select: { id: true, startDate: true, endDate: true },
   })

@@ -957,6 +957,7 @@
       "showAllPeriods": "Show all ({{count}})",
       "tapDayHint": "Tap a day to add a period starting then, or a logged day to edit it.",
       "overlapError": "A period is already logged on these dates ({{dates}}).",
+      "endBeforeStartError": "End date can't be before the start date.",
       "editExisting": "Edit that period",
       "now": "Now",
       "most": "most",

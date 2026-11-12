@@ -28,7 +28,7 @@ Line numbers are from the review and may have shifted.
 ## Wrong numbers / dates
 15. ✅ Calendar month view skips a month when navigating on the 29th–31st (`setMonth` overflow; day now clamped to the target month) — `src/app/calendar/page.tsx:454-472`
 16. ✅ Trip/deload "day N/M" one too low ("0/3" on first day; UTC-midnight start vs local-midnight cell; now compares day numbers) — `src/app/calendar/page.tsx:67-76`
-17. ⬜ Period end date can be before start date (no check client or server); period then vanishes from calendar and bypasses the overlap check; no DB constraint against double-tap duplicates — `src/app/cycle/page.tsx` (PeriodFormModal), `src/app/api/periods/route.ts:8-13`, `src/app/api/periods/[id]/route.ts:8-13`
+17. ✅ Period end date can be before start date (no check client or server); period then vanishes from calendar and bypasses the overlap check; no DB constraint against double-tap duplicates (now refused in form + API; overlap check and save run under a per-user advisory lock, form ignores a second tap) — `src/app/cycle/page.tsx` (PeriodFormModal), `src/app/api/periods/route.ts:8-13`, `src/app/api/periods/[id]/route.ts:8-13`
 18. ⬜ "Max reps" record uses reps of the best (weight×reps) set, not highest reps — `src/lib/progression-service.ts:295-298, 316-319`
 19. ⬜ Exercise quick stats: "last set" ordered by `createdAt` instead of `setNumber`; shows "never used" if latest workout has no sets — `src/app/api/exercises/[id]/quick-stats/route.ts:64-69, 78-86` (same pattern in `src/app/api/exercises/[id]/route.ts:35-40`)
 20. ⬜ Strong Mind project goals get duplicate ids after reload (counter seeded only from process goals) — `src/app/strong-mind/page.tsx:118-124, 325`

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { findOverlappingPeriod, syncLastPeriodDate } from '@/lib/period-utils'
+import { endsBeforeStart, findOverlappingPeriod, syncLastPeriodDate, withPeriodLock } from '@/lib/period-utils'
 import { requireAuth } from '@/lib/auth-helpers'
 import { applySecurity } from '@/lib/api-security'
 import { z } from 'zod'
@@ -96,10 +96,10 @@ export async function PUT(
 
     const newStart = startDate ? new Date(startDate) : period.startDate
     const newEnd = endDate !== undefined ? (endDate ? new Date(endDate) : null) : period.endDate
-    if (await findOverlappingPeriod(user.id, newStart, newEnd, id)) {
+    if (endsBeforeStart(newStart, newEnd)) {
       return NextResponse.json(
-        { error: 'A period is already logged on these dates', code: 'PERIOD_OVERLAP' },
-        { status: 409 }
+        { error: 'End date cannot be before start date', code: 'PERIOD_END_BEFORE_START' },
+        { status: 400 }
       )
     }
 
@@ -127,16 +127,26 @@ export async function PUT(
       }
     }
 
-    const updatedPeriod = await prisma.period.update({
-      where: { id },
-      data: {
-        ...(startDate && { startDate: new Date(startDate) }),
-        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
-        ...(notes !== undefined && { notes: notes || null }),
-        ...(flow !== undefined && { flow }),
-        ...(cycleDay !== undefined && { cycleDay: cycleDay || null }),
-      },
+    const updatedPeriod = await withPeriodLock(user.id, async tx => {
+      if (await findOverlappingPeriod(user.id, newStart, newEnd, id, tx)) return null
+      return tx.period.update({
+        where: { id },
+        data: {
+          ...(startDate && { startDate: new Date(startDate) }),
+          ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
+          ...(notes !== undefined && { notes: notes || null }),
+          ...(flow !== undefined && { flow }),
+          ...(cycleDay !== undefined && { cycleDay: cycleDay || null }),
+        },
+      })
     })
+
+    if (!updatedPeriod) {
+      return NextResponse.json(
+        { error: 'A period is already logged on these dates', code: 'PERIOD_OVERLAP' },
+        { status: 409 }
+      )
+    }
 
     if (updatedPeriod.startDate.getTime() !== period.startDate.getTime()) {
       try {

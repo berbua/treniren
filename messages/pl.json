@@ -965,6 +965,7 @@
       "showAllPeriods": "Pokaż wszystkie ({{count}})",
       "tapDayHint": "Dotknij dnia, aby dodać miesiączkę od tego dnia, albo zapisanego dnia, aby ją edytować.",
       "overlapError": "W tych dniach jest już zapisana miesiączka ({{dates}}).",
+      "endBeforeStartError": "Data końca nie może być wcześniejsza niż data początku.",
       "editExisting": "Edytuj tę miesiączkę",
       "now": "Teraz",
       "most": "najwięcej",

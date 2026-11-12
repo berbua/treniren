@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { useCycle } from '@/contexts/CycleContext'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -936,6 +936,11 @@ function PeriodFormModal({
     flow: period?.flow ?? null,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Blocks a second save from a double tap before isSubmitting re-renders the button
+  const submittingRef = useRef(false)
+
+  const endBeforeStart = !!formData.startDate && !!formData.endDate &&
+    storedDayNumber(formData.endDate) < storedDayNumber(formData.startDate)
 
   // One period per day: the server refuses overlaps too, this just says so before saving
   const overlapping = useMemo(() => {
@@ -955,11 +960,13 @@ function PeriodFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (overlapping) return
+    if (overlapping || endBeforeStart || submittingRef.current) return
+    submittingRef.current = true
     setIsSubmitting(true)
     try {
       await onSave(formData)
     } finally {
+      submittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -994,7 +1001,7 @@ function PeriodFormModal({
           <Button variant="ghost" className="min-h-12 flex-1" onClick={onClose}>
             {t('cycle.tracking.cancel') || 'Cancel'}
           </Button>
-          <Button type="submit" form="period-form" variant="accent" className="min-h-12 flex-[1.4]" isLoading={isSubmitting} disabled={!!overlapping}>
+          <Button type="submit" form="period-form" variant="accent" className="min-h-12 flex-[1.4]" isLoading={isSubmitting} disabled={!!overlapping || endBeforeStart}>
             {isSubmitting ? (t('cycle.tracking.saving') || 'Saving...') : period ? (t('cycle.tracking.update') || 'Update') : (t('cycle.tracking.add') || 'Add')}
           </Button>
         </div>
@@ -1018,12 +1025,20 @@ function PeriodFormModal({
               id="period-end"
               type="date"
               value={formData.endDate || ''}
+              min={formData.startDate || undefined}
+              aria-invalid={endBeforeStart || undefined}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value || undefined })}
             />
           </div>
         </div>
 
-        {overlapping && (
+        {endBeforeStart && (
+          <p role="alert" className="text-sm font-semibold text-uc-error">
+            {t('cycle.tracking.endBeforeStartError')}
+          </p>
+        )}
+
+        {overlapping && !endBeforeStart && (
           <div role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold text-uc-error">
             <span>{t('cycle.tracking.overlapError', { dates: overlapDates })}</span>
             <button

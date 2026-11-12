@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { findOverlappingPeriod, syncLastPeriodDate } from '@/lib/period-utils'
+import { endsBeforeStart, findOverlappingPeriod, syncLastPeriodDate, withPeriodLock } from '@/lib/period-utils'
 import { requireAuth } from '@/lib/auth-helpers'
 import { applySecurity } from '@/lib/api-security'
 import { z } from 'zod'
@@ -72,11 +72,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { startDate, endDate, notes, flow } = validationResult.data
+    const start = new Date(startDate)
+    const end = endDate ? new Date(endDate) : start
 
-    if (await findOverlappingPeriod(user.id, new Date(startDate), endDate ? new Date(endDate) : null)) {
+    if (endsBeforeStart(start, end)) {
       return NextResponse.json(
-        { error: 'A period is already logged on these dates', code: 'PERIOD_OVERLAP' },
-        { status: 409 }
+        { error: 'End date cannot be before start date', code: 'PERIOD_END_BEFORE_START' },
+        { status: 400 }
       )
     }
 
@@ -102,16 +104,26 @@ export async function POST(request: NextRequest) {
       console.error('Error calculating cycle day:', error)
     }
 
-    const period = await prisma.period.create({
-      data: {
-        userId: user.id,
-        startDate: new Date(startDate),
-        endDate: endDate ? new Date(endDate) : new Date(startDate),
-        notes: notes || null,
-        flow: flow ?? null,
-        cycleDay: cycleDay || null,
-      },
+    const period = await withPeriodLock(user.id, async tx => {
+      if (await findOverlappingPeriod(user.id, start, end, undefined, tx)) return null
+      return tx.period.create({
+        data: {
+          userId: user.id,
+          startDate: start,
+          endDate: end,
+          notes: notes || null,
+          flow: flow ?? null,
+          cycleDay: cycleDay || null,
+        },
+      })
     })
+
+    if (!period) {
+      return NextResponse.json(
+        { error: 'A period is already logged on these dates', code: 'PERIOD_OVERLAP' },
+        { status: 409 }
+      )
+    }
 
     // Move the cycle anchor forward if this is the newest period
     try {
