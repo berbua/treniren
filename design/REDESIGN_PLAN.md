@@ -67,7 +67,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Exercises — `Exercises.png`
 - [x] Routines — `Routines.png`
 - [x] Fingerboard protocols & testing — `Fingerboard protocols & testing.png`
-- [ ] Profile & settings — `Profile & settings.png`
+- [x] Profile & settings — `Profile & settings.png`
 - [ ] Global UI (More, messages, menus, banners, install, loading) —
       `Global UI — More, messages, menus, banners, install, loading.png`
 - [ ] Auth & landing — `Sign in, sign up, password, sign out.png`, `Landing page.png`
@@ -281,3 +281,16 @@ note the answer.
   `BottomSheet` got `size="lg"`. Hard-coded English in the modal, perform and testing forms replaced (new keys
   `fingerboard.hangNumber`, `protocolForm.hangs`, `fingerboardTesting.*`). Same data, handlers, alerts and API calls.
   Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Profile & settings done. `/profile` is now a page (was a placeholder page with `UserProfile` as a
+  modal opened on load; Close / ✕ only went to the dashboard): avatar (photo or initial, primary) + display name header,
+  4-tab `SegmentedControl` (new `equalWidth={false}` so PL "Ustawienia" fits at 390px). Profile tab: 80px avatar + ghost
+  Upload photo, dashed read-only Google / display name (hints now translated), `Select` timezone, `Input` Sheets URL,
+  accent "Save profile" (was the footer Save on every tab; same handler). Cycle tab: success status bar, cycle length as a
+  range slider 21–35 with the value on the right (widens if a saved value is outside), date `Input`, accent Save, ghost
+  red "Disable cycle tracking" → inline confirm card Keep on / Disable (was `confirm()`), disabled state as dashed
+  `EmptyState`. Settings tab: overline groups (App status, Privacy, Notifications) as divided `Card` rows; push is a
+  checkbox (spinner while subscribing; was Enable/Disable button + ✅/❌), other ✅/❌ marks dropped; numbers and unit
+  `Select` inline; "Notifications blocked" warning banner replaces the denied `alert()`. Export tab: stacked action rows,
+  error banner below. New keys `profile.googleName`, `googleNameHint`, `displayName`, `displayNameHint`, `saveProfile`,
+  `disableCycleTitle`, `keepOn`, `pushBlockedTitle`, `notificationsSection`. Same data, handlers and API calls. Not
+  checked logged-in in a browser.

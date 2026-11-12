@@ -1012,7 +1012,16 @@
     "saved": "Profile saved",
     "saveFailed": "Failed to save profile",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "googleName": "Google name",
+    "googleNameHint": "Your full name from your Google account",
+    "displayName": "Display name",
+    "displayNameHint": "Your first name, used in the app",
+    "saveProfile": "Save profile",
+    "disableCycleTitle": "Disable cycle tracking?",
+    "keepOn": "Keep on",
+    "pushBlockedTitle": "Notifications blocked.",
+    "notificationsSection": "Notifications"
   },
   "landing": {
     "tagline": "Train with your unicorn flow - Track your climbing journey with precision and mindfulness",

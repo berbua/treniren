@@ -15,9 +15,11 @@ interface SegmentedControlProps<T extends string> {
   onChange: (value: T) => void
   ariaLabel?: string
   className?: string
+  /** false lets each segment grow with its label (long PL labels in a 4-tab bar). */
+  equalWidth?: boolean
 }
 
-export function SegmentedControl<T extends string>({ options, value, onChange, ariaLabel, className = '' }: SegmentedControlProps<T>) {
+export function SegmentedControl<T extends string>({ options, value, onChange, ariaLabel, className = '', equalWidth = true }: SegmentedControlProps<T>) {
   const isSelected = (v: T) => (Array.isArray(value) ? value.includes(v) : value === v)
   return (
     <div
@@ -33,7 +35,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, a
             type="button"
             aria-pressed={selected}
             onClick={() => onChange(option.value)}
-            className={`flex-1 min-w-0 min-h-11 px-2 py-1 rounded-[10px] flex flex-col items-center justify-center transition-colors ${
+            className={`${equalWidth ? 'flex-1 px-2' : 'flex-auto px-3'} min-w-0 min-h-11 py-1 rounded-[10px] flex flex-col items-center justify-center transition-colors ${
               selected ? 'bg-uc-primary text-uc-on-primary' : 'text-uc-text hover:bg-uc-elevated'
             }`}
           >

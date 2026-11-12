@@ -1012,7 +1012,16 @@
     "saved": "Profil zapisany",
     "saveFailed": "Nie udało się zapisać profilu",
     "enabled": "Włączone",
-    "disabled": "Wyłączone"
+    "disabled": "Wyłączone",
+    "googleName": "Imię i nazwisko z Google",
+    "googleNameHint": "Twoje pełne imię i nazwisko z konta Google",
+    "displayName": "Nazwa wyświetlana",
+    "displayNameHint": "Twoje imię używane w aplikacji",
+    "saveProfile": "Zapisz profil",
+    "disableCycleTitle": "Wyłączyć śledzenie cyklu?",
+    "keepOn": "Zostaw włączone",
+    "pushBlockedTitle": "Powiadomienia zablokowane.",
+    "notificationsSection": "Powiadomienia"
   },
   "landing": {
     "tagline": "Trenuj z jednorożcowym flow - Śledź swoją wspinaczkową podróż z precyzją i uważnością",

@@ -253,6 +253,22 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - New test protocol: "Load from protocol" is a full-width tonal button above the hang list; hang targets are edited in
     the hang sheet (Target load / Target time), not inline in the form.
 
+### Profile & settings
+- Built 2026-11-12 against `Profile & settings.png`. Kept where the mock differs:
+  - **"Member since March 2025"** isn't shown: `/api/user` doesn't return `createdAt`. The header shows the avatar,
+    display name and the app's profile description instead.
+  - **Display name** stays read-only (first word of the Google name), like Google name; both are dashed read-only
+    fields with their hints. Timezone keeps its four options.
+  - **Privacy → "Anonymous usage data" checkbox** doesn't exist: the app shows a static "Data collection · Enabled"
+    row. Cycle tracking shows "Enabled" or the tonal Setup button.
+  - **Disable cycle tracking** confirm copy keeps the app's text ("…will remove all cycle-related data"), not the mock's
+    "Your logged periods are kept". Which one is true should be checked before changing the text.
+  - Inactivity reminder and test reminders keep their own on/off checkboxes; the days / interval rows appear only when
+    they're on (mock shows the value rows always).
+  - The "Notifications blocked" banner shows when the browser permission is denied (on load or when enabling push).
+  - Export rows keep the 📊 / 📈 emoji until the custom download icon arrives; dev-only tools stay below them.
+  - The page has no Close button any more (it's a page, not a modal); Save profile still returns to the dashboard.
+
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event
