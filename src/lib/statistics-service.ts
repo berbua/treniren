@@ -4,7 +4,7 @@ import { Workout, WorkoutType, TrainingVolume, Tag } from '@/types/workout';
 import { Event } from '@/types/event';
 import { calculateCycleInfo, CycleSettings, getPhaseRanges } from '@/lib/cycle-utils';
 
-export type TimeFrame = '1week' | '1month' | '3months' | '6months' | '1year' | 'all' | 'custom';
+export type TimeFrame = '1week' | '4weeks' | '1month' | '3months' | '6months' | '1year' | 'all' | 'custom';
 
 export interface TimeRange {
   start: Date;
@@ -112,6 +112,10 @@ class StatisticsService {
       case '1week':
         start = new Date(now);
         start.setDate(start.getDate() - 7);
+        break;
+      case '4weeks':
+        start = new Date(now);
+        start.setDate(start.getDate() - 28);
         break;
       case '1month':
         start = new Date(now);

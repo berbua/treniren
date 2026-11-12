@@ -223,8 +223,10 @@
       "3months": "3M",
       "6months": "6M",
       "1year": "1Y",
-      "allTime": "All"
-    }
+      "allTime": "All",
+      "4weeks": "4W"
+    },
+    "4weeks": "4 Weeks"
   },
   "app": {
     "title": "Unicorn Climb - Train with your unicorn flow",

@@ -26,13 +26,12 @@ const typeLabelKey: Record<WorkoutType, string> = {
   FINGERBOARD: 'fingerboard',
 };
 
+// Range segments from the mockup (decision 42): 4W / 3M / 6M / 1Y
 const timeframes: { value: TimeFrame; key: string; short: string }[] = [
-  { value: '1week', key: '1week', short: '1W' },
-  { value: '1month', key: '1month', short: '1M' },
+  { value: '4weeks', key: '4weeks', short: '4W' },
   { value: '3months', key: '3months', short: '3M' },
   { value: '6months', key: '6months', short: '6M' },
   { value: '1year', key: '1year', short: '1Y' },
-  { value: 'all', key: 'allTime', short: 'All' },
 ];
 
 const phases: CyclePhase[] = ['menstrual', 'follicular', 'ovulation', 'early-luteal', 'late-luteal'];
@@ -57,7 +56,7 @@ export const StatisticsContent = () => {
   const locale = language === 'pl' ? 'pl-PL' : 'en-GB';
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { settings: notificationSettings, updateSettings } = useNotifications();
-  const [timeframe, setTimeframe] = useState<TimeFrame>('1month');
+  const [timeframe, setTimeframe] = useState<TimeFrame>('4weeks');
   const [isEnablingNotification, setIsEnablingNotification] = useState(false);
   const [statsData, setStatsData] = useState<StatisticsData | null>(null);
   const [loading, setLoading] = useState(false);

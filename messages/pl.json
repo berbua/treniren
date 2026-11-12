@@ -223,8 +223,10 @@
       "3months": "3M",
       "6months": "6M",
       "1year": "1R",
-      "allTime": "Całość"
-    }
+      "allTime": "Całość",
+      "4weeks": "4T"
+    },
+    "4weeks": "4 Tygodnie"
   },
   "app": {
     "title": "Jednorożec wspin - trenuj z jednorożcowym flow",
