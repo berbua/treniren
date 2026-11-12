@@ -585,6 +585,20 @@
       "enterReps": {
         "other": "Wpisz powtórzenia dla serii {{sets}}"
       }
+    },
+    "saveSession": "Zapisz sesję",
+    "updateSession": "Zaktualizuj sesję",
+    "hangsCount": {
+      "one": "{{count}} zwis",
+      "few": "{{count}} zwisy",
+      "many": "{{count}} zwisów",
+      "other": "{{count}} zwisu"
+    },
+    "climbsCount": {
+      "one": "{{count}} droga",
+      "few": "{{count}} drogi",
+      "many": "{{count}} dróg",
+      "other": "{{count}} drogi"
     }
   },
   "exercises": {

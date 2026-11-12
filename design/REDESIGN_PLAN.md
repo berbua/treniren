@@ -368,3 +368,7 @@ note the answer.
 - 2026-11-12: Decision 19 built. `WorkoutExerciseTracker` got `showSetErrors` (set by the form once the incomplete-data
   dialog opened): reps `Input`s of sets without reps get `aria-invalid` (red), and a `FieldError` per exercise lists them
   (`workouts.setErrors.enterReps`, plural). Shared `setHasReps`; the dialog now also counts a set without reps as empty.
+- 2026-11-12: Decision 25 built. `EnhancedWorkoutForm` footer: truncated summary line (type, localized short date, TR,
+  `tPlural` count of exercises / hangs / climbs) + accent "Save session" / "Update session" (new keys
+  `workouts.saveSession`, `updateSession`, `hangsCount`, `climbsCount`); no Cancel button (✕ calls `onCancel`). Duplicating
+  now says "Save session" (it said "Update Workout" because `initialData` is set).

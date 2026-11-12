@@ -581,6 +581,16 @@
         "one": "Enter reps for set {{sets}}",
         "other": "Enter reps for sets {{sets}}"
       }
+    },
+    "saveSession": "Save session",
+    "updateSession": "Update session",
+    "hangsCount": {
+      "one": "{{count}} hang",
+      "other": "{{count}} hangs"
+    },
+    "climbsCount": {
+      "one": "{{count}} climb",
+      "other": "{{count}} climbs"
     }
   },
   "exercises": {

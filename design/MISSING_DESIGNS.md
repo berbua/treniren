@@ -54,7 +54,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   (Morning + Evening possible), not a single segment.
 - **Phase pill next to the date** — the app shows a collapsible **Cycle information** panel instead
   (phase + recommendations for the chosen date). A pill is fine as a summary of it.
-- **"Save session" + one-line summary sticky footer** — the app has Cancel + Save/Update.
+- **"Save session" + one-line summary sticky footer** — built 2026-11-12 (decision 25): footer is a muted one-line
+  summary ("Lead Wall · Wed 11 Nov · TR4 · 2 climbs"; N exercises / N hangs for gym / fingerboard) + accent "Save session"
+  ("Update session" when editing). Cancel was dropped; the header ✕ cancels.
 - Wall angle (slab/overhang/roof…) and style (powerful/technical) — enums exist in the DB but **no UI** uses them; don't show.
 - Built 2026-11-12 against `Log workout — lead climbing (full form).png`. Kept where the mock differs:
   - No footer in the mock; the app keeps a sticky **Cancel + Save/Update** footer. Esc and scrim tap don't close

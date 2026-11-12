@@ -80,7 +80,7 @@ const getTrainingVolumes = (t: (key: string) => string): { value: TrainingVolume
 
 export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate, isDuplicating = false }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
-  const { t, tPlural } = useLanguage();
+  const { t, tPlural, language } = useLanguage();
 
   // Set current date on client side to prevent hydration mismatch
   // Also handle duplication: when defaultDate is provided, use it even if initialData exists
@@ -294,6 +294,29 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     }).length;
 
     return { exercises, hangs };
+  };
+
+  // Footer line: "Lead · Wall · Wed 11 Nov · TR4 · 2 climbs"
+  const footerSummary = () => {
+    const parts: string[] = [];
+    if (formData.type) parts.push(t(`workouts.workoutTypes.${formData.type}`));
+    if (formData.date) {
+      parts.push(
+        new Date(`${formData.date}T12:00:00`).toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        })
+      );
+    }
+    if (formData.trainingVolume) parts.push(formData.trainingVolume);
+    const exercises = formData.type === 'GYM' ? formData.exercises?.length ?? 0 : 0;
+    const hangs = formData.type === 'FINGERBOARD' ? formData.fingerboardHangs?.length ?? 0 : 0;
+    const climbs = formData.mentalState?.climbSections?.length ?? 0;
+    if (exercises > 0) parts.push(tPlural('workouts.exercisesCount', exercises));
+    else if (hangs > 0) parts.push(tPlural('workouts.hangsCount', hangs));
+    else if (climbs > 0) parts.push(tPlural('workouts.climbsCount', climbs));
+    return parts.join(' · ');
   };
 
   // "2 sets in Weighted pull-up and 1 hang have no values." (plural forms per language)
@@ -536,16 +559,15 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
           </span>
         }
         footer={
-          <div className="flex gap-3">
-            <Button variant="ghost" size="lg" onClick={onCancel}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" form="workout-form" variant="accent" size="lg" isLoading={isSubmitting} className="flex-1">
+          // One-line summary + Save session (the header ✕ cancels, as in Quick log)
+          <div className="flex items-center gap-3">
+            <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-uc-text-muted uc-num">{footerSummary()}</p>
+            <Button type="submit" form="workout-form" variant="accent" size="lg" isLoading={isSubmitting} className="shrink-0">
               {isSubmitting
                 ? `${t('common.save') || 'Save'}...`
-                : <><Icon name="success" />{initialData
-                  ? t('workouts.updateWorkout') || 'Update Workout'
-                  : t('workouts.saveWorkout') || 'Save Workout'}</>}
+                : <><Icon name="success" />{initialData && !isDuplicating
+                  ? t('workouts.updateSession') || 'Update session'
+                  : t('workouts.saveSession') || 'Save session'}</>}
             </Button>
           </div>
         }
