@@ -3,6 +3,7 @@ import { dayNumberToLocalDate, localDayNumber, storedDayNumber, toLocalDateStrin
 import { Workout, WorkoutType, TrainingVolume, Tag } from '@/types/workout';
 import { Event } from '@/types/event';
 import { weeklyStreaks } from './streak';
+import { deloadDayNumbers } from './deload';
 import { calculateCycleInfo, CycleSettings, getPhaseRanges } from '@/lib/cycle-utils';
 
 export type TimeFrame = '1week' | '4weeks' | '1month' | '3months' | '6months' | '1year' | 'all' | 'custom';
@@ -182,15 +183,23 @@ class StatisticsService {
   }
 
   // Number of weeks in a range, from its calendar days (not rounded up to whole weeks)
-  private weeksInRange(timeRange: TimeRange): number {
-    const days = localDayNumber(timeRange.end) - localDayNumber(timeRange.start) + 1;
-    return Math.max(1, days / 7);
+  // Weeks in the range, leaving out deload days (rest periods don't lower the per-week averages)
+  private weeksInRange(timeRange: TimeRange, deloadDays: Set<number> = new Set()): number {
+    const start = localDayNumber(timeRange.start);
+    const end = localDayNumber(timeRange.end);
+    let restDays = 0;
+    deloadDays.forEach(day => { if (day >= start && day <= end) restDays++; });
+    return Math.max(1, (end - start + 1 - restDays) / 7);
+  }
+
+  private onDeload(workout: Workout, deloadDays: Set<number>): boolean {
+    return deloadDays.has(storedDayNumber(workout.startTime));
   }
 
   /**
    * Calculate overall statistics
    */
-  calculateOverallStats(workouts: Workout[], timeRange: TimeRange, allWorkouts: Workout[] = workouts): OverallStats {
+  calculateOverallStats(workouts: Workout[], timeRange: TimeRange, allWorkouts: Workout[] = workouts, deloadDays: Set<number> = new Set()): OverallStats {
     const totalWorkouts = workouts.length;
     
     if (totalWorkouts === 0) {
@@ -205,9 +214,9 @@ class StatisticsService {
       };
     }
 
-    // Calculate average workouts per week
-    const weeksInRange = this.weeksInRange(timeRange);
-    const averageWorkoutsPerWeek = totalWorkouts / weeksInRange;
+    // Calculate average workouts per week (deload days and their workouts left out)
+    const weeksInRange = this.weeksInRange(timeRange, deloadDays);
+    const averageWorkoutsPerWeek = workouts.filter(w => !this.onDeload(w, deloadDays)).length / weeksInRange;
 
     // Workouts in the current calendar month - from all workouts, independent of the selected timeframe
     const thisMonthKey = toLocalDateString().slice(0, 7);
@@ -234,7 +243,7 @@ class StatisticsService {
     // Calculate streaks
     const sortedWorkouts = [...workouts].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     // Streaks look at all workouts, not only the selected range
-    const { currentStreak, longestStreak } = this.calculateStreaks(allWorkouts);
+    const { currentStreak, longestStreak } = this.calculateStreaks(allWorkouts, deloadDays);
 
     const lastWorkout = sortedWorkouts.length > 0 ? new Date(sortedWorkouts[sortedWorkouts.length - 1].startTime) : undefined;
 
@@ -253,12 +262,14 @@ class StatisticsService {
   /**
    * Calculate workout type statistics
    */
-  calculateWorkoutTypeStats(workouts: Workout[], timeRange: TimeRange): WorkoutTypeStats[] {
-    const typeCounts = new Map<WorkoutType, { count: number; lastWorkout?: Date }>();
+  calculateWorkoutTypeStats(workouts: Workout[], timeRange: TimeRange, deloadDays: Set<number> = new Set()): WorkoutTypeStats[] {
+    // rateCount: workouts outside deloads, for the per-week frequency
+    const typeCounts = new Map<WorkoutType, { count: number; rateCount: number; lastWorkout?: Date }>();
     
     workouts.forEach(workout => {
-      const existing = typeCounts.get(workout.type) || { count: 0 };
+      const existing = typeCounts.get(workout.type) || { count: 0, rateCount: 0 };
       existing.count++;
+      if (!this.onDeload(workout, deloadDays)) existing.rateCount++;
       
       const workoutDate = new Date(workout.startTime);
       if (!existing.lastWorkout || workoutDate > existing.lastWorkout) {
@@ -269,27 +280,28 @@ class StatisticsService {
     });
 
     const totalWorkouts = workouts.length;
-    const weeksInRange = this.weeksInRange(timeRange);
+    const weeksInRange = this.weeksInRange(timeRange, deloadDays);
 
     return Array.from(typeCounts.entries()).map(([type, data]) => ({
       type,
       count: data.count,
       percentage: totalWorkouts > 0 ? Math.round((data.count / totalWorkouts) * 100) : 0,
       lastWorkout: data.lastWorkout,
-      frequency: Math.round((data.count / weeksInRange) * 10) / 10,
+      frequency: Math.round((data.rateCount / weeksInRange) * 10) / 10,
     })).sort((a, b) => b.count - a.count);
   }
 
   /**
    * Calculate tag statistics
    */
-  calculateTagStats(workouts: Workout[], tags: Tag[], timeRange: TimeRange): TagStats[] {
-    const tagCounts = new Map<string, { count: number; lastUsed?: Date; types: Set<WorkoutType> }>();
+  calculateTagStats(workouts: Workout[], tags: Tag[], timeRange: TimeRange, deloadDays: Set<number> = new Set()): TagStats[] {
+    const tagCounts = new Map<string, { count: number; rateCount: number; lastUsed?: Date; types: Set<WorkoutType> }>();
 
     workouts.forEach(workout => {
       workout.tags?.forEach(tag => {
-        const existing = tagCounts.get(tag.id) || { count: 0, types: new Set<WorkoutType>() };
+        const existing = tagCounts.get(tag.id) || { count: 0, rateCount: 0, types: new Set<WorkoutType>() };
         existing.count++;
+        if (!this.onDeload(workout, deloadDays)) existing.rateCount++;
         existing.types.add(workout.type);
         
         const workoutDate = new Date(workout.startTime);
@@ -302,7 +314,7 @@ class StatisticsService {
     });
 
     const totalTaggedWorkouts = workouts.filter(w => w.tags && w.tags.length > 0).length;
-    const weeksInRange = this.weeksInRange(timeRange);
+    const weeksInRange = this.weeksInRange(timeRange, deloadDays);
 
     return Array.from(tagCounts.entries())
       .map(([tagId, data]) => {
@@ -313,7 +325,7 @@ class StatisticsService {
           tag,
           count: data.count,
           percentage: totalTaggedWorkouts > 0 ? Math.round((data.count / totalTaggedWorkouts) * 100) : 0,
-          frequency: Math.round((data.count / weeksInRange) * 10) / 10,
+          frequency: Math.round((data.rateCount / weeksInRange) * 10) / 10,
           lastUsed: data.lastUsed,
           associatedTypes: Array.from(data.types),
         };
@@ -561,12 +573,14 @@ class StatisticsService {
     const timeRange = this.getTimeRange(timeframe, customRange, workouts, events);
     const filteredWorkouts = this.filterWorkoutsByTimeRange(workouts, timeRange);
     const filteredEvents = Array.isArray(events) ? events.filter(event => this.isInTimeRange(event.date, timeRange)) : [];
+    // All deloads (not only those starting in the range): they pause the streak and are left out of per-week averages
+    const deloadDays = deloadDayNumbers(Array.isArray(events) ? events : []);
 
     return {
       timeRange,
-      overall: this.calculateOverallStats(filteredWorkouts, timeRange, workouts),
-      workoutTypes: this.calculateWorkoutTypeStats(filteredWorkouts, timeRange),
-      tags: this.calculateTagStats(filteredWorkouts, tags, timeRange),
+      overall: this.calculateOverallStats(filteredWorkouts, timeRange, workouts, deloadDays),
+      workoutTypes: this.calculateWorkoutTypeStats(filteredWorkouts, timeRange, deloadDays),
+      tags: this.calculateTagStats(filteredWorkouts, tags, timeRange, deloadDays),
       trainingVolumes: this.calculateTrainingVolumeStats(filteredWorkouts),
       mentalSessions: this.calculateMentalSessionStats(filteredWorkouts),
       falls: this.calculateFallsStats(filteredWorkouts),
@@ -577,8 +591,8 @@ class StatisticsService {
   /**
    * Calculate workout streaks
    */
-  private calculateStreaks(workouts: Workout[]): { currentStreak: number; longestStreak: number } {
-    const { current, longest } = weeklyStreaks(workouts);
+  private calculateStreaks(workouts: Workout[], deloadDays: Set<number> = new Set()): { currentStreak: number; longestStreak: number } {
+    const { current, longest } = weeklyStreaks(workouts, undefined, undefined, deloadDays);
     return { currentStreak: current, longestStreak: longest };
   }
 

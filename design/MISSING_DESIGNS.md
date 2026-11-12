@@ -140,6 +140,14 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   row "Deload · 2/5"; Upcoming events shows it until its last day. Event card: date range as title + "N days".
 - Stored like trips: `tripStartDate` / `tripEndDate` (columns keep their names); new enum value via migration
   `20261112_add_deload_event_type`.
+- **Streak** (user decision): a Mon–Sun week with any deload day pauses the streak — it doesn't break it and doesn't add
+  to it (unless it reached 3+ sessions anyway). Applies to Today and Stats; the rule line reads "3+ sessions a week ·
+  deloads pause it".
+- **Today**: while a deload runs, a card "Deload · day 2/5" + "Rest and recover. Your streak is paused, not broken." (and
+  the deload's notes) replaces the "Time to train!" nudge.
+- **Stats**: deload days and the workouts on them are left out of the per-week numbers (Avg per week, workout-type and
+  tag frequency, Gym variation frequency); totals and percentages still count everything. Weekly volume: deload weeks
+  are blue bars, named in the tooltip, not in "Avg per week", with a note under the chart.
 
 ### Calendar
 - **Upcoming events list** (decision 33, built 2026-11-12, no mock): "Upcoming events" section under the legend card

@@ -10,6 +10,8 @@ import { useCycle } from '@/contexts/CycleContext';
 import { CyclePhase, getPhaseDisplayName, getPhaseDayRange } from '@/lib/cycle-utils';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { STREAK_MIN_SESSIONS } from '@/lib/streak';
+import { deloadDayNumbers } from '@/lib/deload';
+import { localDayNumber, storedDayNumber } from '@/lib/date-utils';
 import { WeeklyVolumeChart } from './WeeklyVolumeChart';
 import { StatsFingerboardTests } from './StatsFingerboardTests';
 import {
@@ -103,9 +105,13 @@ export const StatisticsContent = () => {
         break;
     }
     
-    // Filter workouts within period
-    const periodWorkouts = gymWorkouts.filter(w => new Date(w.startTime) >= periodStart);
-    const periodDays = Math.max(1, (now.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000));
+    // Filter workouts within period; deload days (and their workouts) don't count towards the frequency
+    const deloadDays = deloadDayNumbers(events);
+    const periodWorkouts = gymWorkouts.filter(w => new Date(w.startTime) >= periodStart && !deloadDays.has(storedDayNumber(w.startTime)));
+    const firstDay = localDayNumber(periodStart);
+    const lastDay = localDayNumber(now);
+    const restDays = Array.from(deloadDays).filter(day => day >= firstDay && day <= lastDay).length;
+    const periodDays = Math.max(1, (now.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000) - restDays);
     
     // Calculate frequency per period
     const variationFreq: Array<{ name: string; frequency: number }> = [];
@@ -120,7 +126,7 @@ export const StatisticsContent = () => {
     });
     
     return variationFreq.sort((a, b) => b.frequency - a.frequency);
-  }, [workouts, variationFrequencyPeriod]);
+  }, [workouts, events, variationFrequencyPeriod]);
 
   // Load data
   useEffect(() => {
@@ -183,6 +189,8 @@ export const StatisticsContent = () => {
       setStatsData(stats);
     }
   }, [workouts, tags, timeframe, events, isCycleTrackingEnabled, cycleSettings]);
+
+  const deloadDays = useMemo(() => deloadDayNumbers(events), [events]);
 
   // Workouts in the stats range (weekly volume chart)
   const workoutsInRange = useMemo(() => {
@@ -442,7 +450,12 @@ export const StatisticsContent = () => {
               title={t('stats.weeklyVolume') || 'Weekly volume'}
               subtitle={t('stats.weeklyVolumeSubtitle') || 'TR points per week: TR1 = 1 … TR5 = 5'}
             >
-              <WeeklyVolumeChart workouts={workoutsInRange} start={statsData.timeRange.start} end={statsData.timeRange.end} />
+              <WeeklyVolumeChart
+                workouts={workoutsInRange}
+                start={statsData.timeRange.start}
+                end={statsData.timeRange.end}
+                deloadDays={deloadDays}
+              />
             </Section>
             <StatsFingerboardTests
               renderSection={(title, subtitle, body) => <Section title={title} subtitle={subtitle}>{body}</Section>}

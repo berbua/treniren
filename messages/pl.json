@@ -162,6 +162,7 @@
     "log": "Dodaj"
   },
   "stats": {
+    "deloadWeeksNote": "Tygodnie deloadu — nie wliczają się do średniej",
     "weeklyVolume": "Objętość tygodniowa",
     "weeklyVolumeSubtitle": "Punkty TR na tydzień: TR1 = 1 … TR5 = 5",
     "volumeTotal": "Razem",
@@ -1287,6 +1288,8 @@
     "sync": "Automatyczna Synchronizacja"
   },
   "dashboard": {
+    "deloadDay": "dzień {{day}}/{{total}}",
+    "deloadHint": "Odpoczynek i regeneracja. Passa jest wstrzymana, nie przerwana.",
     "welcome": "Witaj w swoim panelu",
     "hi": "Cześć",
     "there": "tam",
@@ -1339,7 +1342,7 @@
       "many": "tygodni",
       "other": "tygodnia"
     },
-    "streakRule": "{{min}}+ treningi w tygodniu",
+    "streakRule": "{{min}}+ treningi w tygodniu · deload ją wstrzymuje",
     "streakWeeksInRow": {
       "one": "{{count}} tydzień z {{min}}+ treningami. Tak trzymaj!",
       "few": "{{count}} tygodnie z rzędu z {{min}}+ treningami. Tak trzymaj!",

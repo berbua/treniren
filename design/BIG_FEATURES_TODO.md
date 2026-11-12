@@ -50,7 +50,7 @@ Not checked in a browser yet (no local server / test account in the session) —
 - Done earlier on 2026-11-12: 1, 2, 3, 4, 5, 7, 12, 19, 25, 29, 30, 32, 34, 42, 49, 57, 58, 62, 64, 65.
 - 9 changed to "Keep the app"; 51 future idea only (more exercise categories).
 - Discuss later: 15, 17, 24, 28, 31, 40, 66. Pending: 63 (auth titles, user adds Polish strings).
-- Deload follow-ups to decide: should a deload week keep the streak (weeks with 3+ sessions) alive? Show "Deload ·
-  day 2/5" on Today? Leave deload weeks out of Stats averages?
+- Deload follow-ups — built 2026-11-12 (user decision): deload weeks pause the streak, Today shows "Deload · day 2/5",
+  deload days are left out of the Stats per-week averages.
 - Follow-ups from this round: route name for Lead Wall / Bouldering too? Fingerboard tests on Stats follow the range
   instead of all tests? Wall angle / style in Stats? Offline form fields (waits for 15).

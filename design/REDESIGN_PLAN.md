@@ -441,3 +441,6 @@ note the answer.
 - 2026-11-12: Deload event (user request): `EventType.DELOAD` + migration `20261112_add_deload_event_type`;
   `RANGE_EVENT_TYPES` / `isRangeEventType` in `types/event.ts` (trip + deload share the date-range code); icon
   `event-deload`; keys `events.types.deload`, `startDate`, `endDate`, `deloadHint`, `deloadDescription*`, `daysCount`.
+- 2026-11-12: Deload behaviour: `lib/deload.ts` (`deloadDayNumbers`, `currentDeload`); `weeklyStreaks(…, deloadDays)`
+  bridges deload weeks; statistics-service `weeksInRange` / frequencies skip deload days; `WeeklyVolumeChart`
+  `deloadDays` prop; Today deload card (`dashboard.deloadDay`, `deloadHint`); `stats.deloadWeeksNote`.

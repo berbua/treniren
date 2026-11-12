@@ -17,6 +17,7 @@ import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { OFFLINE_WORKOUTS_SYNCED_EVENT } from '@/lib/offline-sync'
 import { localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils'
 import { STREAK_MIN_SESSIONS, weeklyStreaks } from '@/lib/streak'
+import { currentDeload, deloadDayNumbers } from '@/lib/deload'
 import { useCycle } from '@/contexts/CycleContext'
 import { CyclePhase, getPhaseRanges } from '@/lib/cycle-utils'
 import {
@@ -54,6 +55,7 @@ function DashboardContent() {
   })
   const [userProfile, setUserProfile] = useState<any>(null)
   const [streak, setStreak] = useState(0)
+  const [deload, setDeload] = useState<ReturnType<typeof currentDeload<Event>>>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showPWAStatus, setShowPWAStatus] = useState(false)
   const [showQuickLog, setShowQuickLog] = useState(false)
@@ -112,6 +114,7 @@ function DashboardContent() {
           )
           setUpcomingTrips(trips)
           setRecentEvents(allEvents.slice(0, 3))
+          setDeload(currentDeload(allEvents))
         }
 
         // Fetch workouts - only get first page for recent workouts and stats
@@ -147,7 +150,8 @@ function DashboardContent() {
           
           // Calculate streak
           // Weeks in a row with 3+ sessions (from the newest 100 workouts loaded here)
-          setStreak(weeklyStreaks(workouts).current)
+          // Deload weeks pause the streak instead of breaking it
+          setStreak(weeklyStreaks(workouts, undefined, undefined, deloadDayNumbers(allEvents)).current)
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
@@ -197,8 +201,9 @@ function DashboardContent() {
   ]
 
   const showHero = isCycleTrackingEnabled && cycleInfo
-  const hasSuggestion = !isLoading && recentWorkouts.length > 0 && (streak >= 2 || (streak === 0 && stats.thisWeekWorkouts === 0))
-  const hasSideCards = hasSuggestion || upcomingTrips.length > 0
+  // During a deload the "Time to train!" nudge is replaced by the deload card
+  const hasSuggestion = !isLoading && recentWorkouts.length > 0 && (streak >= 2 || (streak === 0 && stats.thisWeekWorkouts === 0 && !deload))
+  const hasSideCards = hasSuggestion || upcomingTrips.length > 0 || !!deload
 
   return (
     <div className="min-h-screen bg-uc-bg text-uc-text">
@@ -241,6 +246,24 @@ function DashboardContent() {
 
           {hasSideCards && (
             <div className={`grid gap-4 content-start ${showHero ? '' : 'lg:grid-cols-2'}`}>
+              {/* Deload running today */}
+              {deload && (
+                <Card className="flex items-start gap-3">
+                  <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl border-[1.5px] border-uc-tag-5 bg-uc-elevated text-uc-tag-5">
+                    <Icon name="event-deload" size={22} />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-[15px] font-extrabold uc-num">
+                      {t('events.types.deload')} · {t('dashboard.deloadDay', { day: deload.day, total: deload.totalDays })}
+                    </h3>
+                    <p className="text-[13px] text-uc-text-muted">{t('dashboard.deloadHint')}</p>
+                    {deload.event.description && (
+                      <p className="mt-1 text-[13px] text-uc-text line-clamp-2">{deload.event.description}</p>
+                    )}
+                  </div>
+                </Card>
+              )}
+
               {/* Personalized Suggestions */}
               {hasSuggestion && streak >= 2 && (
                 <Card className="flex items-start gap-3">
@@ -310,7 +333,7 @@ function DashboardContent() {
               label={t('dashboard.streakLabel') || 'Streak'}
               value={streak}
               unit={tPlural('dashboard.weeksUnit', streak)}
-              footer={t('dashboard.streakRule', { min: STREAK_MIN_SESSIONS }) || `${STREAK_MIN_SESSIONS}+ sessions a week`}
+              footer={t('dashboard.streakRule', { min: STREAK_MIN_SESSIONS })}
             />
             <StatTile
               className="order-2 lg:order-4"

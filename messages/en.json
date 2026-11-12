@@ -162,6 +162,7 @@
     "log": "Log"
   },
   "stats": {
+    "deloadWeeksNote": "Deload weeks — not counted in the average",
     "weeklyVolume": "Weekly volume",
     "weeklyVolumeSubtitle": "TR points per week: TR1 = 1 … TR5 = 5",
     "volumeTotal": "Total",
@@ -1279,6 +1280,8 @@
     "sync": "Auto Sync"
   },
   "dashboard": {
+    "deloadDay": "day {{day}}/{{total}}",
+    "deloadHint": "Rest and recover. Your streak is paused, not broken.",
     "welcome": "Welcome to Your Dashboard",
     "hi": "Hi",
     "there": "there",
@@ -1329,7 +1332,7 @@
       "one": "week",
       "other": "weeks"
     },
-    "streakRule": "{{min}}+ sessions a week",
+    "streakRule": "{{min}}+ sessions a week · deloads pause it",
     "streakWeeksInRow": {
       "one": "{{count}} week with {{min}}+ sessions. Keep it going!",
       "other": "{{count}} weeks in a row with {{min}}+ sessions. Keep it going!"
