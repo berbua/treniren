@@ -276,8 +276,8 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - **Message icons** stay the existing emoji per type (🔄 cycle reminder, ⚠️ period overdue, 🏋️ workout / inactivity,
     📢 general); the mock's droplet / retest / bolt / mental icons wait for the custom SVGs. There's no separate "retest"
     or "mental practice" message type — those messages come in as `general` with their action button.
-  - **Priority**: only high shows a chip ("High"); medium and low look the same (the old panel tinted medium yellow and
-    low blue). Unread is the accent dot before the title.
+  - **Priority**: every priority has a chip since 2026-11-12 (decision 4): High (error), Medium (warning), Low (muted);
+    unread high / medium cards also get a tinted border. Unread is the accent dot before the title.
   - The panel keeps its footer ("N messages · N unread", "Last updated") and the unread count next to the title; the
     mock has neither. Clear all asks for confirmation (dialog not in the mock).
   - **Offline banner** keeps the "saved locally and synced…" line under "You're offline"; "Back online" has no

@@ -363,3 +363,5 @@ note the answer.
   Phone tab bar: Today, Calendar, accent "+" (`nav.log` "Log" / "Dodaj"), Stats, More; "+" opens the sheet and a choice
   pushes `/workouts?add=quicklog|workout|event`, where `AddParamHandler` (in `Suspense`) opens the form and replaces the
   URL. Workouts is reached via More / sidebar. Not checked logged-in in a browser.
+- 2026-11-12: Decision 4 built. `MessagesPanel`: priority chips for high / medium / low (new keys `messages.priorityMedium`,
+  `priorityLow`), tinted border on unread high (error) and medium (warning) cards.

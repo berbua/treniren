@@ -133,7 +133,9 @@
     "message": "message",
     "messages_plural": "messages",
     "unread": "unread",
-    "priorityHigh": "High"
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low"
   },
   "nav": {
     "home": "Home",

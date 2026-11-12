@@ -232,7 +232,7 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
               <ul className="space-y-3">
                 {messages.map((message) => (
                   <li key={message.id}>
-                    <Card className={message.priority === 'high' && !message.read ? 'border-uc-error/50' : ''}>
+                    <Card className={!message.read ? priorityBorder[message.priority ?? ''] ?? '' : ''}>
                       <div className="flex items-start gap-3">
                         <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-elevated ${
                           message.type.startsWith('cycle') ? 'text-uc-phase-menstruation' : message.type.startsWith('workout') ? 'text-uc-accent-text' : 'text-uc-primary'
@@ -243,9 +243,9 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             {!message.read && <span aria-hidden className="size-2 shrink-0 rounded-full bg-uc-accent" />}
                             <h3 className="text-[15px] font-extrabold leading-5">{message.title}</h3>
-                            {message.priority === 'high' && (
-                              <span className="rounded-md bg-uc-error-bg px-1.5 py-0.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-uc-error">
-                                {t('messages.priorityHigh') || 'High'}
+                            {message.priority && priorityChip[message.priority] && (
+                              <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-extrabold uppercase tracking-[0.06em] ${priorityChip[message.priority].className}`}>
+                                {t(priorityChip[message.priority].key) || priorityChip[message.priority].fallback}
                               </span>
                             )}
                           </div>
@@ -302,3 +302,15 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
     </>
   );
 };
+
+// Every priority gets its own chip (decision 4); unread high / medium messages also get a tinted border
+const priorityChip: Record<string, { key: string; fallback: string; className: string }> = {
+  high: { key: 'messages.priorityHigh', fallback: 'High', className: 'bg-uc-error-bg text-uc-error' },
+  medium: { key: 'messages.priorityMedium', fallback: 'Medium', className: 'bg-uc-warning-bg text-uc-warning' },
+  low: { key: 'messages.priorityLow', fallback: 'Low', className: 'bg-uc-elevated text-uc-text-muted' },
+}
+
+const priorityBorder: Record<string, string> = {
+  high: 'border-uc-error/50',
+  medium: 'border-uc-warning/50',
+}

@@ -133,7 +133,9 @@
     "message": "wiadomość",
     "messages_plural": "wiadomości",
     "unread": "nieprzeczytanych",
-    "priorityHigh": "Wysoki"
+    "priorityHigh": "Wysoki",
+    "priorityMedium": "Średni",
+    "priorityLow": "Niski"
   },
   "nav": {
     "home": "Strona główna",
