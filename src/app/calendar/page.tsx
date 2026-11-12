@@ -5,6 +5,7 @@ import { useCycle } from '@/contexts/CycleContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useApiError } from '@/hooks/useApiError'
 import { useConfirmation } from '@/hooks/useConfirmation'
+import { useUndoableDelete } from '@/hooks/useUndoableDelete'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { extractApiError } from '@/lib/errors'
 import { calculateCycleInfo, CycleInfo, CyclePhase } from '@/lib/cycle-utils'
@@ -202,6 +203,7 @@ function CalendarPageContent() {
   const { t, language } = useLanguage()
   const { handleError, showSuccess } = useApiError()
   const confirmation = useConfirmation()
+  const undoableDelete = useUndoableDelete()
   const { getToken } = useCsrfToken()
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [events, setEvents] = useState<Event[]>([])
@@ -640,22 +642,15 @@ function CalendarPageContent() {
         variant: 'danger',
       },
       async () => {
-        try {
-          const csrfToken = await getToken()
-          const response = await fetch(`/api/events/${id}`, {
-            method: 'DELETE',
-            headers: { 'x-csrf-token': csrfToken },
-            credentials: 'include',
-          })
-          if (response.ok) {
-            setEvents((prev) => prev.filter((event) => event.id !== id))
-            showSuccess(t('workouts.eventDeleted') || 'Event deleted')
-          } else {
-            handleError(await extractApiError(response), 'Failed to delete event')
-          }
-        } catch (error) {
-          handleError(error, 'Failed to delete event')
-        }
+        const event = events.find((e) => e.id === id)
+        if (!event) return
+        undoableDelete({
+          url: `/api/events/${id}`,
+          item: event,
+          setItems: setEvents,
+          message: t('events.deletedUndo') || 'Event deleted',
+          errorFallback: 'Failed to delete event',
+        })
       }
     )
   }

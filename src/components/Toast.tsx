@@ -10,6 +10,8 @@ export interface Toast {
   message: string
   type: ToastType
   duration?: number
+  /** Text button before the ✕ (e.g. "Undo"). */
+  action?: { label: string; onClick: () => void }
 }
 
 interface ToastProps {
@@ -66,6 +68,15 @@ export function ToastItem({ toast, onClose }: ToastProps) {
         <Icon name={getIcon()} />
         <p className="text-sm font-bold">{toast.message}</p>
       </div>
+      {toast.action && (
+        <button
+          type="button"
+          onClick={toast.action.onClick}
+          className="shrink-0 min-h-11 px-3 rounded-uc-input text-sm font-extrabold text-uc-accent hover:underline"
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         onClick={() => onClose(toast.id)}
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input opacity-70 hover:opacity-100 transition-opacity"

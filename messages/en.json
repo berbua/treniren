@@ -59,7 +59,8 @@
     "dayAfterTiredness": "Day after tiredness:",
     "nextPeriod": "Next period:",
     "nextOvulation": "Next ovulation:",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "undo": "Undo"
   },
   "auth": {
     "signIn": "Sign In",
@@ -595,7 +596,8 @@
     "climbsCount": {
       "one": "{{count}} climb",
       "other": "{{count}} climbs"
-    }
+    },
+    "deletedUndo": "Workout deleted"
   },
   "exercises": {
     "title": "Exercise Library",
@@ -1354,7 +1356,8 @@
     "dates": "Dates",
     "countdown": "Countdown",
     "notes": "Notes",
-    "deleteEvent": "Delete event"
+    "deleteEvent": "Delete event",
+    "deletedUndo": "Event deleted"
   },
   "strongMind": {
     "title": "Strong Mind",

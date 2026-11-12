@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Event, EventFormData, Tag } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useConfirmation } from '@/hooks/useConfirmation'
+import { useUndoableDelete } from '@/hooks/useUndoableDelete'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import EventForm from '@/components/EventForm'
 import EventCard from '@/components/EventCard'
@@ -15,6 +16,7 @@ import { Button, EmptyState, Icon, SkeletonRows } from '@/components/ui'
 export default function EventsPage() {
   const { t } = useLanguage()
   const confirmation = useConfirmation()
+  const undoableDelete = useUndoableDelete()
   const { handleError } = useApiError()
   const { getToken } = useCsrfToken()
   const [events, setEvents] = useState<Event[]>([])
@@ -23,7 +25,6 @@ export default function EventsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
 
   // Fetch events and tags
   useEffect(() => {
@@ -121,26 +122,15 @@ export default function EventsPage() {
         variant: 'danger',
       },
       async () => {
-        try {
-          setDeletingEventId(eventId)
-          const token = await getToken()
-          const response = await fetch(`/api/events/${eventId}`, {
-            method: 'DELETE',
-            headers: {
-              'x-csrf-token': token,
-            },
-          })
-
-          if (response.ok) {
-            setEvents(prev => prev.filter(event => event.id !== eventId))
-          } else {
-            console.error('Failed to delete event')
-          }
-        } catch (error) {
-          console.error('Error deleting event:', error)
-        } finally {
-          setDeletingEventId(null)
-        }
+        const event = events.find((e) => e.id === eventId)
+        if (!event) return
+        undoableDelete({
+          url: `/api/events/${eventId}`,
+          item: event,
+          setItems: setEvents,
+          message: t('events.deletedUndo') || 'Event deleted',
+          errorFallback: 'Failed to delete event',
+        })
       }
     )
   }
@@ -254,7 +244,6 @@ export default function EventsPage() {
                 onEdit={handleEditEvent}
                 onDelete={handleDeleteEvent}
                 onCycleDayUpdate={handleCycleDayUpdate}
-                isDeleting={deletingEventId === event.id}
               />
             ))}
           </div>
@@ -291,7 +280,6 @@ export default function EventsPage() {
           confirmText={confirmation.confirmText}
           cancelText={confirmation.cancelText}
           variant={confirmation.variant}
-          isLoading={deletingEventId !== null}
         />
       </div>
     </div>

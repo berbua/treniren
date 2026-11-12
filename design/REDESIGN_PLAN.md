@@ -393,3 +393,10 @@ note the answer.
   the `cycle-settings` localStorage. Logged periods, events' cycle days and workouts are **not** deleted, so the mock's
   "your logged periods are kept" is true and "will remove all cycle-related data" is not; lost are the last period date
   and the cycle length. Side effect: the user's timezone is reset to Europe/Warsaw.
+- 2026-11-12: Decision 3 built (user chose: undo deletes of workouts and events). `Toast` got an optional `action`
+  (accent text button); `ToastContext.showUndo(message, { onUndo, onCommit })` keeps pending commits in a ref and runs
+  them when the toast closes without Undo, so it survives navigation. New `hooks/useUndoableDelete` (hide in local state,
+  put back at the same index on Undo or on a failed delete, optional pagination `onCountChange`). Used for workouts +
+  events on /workouts, events on /events and /calendar; the per-card deleting spinners went. New keys `common.undo`,
+  `workouts.deletedUndo`, `events.deletedUndo`. Known gap: a list refetch during the 5 s (e.g. saving another workout)
+  shows the item again until the delete runs.

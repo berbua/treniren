@@ -327,7 +327,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   the desktop sidebar keeps Dashboard / Statistics like the desktop mock.
 
 ### Components
-- **Toast with "Undo"** — toasts have no actions (success / error / warning / info + close).
+- **Toast with "Undo"** — built 2026-11-12 (decision 3) for deleting a workout or an event (after the existing
+  confirmation): the item disappears at once, "Workout deleted · Undo" shows for 5 s, and the server delete runs only
+  when the toast closes without Undo (timeout or ✕). If the tab is closed within those 5 s, nothing is deleted. Other
+  deletes (routines, exercises, protocols, periods) have no Undo.
 
 ---
 

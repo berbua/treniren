@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useApiError } from '@/hooks/useApiError'
 import { useConfirmation } from '@/hooks/useConfirmation'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { useUndoableDelete } from '@/hooks/useUndoableDelete'
 import { extractApiError, ValidationError } from '@/lib/errors'
 import AuthGuard from '@/components/AuthGuard'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
@@ -37,6 +38,7 @@ function WorkoutsPageContent() {
   const { t } = useLanguage()
   const { handleError, showSuccess } = useApiError()
   const confirmation = useConfirmation()
+  const undoableDelete = useUndoableDelete()
   const { getToken, refreshToken } = useCsrfToken()
   
   const [workouts, setWorkouts] = useState<Workout[]>([])
@@ -53,8 +55,6 @@ function WorkoutsPageContent() {
   const [showAddChoice, setShowAddChoice] = useState(false)
   const [showQuickLog, setShowQuickLog] = useState(false)
   const [isSubmittingQuickLog, setIsSubmittingQuickLog] = useState(false)
-  const [deletingWorkoutId, setDeletingWorkoutId] = useState<string | null>(null)
-  const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
   const [showGoalsConfigurator, setShowGoalsConfigurator] = useState(false)
   const [userProfile, setUserProfile] = useState<any>(null)
   
@@ -329,31 +329,16 @@ function WorkoutsPageContent() {
         variant: 'danger',
       },
       async () => {
-        try {
-          setDeletingWorkoutId(id)
-          const csrfToken = await getToken()
-          const response = await fetch(`/api/workouts/${id}`, {
-            method: 'DELETE',
-            headers: { 
-              'Content-Type': 'application/json',
-              'x-csrf-token': csrfToken,
-            },
-            credentials: 'include',
-            body: JSON.stringify({}),
-          })
-
-          if (response.ok) {
-            showSuccess(t('workouts.deleteSuccess') || 'Workout deleted successfully')
-            await fetchWorkouts(workoutsPage, false) // Refresh current page
-          } else {
-            const error = await extractApiError(response)
-            handleError(error, 'Failed to delete workout')
-          }
-        } catch (error) {
-          handleError(error, 'Failed to delete workout')
-        } finally {
-          setDeletingWorkoutId(null)
-        }
+        const workout = workouts.find((w) => w.id === id)
+        if (!workout) return
+        undoableDelete({
+          url: `/api/workouts/${id}`,
+          item: workout,
+          setItems: setWorkouts,
+          message: t('workouts.deletedUndo') || 'Workout deleted',
+          onCountChange: (delta) => setWorkoutsPagination((prev) => ({ ...prev, total: prev.total + delta })),
+          errorFallback: 'Failed to delete workout',
+        })
       }
     )
   }
@@ -477,30 +462,16 @@ function WorkoutsPageContent() {
         variant: 'danger',
       },
       async () => {
-        try {
-          setDeletingEventId(id)
-          const csrfToken = await getToken()
-          const response = await fetch(`/api/events/${id}`, {
-            method: 'DELETE',
-            headers: { 
-              'Content-Type': 'application/json',
-              'x-csrf-token': csrfToken,
-            },
-            credentials: 'include',
-          })
-
-          if (response.ok) {
-            showSuccess(t('workouts.eventDeleted') || 'Event deleted successfully')
-            await fetchEvents(eventsPage, false) // Refresh current page
-          } else {
-            const error = await extractApiError(response)
-            handleError(error, 'Failed to delete event')
-          }
-        } catch (error) {
-          handleError(error, 'Failed to delete event')
-        } finally {
-          setDeletingEventId(null)
-        }
+        const event = events.find((e) => e.id === id)
+        if (!event) return
+        undoableDelete({
+          url: `/api/events/${id}`,
+          item: event,
+          setItems: setEvents,
+          message: t('events.deletedUndo') || 'Event deleted',
+          onCountChange: (delta) => setEventsPagination((prev) => ({ ...prev, total: prev.total + delta })),
+          errorFallback: 'Failed to delete event',
+        })
       }
     )
   }
@@ -743,7 +714,6 @@ function WorkoutsPageContent() {
                     workout={workout}
                     onEdit={handleEdit}
                     onDelete={deleteWorkout}
-                    isDeleting={deletingWorkoutId === workout.id}
                   />
                 ))}
               </div>
@@ -790,7 +760,6 @@ function WorkoutsPageContent() {
                     onEdit={handleEventEdit}
                     onDelete={deleteEvent}
                     onCycleDayUpdate={handleCycleDayUpdate}
-                    isDeleting={deletingEventId === event.id}
                   />
                 ))}
               </div>
@@ -911,7 +880,6 @@ function WorkoutsPageContent() {
           confirmText={confirmation.confirmText}
           cancelText={confirmation.cancelText}
           variant={confirmation.variant}
-          isLoading={deletingWorkoutId !== null || deletingEventId !== null}
         />
 
         {/* Goals Configurator */}

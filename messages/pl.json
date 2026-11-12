@@ -59,7 +59,8 @@
     "dayAfterTiredness": "Zmęczenie następnego dnia:",
     "nextPeriod": "Następna miesiączka:",
     "nextOvulation": "Następna owulacja:",
-    "saving": "Zapisywanie..."
+    "saving": "Zapisywanie...",
+    "undo": "Cofnij"
   },
   "auth": {
     "signIn": "Zaloguj się",
@@ -603,7 +604,8 @@
       "few": "{{count}} drogi",
       "many": "{{count}} dróg",
       "other": "{{count}} drogi"
-    }
+    },
+    "deletedUndo": "Trening usunięty"
   },
   "exercises": {
     "title": "Biblioteka Ćwiczeń",
@@ -1362,7 +1364,8 @@
     "dates": "Daty",
     "countdown": "Odliczanie",
     "notes": "Notatki",
-    "deleteEvent": "Usuń wydarzenie"
+    "deleteEvent": "Usuń wydarzenie",
+    "deletedUndo": "Wydarzenie usunięte"
   },
   "strongMind": {
     "title": "Silny Umysł",
