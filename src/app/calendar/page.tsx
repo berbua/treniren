@@ -25,7 +25,6 @@ import {
   BottomSheet,
   Button,
   Card,
-  Chip,
   ChoiceChip,
   EVENT_TYPE_META,
   eventTypeMeta,
@@ -134,12 +133,6 @@ function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
           <span className="text-[15px] font-extrabold text-uc-text">
             {meta ? t(`training.types.${meta.key}`) : workout.type}
           </span>
-          {details?.quickLog && (
-            <Chip className="min-h-6 px-2 text-xs">
-              <Icon name="quick-log" size={14} />
-              {t('quickLog.quickLogBadge') || 'Quick'}
-            </Chip>
-          )}
         </div>
         {info.length > 0 && (
           <p className="mt-0.5 line-clamp-2 text-[13px] text-uc-text-muted">{info.join(' · ')}</p>
@@ -700,6 +693,28 @@ function CalendarPageContent() {
     setSelectedDate(null)
   }
 
+  // "Delete workout" in the edit form
+  const deleteWorkout = (id: string) => {
+    confirmation.showConfirmation(
+      {
+        title: t('workouts.deleteConfirmTitle') || 'Delete Workout',
+        message: t('workouts.deleteConfirm') || 'Are you sure you want to delete this workout? This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        const workout = workouts.find((w) => w.id === id)
+        if (!workout) return
+        undoableDelete({
+          url: `/api/workouts/${id}`,
+          item: workout,
+          setItems: setWorkouts,
+          message: t('workouts.deletedUndo') || 'Workout deleted',
+          errorFallback: 'Failed to delete workout',
+        })
+      }
+    )
+  }
+
   // "Delete event" in the edit form (decision 49)
   const deleteEvent = (id: string) => {
     confirmation.showConfirmation(
@@ -1236,6 +1251,11 @@ function CalendarPageContent() {
             onSubmit={handleWorkoutSubmit}
             onCancel={handleCancelWorkoutForm}
             initialData={editingWorkout || duplicatingWorkout || undefined}
+            onDelete={editingWorkout ? () => {
+              const id = editingWorkout.id
+              handleCancelWorkoutForm()
+              deleteWorkout(id)
+            } : undefined}
             availableTags={availableTags}
             onCreateTag={handleCreateTag}
             isSubmitting={isSubmitting}

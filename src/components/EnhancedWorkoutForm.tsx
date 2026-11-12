@@ -55,6 +55,7 @@ interface EnhancedWorkoutFormProps {
   onCreateExercise?: (name: string, category?: string, defaultUnit?: string) => Promise<Exercise>;
   defaultDate?: string; // Optional default date to pre-fill
   isDuplicating?: boolean; // Indicates if this is a duplication (not editing)
+  onDelete?: () => void;
 }
 
 // Workout types will be generated dynamically with translations (mockup order: lead first)
@@ -78,7 +79,7 @@ const getTrainingVolumes = (t: (key: string) => string): { value: TrainingVolume
 ];
 
 
-export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate, isDuplicating = false }: EnhancedWorkoutFormProps) {
+export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, availableExercises = [], onCreateExercise, defaultDate, isDuplicating = false, onDelete }: EnhancedWorkoutFormProps) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t, tPlural, language } = useLanguage();
 
@@ -389,6 +390,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     if (formData.type === 'GYM' && formData.routineVariation) {
       details = details || {}
       details.routineVariation = formData.routineVariation
+    } else if (details) {
+      delete details.routineVariation
     }
 
     // Route name (lead rock), wall angle (lead, bouldering) and style (bouldering); dropped when the type has none
@@ -429,10 +432,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
         ? formData.timeOfDay 
         : undefined,
       tagIds: formData.tagIds,
-      exercises: formData.exercises.length > 0 ? formData.exercises : undefined,
-      fingerboardHangs: formData.fingerboardHangs.length > 0 ? formData.fingerboardHangs : undefined,
-      gratitude: formData.gratitude || undefined,
-      improvements: formData.improvements || undefined,
+      // Empty lists and null (not undefined) so clearing them on edit is saved
+      exercises: formData.exercises,
+      fingerboardHangs: formData.fingerboardHangs,
+      gratitude: formData.gratitude || null,
+      improvements: formData.improvements || null,
       details,
     };
 
@@ -1102,6 +1106,13 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                 )}
               </div>
             </CollapsibleCard>
+          )}
+
+          {initialData && !isDuplicating && onDelete && (
+            <Button variant="ghost" size="lg" className="w-full text-uc-error" onClick={onDelete}>
+              <Icon name="delete" />
+              {t('workouts.deleteWorkout') || 'Delete workout'}
+            </Button>
           )}
         </form>
       </BottomSheet>
