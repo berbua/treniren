@@ -4,7 +4,7 @@ import { Workout, WorkoutType, TrainingVolume, Tag } from '@/types/workout';
 import { Event } from '@/types/event';
 import { weeklyStreaks } from './streak';
 import { deloadDayNumbers } from './deload';
-import { calculateCycleInfo, CycleSettings, getPhaseRanges } from '@/lib/cycle-utils';
+import { calculateCycleInfo, CycleSettings, getPhaseForCycleDay } from '@/lib/cycle-utils';
 
 export type TimeFrame = '1week' | '4weeks' | '1month' | '3months' | '6months' | '1year' | 'all' | 'custom';
 
@@ -441,11 +441,13 @@ class StatisticsService {
 
     injuryEvents.forEach(event => {
       const injuryDate = new Date(event.date);
-      // Pass the stored date string so it's read as that calendar day
-      const cycleInfo = calculateCycleInfo(cycleSettings, toStoredDateString(event.date));
+      // A cycle day the user entered wins over the one calculated from the date (stored date string = that calendar day)
+      const cycleDay = event.cycleDayManuallySet && event.cycleDay
+        ? event.cycleDay
+        : calculateCycleInfo(cycleSettings, toStoredDateString(event.date)).currentDay;
       
       // Count by phase
-      switch (cycleInfo.phase) {
+      switch (getPhaseForCycleDay(cycleDay, cycleSettings.cycleLength)) {
         case 'menstrual':
           injuriesByPhase.menstrual++;
           break;
@@ -464,8 +466,8 @@ class StatisticsService {
       }
 
       // Count by cycle day
-      const currentCount = cycleDayCounts.get(cycleInfo.currentDay) || 0;
-      cycleDayCounts.set(cycleInfo.currentDay, currentCount + 1);
+      const currentCount = cycleDayCounts.get(cycleDay) || 0;
+      cycleDayCounts.set(cycleDay, currentCount + 1);
 
       // Track last injury
       if (!lastInjury || injuryDate > lastInjury) {
@@ -473,14 +475,15 @@ class StatisticsService {
       }
     });
 
-    // Convert cycle day counts to array
-    for (let day = 1; day <= cycleSettings.cycleLength; day++) {
+    // Convert cycle day counts to array (entered cycle days can go past the cycle length)
+    const lastCycleDay = Math.max(cycleSettings.cycleLength, ...cycleDayCounts.keys());
+    for (let day = 1; day <= lastCycleDay; day++) {
       const count = cycleDayCounts.get(day) || 0;
       injuriesByCycleDay.push({
         cycleDay: day,
         count,
         // Phase of that cycle day (not today's phase)
-        phase: getPhaseRanges(cycleSettings.cycleLength).find(r => day >= r.start && day <= r.end)?.phase ?? 'late-luteal',
+        phase: getPhaseForCycleDay(day, cycleSettings.cycleLength),
       });
     }
 

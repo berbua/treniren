@@ -111,11 +111,17 @@ const PHASE_DESCRIPTIONS: Record<CyclePhase, string> = {
 }
 
 /**
+ * Phase of a cycle day. Days past the cycle length (a longer cycle than usual) count as late luteal.
+ */
+export function getPhaseForCycleDay(cycleDay: number, cycleLength: number = DEFAULT_CYCLE_LENGTH): CyclePhase {
+  return getPhaseRanges(cycleLength).find(r => cycleDay >= r.start && cycleDay <= r.end)?.phase ?? 'late-luteal'
+}
+
+/**
  * Get phase information based on cycle day
  */
 function getPhaseInfo(cycleDay: number, cycleLength: number = DEFAULT_CYCLE_LENGTH) {
-  const range = getPhaseRanges(cycleLength).find(r => cycleDay >= r.start && cycleDay <= r.end)
-  const phase = range?.phase ?? 'late-luteal'
+  const phase = getPhaseForCycleDay(cycleDay, cycleLength)
   const description = PHASE_DESCRIPTIONS[phase]
   return {
     phase,
