@@ -18,7 +18,7 @@ import { EventType, Event, EventFormData, isRangeEventType } from '@/types/event
 import TrainingTypeFilter from '@/components/TrainingTypeFilter'
 import AuthGuard from '@/components/AuthGuard'
 import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
-import { toLocalDateString } from '@/lib/date-utils'
+import { localDayNumber, storedDayNumber, toLocalDateString } from '@/lib/date-utils'
 import EventForm from '@/components/EventForm'
 import QuickLogModal, { QuickLogData } from '@/components/QuickLogModal'
 import {
@@ -66,12 +66,12 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const getTripDay = (event: Event, date: Date) => {
   if (!isRangeEventType(event.type) || !event.tripStartDate || !event.tripEndDate) return null
   if (event.type === 'TRIP' && !event.destination) return null
-  const tripStart = new Date(event.tripStartDate)
-  const tripEnd = new Date(event.tripEndDate)
-  // Calculate total trip days (inclusive of both start and end dates)
-  const totalDays = Math.floor((tripEnd.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
-  // Calculate current day of trip (1-based)
-  const currentDay = Math.floor((date.getTime() - tripStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  // Range is stored as UTC midnight, the cell date is local midnight: compare day numbers
+  const tripStart = storedDayNumber(event.tripStartDate)
+  // Inclusive of both start and end dates
+  const totalDays = storedDayNumber(event.tripEndDate) - tripStart + 1
+  // 1-based
+  const currentDay = localDayNumber(date) - tripStart + 1
   return { currentDay, totalDays }
 }
 
