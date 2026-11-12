@@ -381,3 +381,6 @@ note the answer.
 - 2026-11-12: Decision 49 built. `EventForm` got `onDelete` (editing only): ghost red "Delete event" under the fields
   (new key `events.deleteEvent`); the callers close the form and run their delete with confirmation. Calendar got its own
   `deleteEvent` (confirmation, `DELETE /api/events/:id`, removes it from state, toast).
+- 2026-11-12: Decision 57 built. `FingerboardTestModal`: Clone opens a sheet with the copy's name (`fingerboardTesting.copyName`
+  "{{name}} (Copy)" / "(kopia)", editable, required) and Cancel / Clone; it was a one-tap POST named "… (Copy)". New keys
+  `cloneSheetTitle`, `cloneSheetDescription`, `cloneNameLabel`.

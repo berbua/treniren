@@ -251,7 +251,8 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     +6 kg · 6 reps · 10 s") with ↑ ↓ ✏️ ✕, as in the mock; the sheet keeps all fields (custom description, notes, crimp
     `Select` with the fixed 6–30 mm list).
   - **Test yourself**: "Step N of 3" bar shows 1 on Choose and 3 on Results; Create and Perform open their own sheets
-    (no bar there, Perform is also used on the detail page). Clone stays one tap (no confirm, no rename).
+    (no bar there, Perform is also used on the detail page). Clone opens a small "Clone protocol" sheet (name prefilled "Name (Copy)", Cancel + Clone) since 2026-11-12
+    (decision 57); the mock has no frame for it.
   - **Perform test**: Success is a Yes / No segment that can be left empty (tap again to clear), in the primary colour
     (mock: green Yes). Notes is one line. A Cancel button sits next to "Save results". The load-unload hint is one line
     under the hang cards.

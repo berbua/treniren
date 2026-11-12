@@ -1571,7 +1571,11 @@
     "metricLoad": "Load",
     "metricTime": "Time",
     "chartTitleLoad": "Added load per test",
-    "chartTitleTime": "Hang time per test"
+    "chartTitleTime": "Hang time per test",
+    "copyName": "{{name}} (Copy)",
+    "cloneSheetTitle": "Clone protocol",
+    "cloneSheetDescription": "A copy of {{name}} with the same hangs and targets.",
+    "cloneNameLabel": "Name of the copy"
   },
   "offlineForm": {
     "title": "Add Workout",

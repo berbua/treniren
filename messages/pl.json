@@ -1579,7 +1579,11 @@
     "metricLoad": "Obciążenie",
     "metricTime": "Czas",
     "chartTitleLoad": "Dodatkowe obciążenie w testach",
-    "chartTitleTime": "Czas zwisu w testach"
+    "chartTitleTime": "Czas zwisu w testach",
+    "copyName": "{{name}} (kopia)",
+    "cloneSheetTitle": "Klonuj protokół",
+    "cloneSheetDescription": "Kopia protokołu {{name}} z tymi samymi zwisami i celami.",
+    "cloneNameLabel": "Nazwa kopii"
   },
   "offlineForm": {
     "title": "Dodaj trening",

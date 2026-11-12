@@ -8,7 +8,7 @@ import PerformTestModal from './PerformTestModal'
 import FingerboardTestChart from './FingerboardTestChart'
 import FingerboardTestResultsTable from './FingerboardTestResultsTable'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
-import { BottomSheet, Button, Card, EmptyState, Icon, Overline, SkeletonRows } from './ui'
+import { BottomSheet, Button, Card, EmptyState, Icon, Input, Label, Overline, SkeletonRows } from './ui'
 
 interface FingerboardTestModalProps {
   onClose: () => void
@@ -26,6 +26,9 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Clone asks for the copy's name first (decision 57)
+  const [cloningProtocol, setCloningProtocol] = useState<FingerboardTestingProtocol | null>(null)
+  const [cloneName, setCloneName] = useState('')
 
   useEffect(() => {
     fetchTestingProtocols()
@@ -128,10 +131,16 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
     setStep('results')
   }
 
-  const handleCloneProtocol = async (protocol: FingerboardTestingProtocol) => {
+  const startClone = (protocol: FingerboardTestingProtocol) => {
+    setCloningProtocol(protocol)
+    setCloneName(t('fingerboardTesting.copyName', { name: protocol.name }) || `${protocol.name} (Copy)`)
+  }
+
+  const handleCloneProtocol = async (protocol: FingerboardTestingProtocol, name: string) => {
+    setIsSubmitting(true)
     try {
       const clonedData = {
-        name: `${protocol.name} (Copy)`,
+        name,
         description: protocol.description || '',
         testHangs: protocol.testHangs.map((hang) => ({
           order: hang.order,
@@ -156,8 +165,8 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
       })
 
       if (response.ok) {
+        setCloningProtocol(null)
         await fetchTestingProtocols()
-        // Optionally show a success message or open the cloned protocol for editing
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         alert(`${t('fingerboardTesting.cloneError') || 'Failed to clone protocol'}: ${errorData.error || 'Unknown error'}`)
@@ -165,6 +174,8 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
     } catch (error) {
       console.error('Error cloning protocol:', error)
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to clone protocol'}`)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -196,6 +207,50 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
         onClose={() => setStep('select')}
         onProtocolUpdated={handleProtocolUpdated}
       />
+    )
+  }
+
+  if (cloningProtocol) {
+    return (
+      <BottomSheet
+        isOpen
+        onClose={() => setCloningProtocol(null)}
+        closeLabel={t('common.close') || 'Close'}
+        title={t('fingerboardTesting.cloneSheetTitle') || 'Clone protocol'}
+        footer={
+          <div className="flex gap-3">
+            <Button variant="ghost" size="lg" className="flex-1" onClick={() => setCloningProtocol(null)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              type="submit"
+              form="clone-protocol-form"
+              variant="primary"
+              size="lg"
+              className="flex-1"
+              isLoading={isSubmitting}
+              disabled={!cloneName.trim()}
+            >
+              {t('fingerboardTesting.clone') || 'Clone'}
+            </Button>
+          </div>
+        }
+      >
+        <form
+          id="clone-protocol-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (cloneName.trim() && !isSubmitting) handleCloneProtocol(cloningProtocol, cloneName.trim())
+          }}
+          className="space-y-2"
+        >
+          <p className="text-sm text-uc-text-muted">
+            {t('fingerboardTesting.cloneSheetDescription', { name: cloningProtocol.name }) || `A copy of ${cloningProtocol.name} with the same hangs and targets.`}
+          </p>
+          <Label htmlFor="clone-protocol-name">{t('fingerboardTesting.cloneNameLabel') || 'Name of the copy'}</Label>
+          <Input id="clone-protocol-name" value={cloneName} onChange={(e) => setCloneName(e.target.value)} autoFocus />
+        </form>
+      </BottomSheet>
     )
   }
 
@@ -288,7 +343,7 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
                   <Button
                     variant="ghost"
                     className="px-2"
-                    onClick={() => handleCloneProtocol(protocol)}
+                    onClick={() => startClone(protocol)}
                     title={t('fingerboardTesting.cloneTitle') || 'Duplicate this protocol'}
                   >
                     {t('fingerboardTesting.clone') || 'Clone'}
