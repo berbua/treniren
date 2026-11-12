@@ -80,7 +80,8 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
-    error: '/auth/error',
+    // NextAuth appends ?error=<code>; the sign-in page shows it
+    error: '/auth/signin',
   },
   callbacks: {
     async jwt({ token, user, account }) {

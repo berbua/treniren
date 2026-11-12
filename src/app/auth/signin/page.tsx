@@ -1,27 +1,38 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { AuthAlert, AuthDivider, AuthShell, GoogleButton, authLinkClass } from '@/components/AuthLayout'
 import { Button, Input, Label } from '@/components/ui'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 
-export default function LoginForm() {
+// Error codes NextAuth puts in ?error= when it redirects here
+const OAUTH_ERROR_CODES = ['OAuthSignin', 'OAuthCallback', 'OAuthCreateAccount', 'OAuthAccountNotLinked', 'Callback', 'AccessDenied']
+
+function LoginFormContent() {
   const { t } = useLanguage()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  // Error from a failed redirect sign-in (e.g. Google); hidden once the user tries again
+  const [redirectErrorCode, setRedirectErrorCode] = useState(searchParams.get('error'))
+  const redirectError = redirectErrorCode
+    ? t(OAUTH_ERROR_CODES.includes(redirectErrorCode) ? 'auth.errors.googleFailed' : 'auth.errors.generic')
+    : ''
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+    setRedirectErrorCode(null)
 
     try {
       const result = await signIn('credentials', {
@@ -45,6 +56,8 @@ export default function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
+    setError('')
+    setRedirectErrorCode(null)
     try {
       await signIn('google', { callbackUrl: '/dashboard' })
     } catch (error) {
@@ -67,7 +80,7 @@ export default function LoginForm() {
       }
     >
       <form className="space-y-4" onSubmit={handleSubmit}>
-        {error && <AuthAlert tone="error">{error}</AuthAlert>}
+        {(error || redirectError) && <AuthAlert tone="error">{error || redirectError}</AuthAlert>}
 
         <div>
           <Label htmlFor="email">{t('auth.email') || 'Email address'}</Label>
@@ -116,5 +129,13 @@ export default function LoginForm() {
         </GoogleButton>
       </form>
     </AuthShell>
+  )
+}
+
+export default function LoginForm() {
+  return (
+    <Suspense fallback={<LoadingSpinner fullScreen />}>
+      <LoginFormContent />
+    </Suspense>
   )
 }
