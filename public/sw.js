@@ -353,12 +353,42 @@ self.addEventListener('notificationclick', (event) => {
   console.log('Service Worker: Notification click event');
   
   event.notification.close();
-  
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
+
+  // Tapping the notification body has no action; only the "Close" button should do nothing
+  if (event.action === 'close') {
+    return;
   }
+
+  // Only follow same-origin URLs from the payload
+  let targetUrl = null;
+  const requestedUrl = event.notification.data && event.notification.data.url;
+  if (typeof requestedUrl === 'string') {
+    try {
+      const parsed = new URL(requestedUrl, self.location.origin);
+      if (parsed.origin === self.location.origin) {
+        targetUrl = parsed.href;
+      }
+    } catch (e) {
+      // Invalid URL, ignore it
+    }
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Reuse an open app window instead of opening a new one
+      const existing = windowClients.find((client) => new URL(client.url).origin === self.location.origin);
+      if (existing) {
+        return existing.focus().then((client) => {
+          // Only navigate when the payload asked for a specific page; keep the user where they are otherwise
+          if (client && targetUrl && client.url !== targetUrl && 'navigate' in client) {
+            return client.navigate(targetUrl).catch(() => clients.openWindow(targetUrl));
+          }
+          return client;
+        });
+      }
+      return clients.openWindow(targetUrl || '/');
+    })
+  );
 });
 
 // Message handling from main thread
