@@ -24,6 +24,7 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   (count, trend %, bar to monthly goal), **Total workouts** and **Events count** tiles.
 - **"This week's sessions" list** — the app shows **Recent workouts (last 3)**; row meta is type, TR badge,
   date and "N exercises / N hangs / Quick log" (no time of day, wall angle or style).
+  User decision 2026-11-12 (#9): keep the app's Recent workouts; the mock's list won't be built.
 - **Goals card with goals like "Max hang 20 mm +10 kg" / "Present or better on 80%"** — no such measurable goals.
   The goals that exist: weekly/monthly session goals (+ optional per-type "× per week"), and Strong Mind
   process/project goals (see B).

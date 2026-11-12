@@ -13,7 +13,6 @@ Details of each gap: `design/MISSING_DESIGNS.md`.
 | 3 | Toast | Add an "Undo" action to toasts |
 | 5 | User menu trigger | Avatar only (no name / chevron) |
 | 7 | Streak | "Weeks with ≥3 sessions" instead of consecutive days |
-| 9 | Session list | "This week's sessions" (time of day, wall angle, style) instead of last 3 workouts |
 | 10 | Goals card | Create measurable goals ("Max hang 20 mm +10 kg") — new feature |
 | 11 | "Log again" chips | Create — new feature |
 | 12 | Shortcuts | 3×2 grid |
@@ -58,7 +57,8 @@ Details of each gap: `design/MISSING_DESIGNS.md`.
 
 ## Keep the app
 
-6 (logged-out language picker) · 8 ("This week" rolling 7 days + tiles) · 13 (phase ranges 1–7 / 8–12 / 13–16 / 17–20 /
+6 (logged-out language picker) · 8 ("This week" rolling 7 days + tiles) · 9 (Recent workouts, last 3 — changed
+from Design on 2026-11-12: the mock's "This week's sessions" doesn't make sense for the app) · 13 (phase ranges 1–7 / 8–12 / 13–16 / 17–20 /
 21–end) · 16 (native date picker in Quick log) · 18 (plain Edit / Duplicate titles) · 20 (hangs not collapsible) ·
 21 (crimp 6–30 mm list) · 27 (read-only mental state summary) · 35 (calendar Today button) · 36 (⚠ on every injury-risk
 day) · 41 (cycle cells: date + cycle day) · 46 (Linked workouts list) · 47 (project edit/delete) · 48 (two gratitude

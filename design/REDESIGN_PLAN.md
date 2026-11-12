@@ -408,3 +408,5 @@ note the answer.
   "3+ sessions a week"; "Great streak" card at ≥ 2 weeks with "N weeks in a row with 3+ sessions"; `statistics-service`
   streaks use it on all workouts (were consecutive days within the range). New keys `dashboard.streakLabel`, `weeksUnit`,
   `streakRule`, `streakWeeksInRow`. Old keys `dashboard.streak` / `keepGoing` kept, unused.
+- 2026-11-12: Decision 9 changed to "Keep the app" (user): Recent workouts (last 3) stays; "This week's sessions" won't be
+  built.
