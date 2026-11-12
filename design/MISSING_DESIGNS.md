@@ -192,8 +192,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - Built 2026-11-12 against `Events.png`. Kept where the mock differs:
   - **Trip countdown "23 days"** — the card shows "Countdown · Enabled" (as before). User decision 2026-11-12: the
     days-to-go number is shown only on the dashboard, not repeated on the event card.
-  - **"Delete event" inside the edit form** and the trip-specific delete text ("Delete “Frankenjura”? … Keep") don't
-    exist; delete stays on the card with the existing "Delete Event" confirmation.
+  - **"Delete event" inside the edit form**: built 2026-11-12 (decision 49) on Events, Workouts and Calendar (Calendar had
+    no event delete before); the card's delete stays. Both use the existing "Delete Event" confirmation, not the mock's
+    trip-specific text ("Delete “Frankenjura”? … Keep").
   - Trip card title stays the saved title ("Frankenjura Trip"); the destination is printed separately only when the
     title doesn't contain it. Trip type tile reads "Sport Climbing" / "Bouldering" (mock: "Sport").
   - Severity shows 5 dots (the app's 1–5 scale; mock shows 3). Severity and status are only shown when set — the form

@@ -378,3 +378,6 @@ note the answer.
   `resetFilters`, `showResults`).
 - 2026-11-12: Decision 42 built. Statistics range segments 4W / 3M / 6M / 1Y, default 4W; `statistics-service` got a
   `4weeks` timeframe (28 days); new keys `stats.4weeks`, `stats.short.4weeks`. Other screens' timeframes unchanged.
+- 2026-11-12: Decision 49 built. `EventForm` got `onDelete` (editing only): ghost red "Delete event" under the fields
+  (new key `events.deleteEvent`); the callers close the form and run their delete with confirmation. Calendar got its own
+  `deleteEvent` (confirmation, `DELETE /api/events/:id`, removes it from state, toast).

@@ -1351,7 +1351,8 @@
     "severity": "Severity",
     "dates": "Dates",
     "countdown": "Countdown",
-    "notes": "Notes"
+    "notes": "Notes",
+    "deleteEvent": "Delete event"
   },
   "strongMind": {
     "title": "Strong Mind",

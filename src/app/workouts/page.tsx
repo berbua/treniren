@@ -830,6 +830,11 @@ function WorkoutsPageContent() {
             onSubmit={handleEventSubmit}
             onCancel={handleCancel}
             initialData={editingEvent || undefined}
+            onDelete={editingEvent ? () => {
+              const id = editingEvent.id
+              handleCancel()
+              deleteEvent(id)
+            } : undefined}
             availableTags={availableTags}
             onCreateTag={handleCreateTag}
             isSubmitting={isSubmitting}

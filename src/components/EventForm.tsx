@@ -17,11 +17,13 @@ interface EventFormProps {
   onCreateTag?: (name: string, color: string) => void;
   isSubmitting?: boolean;
   defaultDate?: string; // Optional default date to pre-fill
+  /** Editing only: shows "Delete event" at the end of the form (the caller confirms and deletes). */
+  onDelete?: () => void;
 }
 
 const eventTypes: EventType[] = ['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'OTHER'];
 
-export default function EventForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, defaultDate }: EventFormProps) {
+export default function EventForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, defaultDate, onDelete }: EventFormProps) {
   const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
@@ -409,6 +411,12 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
             rows={3}
           />
         </div>
+        {initialData && onDelete && (
+          <Button variant="ghost" size="lg" className="w-full text-uc-error" onClick={onDelete}>
+            <Icon name="delete" />
+            {t('events.deleteEvent') || 'Delete event'}
+          </Button>
+        )}
       </form>
     </BottomSheet>
   );

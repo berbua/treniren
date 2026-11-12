@@ -631,6 +631,35 @@ function CalendarPageContent() {
     setSelectedDate(null)
   }
 
+  // "Delete event" in the edit form (decision 49)
+  const deleteEvent = (id: string) => {
+    confirmation.showConfirmation(
+      {
+        title: t('events.deleteConfirmTitle') || 'Delete Event',
+        message: t('events.deleteConfirm') || 'Are you sure you want to delete this event? This action cannot be undone.',
+        variant: 'danger',
+      },
+      async () => {
+        try {
+          const csrfToken = await getToken()
+          const response = await fetch(`/api/events/${id}`, {
+            method: 'DELETE',
+            headers: { 'x-csrf-token': csrfToken },
+            credentials: 'include',
+          })
+          if (response.ok) {
+            setEvents((prev) => prev.filter((event) => event.id !== id))
+            showSuccess(t('workouts.eventDeleted') || 'Event deleted')
+          } else {
+            handleError(await extractApiError(response), 'Failed to delete event')
+          }
+        } catch (error) {
+          handleError(error, 'Failed to delete event')
+        }
+      }
+    )
+  }
+
 
   const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
 
@@ -1138,6 +1167,11 @@ function CalendarPageContent() {
             onSubmit={handleEventSubmit}
             onCancel={handleCancelEventForm}
             initialData={editingEvent || undefined}
+            onDelete={editingEvent ? () => {
+              const id = editingEvent.id
+              handleCancelEventForm()
+              deleteEvent(id)
+            } : undefined}
             availableTags={availableTags}
             onCreateTag={handleCreateTag}
             isSubmitting={isSubmitting}

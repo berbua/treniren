@@ -269,6 +269,12 @@ export default function EventsPage() {
               setEditingEvent(undefined)
             }}
             initialData={editingEvent}
+            onDelete={editingEvent ? () => {
+              const id = editingEvent.id
+              setShowForm(false)
+              setEditingEvent(undefined)
+              handleDeleteEvent(id)
+            } : undefined}
             availableTags={tags}
             onCreateTag={handleCreateTag}
             isSubmitting={isSubmitting}

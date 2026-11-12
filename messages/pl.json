@@ -1359,7 +1359,8 @@
     "severity": "Nasilenie",
     "dates": "Daty",
     "countdown": "Odliczanie",
-    "notes": "Notatki"
+    "notes": "Notatki",
+    "deleteEvent": "Usuń wydarzenie"
   },
   "strongMind": {
     "title": "Silny Umysł",
