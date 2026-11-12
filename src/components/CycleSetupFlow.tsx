@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useCycle } from '@/contexts/CycleContext'
+import { useNotifications } from '@/contexts/NotificationContext'
 import CycleConsentModal from './CycleConsentModal'
 import CycleSetupForm from './CycleSetupForm'
 
 export default function CycleSetupFlow() {
   const { data: session, status } = useSession()
   const { isCycleTrackingEnabled, isLoading, setCycleSettings } = useCycle()
+  const { settings: notificationSettings, updateSettings: updateNotificationSettings } = useNotifications()
   const [showConsent, setShowConsent] = useState(false)
   const [showSetup, setShowSetup] = useState(false)
   const [hasCheckedConsent, setHasCheckedConsent] = useState(false)
@@ -73,6 +75,10 @@ export default function CycleSetupFlow() {
 
   const handleSetupComplete = async (settings: { cycleLength: number; lastPeriodDate: Date; timezone: string; latePeriodNotifications?: boolean }) => {
     await setCycleSettings(settings, settings.latePeriodNotifications)
+    // The late-period reminder check reads this setting (same one as the Profile > Settings checkbox)
+    if (settings.latePeriodNotifications !== undefined) {
+      updateNotificationSettings({ ...notificationSettings, latePeriodNotificationsEnabled: settings.latePeriodNotifications })
+    }
     setShowSetup(false)
     // Clean up temporary storage
     if (typeof window !== 'undefined') {

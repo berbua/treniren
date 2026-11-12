@@ -1,18 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import AuthGuard from '@/components/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { GoalProgressDisplay } from '@/components/GoalProgressDisplay'
 import { statisticsService, StatisticsData, TimeFrame } from '@/lib/statistics-service'
 import { Workout } from '@/types/workout'
-
-// Lazy load StatisticsContent for better performance
-const StatisticsContent = dynamic(() => import('@/components/StatisticsContent').then(mod => ({ default: mod.StatisticsContent })), {
-  loading: () => <div className="text-center py-8 text-uc-text-muted">Loading statistics...</div>,
-  ssr: false
-})
 
 export default function StrongMindPage() {
   return (
@@ -36,7 +29,7 @@ function StrongMindPageContent() {
     improvements?: string
   }>>([])
   const [timeframeValue, setTimeframeValue] = useState<string>('1')
-  const [timeframeUnit, setTimeframeUnit] = useState<string>('week')
+  const [timeframeUnit, setTimeframeUnit] = useState<string>('weeks')
   const [startDate, setStartDate] = useState<string>('')
   const [goalDescription, setGoalDescription] = useState<string>('')
   const [editingProcessGoalId, setEditingProcessGoalId] = useState<string | null>(null)
@@ -224,7 +217,7 @@ function StrongMindPageContent() {
     
     // Reset form
     setTimeframeValue('1')
-    setTimeframeUnit('week')
+    setTimeframeUnit('weeks')
     setStartDate('')
     setGoalDescription('')
   }
@@ -251,7 +244,7 @@ function StrongMindPageContent() {
         setEditingProcessGoalId(null)
         // Reset form
         setTimeframeValue('1')
-        setTimeframeUnit('week')
+        setTimeframeUnit('weeks')
         setStartDate('')
         setGoalDescription('')
       }
@@ -602,7 +595,7 @@ function StrongMindPageContent() {
                     onClick={() => {
                       setEditingProcessGoalId(null)
                       setTimeframeValue('1')
-                      setTimeframeUnit('week')
+                      setTimeframeUnit('weeks')
                       setStartDate('')
                       setGoalDescription('')
                     }}
@@ -928,7 +921,7 @@ function StrongMindPageContent() {
         )}
 
             {/* Project Goals Content */}
-            {goalsSubTab === 'project' && (
+            {activeTab === 'goals' && goalsSubTab === 'project' && (
         <div className="bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
           <h2 className="text-xl font-semibold text-uc-text-light mb-2">
             🏔️ {t('strongMind.projectGoals') || 'Project Goals'}
