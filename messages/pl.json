@@ -1594,6 +1594,15 @@
     "deleteGoalTitle": "Usunąć cel?",
     "noProgressYet": "Brak zapisanych postępów",
     "notAchievedYet": "Jeszcze nie zdobyty",
+    "processGoal": "Cel procesowy",
+    "achievedGoals": "Osiągnięte cele",
+    "achievedGoalsDescription": "Oznacz cel jako osiągnięty podczas treningu lub w edycji celu",
+    "noAchievedGoals": "Brak osiągniętych celów.",
+    "achievedOn": "Osiągnięto {{date}}",
+    "goalAchieved": "Cel osiągnięty",
+    "achievedDate": "Data osiągnięcia",
+    "markGoalAchieved": "Cel osiągnięty w tej sesji",
+    "processAchievedHint": "Stuknij puchar, jeśli w tej sesji udało się osiągnąć cel.",
     "classifiedAs": "Klasyfikacja"
   },
   "quickLog": {

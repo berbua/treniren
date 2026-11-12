@@ -27,6 +27,7 @@ export interface ClimbSection {
 export interface ProcessGoalProgress {
   goalId: string
   progress: 1 | 2 | 3 // 1 = minimal progress, 2 = good progress, 3 = excellent progress
+  achieved?: boolean // Goal achieved in this workout
 }
 
 export interface ProjectGoalCompletion {

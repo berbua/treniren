@@ -1582,6 +1582,15 @@
     "deleteGoalTitle": "Delete goal?",
     "noProgressYet": "No progress recorded yet",
     "notAchievedYet": "Not achieved yet",
+    "processGoal": "Process goal",
+    "achievedGoals": "Achieved Goals",
+    "achievedGoalsDescription": "Mark a goal as achieved during a workout or when editing it",
+    "noAchievedGoals": "No achieved goals yet.",
+    "achievedOn": "Achieved {{date}}",
+    "goalAchieved": "Goal achieved",
+    "achievedDate": "Date achieved",
+    "markGoalAchieved": "Goal achieved in this session",
+    "processAchievedHint": "Tap the trophy if you achieved the goal in this session.",
     "classifiedAs": "Classified as"
   },
   "quickLog": {

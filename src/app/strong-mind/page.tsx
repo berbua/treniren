@@ -7,6 +7,8 @@ import { GoalProgressDisplay } from '@/components/GoalProgressDisplay'
 import { statisticsService, StatisticsData, TimeFrame } from '@/lib/statistics-service'
 import { Workout } from '@/types/workout'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
+import { toLocalDateString } from '@/lib/date-utils'
+import { GoalKind, ProcessGoal, ProjectGoal, isGoalAchieved, nextGoalId, saveGoals } from '@/lib/strong-mind-goals'
 import {
   BottomSheet,
   Button,
@@ -25,8 +27,6 @@ import {
   Textarea,
   workoutBg,
 } from '@/components/ui'
-
-type GoalKind = 'process' | 'project'
 
 const typeLabelKey: Record<string, string> = {
   GYM: 'gym',
@@ -76,31 +76,15 @@ function StrongMindPageContent() {
   const [sectorLocation, setSectorLocation] = useState<string>('')
   const [relatedProcessGoal, setRelatedProcessGoal] = useState<string>('')
   const [editingProjectGoalId, setEditingProjectGoalId] = useState<string | null>(null)
+  // Edit sheets (both kinds): date the goal was achieved, '' = not achieved
+  const [achievedDate, setAchievedDate] = useState<string>('')
   
   // Goals storage
-  const [processGoals, setProcessGoals] = useState<Array<{
-    id: string
-    timeframeValue: string
-    timeframeUnit: string
-    startDate: string
-    goalDescription: string
-    createdAt: string
-  }>>([])
-  
-  const [projectGoals, setProjectGoals] = useState<Array<{
-    id: string
-    climbingType: string
-    gradeSystem: string
-    routeGrade: string
-    routeName: string
-    sectorLocation: string
-    relatedProcessGoal: string
-    createdAt: string
-  }>>([])
+  const [processGoals, setProcessGoals] = useState<ProcessGoal[]>([])
+  const [projectGoals, setProjectGoals] = useState<ProjectGoal[]>([])
 
   // Client-side only state to prevent hydration issues
   const [isClient, setIsClient] = useState(false)
-  const [idCounter, setIdCounter] = useState(0)
   
   // Statistics state
   const [workouts, setWorkouts] = useState<Workout[]>([])
@@ -117,13 +101,7 @@ function StrongMindPageContent() {
     
     if (storedProcessGoals) {
       try {
-        const goals = JSON.parse(storedProcessGoals)
-        setProcessGoals(goals)
-        // Set counter to avoid ID conflicts
-        if (goals.length > 0) {
-          const maxId = Math.max(...goals.map((g: { id: string }) => parseInt(g.id.split('-')[1]) || 0))
-          setIdCounter(maxId + 1)
-        }
+        setProcessGoals(JSON.parse(storedProcessGoals))
       } catch (e) {
         console.error('Error parsing process goals:', e)
       }
@@ -177,6 +155,36 @@ function StrongMindPageContent() {
     fetchWorkouts()
   }, [])
   
+  // Goals saved before they could be marked achieved: take the date from the first workout that achieved them
+  useEffect(() => {
+    if (workouts.length === 0) return
+    const firstAchievedDate = (kind: GoalKind, goalId: string) => {
+      const dates = workouts
+        .filter(w => kind === 'process'
+          ? w.mentalState?.processGoals?.some(pg => pg.goalId === goalId && pg.achieved)
+          : w.mentalState?.projectGoals?.some(pg => pg.goalId === goalId && pg.completed))
+        .map(w => toLocalDateString(new Date(w.startTime)))
+        .sort()
+      return dates[0]
+    }
+    const backfill = <G extends ProcessGoal | ProjectGoal>(kind: GoalKind, goals: G[]) => {
+      let changed = false
+      const updated = goals.map(goal => {
+        if (goal.achievedAt !== undefined) return goal
+        const date = firstAchievedDate(kind, goal.id)
+        if (!date) return goal
+        changed = true
+        return { ...goal, achievedAt: date }
+      })
+      return changed ? updated : null
+    }
+    const updatedProcess = backfill('process', processGoals)
+    if (updatedProcess) { setProcessGoals(updatedProcess); saveGoals('process', updatedProcess) }
+    const updatedProject = backfill('project', projectGoals)
+    if (updatedProject) { setProjectGoals(updatedProject); saveGoals('project', updatedProject) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workouts])
+
   // Calculate statistics when workouts or timeframe changes
   useEffect(() => {
     if (workouts.length === 0) return
@@ -204,14 +212,22 @@ function StrongMindPageContent() {
     return false
   }
 
-  // Separate goals into long-term and short-term (only on client)
-  const longTermGoals = isClient ? processGoals.filter(goal => 
+  // Separate active goals into long-term and short-term (only on client); achieved goals get their own section
+  const activeProcessGoals = processGoals.filter(goal => !isGoalAchieved(goal))
+  const activeProjectGoals = projectGoals.filter(goal => !isGoalAchieved(goal))
+
+  const longTermGoals = isClient ? activeProcessGoals.filter(goal => 
     isLongTerm(goal.timeframeValue, goal.timeframeUnit)
   ) : []
   
-  const shortTermGoals = isClient ? processGoals.filter(goal => 
+  const shortTermGoals = isClient ? activeProcessGoals.filter(goal => 
     !isLongTerm(goal.timeframeValue, goal.timeframeUnit)
   ) : []
+
+  const achievedGoals = [
+    ...processGoals.filter(isGoalAchieved).map(goal => ({ kind: 'process' as const, goal })),
+    ...projectGoals.filter(isGoalAchieved).map(goal => ({ kind: 'project' as const, goal })),
+  ].sort((a, b) => b.goal.achievedAt!.localeCompare(a.goal.achievedAt!))
 
   const resetProcessForm = () => {
     setEditingProcessGoalId(null)
@@ -219,6 +235,7 @@ function StrongMindPageContent() {
     setTimeframeUnit('weeks')
     setStartDate('')
     setGoalDescription('')
+    setAchievedDate('')
   }
 
   const resetProjectForm = () => {
@@ -229,6 +246,7 @@ function StrongMindPageContent() {
     setRouteName('')
     setSectorLocation('')
     setRelatedProcessGoal('')
+    setAchievedDate('')
   }
 
   const closeProcessSheet = () => {
@@ -253,7 +271,8 @@ function StrongMindPageContent() {
               timeframeValue,
               timeframeUnit,
               startDate,
-              goalDescription
+              goalDescription,
+              achievedAt: achievedDate || null
             }
           : goal
       )
@@ -263,7 +282,7 @@ function StrongMindPageContent() {
     } else {
       // Add new goal
       const newGoal = {
-        id: `goal-${idCounter}`,
+        id: nextGoalId('goal', [...processGoals, ...projectGoals]),
         timeframeValue,
         timeframeUnit,
         startDate,
@@ -274,7 +293,6 @@ function StrongMindPageContent() {
       const updatedGoals = [...processGoals, newGoal]
       setProcessGoals(updatedGoals)
       localStorage.setItem('processGoals', JSON.stringify(updatedGoals))
-      setIdCounter(prev => prev + 1)
     }
     
     closeProcessSheet()
@@ -287,6 +305,7 @@ function StrongMindPageContent() {
       setTimeframeUnit(goal.timeframeUnit)
       setStartDate(goal.startDate)
       setGoalDescription(goal.goalDescription)
+      setAchievedDate(goal.achievedAt || '')
       setEditingProcessGoalId(goalId)
       setProcessSheetOpen(true)
     }
@@ -313,7 +332,8 @@ function StrongMindPageContent() {
               routeGrade,
               routeName,
               sectorLocation,
-              relatedProcessGoal
+              relatedProcessGoal,
+              achievedAt: achievedDate || null
             }
           : goal
       )
@@ -323,7 +343,7 @@ function StrongMindPageContent() {
     } else {
       // Add new goal
       const newProjectGoal = {
-        id: `project-${idCounter}`,
+        id: nextGoalId('project', [...processGoals, ...projectGoals]),
         climbingType,
         gradeSystem,
         routeGrade,
@@ -336,7 +356,6 @@ function StrongMindPageContent() {
       const updatedGoals = [...projectGoals, newProjectGoal]
       setProjectGoals(updatedGoals)
       localStorage.setItem('projectGoals', JSON.stringify(updatedGoals))
-      setIdCounter(prev => prev + 1)
     }
     
     closeProjectSheet()
@@ -351,6 +370,7 @@ function StrongMindPageContent() {
       setRouteName(goal.routeName)
       setSectorLocation(goal.sectorLocation)
       setRelatedProcessGoal(goal.relatedProcessGoal)
+      setAchievedDate(goal.achievedAt || '')
       setEditingProjectGoalId(goalId)
       setProjectSheetOpen(true)
     }
@@ -413,6 +433,8 @@ function StrongMindPageContent() {
 
   const formatShortDate = (value: string) =>
     new Date(value).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+  const formatFullDate = (value: string) =>
+    new Date(value).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
   const timeframeLabel = (value: string, unit: string) =>
     `${value} ${(t(`strongMind.${unit}`) || unit).toLowerCase()}`
   const workoutTypeLabel = (type: string) =>
@@ -455,6 +477,37 @@ function StrongMindPageContent() {
       >
         <Icon name="delete" />
       </button>
+    </div>
+  )
+
+  const projectGradeBadge = (goal: ProjectGoal) => (
+    <span
+      className={`inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-xl px-1.5 text-[17px] font-extrabold text-uc-chip-ink uc-num ${
+        workoutBg[goal.climbingType === 'boulder' ? 'BOULDERING' : 'LEAD_ARTIFICIAL']
+      }`}
+    >
+      {goal.routeGrade}
+    </span>
+  )
+
+  const projectTypeLabel = (goal: ProjectGoal) =>
+    goal.climbingType === 'boulder' ? (t('strongMind.boulder') || 'Boulder') : (t('strongMind.route') || 'Route')
+
+  // Shown in both edit sheets: mark the goal achieved (or not) and pick the date
+  const achievedField = (
+    <div>
+      <ChoiceChip
+        selected={!!achievedDate}
+        onClick={() => setAchievedDate(achievedDate ? '' : toLocalDateString())}
+      >
+        <Icon name="achieved" size={18} /> {t('strongMind.goalAchieved') || 'Goal achieved'}
+      </ChoiceChip>
+      {achievedDate && (
+        <div className="mt-3">
+          <Label htmlFor="goal-achieved-date">{t('strongMind.achievedDate') || 'Date achieved'}</Label>
+          <Input id="goal-achieved-date" type="date" value={achievedDate} onChange={(e) => setAchievedDate(e.target.value)} />
+        </div>
+      )}
     </div>
   )
 
@@ -594,7 +647,7 @@ function StrongMindPageContent() {
             <section>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xl font-extrabold text-uc-text">
-                  {t('strongMind.projectGoals') || 'Project Goals'} <span className="text-uc-text-muted uc-num">({projectGoals.length})</span>
+                  {t('strongMind.projectGoals') || 'Project Goals'} <span className="text-uc-text-muted uc-num">({activeProjectGoals.length})</span>
                 </h2>
                 <Button variant="tonal" onClick={() => { resetProjectForm(); setProjectSheetOpen(true) }}>
                   + {t('common.add') || 'Add'}
@@ -603,30 +656,24 @@ function StrongMindPageContent() {
               <p className="mt-1 mb-4 text-[13px] text-uc-text-muted">
                 {t('strongMind.projectGoalsSubtitle') || 'Specific routes or boulders that support achieving your process goals'}
               </p>
-              {projectGoals.length === 0 ? (
+              {activeProjectGoals.length === 0 ? (
                 <p className="rounded-uc-card border border-dashed border-uc-border px-4 py-5 text-center text-sm text-uc-text-muted">
                   {t('strongMind.noProjectGoals') || 'No project goals set yet. Add your first project goal above!'}
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {projectGoals.map(goal => {
+                  {activeProjectGoals.map(goal => {
                     const linkedGoal = goal.relatedProcessGoal
                       ? processGoals.find(pg => pg.id === goal.relatedProcessGoal)
                       : undefined
                     return (
                       <Card key={goal.id}>
                         <div className="flex items-start gap-3">
-                          <span
-                            className={`inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-xl px-1.5 text-[17px] font-extrabold text-uc-chip-ink uc-num ${
-                              workoutBg[goal.climbingType === 'boulder' ? 'BOULDERING' : 'LEAD_ARTIFICIAL']
-                            }`}
-                          >
-                            {goal.routeGrade}
-                          </span>
+                          {projectGradeBadge(goal)}
                           <div className="min-w-0 flex-1">
                             <p className="text-[17px] font-bold leading-6 text-uc-text">{goal.routeName}</p>
                             <p className="text-[13px] font-semibold text-uc-text-muted">
-                              {goal.climbingType === 'boulder' ? (t('strongMind.boulder') || 'Boulder') : (t('strongMind.route') || 'Route')}
+                              {projectTypeLabel(goal)}
                               {' · '}
                               {goal.sectorLocation}
                             </p>
@@ -642,6 +689,56 @@ function StrongMindPageContent() {
                       </Card>
                     )
                   })}
+                </div>
+              )}
+            </section>
+
+            {/* Achieved goals */}
+            <section className="lg:col-span-2">
+              <h2 className="flex items-center gap-2 text-xl font-extrabold text-uc-text">
+                <Icon name="achieved" className="text-uc-success" />
+                {t('strongMind.achievedGoals') || 'Achieved Goals'} <span className="text-uc-text-muted uc-num">({achievedGoals.length})</span>
+              </h2>
+              <p className="mt-1 mb-4 text-[13px] text-uc-text-muted">
+                {t('strongMind.achievedGoalsDescription') || 'Mark a goal as achieved during a workout or when editing it'}
+              </p>
+              {achievedGoals.length === 0 ? (
+                <p className="rounded-uc-card border border-dashed border-uc-border px-4 py-5 text-center text-sm text-uc-text-muted">
+                  {t('strongMind.noAchievedGoals') || 'No achieved goals yet.'}
+                </p>
+              ) : (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {achievedGoals.map(({ kind, goal }) => (
+                    <Card key={goal.id}>
+                      <div className="flex items-start gap-3">
+                        {kind === 'project' && projectGradeBadge(goal as ProjectGoal)}
+                        <div className="min-w-0 flex-1">
+                          {kind === 'project' ? (
+                            <>
+                              <p className="text-[17px] font-bold leading-6 text-uc-text">{(goal as ProjectGoal).routeName}</p>
+                              <p className="text-[13px] font-semibold text-uc-text-muted">
+                                {projectTypeLabel(goal as ProjectGoal)} · {(goal as ProjectGoal).sectorLocation}
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="whitespace-pre-wrap text-[17px] font-bold leading-6 text-uc-text">{(goal as ProcessGoal).goalDescription}</p>
+                              <p className="text-[13px] font-semibold text-uc-text-muted uc-num">
+                                {t('strongMind.processGoal') || 'Process goal'} · {timeframeLabel((goal as ProcessGoal).timeframeValue, (goal as ProcessGoal).timeframeUnit)}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        {editDeleteButtons(kind, goal.id)}
+                      </div>
+                      <p className="mt-2">
+                        <span className="inline-flex min-h-7 items-center gap-1.5 rounded-uc-chip bg-uc-success-bg px-2.5 text-[13px] font-bold text-uc-success uc-num">
+                          <Icon name="achieved" size={16} />
+                          {t('strongMind.achievedOn', { date: formatFullDate(goal.achievedAt!) }) || `Achieved ${formatFullDate(goal.achievedAt!)}`}
+                        </span>
+                      </p>
+                    </Card>
+                  ))}
                 </div>
               )}
             </section>
@@ -818,6 +915,7 @@ function StrongMindPageContent() {
               {t('strongMind.longTermTooltip') || 'Timeframes ≥3 months, quarters, or years are considered long-term'}
             </p>
           </div>
+          {editingProcessGoalId && achievedField}
         </div>
       </BottomSheet>
 
@@ -923,6 +1021,7 @@ function StrongMindPageContent() {
               )}
             </Select>
           </div>
+          {editingProjectGoalId && achievedField}
         </div>
       </BottomSheet>
 

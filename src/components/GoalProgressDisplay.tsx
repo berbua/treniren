@@ -9,7 +9,7 @@ interface Workout {
   startTime: string;
   type: string;
   mentalState?: {
-    processGoals?: Array<{ goalId: string; progress: 1 | 2 | 3 }>;
+    processGoals?: Array<{ goalId: string; progress: 1 | 2 | 3; achieved?: boolean }>;
     projectGoals?: Array<{ goalId: string; completed: boolean }>;
   };
 }
@@ -85,7 +85,16 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
   }
 
   const isAchievedIn = (workout: Workout) =>
-    !!workout.mentalState?.projectGoals?.some(pg => pg.goalId === goalId && pg.completed);
+    goalType === 'process'
+      ? !!workout.mentalState?.processGoals?.some(pg => pg.goalId === goalId && pg.achieved)
+      : !!workout.mentalState?.projectGoals?.some(pg => pg.goalId === goalId && pg.completed);
+
+  const achievedBadge = (
+    <span className="inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-uc-chip bg-uc-success-bg px-2.5 text-[13px] font-bold text-uc-success">
+      <Icon name="achieved" size={16} />
+      {t('strongMind.achieved') || 'Achieved!'}
+    </span>
+  );
 
   // Sort workouts by date (newest first)
   const sortedWorkouts = [...relevantWorkouts].sort((a, b) =>
@@ -112,6 +121,7 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
                 <span className="uc-num">{formatDate(workout.startTime)}</span>
                 <span className="text-uc-text-muted"> · {typeLabel(workout.type)}</span>
               </span>
+              {goalType === 'process' && isAchievedIn(workout) && achievedBadge}
               {goalType === 'process' ? (
                 <span
                   className="flex shrink-0 items-center gap-1"
@@ -125,12 +135,7 @@ export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayPro
                     />
                   ))}
                 </span>
-              ) : isAchievedIn(workout) && (
-                <span className="inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-uc-chip bg-uc-success-bg px-2.5 text-[13px] font-bold text-uc-success">
-                  <Icon name="achieved" size={16} />
-                  {t('strongMind.achieved') || 'Achieved!'}
-                </span>
-              )}
+              ) : isAchievedIn(workout) && achievedBadge}
             </li>
           );
         })}

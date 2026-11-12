@@ -9,6 +9,7 @@ import { calculateCycleInfo } from '@/lib/cycle-utils';
 import CycleInfoComponent from './CycleInfo';
 import { StrongMindSection } from './StrongMindSection';
 import { ProcessGoalsSection } from './ProcessGoalsSection';
+import { ProcessGoal, ProjectGoal, isGoalAchieved, markGoalsAchieved } from '@/lib/strong-mind-goals';
 import TagSelector from './TagSelector';
 import WorkoutExerciseTracker, { setHasReps } from './WorkoutExerciseTracker';
 import FingerboardHangTracker from './FingerboardHangTracker';
@@ -230,24 +231,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     frequency: 'weekly' as 'daily' | 'weekly' | 'custom',
     customDays: 7,
   });
-  const [processGoals, setProcessGoals] = useState<Array<{
-    id: string
-    timeframeValue: string
-    timeframeUnit: string
-    startDate: string
-    goalDescription: string
-    createdAt: string
-  }>>([]);
-  const [projectGoals, setProjectGoals] = useState<Array<{
-    id: string
-    climbingType: string
-    gradeSystem: string
-    routeGrade: string
-    routeName: string
-    sectorLocation: string
-    relatedProcessGoal: string
-    createdAt: string
-  }>>([]);
+  const [processGoals, setProcessGoals] = useState<ProcessGoal[]>([]);
+  const [projectGoals, setProjectGoals] = useState<ProjectGoal[]>([]);
   const [selectedProcessGoalIds, setSelectedProcessGoalIds] = useState<Set<string>>(new Set());
   const [selectedProjectGoalIds, setSelectedProjectGoalIds] = useState<Set<string>>(new Set());
 
@@ -255,10 +240,22 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   const getProcessGoalProgress = (goalId: string): 1 | 2 | 3 | undefined =>
     formData.mentalState?.processGoals?.find((pg: ProcessGoalProgress) => pg.goalId === goalId)?.progress;
 
-  const setProcessGoalProgress = (goalId: string, progress: 1 | 2 | 3) => {
+  const updateProcessGoal = (goalId: string, changes: Partial<ProcessGoalProgress>) => {
+    const current = formData.mentalState?.processGoals?.find((pg: ProcessGoalProgress) => pg.goalId === goalId);
     const others = (formData.mentalState?.processGoals || []).filter((pg: ProcessGoalProgress) => pg.goalId !== goalId);
-    updateFormData('mentalState', { ...formData.mentalState, processGoals: [...others, { goalId, progress }] });
+    updateFormData('mentalState', {
+      ...formData.mentalState,
+      processGoals: [...others, { goalId, progress: current?.progress || 1, ...current, ...changes }],
+    });
   };
+
+  const setProcessGoalProgress = (goalId: string, progress: 1 | 2 | 3) => updateProcessGoal(goalId, { progress });
+
+  const isProcessGoalAchieved = (goalId: string): boolean =>
+    !!formData.mentalState?.processGoals?.find((pg: ProcessGoalProgress) => pg.goalId === goalId)?.achieved;
+
+  const toggleProcessGoalAchieved = (goalId: string) =>
+    updateProcessGoal(goalId, { achieved: !isProcessGoalAchieved(goalId) });
 
   const isProjectGoalCompleted = (goalId: string): boolean =>
     !!formData.mentalState?.projectGoals?.find((pg: ProjectGoalCompletion) => pg.goalId === goalId)?.completed;
@@ -410,7 +407,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
       ...formData.mentalState,
       processGoals: Array.from(selectedProcessGoalIds).map(goalId => ({
         goalId,
-        progress: formData.mentalState?.processGoals?.find((pg: any) => pg.goalId === goalId)?.progress || 1
+        progress: formData.mentalState?.processGoals?.find((pg: any) => pg.goalId === goalId)?.progress || 1,
+        achieved: isProcessGoalAchieved(goalId)
       })),
       projectGoals: Array.from(selectedProjectGoalIds).map(goalId => ({
         goalId,
@@ -467,6 +465,10 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     } else {
       await onSubmit(workoutData)
     }
+
+    // Goals achieved in this workout move to Strong Mind's achieved goals
+    markGoalsAchieved('process', mentalState.processGoals.filter(pg => pg.achieved).map(pg => pg.goalId), workoutData.date)
+    markGoalsAchieved('project', mentalState.projectGoals.filter(pg => pg.completed).map(pg => pg.goalId), workoutData.date)
   };
 
   // Calculate recurring dates. Steps over day numbers so the DST change can't shift or repeat a day.
@@ -543,6 +545,14 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
 
   const isClimbingWithVolume = formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && formData.type !== 'FINGERBOARD';
   const linkedGoalsCount = selectedProcessGoalIds.size + selectedProjectGoalIds.size;
+
+  // Achieved goals can't be linked any more, but stay listed on the workouts they were already linked to
+  const initiallyLinkedGoalIds = new Set([
+    ...(initialData?.mentalState?.processGoals?.map((pg: ProcessGoalProgress) => pg.goalId) || []),
+    ...(initialData?.mentalState?.projectGoals?.map((pg: ProjectGoalCompletion) => pg.goalId) || []),
+  ]);
+  const linkableProcessGoals = processGoals.filter(goal => !isGoalAchieved(goal) || initiallyLinkedGoalIds.has(goal.id));
+  const linkableProjectGoals = projectGoals.filter(goal => !isGoalAchieved(goal) || initiallyLinkedGoalIds.has(goal.id));
   const selectedVolume = getTrainingVolumes(t).find(volume => volume.value === formData.trainingVolume);
 
   const clearRecurringError = () => {
@@ -655,7 +665,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
           )}
 
           {/* Goals Section - Collapsible */}
-          {(processGoals.length > 0 || projectGoals.length > 0) && (
+          {(linkableProcessGoals.length > 0 || linkableProjectGoals.length > 0) && (
             <CollapsibleCard
               open={isGoalsExpanded}
               onToggle={() => setIsGoalsExpanded(!isGoalsExpanded)}
@@ -666,11 +676,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             >
               <div className="space-y-4">
                 {/* Process Goals */}
-                {processGoals.length > 0 && (
+                {linkableProcessGoals.length > 0 && (
                   <div>
                     <Overline className="mb-2">{t('strongMind.processGoals') || 'Process Goals'}</Overline>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {processGoals.map(goal => (
+                      {linkableProcessGoals.map(goal => (
                         <label key={goal.id} className={goalRowClass}>
                           <input
                             type="checkbox"
@@ -703,11 +713,11 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                 )}
 
                 {/* Project Goals */}
-                {projectGoals.length > 0 && (
+                {linkableProjectGoals.length > 0 && (
                   <div>
                     <Overline className="mb-2">{t('strongMind.projectGoals') || 'Project Goals'}</Overline>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {projectGoals.map(goal => (
+                      {linkableProjectGoals.map(goal => (
                         <label key={goal.id} className={goalRowClass}>
                           <input
                             type="checkbox"
@@ -742,8 +752,10 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                   processGoals={processGoals.filter(goal => selectedProcessGoalIds.has(goal.id))}
                   projectGoals={projectGoals.filter(goal => selectedProjectGoalIds.has(goal.id))}
                   onProcessGoalProgress={setProcessGoalProgress}
+                  onProcessGoalAchieved={toggleProcessGoalAchieved}
                   onProjectGoalCompletion={toggleProjectGoalCompletion}
                   getProcessGoalProgress={getProcessGoalProgress}
+                  isProcessGoalAchieved={isProcessGoalAchieved}
                   isProjectGoalCompleted={isProjectGoalCompleted}
                 />
 

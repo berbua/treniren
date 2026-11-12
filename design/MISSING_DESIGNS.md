@@ -485,6 +485,9 @@ Order in the app: Date → Type (7) → Tags → Cycle information (collapsible)
   pill), lists split Long-term / Short-term, card with edit/delete and linked-workout progress (1–3 dots).
 - **Project goals**: form (Route / Boulder, grade system French / Polish / YDS or French / V-scale, grade, name,
   sector, linked process goal), card with grade, name, location, link, "🏆 Achieved!" history.
+- **Achieved goals** (added 2026-11-12, built without a design): section under process/project goals listing
+  achieved goals of both kinds with "Achieved <date>" badge and edit/delete; edit sheets get a "Goal achieved"
+  toggle + date; the workout form's goal progress gets a trophy toggle for process goals too (project goals had one).
 - **Gratitude tab**: filter + card grids, empty states.
 - **Statistics tab**: timeframe; Mental practice (sessions, avg focus, days since last, meditations);
   Falls (total, climbing sessions, falls per session, days since last fall); empty states.
