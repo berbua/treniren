@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       fingerboardTestResults,
       tags,
       plans,
+      periods,
       userProfile,
       userData
     ] = await Promise.all([
@@ -130,6 +131,12 @@ export async function GET(request: NextRequest) {
           }
         },
         orderBy: { date: 'desc' }
+      }),
+      
+      // Logged periods
+      prisma.period.findMany({
+        where: { userId },
+        orderBy: { startDate: 'desc' }
       }),
       
       // User Profile
@@ -345,7 +352,14 @@ export async function GET(request: NextRequest) {
             color: pt.tag.color
           }))
         };
-      })
+      }),
+      periods: periods.map(period => ({
+        ...period,
+        startDate: period.startDate.toISOString(),
+        endDate: period.endDate?.toISOString() || null,
+        createdAt: period.createdAt.toISOString(),
+        updatedAt: period.updatedAt.toISOString()
+      }))
     };
 
     return NextResponse.json(exportData, {
