@@ -233,6 +233,26 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Save button keeps "Create Routine" / "Update Routine" (mock: "Save routine"); field labels keep the app texts
     ("Routine Name", "Description (optional)").
 
+### Fingerboard protocols & testing
+- Built 2026-11-12 against `Fingerboard protocols & testing.png`. Kept where the mock differs:
+  - **Two pages stay two pages**: `/fingerboard-protocols` (training protocols + Test yourself card) and
+    `/fingerboard-testing` (testing protocols list). The mock shows both lists on one "Fingerboard" screen; merging them
+    would change navigation, so it's not built. Titles stay "Fingerboard Protocols" / "Fingerboard Testing Protocols".
+  - Protocol cards show "N hangs" + description, not a derived "3 hangs · both hands · crimp" summary.
+  - **Hangs are edited in their own sheet** (Add / Edit Hang) and listed as rows ("Hang 1" + "Both Hands · Crimp · 20mm ·
+    +6 kg · 6 reps · 10 s") with ↑ ↓ ✏️ ✕, as in the mock; the sheet keeps all fields (custom description, notes, crimp
+    `Select` with the fixed 6–30 mm list).
+  - **Test yourself**: "Step N of 3" bar shows 1 on Choose and 3 on Results; Create and Perform open their own sheets
+    (no bar there, Perform is also used on the detail page). Clone stays one tap (no confirm, no rename).
+  - **Perform test**: Success is a Yes / No segment that can be left empty (tap again to clear), in the primary colour
+    (mock: green Yes). Notes is one line. A Cancel button sits next to "Save results". The load-unload hint is one line
+    under the hang cards.
+  - **Detail**: hang filter chips only when the protocol has more than one hang; the chart's own hang `Select` is hidden
+    there (the chips filter it). Chart metric default stays Time (mock: Load). The results table keeps a Hang column and
+    the year in the date; header labels keep the app's texts ("Load (kg)", "Success").
+  - New test protocol: "Load from protocol" is a full-width tonal button above the hang list; hang targets are edited in
+    the hang sheet (Target load / Target time), not inline in the form.
+
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event

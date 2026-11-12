@@ -649,7 +649,9 @@
       "OPEN_HAND": "Open Hand",
       "CRIMP": "Crimp",
       "SLOPER": "Sloper"
-    }
+    },
+    "hangNumber": "Hang {{number}}",
+    "testYourselfSubtitle": "Measure strength and track it over time"
   },
   "routines": {
     "title": "My Routines",
@@ -1445,7 +1447,49 @@
       "time": "Time (s)",
       "success": "Success",
       "notes": "Notes"
-    }
+    },
+    "view": "View",
+    "back": "Back",
+    "stepOf": "Step {{step}} of {{total}}",
+    "chooseProtocol": "Choose a test protocol",
+    "results": "Results",
+    "resultsCount": "{{count}} results",
+    "clone": "Clone",
+    "cloneTitle": "Duplicate this protocol",
+    "performAnother": "Perform another test",
+    "createError": "Failed to create testing protocol",
+    "cloneError": "Failed to clone protocol",
+    "editProtocol": "Edit Testing Protocol",
+    "testHangs": "Test hangs",
+    "addTestHang": "Add test hang",
+    "editTestHang": "Edit test hang",
+    "noTestHangs": "No test hangs added yet",
+    "loadFromProtocol": "Load from protocol",
+    "target": "target",
+    "targetLoad": "Target load",
+    "targetTime": "Target time",
+    "protocolName": "Protocol name",
+    "editName": "Edit protocol name",
+    "renameError": "Failed to update protocol name",
+    "saveTestError": "Failed to save test",
+    "testDate": "Test date",
+    "successQuestion": "Success?",
+    "yes": "Yes",
+    "no": "No",
+    "remindRetest": "Remind me to retest every",
+    "reminderInterval": "Interval",
+    "reminderUnit": "Unit",
+    "units": {
+      "days": "days",
+      "weeks": "weeks",
+      "months": "months"
+    },
+    "saveResults": "Save results",
+    "metric": "Metric",
+    "metricLoad": "Load",
+    "metricTime": "Time",
+    "chartTitleLoad": "Added load per test",
+    "chartTitleTime": "Hang time per test"
   },
   "offlineForm": {
     "title": "Add Workout",
@@ -1468,7 +1512,8 @@
     "load": "Load (kg)",
     "loadHint": "negative value for unload",
     "time": "Time (seconds)",
-    "notes": "Notes (optional)"
+    "notes": "Notes (optional)",
+    "hangs": "Hangs"
   },
   "offlineSync": {
     "uploaded": "Uploaded {{count}} workout(s) saved offline",

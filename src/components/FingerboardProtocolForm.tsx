@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { FingerboardProtocol, FingerboardProtocolFormData, FingerboardProtocolHang, HandType, GripType } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, getHandTypeLabel, getHandTypeEmoji, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
+import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
+import { BottomSheet, Button, FieldError, Input, Label, Overline, SegmentedControl, Select, Textarea, UnitInput } from './ui'
 
 interface FingerboardProtocolFormProps {
   protocol?: FingerboardProtocol | null
@@ -113,158 +114,153 @@ export default function FingerboardProtocolForm({
 
   const currentHang = editingHangIndex !== null ? formData.hangs[editingHangIndex] : null
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-uc-dark-bg border-b border-uc-purple/20 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-uc-text-light">
-            {protocol ? t('protocolForm.editTitle') : t('fingerboard.createProtocol')}
-          </h2>
-          <button onClick={onCancel} className="text-uc-text-muted hover:text-uc-text-light transition-colors">
-            ✕
-          </button>
-        </div>
+  const iconButtonBase = 'inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text-muted transition-colors hover:bg-uc-elevated disabled:opacity-30 disabled:hover:bg-transparent'
+  const iconButton = `${iconButtonBase} hover:text-uc-text`
+  const removeButton = `${iconButtonBase} hover:text-uc-error`
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+  const hangDetails = (hang: FingerboardProtocolHang) => [
+    formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize).replace(/ • /g, ' · '),
+    hang.customDescription,
+    hang.defaultLoad !== undefined && `+${hang.defaultLoad} kg`,
+    hang.defaultUnload !== undefined && `−${hang.defaultUnload} kg`,
+    hang.defaultReps && `${hang.defaultReps} ${t('workouts.labels.reps') || 'reps'}`,
+    hang.defaultTimeSeconds && `${hang.defaultTimeSeconds} s`,
+  ].filter(Boolean).join(' · ')
+
+  return (
+    <>
+      <BottomSheet
+        isOpen
+        onClose={onCancel}
+        title={protocol ? t('protocolForm.editTitle') : t('fingerboard.createProtocol')}
+        closeLabel={t('common.close') || 'Close'}
+        dismissible={false}
+        footer={
+          <div className="flex gap-3">
+            <Button variant="ghost" size="lg" className="flex-1" onClick={onCancel}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" form="fingerboard-protocol-form" variant="accent" size="lg" className="flex-[2]" isLoading={isSubmitting}>
+              {isSubmitting ? t('protocolForm.saving') : protocol ? t('protocolForm.update') : t('fingerboard.createProtocol')}
+            </Button>
+          </div>
+        }
+      >
+        <form id="fingerboard-protocol-form" onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
+            <Overline as="label" htmlFor="protocol-name" className="mb-2 block">
               {t('protocolForm.name')} *
-            </label>
-            <input
+            </Overline>
+            <Input
+              id="protocol-name"
               type="text"
               value={formData.name}
+              aria-invalid={!!errors.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               placeholder={t('workouts.placeholders.protocolName') || 'e.g., Max Strength Protocol'}
             />
-            {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
+            <FieldError>{errors.name}</FieldError>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
+            <Overline as="label" htmlFor="protocol-description" className="mb-2 block">
               {t('protocolForm.description')}
-            </label>
-            <textarea
+            </Overline>
+            <Textarea
+              id="protocol-description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               rows={2}
               placeholder={t('workouts.placeholders.protocolDescription') || 'Brief description of this protocol'}
             />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium text-uc-text-light">
-                Hangs ({formData.hangs.length})
-              </label>
-              <button
-                type="button"
-                onClick={handleAddHang}
-                className="bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                + {t('protocolForm.addHang')}
-              </button>
-            </div>
+            <Overline className="mb-2 uc-num">
+              {t('protocolForm.hangs') || 'Hangs'} ({formData.hangs.length})
+            </Overline>
 
-            {formData.hangs.length === 0 ? (
-              <div className="bg-uc-black/50 rounded-lg p-8 text-center border border-uc-purple/20">
-                <p className="text-uc-text-muted">{t('workouts.labels.noHangsAdded')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
+            {formData.hangs.length > 0 && (
+              <div className="mb-2 space-y-2">
                 {formData.hangs.map((hang, index) => (
                   <div
                     key={index}
-                    className="bg-uc-black/50 rounded-lg p-4 border border-uc-purple/20 flex items-center justify-between"
+                    className="flex min-h-14 items-center gap-1 rounded-uc-input border border-uc-border bg-uc-surface py-2 pl-4 pr-1"
                   >
-                    <div className="flex items-center gap-3 flex-1">
-                      <span className="text-uc-text-muted text-sm w-6">{index + 1}.</span>
-                      <span className="text-uc-text-light font-medium">
-                        {getHandTypeEmoji(hang.handType)} {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize)}
-                        {hang.customDescription && ` • ${hang.customDescription}`}
-                      </span>
-                      {hang.defaultLoad !== undefined && (
-                        <span className="text-xs text-uc-text-muted">+{hang.defaultLoad}kg</span>
-                      )}
-                      {hang.defaultUnload !== undefined && (
-                        <span className="text-xs text-uc-text-muted">-{hang.defaultUnload}kg</span>
-                      )}
-                      {hang.defaultReps && (
-                        <span className="text-xs text-uc-text-muted">{hang.defaultReps} reps</span>
-                      )}
-                      {hang.defaultTimeSeconds && (
-                        <span className="text-xs text-uc-text-muted">{hang.defaultTimeSeconds}s</span>
-                      )}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-uc-text uc-num">
+                        {t('fingerboard.hangNumber', { number: String(index + 1) }) || `Hang ${index + 1}`}
+                      </div>
+                      <div className="text-[13px] font-semibold text-uc-text-muted break-words uc-num">
+                        {hangDetails(hang)}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleMoveHang(index, 'up')}
-                        disabled={index === 0}
-                        className="text-uc-text-muted hover:text-uc-text-light disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMoveHang(index, 'down')}
-                        disabled={index === formData.hangs.length - 1}
-                        className="text-uc-text-muted hover:text-uc-text-light disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleEditHang(index)}
-                        className="text-uc-text-muted hover:text-uc-text-light"
-                      >
-                        {t('common.edit')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveHang(index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        {t('protocolForm.remove')}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveHang(index, 'up')}
+                      disabled={index === 0}
+                      aria-label={t('routines.form.moveUp') || 'Move up'}
+                      className={iconButton}
+                    >
+                      <span aria-hidden>↑</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveHang(index, 'down')}
+                      disabled={index === formData.hangs.length - 1}
+                      aria-label={t('routines.form.moveDown') || 'Move down'}
+                      className={iconButton}
+                    >
+                      <span aria-hidden>↓</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEditHang(index)}
+                      aria-label={t('common.edit')}
+                      title={t('common.edit')}
+                      className={iconButton}
+                    >
+                      <span aria-hidden>✏️</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveHang(index)}
+                      aria-label={t('protocolForm.remove')}
+                      title={t('protocolForm.remove')}
+                      className={removeButton}
+                    >
+                      <span aria-hidden>✕</span>
+                    </button>
                   </div>
                 ))}
               </div>
             )}
-          </div>
 
-          <div className="flex gap-4 pt-4 border-t border-uc-purple/20">
             <button
               type="button"
-              onClick={onCancel}
-              className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-3 rounded-xl font-medium transition-colors"
+              onClick={handleAddHang}
+              className="flex min-h-14 w-full flex-col items-center justify-center rounded-uc-input border border-dashed border-uc-border px-4 py-2 text-sm font-bold text-uc-primary transition-colors hover:border-uc-primary"
             >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
-            >
-              {isSubmitting ? t('protocolForm.saving') : protocol ? t('protocolForm.update') : t('fingerboard.createProtocol')}
+              + {t('protocolForm.addHang')}
+              {formData.hangs.length === 0 && (
+                <span className="text-[13px] font-medium text-uc-text-muted">{t('workouts.labels.noHangsAdded')}</span>
+              )}
             </button>
           </div>
         </form>
+      </BottomSheet>
 
-        {showHangForm && (
-          <HangForm
-            hang={currentHang}
-            onSave={handleSaveHang}
-            onCancel={() => {
-              setShowHangForm(false)
-              setEditingHangIndex(null)
-            }}
-          />
-        )}
-      </div>
-    </div>
+      {showHangForm && (
+        <HangForm
+          hang={currentHang}
+          onSave={handleSaveHang}
+          onCancel={() => {
+            setShowHangForm(false)
+            setEditingHangIndex(null)
+          }}
+        />
+      )}
+    </>
   )
 }
 
@@ -314,108 +310,101 @@ function HangForm({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
-      <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-md">
-        <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-uc-text-light">
-            {hang ? t('protocolForm.editHang') : t('protocolForm.addHang')}
-          </h3>
-          <button onClick={onCancel} className="text-uc-text-muted hover:text-uc-text-light">
-            ✕
-          </button>
+    <BottomSheet
+      isOpen
+      onClose={onCancel}
+      title={hang ? t('protocolForm.editHang') : t('protocolForm.addHang')}
+      closeLabel={t('common.close') || 'Close'}
+      dismissible={false}
+      footer={
+        <div className="flex gap-3">
+          <Button variant="ghost" size="lg" className="flex-1" onClick={onCancel}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" form="fingerboard-hang-form" variant="accent" size="lg" className="flex-[2]">
+            {t('common.save')}
+          </Button>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              {t('workouts.labels.handType')} *
-            </label>
-            <select
-              value={formData.handType}
-              onChange={(e) => setFormData({ ...formData, handType: e.target.value as HandType })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-            >
-              {HAND_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.emoji} {t(opt.labelKey)}
-                </option>
-              ))}
-            </select>
-          </div>
+      }
+    >
+      <form id="fingerboard-hang-form" onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label>{t('workouts.labels.handType')} *</Label>
+          <SegmentedControl
+            ariaLabel={t('workouts.labels.handType')}
+            options={HAND_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey), icon: opt.emoji }))}
+            value={formData.handType}
+            onChange={(value) => setFormData({ ...formData, handType: value as HandType })}
+          />
+        </div>
 
+        <div>
+          <Label>{t('workouts.labels.gripType')} *</Label>
+          <SegmentedControl
+            ariaLabel={t('workouts.labels.gripType')}
+            options={GRIP_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey), icon: opt.emoji }))}
+            value={formData.gripType}
+            onChange={(value) => {
+              const newGripType = value as GripType
+              setFormData({
+                ...formData,
+                gripType: newGripType,
+                // Clear crimp size only if switching to sloper
+                crimpSize: newGripType === 'SLOPER' ? undefined : formData.crimpSize,
+              })
+            }}
+          />
+        </div>
+
+        {shouldShowCrimpSize(formData.gripType) && (
           <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              {t('workouts.labels.gripType')} *
-            </label>
-            <select
-              value={formData.gripType}
-              onChange={(e) => {
-                const newGripType = e.target.value as GripType
+            <Label htmlFor="hang-crimp-size">
+              {t('protocolForm.crimpSize')} {formData.gripType === 'CRIMP' && '*'}
+            </Label>
+            <Select
+              id="hang-crimp-size"
+              value={formData.crimpSize || ''}
+              onChange={(e) =>
                 setFormData({
                   ...formData,
-                  gripType: newGripType,
-                  // Clear crimp size only if switching to sloper
-                  crimpSize: newGripType === 'SLOPER' ? undefined : formData.crimpSize,
+                  crimpSize: e.target.value === '' ? undefined : parseInt(e.target.value),
                 })
-              }}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
+              }
             >
-              {GRIP_TYPE_OPTIONS.map((opt) => (
+              <option value="">{t('common.selectSize') || 'Select size...'}</option>
+              {CRIMP_SIZE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
-                  {opt.emoji} {t(opt.labelKey)}
+                  {opt.emoji} {opt.label}
                 </option>
               ))}
-            </select>
+            </Select>
+            {formData.gripType === 'OPEN_HAND' && (
+              <p className="mt-1.5 text-[13px] text-uc-text-muted">
+                {t('protocolForm.crimpSizeHint')}
+              </p>
+            )}
           </div>
+        )}
 
-          {shouldShowCrimpSize(formData.gripType) && (
-            <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                {t('protocolForm.crimpSize')} {formData.gripType === 'CRIMP' && '*'}
-              </label>
-              <select
-                value={formData.crimpSize || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    crimpSize: e.target.value === '' ? undefined : parseInt(e.target.value),
-                  })
-                }
-                className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              >
-                <option value="">{t('common.selectSize') || 'Select size...'}</option>
-                {CRIMP_SIZE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.emoji} {opt.label}
-                  </option>
-                ))}
-              </select>
-              {formData.gripType === 'OPEN_HAND' && (
-                <p className="text-xs text-uc-text-muted mt-1">
-                  {t('protocolForm.crimpSizeHint')}
-                </p>
-              )}
-            </div>
-          )}
+        <div>
+          <Label htmlFor="hang-custom-description">{t('workouts.labels.customDescription')}</Label>
+          <Input
+            id="hang-custom-description"
+            type="text"
+            value={formData.customDescription || ''}
+            onChange={(e) => setFormData({ ...formData, customDescription: e.target.value })}
+            placeholder={t('workouts.placeholders.customDescription') || 'e.g., 3-finger drag, half crimp'}
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              {t('workouts.labels.customDescription')}
-            </label>
-            <input
-              type="text"
-              value={formData.customDescription || ''}
-              onChange={(e) => setFormData({ ...formData, customDescription: e.target.value })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder={t('workouts.placeholders.customDescription') || 'e.g., 3-finger drag, half crimp'}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              {t('protocolForm.load')} <span className="text-xs text-uc-text-muted font-normal">({t('protocolForm.loadHint')})</span>
-            </label>
-            <input
-              type="number"
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col">
+            <Label htmlFor="hang-load" className="flex-1">
+              {t('protocolForm.load')}
+            </Label>
+            <UnitInput
+              id="hang-load"
+              unit="kg"
               step="0.5"
               value={formData.defaultLoad !== undefined ? formData.defaultLoad : (formData.defaultUnload !== undefined ? -formData.defaultUnload : '')}
               onChange={(e) => {
@@ -436,78 +425,55 @@ function HangForm({
                   })
                 }
               }}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               placeholder={t('workouts.placeholders.load') || '0'}
+              aria-describedby="hang-load-hint"
             />
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                {t('workouts.labels.reps')}
-              </label>
-              <input
-                type="number"
-                value={formData.defaultReps || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    defaultReps: e.target.value ? parseInt(e.target.value) : undefined,
-                  })
-                }
-                className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder={t('workouts.placeholders.unload') || '5'}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                {t('protocolForm.time')}
-              </label>
-              <input
-                type="number"
-                value={formData.defaultTimeSeconds || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    defaultTimeSeconds: e.target.value ? parseInt(e.target.value) : undefined,
-                  })
-                }
-                className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder={t('workouts.placeholders.timeSeconds') || '10'}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              {t('protocolForm.notes')}
-            </label>
-            <textarea
-              value={formData.notes || ''}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              rows={2}
+          <div className="flex flex-col">
+            <Label htmlFor="hang-reps" className="flex-1">{t('workouts.labels.reps')}</Label>
+            <UnitInput
+              id="hang-reps"
+              unit="×"
+              value={formData.defaultReps || ''}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  defaultReps: e.target.value ? parseInt(e.target.value) : undefined,
+                })
+              }
+              placeholder={t('workouts.placeholders.unload') || '5'}
             />
           </div>
-
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-4 py-2 rounded-lg transition-colors"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              {t('common.save')}
-            </button>
+          <div className="flex flex-col">
+            <Label htmlFor="hang-time" className="flex-1">{t('protocolForm.time')}</Label>
+            <UnitInput
+              id="hang-time"
+              unit="s"
+              value={formData.defaultTimeSeconds || ''}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  defaultTimeSeconds: e.target.value ? parseInt(e.target.value) : undefined,
+                })
+              }
+              placeholder={t('workouts.placeholders.timeSeconds') || '10'}
+            />
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <p id="hang-load-hint" className="-mt-2 text-[13px] text-uc-text-muted">
+          {t('protocolForm.load')}: {t('protocolForm.loadHint')}
+        </p>
+
+        <div>
+          <Label htmlFor="hang-notes">{t('protocolForm.notes')}</Label>
+          <Textarea
+            id="hang-notes"
+            value={formData.notes || ''}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            rows={2}
+          />
+        </div>
+      </form>
+    </BottomSheet>
   )
 }
-

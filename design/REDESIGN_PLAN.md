@@ -66,7 +66,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Events — `Events.png`
 - [x] Exercises — `Exercises.png`
 - [x] Routines — `Routines.png`
-- [ ] Fingerboard protocols & testing — `Fingerboard protocols & testing.png`
+- [x] Fingerboard protocols & testing — `Fingerboard protocols & testing.png`
 - [ ] Profile & settings — `Profile & settings.png`
 - [ ] Global UI (More, messages, menus, banners, install, loading) —
       `Global UI — More, messages, menus, banners, install, loading.png`
@@ -259,3 +259,25 @@ note the answer.
   search, one Select all / Deselect all checkbox row, checkbox rows with category on the right, primary "Add Selected (N)";
   variation form has Min / Max / Sets in one row and an inline name error (was `alert()`). New keys
   `routines.form.moveUp`, `moveDown`. Same data, draft saving and API calls. Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Fingerboard protocols & testing done. `/fingerboard-protocols`: 28px title + subtitle, accent "+"
+  (label from `sm`), **Test yourself** card on primary-container (📊, new subtitle `fingerboard.testYourselfSubtitle`, the
+  old tooltip as `title`, chevron; opens the same modal), `SkeletonRows`, dashed `EmptyState` + tip, protocol `Card`s with
+  fingerboard `WorkoutIconTile`, "N hangs", 44px ✏️ 🗑️ (spinner while deleting). `FingerboardProtocolForm` and
+  `FingerboardTestingProtocolForm` are `BottomSheet`s (`dismissible={false}`) with Cancel + accent Save, hang rows
+  ("Hang N" + details, 44px ↑ ↓ ✏️ ✕), dashed "+ Add hang"; hang sub-forms are their own sheets (hand/grip
+  `SegmentedControl`, crimp `Select`, kg / × / s `UnitInput`s); testing form has a tonal "Load from protocol" and the
+  protocol picker as a sheet. `FingerboardTestModal`: one sheet for Choose (step bar, cards with Perform test / Results /
+  Clone, dashed "+ Create testing protocol") and Results (back chevron, `size="lg"`, accent "Perform another test",
+  chart, table); Create and Perform render their own sheets. `PerformTestModal`: sheet with "Perform test" overline +
+  name + ✏️ inline rename (✓ ✕), date, hang cards ("Hang N · …", "target +7 kg · 7 s", Load / Time `UnitInput`s, Yes/No
+  segments, notes), retest reminder row (checkbox, number, unit `Select`), Cancel + accent "Save results".
+  `/fingerboard-testing`: same header/empty/card pattern, cards with "N hangs · Results: N", "View" link, ✏️ 🗑️.
+  `/fingerboard-testing/[id]`: back chevron, name, accent Perform test (full width on phones, header on `lg`), hang
+  `ChoiceChip`s (only with 2+ hangs), chart + results card side by side on `lg`, `EmptyState` + CTA. New
+  `FingerboardTestResultsTable` (shared; results now show notes in the modal too, Yes/No chips, localized dates, units).
+  `FingerboardTestChart`: `Card`, title per metric, tokens via `var(--uc-*)` (first line in the fingerboard colour),
+  hollow dots, custom tooltip, legend only with 2+ lines, Load/Time `SegmentedControl` (was a select), hang `Select` only
+  with 2+ hangs and `showHangFilter` (false on the detail page); hang labels localized (were "2H CRIMP 20mm").
+  `BottomSheet` got `size="lg"`. Hard-coded English in the modal, perform and testing forms replaced (new keys
+  `fingerboard.hangNumber`, `protocolForm.hangs`, `fingerboardTesting.*`). Same data, handlers, alerts and API calls.
+  Not checked logged-in in a browser.

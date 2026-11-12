@@ -12,11 +12,13 @@ interface BottomSheetProps {
   closeLabel?: string
   /** false: Esc and scrim tap don't close it (long forms); only the ✕ or a footer button do. */
   dismissible?: boolean
+  /** `lg` widens the centred card from `sm` up (charts, tables). */
+  size?: 'md' | 'lg'
   className?: string
 }
 
 /** Sheet from the bottom on phones, centred card from `sm` up. Esc and scrim tap close it unless `dismissible` is false. */
-export function BottomSheet({ isOpen, onClose, title, children, footer, closeLabel = 'Close', dismissible = true, className = '' }: BottomSheetProps) {
+export function BottomSheet({ isOpen, onClose, title, children, footer, closeLabel = 'Close', dismissible = true, size = 'md', className = '' }: BottomSheetProps) {
   useEffect(() => {
     if (!isOpen) return
     const onKey = (e: KeyboardEvent) => dismissible && e.key === 'Escape' && onClose()
@@ -37,7 +39,7 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, closeLab
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative w-full sm:max-w-lg max-h-[92dvh] flex flex-col bg-uc-elevated text-uc-text shadow-uc rounded-t-uc-sheet sm:rounded-uc-sheet pb-[env(safe-area-inset-bottom)] ${className}`}
+        className={`relative w-full ${size === 'lg' ? 'sm:max-w-3xl' : 'sm:max-w-lg'} max-h-[92dvh] flex flex-col bg-uc-elevated text-uc-text shadow-uc rounded-t-uc-sheet sm:rounded-uc-sheet pb-[env(safe-area-inset-bottom)] ${className}`}
       >
         <div aria-hidden className="sm:hidden mx-auto mt-2.5 h-[5px] w-10 rounded-uc-pill bg-uc-border" />
         {title && (

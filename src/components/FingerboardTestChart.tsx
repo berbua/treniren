@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestResult } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { LoadingSpinner } from './LoadingSpinner'
+import { formatHangDescription } from '@/lib/fingerboard-utils'
+import { Card, SegmentedControl, Select } from './ui'
 
 // Dynamic import for Recharts
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,7 +21,6 @@ if (typeof window !== 'undefined') {
       YAxis: recharts.YAxis,
       CartesianGrid: recharts.CartesianGrid,
       Tooltip: recharts.Tooltip,
-      Legend: recharts.Legend,
       ResponsiveContainer: recharts.ResponsiveContainer,
     }
   } catch (e) {
@@ -31,10 +31,18 @@ if (typeof window !== 'undefined') {
 interface FingerboardTestChartProps {
   testResults: FingerboardTestResult[]
   protocol: FingerboardTestingProtocol
+  /** false when the page already filters by hang (testing protocol detail). */
+  showHangFilter?: boolean
 }
 
-export default function FingerboardTestChart({ testResults, protocol }: FingerboardTestChartProps) {
-  const { t } = useLanguage()
+// First line in the fingerboard colour, then tag colours
+const LINE_COLORS = ['var(--uc-workout-fingerboard)', 'var(--uc-tag-1)', 'var(--uc-tag-5)', 'var(--uc-tag-3)', 'var(--uc-tag-4)', 'var(--uc-tag-2)']
+
+export default function FingerboardTestChart({ testResults, protocol, showHangFilter = true }: FingerboardTestChartProps) {
+  const { t, language } = useLanguage()
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
+  const hangLabel = (hang: FingerboardTestingProtocol['testHangs'][number]) =>
+    formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize, hang.customDescription).replace(/ • /g, ' · ')
   const [metric, setMetric] = useState<'time' | 'load'>('time')
   const [selectedHangId, setSelectedHangId] = useState<string | null>(null)
 
@@ -55,20 +63,19 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
       }
 
       const hang = protocol.testHangs.find((h) => (h.id || `hang-${h.order}`) === hangKey)
-      const hangLabel = hang
-        ? `${hang.handType === 'ONE_HAND' ? '1H' : '2H'} ${hang.gripType}${hang.crimpSize ? ` ${hang.crimpSize}mm` : ''}`
-        : hangKey
+      const label = hang ? hangLabel(hang) : hangKey
 
       if (metric === 'time') {
-        grouped[dateKey][hangLabel] = result.timeSeconds || 0
+        grouped[dateKey][label] = result.timeSeconds || 0
       } else {
-        grouped[dateKey][hangLabel] = result.load || result.unload ? (result.load || 0) - (result.unload || 0) : 0
+        grouped[dateKey][label] = result.load || result.unload ? (result.load || 0) - (result.unload || 0) : 0
       }
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date))
-  }, [testResults, metric, selectedHangId, protocol])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testResults, metric, selectedHangId, protocol, language])
 
   const availableHangs = useMemo(() => {
     return protocol.testHangs.filter((hang) =>
@@ -78,11 +85,11 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
 
   if (!RechartsComponents) {
     return (
-      <div className="bg-uc-dark-bg rounded-xl p-8 border border-uc-purple/20 text-center">
-        <p className="text-uc-text-muted">
+      <Card className="text-center">
+        <p className="text-sm text-uc-text-muted">
           Charts require Recharts library. Please run: npm install recharts
         </p>
-      </div>
+      </Card>
     )
   }
 
@@ -90,7 +97,7 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
     return null
   }
 
-  const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } =
+  const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } =
     RechartsComponents
 
   const uniqueHangLabels = new Set<string>()
@@ -102,86 +109,116 @@ export default function FingerboardTestChart({ testResults, protocol }: Fingerbo
       }
     })
   })
+  const lines = Array.from(uniqueHangLabels)
 
-  const colors = ['#FCD34D', '#A78BFA', '#60A5FA', '#34D399', '#F87171', '#FB7185']
+  const muted = 'var(--uc-text-muted)'
+  const unit = metric === 'time' ? 's' : 'kg'
+  const formatDate = (value: string, long = false) =>
+    new Date(value).toLocaleDateString(locale, long ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' })
 
   return (
-    <div className="bg-uc-dark-bg rounded-xl p-6 border border-uc-purple/20">
-      <div className="mb-6 flex flex-wrap items-center gap-4">
-        <div>
-          <label className="block text-xs text-uc-text-muted mb-1">Metric</label>
-          <select
-            value={metric}
-            onChange={(e) => setMetric(e.target.value as 'time' | 'load')}
-            className="bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-          >
-            <option value="time">Time (seconds)</option>
-            <option value="load">Load (kg)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs text-uc-text-muted mb-1">{t('workouts.labels.filterByHang') || 'Filter by Hang'}</label>
-          <select
-            value={selectedHangId || ''}
-            onChange={(e) => setSelectedHangId(e.target.value || null)}
-            className="bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-          >
-            <option value="">{t('common.allHangs') || 'All Hangs'}</option>
-            {availableHangs.map((hang) => {
-              const hangId = hang.id || `hang-${hang.order}`
-              return (
-                <option key={hangId} value={hangId}>
-                  {hang.handType === 'ONE_HAND' ? '1H' : '2H'} {hang.gripType}
-                  {hang.crimpSize ? ` ${hang.crimpSize}mm` : ''}
-                </option>
-              )
-            })}
-          </select>
-        </div>
+    <Card className="space-y-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="text-base font-extrabold text-uc-text">
+          {metric === 'time'
+            ? t('fingerboardTesting.chartTitleTime') || 'Hang time per test'
+            : t('fingerboardTesting.chartTitleLoad') || 'Added load per test'}
+        </h3>
+        <span className="shrink-0 text-[13px] font-semibold text-uc-text-muted">{unit}</span>
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#6B7280" opacity={0.3} />
+      {showHangFilter && availableHangs.length > 1 && (
+        <Select
+          value={selectedHangId || ''}
+          onChange={(e) => setSelectedHangId(e.target.value || null)}
+          aria-label={t('workouts.labels.filterByHang') || 'Filter by Hang'}
+        >
+          <option value="">{t('common.allHangs') || 'All Hangs'}</option>
+          {availableHangs.map((hang) => {
+            const hangId = hang.id || `hang-${hang.order}`
+            return (
+              <option key={hangId} value={hangId}>
+                {hangLabel(hang)}
+              </option>
+            )
+          })}
+        </Select>
+      )}
+
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={chartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke="var(--uc-border)" />
           <XAxis
             dataKey="date"
-            stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF' }}
-            tickFormatter={(value: number) => new Date(value).toLocaleDateString()}
+            stroke={muted}
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: muted, fontSize: 12 }}
+            tickFormatter={(value: string) => formatDate(value)}
           />
           <YAxis
-            stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF' }}
-            label={{
-              value: metric === 'time' ? 'Time (seconds)' : 'Load (kg)',
-              angle: -90,
-              position: 'insideLeft',
-              style: { fill: '#9CA3AF' },
-            }}
+            stroke={muted}
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: muted, fontSize: 12 }}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: '#1F2937',
-              border: '1px solid #6B21A8',
-              borderRadius: '8px',
+            cursor={{ stroke: 'var(--uc-border)' }}
+            content={({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
+              if (!active || !payload || payload.length === 0 || !label) return null
+              return (
+                <div className="rounded-uc-input border border-uc-border bg-uc-elevated p-3 shadow-uc">
+                  <p className="mb-1.5 text-sm font-bold text-uc-text">{formatDate(label, true)}</p>
+                  {payload.map((entry) => (
+                    <p key={entry.name} className="flex items-center gap-2 text-sm text-uc-text uc-num">
+                      <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: entry.color }} />
+                      {lines.length > 1 && <span className="text-uc-text-muted">{entry.name}</span>}
+                      <span className="font-bold">
+                        {metric === 'load' && entry.value > 0 ? '+' : ''}{entry.value} {unit}
+                      </span>
+                    </p>
+                  ))}
+                </div>
+              )
             }}
-            labelFormatter={(value: number) => new Date(value).toLocaleDateString()}
           />
-          <Legend />
-          {Array.from(uniqueHangLabels).map((label, index) => (
-            <Line
-              key={label}
-              type="monotone"
-              dataKey={label}
-              stroke={colors[index % colors.length]}
-              strokeWidth={2}
-              dot={{ r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          ))}
+          {lines.map((label, index) => {
+            const color = LINE_COLORS[index % LINE_COLORS.length]
+            return (
+              <Line
+                key={label}
+                type="monotone"
+                dataKey={label}
+                stroke={color}
+                strokeWidth={2.5}
+                dot={{ fill: 'var(--uc-surface)', stroke: color, strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: color }}
+              />
+            )
+          })}
         </LineChart>
       </ResponsiveContainer>
-    </div>
+
+      {lines.length > 1 && (
+        <ul className="flex flex-wrap gap-x-4 gap-y-1">
+          {lines.map((label, index) => (
+            <li key={label} className="flex items-center gap-2 text-[13px] font-semibold text-uc-text-muted">
+              <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: LINE_COLORS[index % LINE_COLORS.length] }} />
+              {label}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <SegmentedControl
+        ariaLabel={t('fingerboardTesting.metric') || 'Metric'}
+        options={[
+          { value: 'load', label: t('fingerboardTesting.metricLoad') || 'Load' },
+          { value: 'time', label: t('fingerboardTesting.metricTime') || 'Time' },
+        ]}
+        value={metric}
+        onChange={setMetric}
+      />
+    </Card>
   )
 }
-

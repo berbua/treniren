@@ -5,12 +5,11 @@ import AuthGuard from '@/components/AuthGuard'
 import { FingerboardProtocol } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useConfirmation } from '@/hooks/useConfirmation'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import FingerboardProtocolForm from '@/components/FingerboardProtocolForm'
 import FingerboardTestModal from '@/components/FingerboardTestModal'
-import Link from 'next/link'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { Button, Card, EmptyState, SkeletonRows, Spinner, WorkoutIconTile } from '@/components/ui'
 
 export default function FingerboardProtocolsPage() {
   return (
@@ -129,113 +128,109 @@ function FingerboardProtocolsPageContent() {
     setEditingProtocol(null)
   }
 
-  if (loading) {
-    return <LoadingSpinner message={t('fingerboard.loading') || 'Loading protocols...'} fullScreen />
-  }
-
   return (
-    <div className="min-h-screen bg-uc-black">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-uc-text-light">
-                🖐️ {t('fingerboard.title') || 'Fingerboard Protocols'}
-              </h1>
-              <p className="text-uc-text-muted mt-2">
-                {t('fingerboard.subtitle') || 'Create reusable fingerboard training protocols'}
-              </p>
-            </div>
-            <div className="flex gap-3 mt-4 lg:mt-0">
-              <div className="relative group">
-                <button
-                  onClick={() => setShowTestModal(true)}
-                  className="bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light px-6 py-3 rounded-xl font-medium transition-colors shadow-lg flex items-center gap-2 w-full lg:w-auto"
-                >
-                  📊 {t('fingerboard.testYourself') || 'Test Yourself'}
-                </button>
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-72 bg-uc-black text-uc-text-light text-sm rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none z-50 border border-uc-purple/30 shadow-xl">
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-uc-black border-r border-b border-uc-purple/30"></div>
-                  {t('fingerboard.testYourselfTooltip') || 'Track your fingerboard progress over time by performing regular tests. Record how long you can hang and with what load to visualize your improvement.'}
-                </div>
-              </div>
-              <button
-                onClick={handleCreateProtocol}
-                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg w-full lg:w-auto"
-              >
-                + {t('fingerboard.createProtocol') || 'Create Protocol'}
-              </button>
-            </div>
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+        {/* Header */}
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-extrabold leading-tight text-uc-text">
+              {t('fingerboard.title') || 'Fingerboard Protocols'}
+            </h1>
+            <p className="mt-1 text-sm text-uc-text-muted">
+              {t('fingerboard.subtitle') || 'Create reusable fingerboard training protocols'}
+            </p>
           </div>
+          <Button
+            variant="accent"
+            className="shrink-0"
+            onClick={handleCreateProtocol}
+            aria-label={t('fingerboard.createProtocol') || 'Create Protocol'}
+          >
+            +<span className="hidden sm:inline">{t('fingerboard.createProtocol') || 'Create Protocol'}</span>
+          </Button>
         </div>
 
-        {protocols.length === 0 ? (
-          <div className="bg-uc-dark-bg rounded-xl p-12 border border-uc-purple/20 text-center">
-            <div className="text-6xl mb-4">🖐️</div>
-            <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-              {t('fingerboard.noProtocols') || 'No protocols yet'}
-            </h2>
-            <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-              {t('fingerboard.noProtocolsDescription') || 'Create reusable fingerboard training protocols to quickly add hangs to your workouts. Save time by defining your favorite hang combinations once.'}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <button
-                onClick={handleCreateProtocol}
-                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-              >
-                ➕ {t('fingerboard.createFirstProtocol') || 'Create Your First Protocol'}
-              </button>
-              <p className="text-sm text-uc-text-muted">
-                {t('fingerboard.tip') || 'Tip: Create protocols for different training phases'}
-              </p>
-            </div>
+        {/* Test yourself */}
+        <button
+          type="button"
+          onClick={() => setShowTestModal(true)}
+          title={t('fingerboard.testYourselfTooltip')}
+          className="mb-6 flex w-full min-h-16 items-center gap-3 rounded-uc-card bg-uc-primary-container px-4 py-3 text-left text-uc-on-primary-container transition-[filter] hover:brightness-110 lg:max-w-xl"
+        >
+          <span aria-hidden className="inline-flex size-6 shrink-0 items-center justify-center text-lg">📊</span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-extrabold">{t('fingerboard.testYourself') || 'Test Yourself'}</span>
+            <span className="block text-[13px] font-medium opacity-80">
+              {t('fingerboard.testYourselfSubtitle')}
+            </span>
+          </span>
+          <svg aria-hidden className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+        </button>
+
+        {/* Protocols */}
+        {loading ? (
+          <SkeletonRows />
+        ) : protocols.length === 0 ? (
+          <div className="rounded-uc-card border border-dashed border-uc-border">
+            <EmptyState
+              icon="🖐️"
+              title={t('fingerboard.noProtocols') || 'No protocols yet'}
+              description={t('fingerboard.noProtocolsDescription') || 'Create reusable fingerboard training protocols to quickly add hangs to your workouts. Save time by defining your favorite hang combinations once.'}
+              action={
+                <div className="flex flex-col items-center gap-3">
+                  <Button variant="accent" onClick={handleCreateProtocol}>
+                    + {t('fingerboard.createFirstProtocol') || 'Create Your First Protocol'}
+                  </Button>
+                  <p className="text-[13px] text-uc-text-muted">
+                    {t('fingerboard.tip') || 'Tip: Create protocols for different training phases'}
+                  </p>
+                </div>
+              }
+            />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
             {protocols.map((protocol) => (
-              <div
-                key={protocol.id}
-                className="bg-uc-dark-bg rounded-xl p-6 border border-uc-purple/20 hover:border-uc-purple/40 transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-uc-text-light mb-1">
-                      {protocol.name}
-                    </h3>
-                    {protocol.description && (
-                      <p className="text-sm text-uc-text-muted">
-                        {protocol.description}
-                      </p>
-                    )}
-                  </div>
+              <Card key={protocol.id} className="flex items-start gap-3">
+                <WorkoutIconTile workoutType="FINGERBOARD" icon="🖐️" />
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[17px] font-extrabold leading-snug text-uc-text break-words">
+                    {protocol.name}
+                  </h3>
+                  <p className="mt-0.5 text-[13px] font-semibold text-uc-text-muted uc-num">
+                    {protocol.hangs.length} {protocol.hangs.length === 1
+                      ? t('fingerboard.hang') || 'hang'
+                      : t('fingerboard.hangs') || 'hangs'}
+                  </p>
+                  {protocol.description && (
+                    <p className="mt-1 text-sm text-uc-text-muted">{protocol.description}</p>
+                  )}
                 </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-uc-text-muted">
-                    <span className="mr-2">🖐️</span>
-                    <span>
-                      {protocol.hangs.length} {protocol.hangs.length === 1 
-                        ? t('fingerboard.hang') || 'hang' 
-                        : t('fingerboard.hangs') || 'hangs'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4 pt-4 border-t border-uc-purple/20">
+                <div className="-mr-2 -mt-1 flex shrink-0">
                   <button
+                    type="button"
                     onClick={() => handleEditProtocol(protocol)}
-                    className="flex-1 bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    aria-label={t('fingerboard.edit') || 'Edit'}
+                    title={t('fingerboard.edit') || 'Edit'}
+                    className="inline-flex size-11 items-center justify-center rounded-uc-input transition-colors hover:bg-uc-elevated"
                   >
-                    {t('fingerboard.edit') || 'Edit'}
+                    <span aria-hidden>✏️</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleDeleteProtocol(protocol.id)}
-                    className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    disabled={deletingProtocolId === protocol.id}
+                    aria-label={t('fingerboard.delete') || 'Delete'}
+                    title={t('fingerboard.delete') || 'Delete'}
+                    className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-error transition-colors hover:bg-uc-elevated disabled:opacity-50"
                   >
-                    {t('fingerboard.delete') || 'Delete'}
+                    {deletingProtocolId === protocol.id ? <Spinner /> : <span aria-hidden>🗑️</span>}
                   </button>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}

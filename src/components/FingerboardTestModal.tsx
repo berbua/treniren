@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react'
 import { FingerboardTestingProtocol, FingerboardTestResult } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { LoadingSpinner } from './LoadingSpinner'
 import FingerboardTestingProtocolForm from './FingerboardTestingProtocolForm'
 import PerformTestModal from './PerformTestModal'
 import FingerboardTestChart from './FingerboardTestChart'
-import { formatHangDescription } from '@/lib/fingerboard-utils'
+import FingerboardTestResultsTable from './FingerboardTestResultsTable'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { BottomSheet, Button, Card, EmptyState, Overline, SkeletonRows } from './ui'
 
 interface FingerboardTestModalProps {
   onClose: () => void
@@ -96,7 +96,7 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
         setStep('perform')
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        alert(`Failed to create testing protocol: ${errorData.error || 'Unknown error'}`)
+        alert(`${t('fingerboardTesting.createError') || 'Failed to create testing protocol'}: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error creating testing protocol:', error)
@@ -160,7 +160,7 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
         // Optionally show a success message or open the cloned protocol for editing
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        alert(`Failed to clone protocol: ${errorData.error || 'Unknown error'}`)
+        alert(`${t('fingerboardTesting.cloneError') || 'Failed to clone protocol'}: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error cloning protocol:', error)
@@ -168,247 +168,167 @@ export default function FingerboardTestModal({ onClose }: FingerboardTestModalPr
     }
   }
 
-  const getStepTitle = () => {
-    switch (step) {
-      case 'select':
-        return 'Select Testing Protocol'
-      case 'create':
-        return 'Create Testing Protocol'
-      case 'perform':
-        return `Perform Test: ${selectedProtocol?.name}`
-      case 'results':
-        return `Test Results: ${selectedProtocol?.name}`
-      default:
-        return 'Test Yourself'
-    }
+  const handleBack = () => {
+    setStep('select')
+    setSelectedProtocol(null)
   }
 
+  // The create form and the perform form are sheets of their own
+  if (step === 'create' || showCreateForm) {
+    return (
+      <FingerboardTestingProtocolForm
+        protocol={null}
+        onSubmit={handleSubmitTestingProtocol}
+        onCancel={() => {
+          setShowCreateForm(false)
+          setStep('select')
+        }}
+        isSubmitting={isSubmitting}
+      />
+    )
+  }
+
+  if (step === 'perform' && selectedProtocol) {
+    return (
+      <PerformTestModal
+        protocol={selectedProtocol}
+        onTestPerformed={handleTestPerformed}
+        onClose={() => setStep('select')}
+        onProtocolUpdated={handleProtocolUpdated}
+      />
+    )
+  }
+
+  const stepNumber = step === 'results' ? 3 : 1
+  const resultsCount = (protocol: FingerboardTestingProtocol) =>
+    (protocol as FingerboardTestingProtocol & { _count?: { testResults?: number } })._count?.testResults || 0
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-uc-dark-bg border-b border-uc-purple/20 px-6 py-4 flex items-center justify-between z-10">
-          <div>
-            <h2 className="text-2xl font-bold text-uc-text-light">{getStepTitle()}</h2>
-            {step === 'select' && (
-              <p className="text-sm text-uc-text-muted mt-1">
-                Track your fingerboard progress over time by performing regular tests
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {step !== 'select' && (
-              <button
-                onClick={() => {
-                  if (step === 'results') {
-                    setStep('select')
-                    setSelectedProtocol(null)
-                  } else if (step === 'perform') {
-                    setStep('select')
-                    setSelectedProtocol(null)
-                  } else {
-                    setStep('select')
-                  }
-                }}
-                className="text-uc-text-muted hover:text-uc-text-light transition-colors px-3 py-1"
-              >
-                ← Back
-              </button>
-            )}
-            <button onClick={onClose} className="text-uc-text-muted hover:text-uc-text-light transition-colors">
-              ✕
+    <BottomSheet
+      isOpen
+      onClose={onClose}
+      size={step === 'results' ? 'lg' : 'md'}
+      closeLabel={t('common.close') || 'Close'}
+      title={
+        step === 'results' && selectedProtocol ? (
+          <span className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleBack}
+              aria-label={t('fingerboardTesting.back') || 'Back'}
+              className="-ml-3 inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text-muted transition-colors hover:bg-uc-surface hover:text-uc-text"
+            >
+              <svg aria-hidden className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="m15 6-6 6 6 6" />
+              </svg>
             </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {loading && step === 'select' && !showCreateForm ? (
-            <LoadingSpinner message="Loading testing protocols..." />
-          ) : (step === 'create' || showCreateForm) ? (
-            <FingerboardTestingProtocolForm
-              protocol={null}
-              onSubmit={handleSubmitTestingProtocol}
-              onCancel={() => {
-                setShowCreateForm(false)
-                setStep('select')
-              }}
-              isSubmitting={isSubmitting}
-            />
-          ) : step === 'select' ? (
-            <div className="space-y-4">
-              <div className="flex justify-end mb-4">
-                <button
-                  onClick={handleCreateProtocol}
-                  className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  + Create New Testing Protocol
-                </button>
-              </div>
-
-              {testingProtocols.length === 0 ? (
-                <div className="bg-uc-black/50 rounded-xl p-12 text-center border border-uc-purple/20">
-                  <div className="text-4xl mb-4">📊</div>
-                  <p className="text-uc-text-muted mb-4">{t('workouts.labels.noTestingProtocols') || 'No testing protocols yet'}</p>
-                  <button
-                    onClick={handleCreateProtocol}
-                    className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors"
-                  >
-                    Create Your First Testing Protocol
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {testingProtocols.map((protocol) => (
-                    <div
-                      key={protocol.id}
-                      className="bg-uc-black/50 rounded-xl p-4 border border-uc-purple/20 hover:border-uc-purple/40 transition-all"
-                    >
-                      <h3 className="text-lg font-semibold text-uc-text-light mb-2">{protocol.name}</h3>
-                      {protocol.description && (
-                        <p className="text-sm text-uc-text-muted mb-3">{protocol.description}</p>
-                      )}
-                      <div className="flex items-center text-sm text-uc-text-muted mb-4">
-                        <span className="mr-2">🖐️</span>
-                        <span>
-                          {protocol.testHangs.length} {protocol.testHangs.length === 1 ? 'test hang' : 'test hangs'}
-                        </span>
-                        {(protocol as any)._count?.testResults > 0 && (
-                          <>
-                            <span className="mx-2">•</span>
-                            <span>{(protocol as any)._count.testResults} results</span>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSelectProtocol(protocol)}
-                          className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          Perform Test
-                        </button>
-                        <button
-                          onClick={() => handleViewResults(protocol)}
-                          className="flex-1 bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          View Results
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => handleCloneProtocol(protocol)}
-                        className="w-full mt-2 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-uc-purple/20"
-                        title="Duplicate this protocol"
-                      >
-                        📋 Clone Protocol
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : step === 'perform' && selectedProtocol ? (
-            <PerformTestModal
-              protocol={selectedProtocol}
-              onTestPerformed={handleTestPerformed}
-              onClose={() => setStep('select')}
-              onProtocolUpdated={handleProtocolUpdated}
-            />
-          ) : step === 'results' && selectedProtocol ? (
-            <div className="space-y-6">
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setStep('perform')}
-                  className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  + Perform Another Test
-                </button>
-              </div>
-
-              {testResults.length > 0 && (
-                <FingerboardTestChart testResults={testResults} protocol={selectedProtocol} />
-              )}
-
-              <div className="bg-uc-black/50 rounded-xl border border-uc-purple/20 overflow-hidden">
-                <div className="p-4 border-b border-uc-purple/20">
-                  <h3 className="text-lg font-semibold text-uc-text-light">
-                    Test Results ({testResults.length})
-                  </h3>
-                </div>
-                {testResults.length === 0 ? (
-                  <div className="p-12 text-center">
-                    <p className="text-uc-text-muted">{t('workouts.labels.noTestResults') || 'No test results yet'}</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-uc-black/50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-uc-text-muted uppercase">
-                            Date
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-uc-text-muted uppercase">
-                            Hang Type
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-uc-text-muted uppercase">
-                            Load (kg)
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-uc-text-muted uppercase">
-                            Time (s)
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-uc-text-muted uppercase">
-                            Success
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-uc-purple/10">
-                        {testResults.map((result) => {
-                          const hang = selectedProtocol.testHangs.find(
-                            (h) => (h.id || `hang-${h.order}`) === result.testHangId
-                          )
-                          return (
-                            <tr key={result.id} className="hover:bg-uc-black/30">
-                              <td className="px-4 py-3 text-sm text-uc-text-light">
-                                {new Date(result.date).toLocaleDateString()}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-uc-text-light">
-                                {formatHangDescription(
-                                  t,
-                                  result.handType,
-                                  result.gripType,
-                                  result.crimpSize,
-                                  result.customDescription
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-uc-text-light">
-                                {result.load !== null && result.load !== undefined
-                                  ? `+${result.load}`
-                                  : result.unload !== null && result.unload !== undefined
-                                  ? `-${result.unload}`
-                                  : '-'}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-uc-text-light">
-                                {result.timeSeconds || '-'}
-                              </td>
-                              <td className="px-4 py-3 text-sm">
-                                {result.success === true ? (
-                                  <span className="text-green-400">✓</span>
-                                ) : result.success === false ? (
-                                  <span className="text-red-400">✗</span>
-                                ) : (
-                                  <span className="text-uc-text-muted">-</span>
-                                )}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : null}
+            <span className="break-words">{selectedProtocol.name}</span>
+          </span>
+        ) : (
+          t('fingerboard.testYourself') || 'Test Yourself'
+        )
+      }
+    >
+      {/* Step indicator */}
+      <div className="mb-4">
+        <p className="mb-2 text-right text-[13px] font-semibold text-uc-text-muted uc-num">
+          {t('fingerboardTesting.stepOf', { step: stepNumber, total: 3 }) || `Step ${stepNumber} of 3`}
+        </p>
+        <div aria-hidden className="grid grid-cols-3 gap-1.5">
+          {[1, 2, 3].map((n) => (
+            <span key={n} className={`h-1 rounded-uc-pill ${n <= stepNumber ? 'bg-uc-primary' : 'bg-uc-border'}`} />
+          ))}
         </div>
       </div>
-    </div>
+
+      {step === 'select' ? (
+        loading ? (
+          <SkeletonRows />
+        ) : testingProtocols.length === 0 ? (
+          <div className="rounded-uc-card border border-dashed border-uc-border">
+            <EmptyState
+              icon="📊"
+              title={t('workouts.labels.noTestingProtocols') || 'No testing protocols yet'}
+              description={t('fingerboard.testYourselfTooltip')}
+              action={
+                <Button variant="accent" onClick={handleCreateProtocol}>
+                  + {t('fingerboardTesting.createFirstProtocol') || 'Create Your First Testing Protocol'}
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-uc-text-muted">
+              {t('fingerboardTesting.chooseProtocol') || 'Choose a test protocol'}
+            </p>
+            {testingProtocols.map((protocol) => (
+              <Card key={protocol.id} className="space-y-3">
+                <div>
+                  <h3 className="text-[17px] font-extrabold leading-snug text-uc-text break-words">{protocol.name}</h3>
+                  <p className="mt-0.5 text-[13px] font-semibold text-uc-text-muted uc-num">
+                    {protocol.testHangs.length} {protocol.testHangs.length === 1
+                      ? t('fingerboard.hang') || 'hang'
+                      : t('fingerboard.hangs') || 'hangs'}
+                    {resultsCount(protocol) > 0 && (
+                      <> · {t('fingerboardTesting.resultsCount', { count: resultsCount(protocol) })}</>
+                    )}
+                  </p>
+                  {protocol.description && (
+                    <p className="mt-1 text-sm text-uc-text-muted">{protocol.description}</p>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button variant="accent" className="px-2" onClick={() => handleSelectProtocol(protocol)}>
+                    {t('fingerboardTesting.performTest') || 'Perform Test'}
+                  </Button>
+                  <Button variant="ghost" className="px-2" onClick={() => handleViewResults(protocol)}>
+                    {t('fingerboardTesting.results') || 'Results'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="px-2"
+                    onClick={() => handleCloneProtocol(protocol)}
+                    title={t('fingerboardTesting.cloneTitle') || 'Duplicate this protocol'}
+                  >
+                    {t('fingerboardTesting.clone') || 'Clone'}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+            <button
+              type="button"
+              onClick={handleCreateProtocol}
+              className="flex min-h-14 w-full items-center justify-center rounded-uc-card border border-dashed border-uc-border px-4 text-sm font-bold text-uc-primary transition-colors hover:border-uc-primary"
+            >
+              + {t('fingerboardTesting.createProtocol') || 'Create Testing Protocol'}
+            </button>
+          </div>
+        )
+      ) : step === 'results' && selectedProtocol ? (
+        <div className="space-y-4">
+          <Button variant="accent" size="lg" className="w-full" onClick={() => setStep('perform')}>
+            {t('fingerboardTesting.performAnother') || 'Perform another test'}
+          </Button>
+
+          {testResults.length > 0 && (
+            <FingerboardTestChart testResults={testResults} protocol={selectedProtocol} />
+          )}
+
+          <Card padded={false} className="overflow-hidden">
+            <Overline className="px-4 pt-4 pb-1 uc-num">
+              {t('fingerboardTesting.testResults') || 'Test Results'} ({testResults.length})
+            </Overline>
+            {testResults.length === 0 ? (
+              <p className="px-4 pb-6 pt-4 text-center text-sm text-uc-text-muted">
+                {t('fingerboard.noTestResults') || 'No test results yet'}
+              </p>
+            ) : (
+              <FingerboardTestResultsTable testResults={testResults} />
+            )}
+          </Card>
+        </div>
+      ) : null}
+    </BottomSheet>
   )
 }
-

@@ -649,7 +649,9 @@
       "OPEN_HAND": "Chwyt otwarty",
       "CRIMP": "Chwyt zamknięty (crimp)",
       "SLOPER": "Oblak"
-    }
+    },
+    "hangNumber": "Zwis {{number}}",
+    "testYourselfSubtitle": "Zmierz siłę i śledź jej postępy"
   },
   "routines": {
     "title": "Moje Rutyny",
@@ -1445,7 +1447,49 @@
       "time": "Czas (s)",
       "success": "Sukces",
       "notes": "Notatki"
-    }
+    },
+    "view": "Zobacz",
+    "back": "Wstecz",
+    "stepOf": "Krok {{step}} z {{total}}",
+    "chooseProtocol": "Wybierz protokół testowy",
+    "results": "Wyniki",
+    "resultsCount": "Wyniki: {{count}}",
+    "clone": "Klonuj",
+    "cloneTitle": "Zduplikuj ten protokół",
+    "performAnother": "Wykonaj kolejny test",
+    "createError": "Nie udało się utworzyć protokołu testowego",
+    "cloneError": "Nie udało się sklonować protokołu",
+    "editProtocol": "Edytuj protokół testowy",
+    "testHangs": "Zwisy testowe",
+    "addTestHang": "Dodaj zwis testowy",
+    "editTestHang": "Edytuj zwis testowy",
+    "noTestHangs": "Nie dodano jeszcze zwisów testowych",
+    "loadFromProtocol": "Wczytaj z protokołu",
+    "target": "cel",
+    "targetLoad": "Docelowe obciążenie",
+    "targetTime": "Docelowy czas",
+    "protocolName": "Nazwa protokołu",
+    "editName": "Edytuj nazwę protokołu",
+    "renameError": "Nie udało się zmienić nazwy protokołu",
+    "saveTestError": "Nie udało się zapisać testu",
+    "testDate": "Data testu",
+    "successQuestion": "Udało się?",
+    "yes": "Tak",
+    "no": "Nie",
+    "remindRetest": "Przypomnij o ponownym teście co",
+    "reminderInterval": "Odstęp",
+    "reminderUnit": "Jednostka",
+    "units": {
+      "days": "dni",
+      "weeks": "tyg.",
+      "months": "mies."
+    },
+    "saveResults": "Zapisz wyniki",
+    "metric": "Miara",
+    "metricLoad": "Obciążenie",
+    "metricTime": "Czas",
+    "chartTitleLoad": "Dodatkowe obciążenie w testach",
+    "chartTitleTime": "Czas zwisu w testach"
   },
   "offlineForm": {
     "title": "Dodaj trening",
@@ -1468,7 +1512,8 @@
     "load": "Obciążenie (kg)",
     "loadHint": "wartość ujemna oznacza odciążenie",
     "time": "Czas (sekundy)",
-    "notes": "Notatki (opcjonalnie)"
+    "notes": "Notatki (opcjonalnie)",
+    "hangs": "Zwisy"
   },
   "offlineSync": {
     "uploaded": "Przesłano treningi zapisane offline: {{count}}",
