@@ -10,6 +10,7 @@ import {
   getStorageSize,
   getLastSyncTime
 } from '@/lib/offline-storage';
+import { OFFLINE_WORKOUTS_CHANGED_EVENT } from '@/lib/offline-sync';
 
 export interface UseOfflineReturn {
   isOnline: boolean;
@@ -64,6 +65,9 @@ export const useOffline = (): UseOfflineReturn => {
 
     window.addEventListener('storage', handleStorageChange);
 
+    // Offline storage changed in this tab (saved or uploaded workouts)
+    window.addEventListener(OFFLINE_WORKOUTS_CHANGED_EVENT, refreshOfflineData);
+
     // Poll for changes every 5 seconds when offline
     const interval = setInterval(() => {
       if (!isOnline()) {
@@ -75,6 +79,7 @@ export const useOffline = (): UseOfflineReturn => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener(OFFLINE_WORKOUTS_CHANGED_EVENT, refreshOfflineData);
       clearInterval(interval);
     };
   }, [refreshOfflineData]);

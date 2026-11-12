@@ -1,16 +1,28 @@
 // Offline storage utilities for PWA functionality
 export interface OfflineWorkout {
   id: string;
-  type: 'gym' | 'bouldering' | 'circuits' | 'lead_rock' | 'lead_artificial';
+  type: 'gym' | 'bouldering' | 'circuits' | 'lead_rock' | 'lead_artificial' | 'mental_practice' | 'fingerboard';
   startTime: string;
   endTime?: string;
   trainingVolume?: 'TR1' | 'TR2' | 'TR3' | 'TR4' | 'TR5';
   details?: Record<string, unknown>;
   preSessionFeel?: number;
+  dayAfterTiredness?: number;
+  focusLevel?: number;
+  sector?: string;
+  mentalPracticeType?: string;
+  timeOfDay?: string[];
+  mentalState?: Record<string, unknown>;
+  gratitude?: string;
+  improvements?: string;
   notes?: string;
   exercises?: OfflineExercise[];
   createdAt: string;
   synced: boolean;
+  // Id of the workout on the server once uploaded. Older entries were marked `synced` without ever
+  // being uploaded, so a missing serverId (not `synced`) is what marks a workout as pending upload.
+  serverId?: string;
+  syncError?: string;
 }
 
 export interface OfflineExercise {
@@ -70,7 +82,11 @@ export const deleteOfflineWorkout = (id: string): void => {
 };
 
 export const getUnsyncedWorkouts = (): OfflineWorkout[] => {
-  return getOfflineWorkouts().filter(workout => !workout.synced);
+  return getPendingUploadWorkouts();
+};
+
+export const getPendingUploadWorkouts = (): OfflineWorkout[] => {
+  return getOfflineWorkouts().filter(workout => !workout.serverId);
 };
 
 // Sync queue management
@@ -116,6 +132,31 @@ export const markWorkoutAsSynced = (id: string): void => {
     localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify(updatedQueue));
   } catch (error) {
     console.error('Failed to mark workout as synced:', error);
+  }
+};
+
+export const markWorkoutAsUploaded = (id: string, serverId: string): void => {
+  try {
+    const workouts = getOfflineWorkouts();
+    const updatedWorkouts = workouts.map(w =>
+      w.id === id ? { ...w, synced: true, serverId, syncError: undefined } : w
+    );
+    localStorage.setItem(STORAGE_KEYS.OFFLINE_WORKOUTS, JSON.stringify(updatedWorkouts));
+
+    const queue = getSyncQueue();
+    localStorage.setItem(STORAGE_KEYS.SYNC_QUEUE, JSON.stringify(queue.filter(w => w.id !== id)));
+  } catch (error) {
+    console.error('Failed to mark workout as uploaded:', error);
+  }
+};
+
+export const markWorkoutSyncError = (id: string, syncError: string): void => {
+  try {
+    const workouts = getOfflineWorkouts();
+    const updatedWorkouts = workouts.map(w => (w.id === id ? { ...w, syncError } : w));
+    localStorage.setItem(STORAGE_KEYS.OFFLINE_WORKOUTS, JSON.stringify(updatedWorkouts));
+  } catch (error) {
+    console.error('Failed to save workout sync error:', error);
   }
 };
 

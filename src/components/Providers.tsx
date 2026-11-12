@@ -8,6 +8,7 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ServiceWorkerProvider } from "@/components/ServiceWorkerProvider";
+import { OfflineSyncManager } from "@/components/OfflineSyncManager";
 import { NavigationHeader } from "@/components/NavigationHeader";
 import { MessagesPanel } from "@/components/MessagesPanel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -29,6 +30,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
       />
       <PWAInstallPrompt />
       <OfflineIndicator />
+      <OfflineSyncManager />
     </>
   );
 }

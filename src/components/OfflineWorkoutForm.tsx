@@ -4,6 +4,10 @@ import { useState, useMemo } from 'react';
 import { useOffline } from '@/hooks/useOffline';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/contexts/ToastContext';
+import { OFFLINE_WORKOUT_QUEUED_EVENT } from './OfflineSyncManager';
+import { OFFLINE_WORKOUTS_CHANGED_EVENT } from '@/lib/offline-sync';
+import { toLocalDateString } from '@/lib/date-utils';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import { 
   saveOfflineWorkout, 
@@ -40,10 +44,11 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
   const { isOnline } = useOffline();
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t } = useLanguage();
+  const { showInfo } = useToast();
   
   const [formData, setFormData] = useState({
     type: 'GYM' as WorkoutType,
-    date: typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '2024-01-15',
+    date: typeof window !== 'undefined' ? toLocalDateString() : '2024-01-15',
     trainingVolume: 'TR3' as TrainingVolume,
     preSessionFeel: 3,
     dayAfterTiredness: 3,
@@ -63,23 +68,23 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
   const cycleInfoForSelectedDate = useMemo(() => {
     if (!isCycleTrackingEnabled || !cycleSettings) return null;
     
-    const selectedDate = new Date(formData.date);
-    return calculateCycleInfo(cycleSettings, selectedDate);
+    // YYYY-MM-DD string: read as that calendar day
+    return calculateCycleInfo(cycleSettings, formData.date);
   }, [formData.date, cycleSettings, isCycleTrackingEnabled]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.type) {
-      newErrors.type = 'Please select a workout type';
+      newErrors.type = t('workouts.errors.workoutTypeRequired');
     }
 
     if (!formData.date) {
-      newErrors.date = 'Please select a date';
+      newErrors.date = t('workouts.errors.dateRequired');
     }
 
     if (formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && !formData.trainingVolume) {
-      newErrors.trainingVolume = 'Please select training volume';
+      newErrors.trainingVolume = t('workouts.errors.trainingVolumeRequired');
     }
 
     setErrors(newErrors);
@@ -101,32 +106,44 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
       return;
     }
 
+    const isMentalPractice = formData.type === 'MENTAL_PRACTICE';
+    const hasTrainingVolume = formData.type !== 'GYM' && !isMentalPractice;
+    const hasSector = ['LEAD_ROCK', 'LEAD_ARTIFICIAL', 'BOULDERING', 'CIRCUITS'].includes(formData.type);
+
+    // Keep only the fields the form shows for the selected type
     const workout: OfflineWorkout = {
       id: generateOfflineId(),
       type: formData.type.toLowerCase() as OfflineWorkout['type'],
       startTime: `${formData.date}T10:00:00.000Z`,
       endTime: undefined,
-      trainingVolume: formData.trainingVolume,
+      trainingVolume: hasTrainingVolume ? formData.trainingVolume : undefined,
       preSessionFeel: formData.preSessionFeel,
+      dayAfterTiredness: formData.dayAfterTiredness,
+      focusLevel: formData.focusLevel,
+      sector: hasSector ? formData.sector || undefined : undefined,
+      mentalPracticeType: isMentalPractice ? formData.mentalPracticeType : undefined,
+      timeOfDay: isMentalPractice && formData.timeOfDay.length > 0 ? formData.timeOfDay : undefined,
+      mentalState: !isMentalPractice && Object.keys(formData.mentalState).length > 0 ? formData.mentalState : undefined,
+      gratitude: isMentalPractice ? undefined : formData.gratitude || undefined,
+      improvements: isMentalPractice ? undefined : formData.improvements || undefined,
       notes: formData.notes || undefined,
       createdAt: typeof window !== 'undefined' ? new Date().toISOString() : '2024-01-15T10:00:00.000Z',
-      synced: isOnline,
+      synced: false,
       exercises: [],
     };
 
-    // Save to offline storage
+    // Save locally first so nothing is lost if the upload fails; OfflineSyncManager uploads it
+    // right away when online (and shows a toast), or once the connection is back
     saveOfflineWorkout(workout);
-    
-    // If offline, add to sync queue
-    if (!isOnline) {
-      addToSyncQueue(workout);
-    }
+    addToSyncQueue(workout);
+    window.dispatchEvent(new CustomEvent(OFFLINE_WORKOUTS_CHANGED_EVENT));
+    window.dispatchEvent(new CustomEvent(OFFLINE_WORKOUT_QUEUED_EVENT));
 
-    // Close the form
     onClose();
-    
-    // Show success message
-    alert(isOnline ? 'Workout saved and synced!' : 'Workout saved offline. It will sync when you\'re back online.');
+
+    if (!isOnline) {
+      showInfo(t('offlineForm.savedOffline'));
+    }
   };
 
   return (
@@ -135,7 +152,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            {!isOnline ? '📱 Add Workout (Offline)' : '➕ Add Workout'}
+            {!isOnline ? `📱 ${t('offlineForm.titleOffline')}` : `➕ ${t('offlineForm.title')}`}
           </h2>
           <button
             onClick={onClose}
@@ -153,7 +170,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             {/* Workout Type Selection */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                🏋️ Workout Type *
+                🏋️ {t('workouts.workoutType')} *
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {workoutTypes.map((type) => (
@@ -170,7 +187,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                     <div className="flex items-center space-x-2">
                       <span className="text-lg">{type.emoji}</span>
                       <div className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                        {type.label}
+                        {t(`workouts.workoutTypes.${type.value}`)}
                       </div>
                     </div>
                   </button>
@@ -184,7 +201,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             {/* Date */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                📅 Date *
+                📅 {t('workouts.date')} *
               </label>
               <input
                 type="date"
@@ -214,7 +231,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             {formData.type !== 'GYM' && formData.type !== 'MENTAL_PRACTICE' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  💪 Training Volume *
+                  💪 {t('workouts.trainingVolume')} *
                 </label>
                 <div className="grid grid-cols-1 gap-2">
                   {trainingVolumes.map((volume) => (
@@ -229,10 +246,10 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                       }`}
                     >
                       <div className="font-medium text-slate-900 dark:text-slate-50">
-                        {volume.label}
+                        {t(`workouts.trainingVolumes.${volume.value}`)}
                       </div>
                       <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {volume.description}
+                        {t(`workouts.trainingVolumeDescriptions.${volume.value}`)}
                       </div>
                     </button>
                   ))}
@@ -247,16 +264,16 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             {formData.type === 'MENTAL_PRACTICE' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  🧘 Practice Type
+                  🧘 {t('workouts.mentalPracticeType')}
                 </label>
                 <select
                   value={formData.mentalPracticeType}
                   onChange={(e) => updateFormData('mentalPracticeType', e.target.value)}
                   className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
                 >
-                  <option value="MEDITATION">Meditation</option>
-                  <option value="REFLECTING">Reflecting</option>
-                  <option value="OTHER">Other</option>
+                  <option value="MEDITATION">{t('workouts.mentalPracticeTypes.meditation')}</option>
+                  <option value="REFLECTING">{t('workouts.mentalPracticeTypes.reflecting')}</option>
+                  <option value="OTHER">{t('workouts.mentalPracticeTypes.other')}</option>
                 </select>
               </div>
             )}
@@ -265,7 +282,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             {formData.type === 'MENTAL_PRACTICE' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                  🕐 Time of Day
+                  🕐 {t('workouts.timeOfDay')}
                 </label>
                 <div className="flex space-x-4">
                   {[
@@ -300,7 +317,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING' || formData.type === 'CIRCUITS') && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  🏔️ Sector
+                  🏔️ {t('workouts.sector')}
                 </label>
                 <input
                   type="text"
@@ -315,7 +332,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             {/* Pre-session Feel */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                😊 Pre-session Feel (1-5)
+                😊 {t('workouts.preSessionFeel')}
               </label>
               <div className="flex space-x-2">
                 {[1, 2, 3, 4, 5].map((rating) => (
@@ -343,18 +360,14 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                 ))}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                {t(`workouts.ratingLabels.preSessionFeel.${formData.preSessionFeel}`) || 
-                 (formData.preSessionFeel === 1 ? 'Very poor' : 
-                 formData.preSessionFeel === 2 ? 'Poor' : 
-                 formData.preSessionFeel === 3 ? 'Average' : 
-                 formData.preSessionFeel === 4 ? 'Good' : 'Excellent')}
+                {t(`workouts.ratingLabels.preSessionFeel.${formData.preSessionFeel}`)}
               </div>
             </div>
 
             {/* Day After Tiredness */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                😴 Day After Tiredness (1-5)
+                😴 {t('workouts.dayAfterTiredness')}
               </label>
               <div className="flex space-x-2">
                 {[1, 2, 3, 4, 5].map((rating) => (
@@ -382,18 +395,14 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                 ))}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                {t(`workouts.ratingLabels.dayAfterTiredness.${formData.dayAfterTiredness}`) || 
-                 (formData.dayAfterTiredness === 1 ? 'Very fresh' : 
-                 formData.dayAfterTiredness === 2 ? 'Fresh' : 
-                 formData.dayAfterTiredness === 3 ? 'Normal' : 
-                 formData.dayAfterTiredness === 4 ? 'Tired' : 'Very tired')}
+                {t(`workouts.ratingLabels.dayAfterTiredness.${formData.dayAfterTiredness}`)}
               </div>
             </div>
 
             {/* Focus Level */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                🎯 Focus Level (1-5)
+                🎯 {t('workouts.focusLevel')}
               </label>
               <div className="flex space-x-2">
                 {[1, 2, 3, 4, 5].map((rating) => (
@@ -421,11 +430,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
                 ))}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                {t(`workouts.ratingLabels.focusLevel.${formData.focusLevel}`) || 
-                 (formData.focusLevel === 1 ? 'Very distracted' : 
-                 formData.focusLevel === 2 ? 'Distracted' : 
-                 formData.focusLevel === 3 ? 'Average' : 
-                 formData.focusLevel === 4 ? 'Focused' : 'Very focused')}
+                {t(`workouts.ratingLabels.focusLevel.${formData.focusLevel}`)}
               </div>
             </div>
 
@@ -473,7 +478,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                📝 Notes
+                📝 {t('workouts.notes')}
               </label>
               <textarea
                 value={formData.notes}
@@ -493,7 +498,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             onClick={onClose}
             className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
@@ -501,7 +506,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
             <span>💾</span>
-            <span>{!isOnline ? 'Save Offline' : 'Save Workout'}</span>
+            <span>{!isOnline ? t('offlineForm.saveOffline') : t('workouts.saveWorkout')}</span>
           </button>
         </div>
       </div>
