@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { SITE_GATE_COOKIE, isGateExempt, siteGateToken } from '@/lib/site-gate'
 
 export async function middleware(request: NextRequest) {
-  const token = await getToken({ 
+  // Site password gate in front of everything (only when SITE_PASSWORD is set)
+  const sitePassword = process.env.SITE_PASSWORD
+  const { pathname, search } = request.nextUrl
+  if (sitePassword && !isGateExempt(pathname)) {
+    const passed = request.cookies.get(SITE_GATE_COOKIE)?.value === await siteGateToken(sitePassword)
+    if (!passed) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Site password required' }, { status: 401 })
+      }
+      const gateUrl = new URL('/gate', request.url)
+      gateUrl.searchParams.set('next', pathname + search)
+      return NextResponse.redirect(gateUrl)
+    }
+  }
+
+  const token = await getToken({
     req: request, 
     secret: process.env.NEXTAUTH_SECRET 
   })

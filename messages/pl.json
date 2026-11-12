@@ -63,6 +63,13 @@
     "saving": "Zapisywanie...",
     "undo": "Cofnij"
   },
+  "gate": {
+    "title": "Prywatna aplikacja",
+    "subtitle": "Wpisz hasło dostępu, aby przejść dalej.",
+    "enter": "Wejdź",
+    "wrongPassword": "Nieprawidłowe hasło",
+    "tooManyAttempts": "Zbyt wiele prób. Spróbuj ponownie za 15 minut."
+  },
   "auth": {
     "signIn": "Zaloguj się",
     "signUp": "Zarejestruj się",

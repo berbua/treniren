@@ -63,6 +63,13 @@
     "saving": "Saving...",
     "undo": "Undo"
   },
+  "gate": {
+    "title": "Private app",
+    "subtitle": "Enter the access password to continue.",
+    "enter": "Enter",
+    "wrongPassword": "Wrong password",
+    "tooManyAttempts": "Too many attempts. Try again in 15 minutes."
+  },
   "auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
