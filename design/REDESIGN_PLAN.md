@@ -455,7 +455,7 @@ note the answer.
   `workouts.boulderNumber / sendStyle / sendStyles.* / climbTries / triesCount`, `stats.grades …`. Not checked in a
   browser yet. No mockup — needs a design.
 - 2026-11-13: Training plan import (branch `feat/plan-import`). `Plan` gets `type` + `trainingVolume` (migration
-  `20261113_add_plan_type_volume`, **apply to production before deploying** — Prisma selects the columns, so
+  `20261113_add_plan_type_volume`, applied to production 2026-11-13 — Prisma selects the columns, so
   /api/plans and the data export fail without them). `lib/plan-import.ts` parses CSV (header `date,type,title,volume,
   notes`, any column order, `;` when the header uses it, ``` fences ignored, friendly type names like "lead wall") and
   holds the "Copy instructions for Claude" prompt. API `/api/plans` (GET all with linked workout ids, POST up to 100)
