@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, validatePassword, validateEmail } from '@/lib/auth-utils'
 import { applySecurity } from '@/lib/api-security'
+import { findUserByEmail } from '@/lib/auth'
 import { sanitizeEmail, sanitizeString } from '@/lib/sanitize'
 
 // POST /api/auth/register - Register a new user
@@ -42,9 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
+    const existingUser = await findUserByEmail(email)
 
     if (existingUser) {
       return NextResponse.json(

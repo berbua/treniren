@@ -13,6 +13,9 @@ const store: RateLimitStore = {}
 interface RateLimitOptions {
   windowMs: number // Time window in milliseconds
   maxRequests: number // Maximum requests per window
+  // Namespace for the default IP key. Every limiter shares one store, so without it e.g. ordinary API
+  // calls would use up the 5 register/login attempts of the same IP.
+  prefix?: string
   keyGenerator?: (request: Request) => string // Custom key generator
 }
 
@@ -30,9 +33,9 @@ export function rateLimit(options: Partial<RateLimitOptions> = {}) {
     // Generate key (default: IP address)
     const key = opts.keyGenerator 
       ? opts.keyGenerator(request)
-      : request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+      : `${opts.prefix ?? 'default'}:${request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
         request.headers.get('x-real-ip') || 
-        'unknown'
+        'unknown'}`
 
     const now = Date.now()
     const record = store[key]
@@ -79,16 +82,19 @@ export function rateLimit(options: Partial<RateLimitOptions> = {}) {
 
 // Pre-configured rate limiters
 export const apiRateLimit = rateLimit({
+  prefix: 'api',
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 100, // 100 requests per 15 minutes
 })
 
 export const strictRateLimit = rateLimit({
+  prefix: 'strict',
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 20, // 20 requests per 15 minutes (for sensitive operations)
 })
 
 export const authRateLimit = rateLimit({
+  prefix: 'auth',
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 5, // 5 requests per 15 minutes (for auth endpoints)
 })

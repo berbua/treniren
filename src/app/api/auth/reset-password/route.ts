@@ -59,18 +59,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update user password
     const hashedPassword = await hashPassword(password)
-    
-    await prisma.user.update({
-      where: { email: resetToken.email },
-      data: { password: hashedPassword }
+
+    // Claim the token and change the password together. Deleting by token first makes the link single-use
+    // even for two simultaneous submits, and deleting every token for the email retires older links too.
+    const used = await prisma.$transaction(async (tx) => {
+      const claimed = await tx.passwordResetToken.deleteMany({ where: { token } })
+      if (claimed.count === 0) return false
+      await tx.passwordResetToken.deleteMany({ where: { email: resetToken.email } })
+      await tx.user.update({
+        where: { email: resetToken.email },
+        data: { password: hashedPassword }
+      })
+      return true
     })
 
-    // Delete used reset token
-    await prisma.passwordResetToken.delete({
-      where: { id: resetToken.id }
-    })
+    if (!used) {
+      return NextResponse.json(
+        { error: 'Invalid or expired reset token' },
+        { status: 400 }
+      )
+    }
 
     return NextResponse.json(
       { message: 'Password reset successfully' },

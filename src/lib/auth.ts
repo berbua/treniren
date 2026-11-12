@@ -9,6 +9,13 @@ if (process.env.NODE_ENV === 'development') {
   console.log('[NextAuth] NEXTAUTH_URL:', process.env.NEXTAUTH_URL || 'NOT SET (will default to localhost:3000)')
 }
 
+/**
+ * Look a user up by email ignoring case. Registration stores emails lowercased, but older accounts may
+ * have mixed case and people type their address however they like.
+ */
+export const findUserByEmail = (email: string) =>
+  prisma.user.findFirst({ where: { email: { equals: email.trim(), mode: 'insensitive' } } })
+
 export const authOptions: NextAuthOptions = {
   // Remove PrismaAdapter for now to fix session issues
   // adapter: PrismaAdapter(prisma),
@@ -43,11 +50,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        })
+        const user = await findUserByEmail(credentials.email)
 
         if (!user || !user.password) {
           return null
@@ -85,9 +88,7 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === 'google' && user) {
         try {
           // Check if user exists in database
-          let dbUser = await prisma.user.findUnique({
-            where: { email: user.email! }
-          })
+          let dbUser = await findUserByEmail(user.email!)
 
           // If user doesn't exist, create them
           if (!dbUser) {

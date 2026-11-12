@@ -7,7 +7,7 @@ import { AuthAlert, AuthShell, authLinkClass } from '@/components/AuthLayout'
 import { Button, Icon, Input, Label } from '@/components/ui'
 
 export default function ForgotPasswordForm() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -25,7 +25,7 @@ export default function ForgotPasswordForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, language }),
       })
 
       if (response.ok) {
