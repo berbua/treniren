@@ -14,6 +14,8 @@ interface ConfirmationDialogProps {
   cancelText?: string
   variant?: 'danger' | 'warning' | 'info'
   isLoading?: boolean
+  /** Which button is filled. 'cancel' when going back is the safer choice (e.g. "Go back & fill"). */
+  emphasis?: 'confirm' | 'cancel'
 }
 
 export function ConfirmationDialog({
@@ -26,15 +28,16 @@ export function ConfirmationDialog({
   cancelText,
   variant = 'danger',
   isLoading = false,
+  emphasis = 'confirm',
 }: ConfirmationDialogProps) {
   const { t } = useLanguage()
 
   if (!isOpen) return null
 
-  const variantStyles: Record<NonNullable<ConfirmationDialogProps['variant']>, { button: ButtonVariant; icon: string }> = {
-    danger: { button: 'destructive', icon: '🔴' },
-    warning: { button: 'accent', icon: '⚠️' },
-    info: { button: 'primary', icon: 'ℹ️' },
+  const variantStyles: Record<NonNullable<ConfirmationDialogProps['variant']>, { button: ButtonVariant; icon: string; tile: string }> = {
+    danger: { button: 'destructive', icon: '🔴', tile: 'bg-uc-error-bg' },
+    warning: { button: 'accent', icon: '⚠️', tile: 'bg-uc-warning-bg' },
+    info: { button: 'primary', icon: 'ℹ️', tile: 'bg-uc-primary-container' },
   }
 
   const styles = variantStyles[variant]
@@ -47,21 +50,29 @@ export function ConfirmationDialog({
         aria-modal="true"
         className="relative bg-uc-elevated text-uc-text rounded-[20px] shadow-uc border border-uc-border max-w-md w-full p-5"
       >
-        <div className="flex items-start gap-3 mb-4">
-          <div aria-hidden className="text-2xl leading-none pt-0.5">{styles.icon}</div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold mb-2">{title}</h3>
-            <div className="text-sm text-uc-text-muted">
-              {typeof message === 'string' ? <p>{message}</p> : message}
-            </div>
-          </div>
+        <div aria-hidden className={`mb-3 flex size-12 items-center justify-center rounded-uc-input text-xl ${styles.tile}`}>
+          {styles.icon}
+        </div>
+        <h3 className="text-xl font-bold mb-2">{title}</h3>
+        <div className="text-sm text-uc-text-muted">
+          {typeof message === 'string' ? <p>{message}</p> : message}
         </div>
 
-        <div className="flex flex-wrap justify-end gap-2 mt-5">
-          <Button variant="ghost" onClick={onClose} disabled={isLoading}>
+        <div className="flex flex-wrap gap-2 mt-5">
+          <Button
+            variant={emphasis === 'cancel' ? 'primary' : 'ghost'}
+            onClick={onClose}
+            disabled={isLoading}
+            className="flex-1 basis-36"
+          >
             {cancelText || t('common.cancel') || 'Cancel'}
           </Button>
-          <Button variant={styles.button} onClick={onConfirm} isLoading={isLoading}>
+          <Button
+            variant={emphasis === 'cancel' ? 'ghost' : styles.button}
+            onClick={onConfirm}
+            isLoading={isLoading}
+            className="flex-1 basis-36"
+          >
             {confirmText || t('common.confirm') || 'Confirm'}
           </Button>
         </div>

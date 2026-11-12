@@ -5,6 +5,7 @@ import { Exercise, WorkoutExerciseData, WorkoutSet, Routine } from '@/types/work
 import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
 import { Tooltip } from './Tooltip'
+import { BottomSheet, Button, Card, EmptyState, Input, Overline } from './ui'
 
 interface WorkoutExerciseTrackerProps {
   exercises: WorkoutExerciseData[]
@@ -212,46 +213,31 @@ export default function WorkoutExerciseTracker({
   const stats = (exerciseId: string) => quickStats[exerciseId] || {}
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          📋 Exercises & Sets
-        </label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setShowRoutineSelector(true)}
-            className="px-4 py-2 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black rounded-lg text-sm font-medium transition-colors"
-          >
-            👯 {t('workouts.labels.loadRoutine') || 'Load Routine'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowExerciseSelector(!showExerciseSelector)}
-            className="px-4 py-2 bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light rounded-lg text-sm font-medium transition-colors"
-          >
-            + {t('workouts.labels.addExercise') || t('exercises.addExercise') || 'Add Exercise'}
-          </button>
-        </div>
+    <div className="space-y-3">
+      <Overline>📋 Exercises & Sets</Overline>
+
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="tonal" onClick={() => setShowRoutineSelector(true)}>
+          <span aria-hidden>👯</span> {t('workouts.labels.loadRoutine') || 'Load Routine'}
+        </Button>
+        <Button variant="ghost" onClick={() => setShowExerciseSelector(!showExerciseSelector)} aria-expanded={showExerciseSelector}>
+          <span aria-hidden>+</span> {t('workouts.labels.addExercise') || t('exercises.addExercise') || 'Add Exercise'}
+        </Button>
       </div>
 
       {/* Exercise Selector */}
       {showExerciseSelector && (
-        <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-          <div className="mb-3">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('workouts.placeholders.searchExercises') || '🔍 Search exercises...'}
-              className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
-              autoFocus
-            />
-          </div>
+        <Card className="space-y-3">
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('workouts.placeholders.searchExercises') || '🔍 Search exercises...'}
+            autoFocus
+          />
 
           {/* Exercise List */}
-          <div className="max-h-48 overflow-y-auto space-y-1 mb-3">
+          <div className="max-h-48 overflow-y-auto -mx-1">
             {filteredExercises
               .filter(ex => !exercises.some(we => we.exerciseId === ex.id))
               .map(exercise => (
@@ -259,153 +245,156 @@ export default function WorkoutExerciseTracker({
                   key={exercise.id}
                   type="button"
                   onClick={() => handleAddExercise(exercise)}
-                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-uc-black/50 transition-colors flex items-center justify-between"
+                  className="w-full min-h-11 text-left px-3 py-2 rounded-uc-input hover:bg-uc-elevated transition-colors flex items-center justify-between gap-3"
                 >
-                  <div>
-                    <div className="font-medium text-uc-text-light">{exercise.name}</div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-uc-text">{exercise.name}</div>
                     {exercise.category && (
                       <div className="text-xs text-uc-text-muted">{exercise.category}</div>
                     )}
                   </div>
-                  <span className="text-xs text-uc-text-muted">{exercise.defaultUnit}</span>
+                  <span className="text-xs font-semibold text-uc-text-muted">{exercise.defaultUnit}</span>
                 </button>
               ))}
           </div>
 
           {/* Create New Exercise */}
-          {searchQuery.trim() && 
+          {searchQuery.trim() &&
            !filteredExercises.some(ex => ex.name.toLowerCase() === searchQuery.toLowerCase()) &&
            onCreateExercise && (
-            <button
-              type="button"
-              onClick={handleCreateNewExercise}
-              className="w-full px-4 py-2 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black rounded-lg text-sm font-medium transition-colors"
-            >
+            <Button variant="tonal" onClick={handleCreateNewExercise} className="w-full">
               + Create &quot;{searchQuery}&quot;
-            </button>
+            </Button>
           )}
 
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={() => {
               setShowExerciseSelector(false)
               setSearchQuery('')
             }}
-            className="mt-2 w-full px-4 py-2 text-uc-text-muted hover:text-uc-text-light transition-colors text-sm"
+            className="w-full"
           >
             Cancel
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {/* Exercises List */}
       {exercises.length === 0 ? (
-        <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-          <div className="text-6xl mb-4">💪</div>
-          <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-            {t('workouts.labels.noExercisesAdded') || 'No exercises added yet'}
-          </h3>
-          <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-            {t('workouts.labels.noExercisesDescription') || 'Add exercises to track your sets, reps, and weights. Click "Add Exercise" above to get started.'}
-          </p>
-          <p className="text-sm text-uc-text-muted">
-            {t('workouts.labels.clickAddExerciseToStart') || `Click "${t('exercises.addExercise') || 'Add Exercise'}" to start tracking`}
-          </p>
+        <div className="rounded-uc-card border border-dashed border-uc-border">
+          <EmptyState
+            icon="💪"
+            title={t('workouts.labels.noExercisesAdded') || 'No exercises added yet'}
+            description={
+              <>
+                {t('workouts.labels.noExercisesDescription') || 'Add exercises to track your sets, reps, and weights. Click "Add Exercise" above to get started.'}
+                <span className="block mt-2">
+                  {t('workouts.labels.clickAddExerciseToStart') || `Click "${t('exercises.addExercise') || 'Add Exercise'}" to start tracking`}
+                </span>
+              </>
+            }
+          />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {exercises.map((exercise, exerciseIndex) => {
             const exerciseStats = stats(exercise.exerciseId)
             return (
-              <div
-                key={exerciseIndex}
-                className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20"
-              >
+              <Card key={exerciseIndex}>
                 {/* Exercise Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-uc-text-light">{exercise.exerciseName}</h4>
-                      {exerciseStats.lastUsed && (
-                        <span className="text-xs text-uc-text-muted">
-                          (Last: {exerciseStats.lastWeight}×{exerciseStats.lastReps})
-                        </span>
-                      )}
-                    </div>
+                <div className="flex items-start gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-uc-text">{exercise.exerciseName}</h4>
+                    {exerciseStats.lastUsed && (
+                      <p className="text-xs text-uc-text-muted uc-num">
+                        Last: {exerciseStats.lastWeight}×{exerciseStats.lastReps}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/exercises/${exercise.exerciseId}`}
-                      className="text-xs text-uc-mustard hover:text-uc-mustard/80 transition-colors"
-                      target="_blank"
-                    >
-                      View Progress →
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveExercise(exerciseIndex)}
-                      className="text-uc-text-muted hover:text-red-500 transition-colors"
-                      title="Remove exercise"
-                    >
-                      🗑️
-                    </button>
-                  </div>
+                  <Link
+                    href={`/exercises/${exercise.exerciseId}`}
+                    className="min-h-11 inline-flex items-center text-sm font-bold text-uc-primary hover:underline"
+                    target="_blank"
+                  >
+                    View Progress →
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveExercise(exerciseIndex)}
+                    className={iconButtonClass}
+                    title="Remove exercise"
+                    aria-label="Remove exercise"
+                  >
+                    🗑️
+                  </button>
                 </div>
 
                 {/* Sets */}
+                {exercise.sets.length > 0 && (
+                  <div className={`${setGridClass} mb-1`}>
+                    <Overline>Set</Overline>
+                    <Overline className="text-center">{t('workouts.placeholders.reps') || 'Reps'}</Overline>
+                    <Overline className="text-center">kg</Overline>
+                    <span className="flex items-center justify-center gap-1">
+                      <Overline>{t('workouts.placeholders.rir') || 'RIR'}</Overline>
+                      <Tooltip content={t('workouts.tooltips.RIR') || 'Reps in Reserve (RIR) is how many more reps you could have done. RIR 0 = maximum effort, RIR 3 = you could do 3 more reps. Helps track training intensity.'}>
+                        <span className="cursor-help text-xs leading-none">ℹ️</span>
+                      </Tooltip>
+                    </span>
+                    <span />
+                  </div>
+                )}
                 <div className="space-y-2">
                   {exercise.sets.map((set, setIndex) => (
-                    <div
-                      key={setIndex}
-                      className="flex items-center gap-2 bg-uc-black/50 rounded-lg p-2"
-                    >
-                      <span className="text-sm text-uc-text-muted w-8">Set {setIndex + 1}</span>
-                      <input
+                    <div key={setIndex} className={setGridClass}>
+                      <span className="text-sm font-semibold text-uc-text-muted uc-num">{setIndex + 1}</span>
+                      <Input
                         type="number"
                         value={set.reps || ''}
                         onChange={(e) =>
                           handleSetChange(exerciseIndex, setIndex, 'reps', parseInt(e.target.value) || 0)
                         }
                         placeholder={t('workouts.placeholders.reps') || 'Reps'}
+                        aria-label={`${t('workouts.placeholders.reps') || 'Reps'} · ${setIndex + 1}`}
                         min="1"
-                        className="w-20 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
+                        className={setInputClass}
                       />
-                      <span className="text-uc-text-muted">×</span>
-                      <input
+                      <Input
                         type="number"
                         value={set.weight || ''}
                         onChange={(e) =>
                           handleSetChange(exerciseIndex, setIndex, 'weight', parseFloat(e.target.value) || 0)
                         }
                         placeholder={t('workouts.placeholders.weight') || 'Weight'}
+                        aria-label={`${t('workouts.placeholders.weight') || 'Weight'} (kg) · ${setIndex + 1}`}
                         step="0.5"
                         min="0"
-                        className="w-20 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
+                        className={setInputClass}
                       />
-                      <span className="text-xs text-uc-text-muted">kg</span>
-                      <Tooltip content={t('workouts.tooltips.RIR') || 'Reps in Reserve (RIR) is how many more reps you could have done. RIR 0 = maximum effort, RIR 3 = you could do 3 more reps. Helps track training intensity.'}>
-                        <input
-                          type="number"
-                          value={set.rir || ''}
-                          onChange={(e) =>
-                            handleSetChange(
-                              exerciseIndex,
-                              setIndex,
-                              'rir',
-                              e.target.value ? parseInt(e.target.value) : 0
-                            )
-                          }
-                          placeholder={t('workouts.placeholders.rir') || 'RIR'}
-                          min="0"
-                          max="5"
-                          className="w-16 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 text-sm"
-                        />
-                      </Tooltip>
+                      <Input
+                        type="number"
+                        value={set.rir || ''}
+                        onChange={(e) =>
+                          handleSetChange(
+                            exerciseIndex,
+                            setIndex,
+                            'rir',
+                            e.target.value ? parseInt(e.target.value) : 0
+                          )
+                        }
+                        placeholder={t('workouts.placeholders.rir') || 'RIR'}
+                        aria-label={`${t('workouts.placeholders.rir') || 'RIR'} · ${setIndex + 1}`}
+                        min="0"
+                        max="5"
+                        className={setInputClass}
+                      />
                       <button
                         type="button"
                         onClick={() => handleRemoveSet(exerciseIndex, setIndex)}
-                        className="text-uc-text-muted hover:text-red-500 transition-colors ml-auto"
+                        className={iconButtonClass}
                         title="Remove set"
+                        aria-label="Remove set"
                       >
                         ×
                       </button>
@@ -414,101 +403,89 @@ export default function WorkoutExerciseTracker({
                   <button
                     type="button"
                     onClick={() => handleAddSet(exerciseIndex)}
-                    className="w-full px-3 py-2 text-sm text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50 rounded-lg transition-colors border border-uc-purple/20"
+                    className={dashedButtonClass}
                   >
                     + Add Set
                   </button>
                 </div>
-              </div>
+              </Card>
             )
           })}
         </div>
       )}
 
-      {/* Routine Selector Modal */}
-      {showRoutineSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
-          <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between sticky top-0 bg-uc-dark-bg">
-              <h3 className="text-lg font-semibold text-uc-text-light">{t('workouts.labels.loadRoutine') || 'Load Routine'}</h3>
-              <button
-                onClick={() => {
-                  setShowRoutineSelector(false)
-                  setSelectedRoutine(null)
-                }}
-                className="text-uc-text-muted hover:text-uc-text-light"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-4">
-              {routines.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-uc-text-muted mb-4">{t('workouts.labels.noRoutinesAvailable') || 'No routines available'}</p>
-                  <Link
-                    href="/routines"
-                    className="text-uc-mustard hover:text-uc-mustard/80 transition-colors"
-                  >
-                    Create your first routine →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {routines.map((routine) => (
-                    <div
-                      key={routine.id}
-                      className="bg-uc-black/50 rounded-lg p-4 border border-uc-purple/20"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold text-uc-text-light">{routine.name}</h4>
-                          {routine.description && (
-                            <p className="text-sm text-uc-text-muted mt-1">{routine.description}</p>
-                          )}
-                          <div className="text-xs text-uc-text-muted mt-2">
-                            {routine.routineExercises.length} {routine.routineExercises.length === 1 ? (t('exercises.exercise') || 'exercise') : (t('exercises.exercises') || 'exercises')}
-                          </div>
-                        </div>
-                      </div>
+      {/* Routine Selector */}
+      <BottomSheet
+        isOpen={showRoutineSelector}
+        onClose={() => {
+          setShowRoutineSelector(false)
+          setSelectedRoutine(null)
+        }}
+        title={t('workouts.labels.loadRoutine') || 'Load Routine'}
+        closeLabel={t('common.close') || 'Close'}
+      >
+        {routines.length === 0 ? (
+          <EmptyState
+            title={t('workouts.labels.noRoutinesAvailable') || 'No routines available'}
+            action={
+              <Link href="/routines" className="text-sm font-bold text-uc-primary hover:underline">
+                Create your first routine →
+              </Link>
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {routines.map((routine) => (
+              <Card key={routine.id}>
+                <h4 className="font-bold text-uc-text">{routine.name}</h4>
+                {routine.description && (
+                  <p className="text-sm text-uc-text-muted mt-1">{routine.description}</p>
+                )}
+                <p className="text-xs font-semibold text-uc-text-muted mt-2 mb-3 uc-num">
+                  {routine.routineExercises.length} {routine.routineExercises.length === 1 ? (t('exercises.exercise') || 'exercise') : (t('exercises.exercises') || 'exercises')}
+                </p>
 
-                      {routine.variations.length > 0 ? (
-                        <div className="space-y-2">
-                          <div className="text-sm text-uc-text-muted mb-2">{t('common.selectVariation') || 'Select variation:'}</div>
-                          {routine.variations.map((variation, vIndex) => (
-                            <button
-                              key={vIndex}
-                              type="button"
-                              onClick={() => handleLoadRoutine(routine, vIndex)}
-                              className="w-full text-left bg-uc-purple/20 hover:bg-uc-purple/30 border border-uc-purple/30 rounded-lg p-3 transition-colors"
-                            >
-                              <div className="font-medium text-uc-text-light">{variation.name}</div>
-                              {variation.defaultRepRangeMin && variation.defaultRepRangeMax && (
-                                <div className="text-sm text-uc-text-muted">
-                                  {variation.defaultRepRangeMin}-{variation.defaultRepRangeMax} reps
-                                  {variation.defaultSets && ` • ${variation.defaultSets} sets`}
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleLoadRoutine(routine)}
-                          className="w-full bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
-                        >
-                          {t('workouts.labels.loadRoutine') || 'Load Routine'}
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                {routine.variations.length > 0 ? (
+                  <div className="space-y-2">
+                    <Overline>{t('common.selectVariation') || 'Select variation:'}</Overline>
+                    {routine.variations.map((variation, vIndex) => (
+                      <button
+                        key={vIndex}
+                        type="button"
+                        onClick={() => handleLoadRoutine(routine, vIndex)}
+                        className="w-full min-h-11 text-left bg-uc-elevated border border-uc-border hover:border-uc-primary rounded-uc-input px-3 py-2.5 transition-colors"
+                      >
+                        <div className="font-semibold text-uc-text">{variation.name}</div>
+                        {variation.defaultRepRangeMin && variation.defaultRepRangeMax && (
+                          <div className="text-sm text-uc-text-muted uc-num">
+                            {variation.defaultRepRangeMin}-{variation.defaultRepRangeMax} reps
+                            {variation.defaultSets && ` • ${variation.defaultSets} sets`}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <Button variant="tonal" onClick={() => handleLoadRoutine(routine)} className="w-full">
+                    {t('workouts.labels.loadRoutine') || 'Load Routine'}
+                  </Button>
+                )}
+              </Card>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </BottomSheet>
     </div>
   )
 }
 
+const iconButtonClass =
+  'inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-lg text-uc-text-muted hover:text-uc-error hover:bg-uc-elevated transition-colors'
+
+// Set number · reps · kg · RIR · remove
+const setGridClass = 'grid grid-cols-[1.5rem_1fr_1fr_1fr_2.75rem] items-center gap-2'
+
+const setInputClass = 'text-center px-1 uc-num'
+
+const dashedButtonClass =
+  'w-full min-h-11 rounded-uc-input border border-dashed border-uc-border text-sm font-bold text-uc-primary hover:border-uc-primary transition-colors'

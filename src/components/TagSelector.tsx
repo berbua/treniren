@@ -114,18 +114,20 @@ export default function TagSelector({
               Create new tag
             </button>
           ) : (
-            <div className="space-y-3 p-3 bg-uc-elevated border border-uc-border rounded-uc-card">
+            <div className="space-y-3 p-4 bg-uc-surface border border-uc-border rounded-uc-card">
+              <h4 className="text-base font-bold text-uc-text">Create new tag</h4>
               <Input
                 type="text"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 placeholder={t('workouts.placeholders.tagName') || 'Tag name'}
+                aria-label={t('workouts.placeholders.tagName') || 'Tag name'}
                 autoFocus
               />
 
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[13px] font-semibold text-uc-text-muted">Color:</span>
-                <div className="flex flex-wrap gap-1.5">
+              <div role="group" aria-labelledby="tag-color-label">
+                <p id="tag-color-label" className="mb-1.5 text-[13px] font-semibold text-uc-text-muted">Color:</p>
+                <div className="grid grid-cols-5 gap-2">
                   {predefinedColors.map(color => (
                     <button
                       type="button"
@@ -133,27 +135,29 @@ export default function TagSelector({
                       onClick={() => setNewTagColor(color)}
                       aria-label={color}
                       aria-pressed={newTagColor === color}
-                      className={`size-8 rounded-full ${
-                        newTagColor === color ? 'ring-2 ring-uc-text ring-offset-2 ring-offset-uc-elevated' : ''
+                      className={`flex min-h-11 items-center justify-center rounded-uc-input border transition-colors ${
+                        newTagColor === color ? 'border-uc-text border-2' : 'border-uc-border hover:border-uc-primary'
                       }`}
-                      style={{ backgroundColor: color }}
-                    />
+                    >
+                      <span aria-hidden className="size-6 rounded-full" style={{ backgroundColor: color }} />
+                    </button>
                   ))}
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Button variant="tonal" onClick={handleCreateTag} disabled={!newTagName.trim()}>
-                  Create
-                </Button>
                 <Button
                   variant="ghost"
+                  className="flex-1"
                   onClick={() => {
                     setShowCreateForm(false);
                     setNewTagName('');
                   }}
                 >
                   Cancel
+                </Button>
+                <Button variant="primary" className="flex-1" onClick={handleCreateTag} disabled={!newTagName.trim()}>
+                  Create
                 </Button>
               </div>
             </div>

@@ -37,7 +37,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, a
               selected ? 'bg-uc-primary text-uc-on-primary' : 'text-uc-text hover:bg-uc-elevated'
             }`}
           >
-            <span className="flex items-center gap-1.5 text-sm font-extrabold uc-num">
+            <span className="flex items-center gap-1.5 text-center text-sm font-extrabold uc-num">
               {option.icon && <span aria-hidden className="inline-flex">{option.icon}</span>}
               {option.label}
             </span>

@@ -68,6 +68,29 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     (phase · cycle day, "N selected" goals, "3 · Neutral", TR label).
   - Before-climbing rating shows 1–5 with "Very Nervous" / "Very Confident" under the ends, as in the mock; the
     label of the chosen value shows in the Strong Mind header.
+- Built 2026-11-12 against `Log workout — gym, fingerboard, mental, tags, recurring, dialogs.png`. Kept where the mock differs:
+  - **Edit / Duplicate subtitles** ("Gym · Mon 9 Nov", "Copy of Fingerboard · Mon 9 Nov — pick a new date") aren't
+    shown: the sheet keeps its titles (with emoji). Adding them means showing the original workout's type/date in the
+    header — user's call.
+  - **Per-set validation** ("Enter reps for set 3", red empty cell) doesn't exist; empty sets are caught only by the
+    incomplete-data dialog on save.
+  - Exercise "Last:" line stays "Last: 10×5" (the mock adds "kg" and the date).
+  - Set table columns are reps · kg · RIR as in the mock; the RIR ℹ️ help moved from the input to the column header.
+  - **Hang title** stays "#1 🤲 Both hands · Crimp 20mm" (no "Hang 1" string exists). **Collapsed hang rows**
+    ("Hang 2 · Both · open · 20 mm…") — hangs don't collapse; every hang shows its fields.
+  - **Crimp size** stays a select of the fixed sizes 6–30 mm (mock shows a free number field with "mm").
+    Hand and grip are segments with their emoji; the Polish crimp label wraps to two lines.
+  - Load hint text stays the app's "negative for unload" (mock: "Negative load = assisted (unloaded) hang.").
+  - **Tag creator**: no "Name" label (no fitting key; the input keeps its "Tag name" placeholder); colours are the
+    app's 10 stored tag colours, not the mock's palette; buttons stay "Cancel" / "Create".
+  - **Recurring**: the mock's header checkbox is the app's collapsible card + "Make this workout recurring" checkbox.
+    Frequency is Daily / Weekly / "Every N days" segments; the N-days input shows below when that segment is picked.
+  - **Incomplete-data dialog** keeps the app's title/message and the list of incomplete items (mock: "Some sets are
+    empty — 2 sets in … have no values. Empty rows won't count in your stats."). "Go back & fill" is now the filled
+    button as in the mock. The shared `ConfirmationDialog` now shows its icon in a tinted tile above the title, with
+    equal-width buttons — this applies to every confirmation in the app.
+  - Load routine / Load protocol pickers are bottom sheets now (no design; "Start from routine" in the component
+    sheet used as reference).
 
 ### Calendar
 - **Selected-day detail panel** and **Upcoming events list** — not implemented.

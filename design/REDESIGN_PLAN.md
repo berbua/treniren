@@ -56,7 +56,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
       `Dashboard — cycle onboarding, alt states, offline.png`, `Desktop — Dashboard.png`
 - [x] Quick log — `Quick log sheet.png`
 - [x] Log workout (lead) — `Log workout — lead climbing (full form).png`
-- [ ] Log workout (other types, tags, recurring, dialogs) —
+- [x] Log workout (other types, tags, recurring, dialogs) —
       `Log workout — gym, fingerboard, mental, tags, recurring, dialogs.png`
 - [ ] Workouts list & goals — `Workouts list & goals.png`
 - [ ] Calendar — `Calendar — month.png`, `Calendar month — light.png`, `Calendar — week view & filters.png`
@@ -135,3 +135,12 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
   (focus level → shared `RatingDots`, moved out of `OfflineWorkoutForm`; practice type → segments; time of day →
   chips) and the incomplete-data dialog (now `ConfirmationDialog`) were tokenised too. Still old: `WorkoutExerciseTracker`
   and `FingerboardHangTracker` — next step. Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Log workout (other types) done. `WorkoutExerciseTracker`: tonal Load routine + ghost Add exercise,
+  exercise `Card`s with a Set · Reps · kg · RIR grid (centred `Input`s, 44px remove), dashed "+ Add Set", dashed empty
+  state, exercise search panel as a `Card`, routine picker as a `BottomSheet`. `FingerboardHangTracker`: same button row,
+  hang `Card` with 44px ↑ ↓ 🗑️, hand/grip as `SegmentedControl`s (emoji as icons), crimp `Select` + `UnitInput`s for
+  load (kg) / reps (×) / time (s), protocol picker as a `BottomSheet`. `TagSelector` creator: titled card, 5×2 swatch
+  tiles, Cancel + Create. Recurring: dates always side by side, frequency as segments. `ConfirmationDialog`: icon tile on
+  top, equal-width buttons, new `emphasis="cancel"` prop (used by the incomplete-data dialog). `SegmentedControl` labels
+  centre when they wrap. Mental practice, goals, gratitude, cycle were already done last step. Not checked logged-in
+  in a browser.

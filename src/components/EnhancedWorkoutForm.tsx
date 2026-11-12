@@ -930,7 +930,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
 
                 {recurringSettings.enabled && (
                   <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       {/* Start Date */}
                       <div>
                         <Label htmlFor="recurring-start">{t('workouts.recurringStartDate') || 'Start Date'} *</Label>
@@ -963,40 +963,34 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                     </div>
 
                     {/* Frequency */}
-                    <div role="radiogroup" aria-labelledby="recurring-frequency">
+                    <div>
                       <Label id="recurring-frequency">{t('workouts.recurringFrequency') || 'Frequency'} *</Label>
-                      <div className="space-y-2">
-                        {(['daily', 'weekly', 'custom'] as const).map(frequency => (
-                          <label key={frequency} className={radioRowClass}>
-                            <input
-                              type="radio"
-                              name="recurringFrequency"
-                              value={frequency}
-                              checked={recurringSettings.frequency === frequency}
-                              onChange={() => setRecurringSettings({ ...recurringSettings, frequency })}
-                              className={checkboxClass}
+                      <SegmentedControl
+                        ariaLabel={t('workouts.recurringFrequency') || 'Frequency'}
+                        options={[
+                          { value: 'daily', label: t('workouts.frequencyDaily') || 'Daily' },
+                          { value: 'weekly', label: t('workouts.frequencyWeekly') || 'Weekly' },
+                          { value: 'custom', label: `${t('workouts.frequencyEvery') || 'Every'} N ${t('workouts.frequencyDays') || 'days'}` },
+                        ]}
+                        value={recurringSettings.frequency}
+                        onChange={(frequency) => setRecurringSettings({ ...recurringSettings, frequency })}
+                      />
+                      {recurringSettings.frequency === 'custom' && (
+                        <div className="mt-3 flex items-center gap-3 text-sm font-semibold">
+                          <label htmlFor="recurring-custom-days">{t('workouts.frequencyEvery') || 'Every'}</label>
+                          <div className="w-20">
+                            <Input
+                              id="recurring-custom-days"
+                              type="number"
+                              min="1"
+                              value={recurringSettings.customDays}
+                              onChange={(e) => setRecurringSettings({ ...recurringSettings, customDays: parseInt(e.target.value) || 1 })}
+                              className="uc-num"
                             />
-                            {frequency === 'daily' && <span>{t('workouts.frequencyDaily') || 'Daily'}</span>}
-                            {frequency === 'weekly' && <span>{t('workouts.frequencyWeekly') || 'Weekly'}</span>}
-                            {frequency === 'custom' && (
-                              <>
-                                <span>{t('workouts.frequencyEvery') || 'Every'}</span>
-                                <div className="w-20">
-                                  <Input
-                                    type="number"
-                                    min="1"
-                                    value={recurringSettings.customDays}
-                                    onChange={(e) => setRecurringSettings({ ...recurringSettings, customDays: parseInt(e.target.value) || 1 })}
-                                    disabled={recurringSettings.frequency !== 'custom'}
-                                    className="uc-num"
-                                  />
-                                </div>
-                                <span>{t('workouts.frequencyDays') || 'days'}</span>
-                              </>
-                            )}
-                          </label>
-                        ))}
-                      </div>
+                          </div>
+                          <span>{t('workouts.frequencyDays') || 'days'}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Error Display */}
@@ -1033,6 +1027,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
           handleSubmit(fakeEvent);
         }}
         variant="warning"
+        emphasis="cancel"
         title={t('workouts.incompleteData.title') || 'Incomplete Data'}
         message={
           <>
@@ -1068,9 +1063,6 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
 
 const goalRowClass =
   'flex items-start gap-3 min-h-11 p-3 bg-uc-elevated border border-uc-border rounded-uc-input cursor-pointer hover:border-uc-primary transition-colors';
-
-const radioRowClass =
-  'flex items-center gap-3 min-h-11 px-3 py-2 bg-uc-elevated border border-uc-border rounded-uc-input text-sm font-semibold cursor-pointer hover:border-uc-primary transition-colors';
 
 const checkboxClass = 'mt-0.5 size-5 shrink-0 accent-uc-primary cursor-pointer';
 
