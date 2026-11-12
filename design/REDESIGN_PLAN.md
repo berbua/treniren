@@ -60,7 +60,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
       `Log workout — gym, fingerboard, mental, tags, recurring, dialogs.png`
 - [x] Workouts list & goals — `Workouts list & goals.png`
 - [x] Calendar — `Calendar — month.png`, `Calendar month — light.png`, `Calendar — week view & filters.png`
-- [ ] Cycle — `Cycle.png`, `Cycle — disabled, period form.png`
+- [x] Cycle — `Cycle.png`, `Cycle — disabled, period form.png`
 - [ ] Statistics — `Statistics.png`
 - [ ] Strong Mind — `Strong Mind.png`
 - [ ] Events — `Events.png`
@@ -100,7 +100,7 @@ note the answer.
 - [ ] **Tab labels**: keep Dashboard / Statistics or switch to the mock's Today / Stats?
 - [x] **Workouts tab counts**: show the total from the API ("Workouts (214)") instead of the items on this page? → Yes, built.
 - [x] **Numbered pagination** ("1 2 … 11", "1–20 of 214"): add jump-to-page, or keep Previous / Next? → Yes, built.
-- [ ] **Cycle — recent periods list with edit**: the API supports it but there's no UI. Build it in the Cycle step?
+- [x] **Cycle — recent periods list with edit**: the API supports it but there's no UI. Build it in the Cycle step? → Yes, built (list + edit + delete).
 
 ## Log
 
@@ -185,3 +185,15 @@ note the answer.
   Fix: the injury-risk marker never showed for early/late luteal (`'earlyLuteal'` vs `'early-luteal'`); now compared
   via `phaseTranslationKey`. New keys `calendar.cycleDayShort`, `calendar.injuryRiskPhase`; `calendar.clickDateHint`
   reworded. Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Cycle done. `/cycle`: title + "Cycle settings" link, **cycle ring** (SVG, one arc per phase from
+  `getPhaseRanges`, other phases at 45%, a dot per day, marker on today; centre: Day N, `PhaseBadge`, "of 28 · next period
+  ~date"), full-width accent Add period, injury warning on `--uc-warning-bg`, month calendar in a `Card` (Mon-first,
+  localized month/weekdays, period = solid menstruation, predicted menstrual = dashed, ovulation = band, ~ forecast and
+  cycle day kept, ⚠️ on most-injury phase), legend + "Tap a day…" hint, phase cards (dot, days, label/value rows, current
+  phase on its band with a "Now" chip, most-injury phase with a warning border + "Injuries: N · most" chip). Period form
+  is a `BottomSheet` (start/end side by side, notes, 🗑️ / Cancel / accent Save). Tracking off: `EmptyState` with
+  "Enable in profile" → `/profile?tab=cycle`. User decisions: **Recent periods** card (newest first, 5 + Show all, tap to
+  edit; delete via `ConfirmationDialog` → `DELETE /api/periods/:id`, both APIs existed) and the two profile links
+  (`UserProfile` got `initialTab`, `/profile` reads `?tab=`). Edit sends an emptied end date as `null` so it clears.
+  Desktop: ring, Add, warning and recent periods in a 360px left column. New `cycle.tracking.*` keys (EN + PL).
+  Not checked logged-in in a browser.

@@ -134,12 +134,21 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 ### Cycle
 - **Log symptoms** — doesn't exist.
 - **Flow bars on recent periods** — no flow intensity is recorded (period = start date, end date, notes).
-- **Recent periods list with edit** — not in the UI today (API supports it; design can keep it only if we
-  treat it as missing design for an existing API — please confirm).
 - **Avg cycle / Avg period / Logged tiles** — not computed. Only cycle length (from settings) is known.
 - **Train / Recover rows in guidance cards** — phase cards have **Physiology, Impact, Goal, Tips** and an
   injury count instead.
-- **Settings (sliders) icon** — cycle settings live in Profile → Cycle tab.
+- Built 2026-11-12 against `Cycle.png` and `Cycle — disabled, period form.png`. Kept where the mock differs:
+  - **Recent periods** list isn't in the mock; built by user decision (rows: date range + notes, tap → Edit sheet,
+    5 shown + "Show all"). Needs a design.
+  - Calendar cells keep the date **and** the cycle day (with "~" before the last confirmed period, as before); the mock
+    shows the date only, with "~" on future days. Days of the previous/next month aren't shown.
+  - The mock's "Injury" legend item and per-day injury dot don't exist; the app marks the **most-injury phase** with ⚠️.
+  - The ⚠️ forecast-style dashed ovulation cells aren't used: ovulation is the band colour, predicted menstrual days
+    are dashed.
+  - Phase cards show the injury chip only when there are injuries (mock shows "0 injuries"); "days 1–7" comes from the
+    static phase texts as before (the injury warning uses the real ranges for the cycle length).
+  - No back arrow in the header (screens are reached from the tab bar / More).
+  - Delete in the period sheet asks for confirmation (dialog not in the mock).
 
 ### Statistics
 - **Range 4W / 3M / 6M / 1Y** — the app offers **1 week, 1 month (default), 3 months, 6 months, 1 year, All time**,

@@ -1,13 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { UserProfile } from '@/components/UserProfile'
 import AuthGuard from '@/components/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 function ProfilePageContent() {
   const router = useRouter()
+  // ?tab=cycle opens the profile on the Cycle tab (link from the Cycle screen)
+  const tab = useSearchParams().get('tab')
+  const initialTab = tab === 'cycle' || tab === 'settings' || tab === 'export' ? tab : 'profile'
   const { t } = useLanguage()
   const [showProfileModal, setShowProfileModal] = useState(true)
 
@@ -99,6 +102,7 @@ function ProfilePageContent() {
         <UserProfile 
           onClose={handleClose}
           onPhotoUpdate={handlePhotoUpdate}
+          initialTab={initialTab}
         />
       )}
     </div>
@@ -108,7 +112,9 @@ function ProfilePageContent() {
 export default function ProfilePage() {
   return (
     <AuthGuard>
-      <ProfilePageContent />
+      <Suspense>
+        <ProfilePageContent />
+      </Suspense>
     </AuthGuard>
   )
 }

@@ -16,9 +16,10 @@ import { useToast } from '@/contexts/ToastContext';
 interface UserProfileProps {
   onClose: () => void;
   onPhotoUpdate?: (photoUrl: string | null) => void;
+  initialTab?: 'profile' | 'cycle' | 'settings' | 'export';
 }
 
-export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
+export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: UserProfileProps) => {
   const { data: session } = useSession();
   const { t } = useLanguage();
   const { cycleSettings, isCycleTrackingEnabled, setCycleSettings, disableCycleTracking } = useCycle();
@@ -26,7 +27,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   const { settings: notificationSettings, updateSettings } = useNotifications();
   const { getToken } = useCsrfToken();
   const { showSuccess, showError } = useToast();
-  const [activeTab, setActiveTab] = useState<'profile' | 'cycle' | 'settings' | 'export'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'cycle' | 'settings' | 'export'>(initialTab);
   const [profileData, setProfileData] = useState({
     googleName: session?.user?.name || 'Training User',
     displayName: session?.user?.name?.split(' ')[0] || 'Training User',

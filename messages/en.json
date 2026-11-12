@@ -704,7 +704,20 @@
       "add": "Add",
       "saving": "Saving...",
       "periodUpdated": "Period updated",
-      "periodAdded": "Period added"
+      "periodAdded": "Period added",
+      "cycleSettings": "Cycle settings",
+      "enableInProfile": "Enable in profile",
+      "dayLabel": "Day",
+      "ofLengthNextPeriod": "of {{length}} · next period ~{{date}}",
+      "recentPeriods": "Recent periods",
+      "noPeriods": "No periods logged yet.",
+      "showAllPeriods": "Show all ({{count}})",
+      "tapDayHint": "Tap a day to add a period starting then.",
+      "now": "Now",
+      "most": "most",
+      "deletePeriodTitle": "Delete period?",
+      "deletePeriodMessage": "This period will be removed from your history.",
+      "periodDeleted": "Period deleted"
     },
     "phaseDetails": {
       "menstrual": {

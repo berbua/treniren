@@ -704,7 +704,20 @@
       "add": "Dodaj",
       "saving": "Zapisywanie...",
       "periodUpdated": "Miesiączka zaktualizowana",
-      "periodAdded": "Miesiączka dodana"
+      "periodAdded": "Miesiączka dodana",
+      "cycleSettings": "Ustawienia cyklu",
+      "enableInProfile": "Włącz w profilu",
+      "dayLabel": "Dzień",
+      "ofLengthNextPeriod": "z {{length}} · następna miesiączka ~{{date}}",
+      "recentPeriods": "Ostatnie miesiączki",
+      "noPeriods": "Brak zapisanych miesiączek.",
+      "showAllPeriods": "Pokaż wszystkie ({{count}})",
+      "tapDayHint": "Dotknij dnia, aby dodać miesiączkę od tego dnia.",
+      "now": "Teraz",
+      "most": "najwięcej",
+      "deletePeriodTitle": "Usunąć miesiączkę?",
+      "deletePeriodMessage": "Ta miesiączka zostanie usunięta z historii.",
+      "periodDeleted": "Miesiączka usunięta"
     },
     "phaseDetails": {
       "menstrual": {
