@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { toLocalDateString } from '@/lib/date-utils'
+import { BottomSheet, Button, ChoiceChip, Input, Overline, SegmentedControl, Select, WorkoutTypeChip } from './ui'
 import { WorkoutType, TrainingVolume, TimeOfDay, MentalPracticeType, FingerboardProtocol } from '@/types/workout'
 
 interface QuickLogModalProps {
@@ -74,12 +75,12 @@ export default function QuickLogModal({
   }
 
   const workoutTypes: { value: WorkoutType; label: string; emoji: string }[] = [
+    { value: 'BOULDERING', label: t('workoutTypes.bouldering') || 'Bouldering', emoji: '🧗' },
+    { value: 'LEAD_ARTIFICIAL', label: t('workoutTypes.leadArtificial') || 'Lead Artificial', emoji: '🧗‍♂️' },
+    { value: 'LEAD_ROCK', label: t('workoutTypes.leadRock') || 'Lead Rock', emoji: '🧗‍♀️' },
+    { value: 'CIRCUITS', label: t('workoutTypes.circuits') || 'Circuits', emoji: '🔄' },
     { value: 'GYM', label: t('workoutTypes.gym') || 'Gym', emoji: '🏋️' },
     { value: 'FINGERBOARD', label: t('workoutTypes.fingerboard') || 'Fingerboard', emoji: '🖐️' },
-    { value: 'BOULDERING', label: t('workoutTypes.bouldering') || 'Bouldering', emoji: '🧗' },
-    { value: 'CIRCUITS', label: t('workoutTypes.circuits') || 'Circuits', emoji: '🔄' },
-    { value: 'LEAD_ROCK', label: t('workoutTypes.leadRock') || 'Lead Rock', emoji: '🧗‍♀️' },
-    { value: 'LEAD_ARTIFICIAL', label: t('workoutTypes.leadArtificial') || 'Lead Artificial', emoji: '🧗‍♂️' },
     { value: 'MENTAL_PRACTICE', label: t('workoutTypes.mentalPractice') || 'Mental Practice', emoji: '🧘' },
   ]
 
@@ -148,176 +149,145 @@ export default function QuickLogModal({
     setFormData({ ...formData, timeOfDay: newTimeOfDay })
   }
 
+  const typeOptional = (key: string, fallback: string) =>
+    `${t(key) || fallback} (${t('common.optional') || 'Optional'})`
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-uc-dark-bg rounded-2xl shadow-xl w-full max-w-md border border-uc-purple/20">
-        <div className="p-6 border-b border-uc-purple/20">
-          <h2 className="text-2xl font-bold text-uc-text-light mb-2">
-            {t('quickLog.title') || '⚡ Quick Log'}
-          </h2>
-          <p className="text-sm text-uc-text-muted">
-            {t('quickLog.description') || 'Quickly log a workout. You can add details later.'}
-          </p>
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      closeLabel={t('common.close') || 'Close'}
+      title={t('quickLog.title') || '⚡ Quick Log'}
+      footer={
+        <Button type="submit" form="quick-log-form" variant="accent" size="lg" isLoading={isSubmitting} className="w-full">
+          {isSubmitting
+            ? (t('quickLog.saving') || 'Saving...')
+            : (t('quickLog.markAsDone') || '⚡ Mark as Done')}
+        </Button>
+      }
+    >
+      <form id="quick-log-form" onSubmit={handleSubmit} className="space-y-5">
+        <p className="text-sm text-uc-text-muted">
+          {t('quickLog.description') || 'Quickly log a workout. You can add details later.'}
+        </p>
+
+        {/* Date */}
+        <div>
+          <Overline as="label" htmlFor="quick-log-date" className="block mb-2">
+            {t('workouts.labels.date') || 'Date'} *
+          </Overline>
+          <Input
+            id="quick-log-date"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            required
+          />
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="p-6 space-y-4">
-            {/* Date */}
-            <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                {t('workouts.labels.date') || 'Date'} *
-              </label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                required
-                className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              />
-            </div>
+        {/* Workout Type */}
+        <div role="group" aria-labelledby="quick-log-type">
+          <Overline id="quick-log-type" className="mb-2">
+            {t('workouts.labels.type') || 'Workout Type'} *
+          </Overline>
+          <div className="grid grid-cols-2 gap-2">
+            {workoutTypes.map(({ value, label, emoji }) => (
+              <WorkoutTypeChip
+                key={value}
+                workoutType={value}
+                selected={formData.type === value}
+                icon={emoji}
+                onClick={() => handleTypeChange(value)}
+                className="min-h-14 justify-start text-left"
+              >
+                {label}
+              </WorkoutTypeChip>
+            ))}
+          </div>
+        </div>
 
-            {/* Workout Type */}
-            <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                {t('workouts.labels.type') || 'Workout Type'} *
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {workoutTypes.map(({ value, label, emoji }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => handleTypeChange(value)}
-                    className={`p-3 rounded-xl border-2 transition-all text-left ${
-                      formData.type === value
-                        ? 'border-uc-purple bg-uc-purple/20'
-                        : 'border-uc-purple/20 bg-uc-black/50 hover:border-uc-purple/40'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">{emoji}</span>
-                      <span className="text-sm font-medium text-uc-text-light">{label}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Protocol (for Fingerboard) */}
-            {formData.type === 'FINGERBOARD' && (
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  {t('workouts.labels.protocol') || 'Protocol'} ({t('common.optional') || 'Optional'})
-                </label>
-                <select
-                  value={formData.protocolId || ''}
-                  onChange={(e) => setFormData({ ...formData, protocolId: e.target.value || undefined })}
-                  disabled={loadingProtocols}
-                  className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple disabled:opacity-50"
-                >
-                  <option value="">{loadingProtocols ? (t('common.loading') || 'Loading...') : (t('common.select') || 'Select')}...</option>
-                  {protocols.map((protocol) => (
-                    <option key={protocol.id} value={protocol.id}>
-                      {protocol.name}
-                    </option>
-                  ))}
-                </select>
-                {protocols.length === 0 && !loadingProtocols && (
-                  <p className="text-xs text-uc-text-muted mt-1">
-                    {t('quickLog.noProtocols') || 'No protocols available. Create one in Fingerboard Protocols.'}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Training Volume (for Fingerboard and Gym) */}
-            {(formData.type === 'FINGERBOARD' || formData.type === 'GYM') && (
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  {t('workouts.labels.trainingVolume') || 'Training Volume'} ({t('common.optional') || 'Optional'})
-                </label>
-                <select
-                  value={formData.trainingVolume || ''}
-                  onChange={(e) => setFormData({ ...formData, trainingVolume: e.target.value as TrainingVolume })}
-                  className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                >
-                  <option value="">{t('common.select') || 'Select'}...</option>
-                  {trainingVolumes.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Mental Practice Type */}
-            {formData.type === 'MENTAL_PRACTICE' && (
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  {t('workouts.labels.mentalPracticeType') || 'Practice Type'} ({t('common.optional') || 'Optional'})
-                </label>
-                <select
-                  value={formData.mentalPracticeType || ''}
-                  onChange={(e) => setFormData({ ...formData, mentalPracticeType: e.target.value as MentalPracticeType })}
-                  className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                >
-                  <option value="">{t('common.select') || 'Select'}...</option>
-                  {mentalPracticeTypes.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Time of Day (for Mental Practice) */}
-            {formData.type === 'MENTAL_PRACTICE' && (
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  {t('workouts.labels.timeOfDay') || 'Time of Day'} ({t('common.optional') || 'Optional'})
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {timeOfDayOptions.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => handleTimeOfDayToggle(value)}
-                      className={`px-4 py-2 rounded-xl border-2 transition-all ${
-                        formData.timeOfDay?.includes(value)
-                          ? 'border-uc-purple bg-uc-purple/20 text-uc-text-light'
-                          : 'border-uc-purple/20 bg-uc-black/50 text-uc-text-muted hover:border-uc-purple/40'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* Protocol (for Fingerboard) */}
+        {formData.type === 'FINGERBOARD' && (
+          <div>
+            <Overline as="label" htmlFor="quick-log-protocol" className="block mb-2">
+              {typeOptional('workouts.labels.protocol', 'Protocol')}
+            </Overline>
+            <Select
+              id="quick-log-protocol"
+              value={formData.protocolId || ''}
+              onChange={(e) => setFormData({ ...formData, protocolId: e.target.value || undefined })}
+              disabled={loadingProtocols}
+            >
+              <option value="">{loadingProtocols ? (t('common.loading') || 'Loading...') : (t('common.select') || 'Select')}...</option>
+              {protocols.map((protocol) => (
+                <option key={protocol.id} value={protocol.id}>
+                  {protocol.name}
+                </option>
+              ))}
+            </Select>
+            {protocols.length === 0 && !loadingProtocols && (
+              <p className="text-[13px] text-uc-text-muted mt-1.5">
+                {t('quickLog.noProtocols') || 'No protocols available. Create one in Fingerboard Protocols.'}
+              </p>
             )}
           </div>
+        )}
 
-          <div className="p-6 border-t border-uc-purple/20 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-uc-text-muted hover:text-uc-text-light transition-colors bg-uc-dark-bg/50 hover:bg-uc-dark-bg rounded-xl border border-uc-purple/20"
-            >
-              {t('common.cancel') || 'Cancel'}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg font-medium"
-            >
-              {isSubmitting
-                ? (t('quickLog.saving') || 'Saving...')
-                : (t('quickLog.markAsDone') || '⚡ Mark as Done')}
-            </button>
+        {/* Training Volume (for Fingerboard and Gym); tap the selected one again to clear it */}
+        {(formData.type === 'FINGERBOARD' || formData.type === 'GYM') && (
+          <div>
+            <Overline className="mb-2">
+              {typeOptional('workouts.labels.trainingVolume', 'Training Volume')}
+            </Overline>
+            <SegmentedControl
+              ariaLabel={t('workouts.labels.trainingVolume') || 'Training Volume'}
+              options={trainingVolumes}
+              value={formData.trainingVolume ?? null}
+              onChange={(value) =>
+                setFormData({ ...formData, trainingVolume: formData.trainingVolume === value ? undefined : value })
+              }
+            />
           </div>
-        </form>
-      </div>
-    </div>
+        )}
+
+        {/* Mental Practice Type; tap the selected one again to clear it */}
+        {formData.type === 'MENTAL_PRACTICE' && (
+          <div>
+            <Overline className="mb-2">
+              {typeOptional('workouts.labels.mentalPracticeType', 'Practice Type')}
+            </Overline>
+            <SegmentedControl
+              ariaLabel={t('workouts.labels.mentalPracticeType') || 'Practice Type'}
+              options={mentalPracticeTypes}
+              value={formData.mentalPracticeType ?? null}
+              onChange={(value) =>
+                setFormData({ ...formData, mentalPracticeType: formData.mentalPracticeType === value ? undefined : value })
+              }
+            />
+          </div>
+        )}
+
+        {/* Time of Day (for Mental Practice), multi-select */}
+        {formData.type === 'MENTAL_PRACTICE' && (
+          <div role="group" aria-labelledby="quick-log-time">
+            <Overline id="quick-log-time" className="mb-2">
+              {typeOptional('workouts.labels.timeOfDay', 'Time of Day')}
+            </Overline>
+            <div className="grid grid-cols-3 gap-2">
+              {timeOfDayOptions.map(({ value, label }) => (
+                <ChoiceChip
+                  key={value}
+                  selected={formData.timeOfDay?.includes(value)}
+                  onClick={() => handleTimeOfDayToggle(value)}
+                  className="px-2"
+                >
+                  {label}
+                </ChoiceChip>
+              ))}
+            </div>
+          </div>
+        )}
+      </form>
+    </BottomSheet>
   )
 }
-

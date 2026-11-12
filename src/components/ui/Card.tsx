@@ -16,12 +16,13 @@ export function Card({ tone = 'surface', padded = true, className = '', ...props
   )
 }
 
-/** Overline label: 11px, 700, uppercase, muted. */
-export function Overline({ className = '', ...props }: HTMLAttributes<HTMLParagraphElement>) {
-  return (
-    <p
-      className={`text-[11px] leading-[14px] font-bold uppercase tracking-[0.08em] text-uc-text-muted ${className}`}
-      {...props}
-    />
-  )
+const overline = 'text-[11px] leading-[14px] font-bold uppercase tracking-[0.08em] text-uc-text-muted'
+
+/** Overline label: 11px, 700, uppercase, muted. `as="label"` for a form field label. */
+export function Overline({
+  as: Tag = 'p',
+  className = '',
+  ...props
+}: HTMLAttributes<HTMLElement> & { as?: 'p' | 'label'; htmlFor?: string }) {
+  return <Tag className={`${overline} ${className}`} {...props} />
 }

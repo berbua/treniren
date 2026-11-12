@@ -38,6 +38,13 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   fields, three 1–5 ratings, Strong Mind, gratitude/improvements — kept.
 - Dashboard quick-log ⚡ floating button (phones) was dropped: it collided with the floating tab bar.
 
+### Quick log
+- Built 2026-11-12. The mock's date field reads "Today, Wed 11 Nov"; the app keeps the native date picker.
+- The mock has no description line and no "(Optional)" markers; the app keeps both. "Time of day · pick any" isn't
+  an existing string, so the label stays "Time of Day (Optional)".
+- Optional TR / practice type: the mock doesn't show how to clear a choice; built as "tap again to deselect".
+- "No protocols available" hint (Fingerboard without protocols) has no design.
+
 ### Log workout
 - **Bottom sheet** — fine as a visual, but the form is much longer than shown (see B).
 - **Route name field** — doesn't exist. Lead climbing has a **Sector** text field instead.

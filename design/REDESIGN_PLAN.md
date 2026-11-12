@@ -54,7 +54,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 ### 3. Screens (one per session; tick when done)
 - [x] Today / Dashboard — `Dashboard — dark.png`, `Dashboard — light.png`,
       `Dashboard — cycle onboarding, alt states, offline.png`, `Desktop — Dashboard.png`
-- [ ] Quick log — `Quick log sheet.png`
+- [x] Quick log — `Quick log sheet.png`
 - [ ] Log workout (lead) — `Log workout — lead climbing (full form).png`
 - [ ] Log workout (other types, tags, recurring, dialogs) —
       `Log workout — gym, fingerboard, mental, tags, recurring, dialogs.png`
@@ -119,4 +119,9 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
   `dashboard.recommendations`; `StatTile` got `progressClassName`; `phaseTranslationKey` moved to `PhaseBadge`.
   Restyled `CycleConsentModal`, `CycleSetupForm` (bottom sheet, still a select for 21–35) and `OfflineWorkoutForm`
   (`BottomSheet`, type chips, TR cards, rating dots) — all fields kept. Not checked logged-in in a browser.
-
+- 2026-11-12: Step 3 · Quick log done. `QuickLogModal` now a `BottomSheet` (same props, same three callers): overline
+  labels, type chips in a 2-column grid in the mockup order, protocol `Select`, TR1–TR5 and practice type as
+  `SegmentedControl` (tap the selected segment again to clear it, since both stay optional as before), time of day as
+  multi-select `ChoiceChip`s, full-width accent "Mark as done" (spinner while saving). The Cancel button was dropped;
+  the sheet's ✕, Esc and scrim tap still close it. Description line, "(Optional)" labels, emoji and smart defaults kept.
+  `Overline` got `as="label"`. Not checked logged-in in a browser.
