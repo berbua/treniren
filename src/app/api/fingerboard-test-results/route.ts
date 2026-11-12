@@ -132,22 +132,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create test results
-    // Match testHangId from request (which might be a temporary ID) to actual database hang
-    const testResults = await Promise.all(
-      results.map(async (result: any) => {
-        // Try to find by ID first, then by order (for temporary IDs like "hang-0")
-        let testHang = protocol.testHangs.find((th) => th.id === result.testHangId)
-        if (!testHang && result.testHangId.startsWith('hang-')) {
-          const order = parseInt(result.testHangId.replace('hang-', ''))
-          testHang = protocol.testHangs.find((th) => th.order === order)
-        }
-        
-        if (!testHang) {
-          throw new Error(`Test hang ${result.testHangId} not found in protocol`)
-        }
+    // Match testHangId from request (which might be a temporary ID like "hang-0") to the actual database hang
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resolvedResults: { result: any; testHang: (typeof protocol.testHangs)[number] }[] = []
+    for (const result of results) {
+      const testHangId = typeof result?.testHangId === 'string' ? result.testHangId : ''
+      let testHang = protocol.testHangs.find((th) => th.id === testHangId)
+      if (!testHang && testHangId.startsWith('hang-')) {
+        const order = parseInt(testHangId.replace('hang-', ''))
+        testHang = protocol.testHangs.find((th) => th.order === order)
+      }
+      if (!testHang) {
+        return NextResponse.json(
+          { error: `Test hang ${testHangId} not found in protocol` },
+          { status: 400 }
+        )
+      }
+      resolvedResults.push({ result, testHang })
+    }
 
-        return await prisma.fingerboardTestResult.create({
+    const saveReminder = !!reminderSettings?.enabled
+    if (saveReminder) {
+      const { interval, unit } = reminderSettings
+      if (!Number.isInteger(interval) || interval < 1 || interval > 365 || !['days', 'weeks', 'months'].includes(unit)) {
+        return NextResponse.json(
+          { error: 'Reminder needs an interval of 1-365 and a unit of days, weeks or months' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // All results and the reminder are saved together, so a failure leaves nothing half-saved
+    const testResults = await prisma.$transaction(async (tx) => {
+      const created = []
+      for (const { result, testHang } of resolvedResults) {
+        created.push(await tx.fingerboardTestResult.create({
           data: {
             protocolId,
             testHangId: testHang.id, // Use the actual database ID
@@ -163,27 +182,29 @@ export async function POST(request: NextRequest) {
             success: result.success ?? null,
             notes: result.notes || null,
           },
-        })
-      })
-    )
+        }))
+      }
 
-    // Update user profile with reminder settings if provided
-    if (reminderSettings && reminderSettings.enabled) {
-      await prisma.userProfile.upsert({
-        where: { userId: user.id },
-        update: {
-          testReminderEnabled: true,
-          testReminderInterval: reminderSettings.interval,
-          testReminderUnit: reminderSettings.unit,
-        },
-        create: {
-          userId: user.id,
-          testReminderEnabled: true,
-          testReminderInterval: reminderSettings.interval,
-          testReminderUnit: reminderSettings.unit,
-        },
-      })
-    }
+      // Update user profile with reminder settings if provided
+      if (saveReminder) {
+        await tx.userProfile.upsert({
+          where: { userId: user.id },
+          update: {
+            testReminderEnabled: true,
+            testReminderInterval: reminderSettings.interval,
+            testReminderUnit: reminderSettings.unit,
+          },
+          create: {
+            userId: user.id,
+            testReminderEnabled: true,
+            testReminderInterval: reminderSettings.interval,
+            testReminderUnit: reminderSettings.unit,
+          },
+        })
+      }
+
+      return created
+    })
 
     return NextResponse.json(testResults, { status: 201 })
   } catch (error) {

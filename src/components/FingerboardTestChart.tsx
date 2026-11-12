@@ -67,15 +67,22 @@ export default function FingerboardTestChart({ testResults, protocol, showHangFi
       const hang = protocol.testHangs.find((h) => (h.id || `hang-${h.order}`) === hangKey)
       const label = hang ? hangLabel(hang) : hangKey
 
-      if (metric === 'time') {
-        grouped[dateKey][label] = result.timeSeconds || 0
-      } else {
-        grouped[dateKey][label] = result.load || result.unload ? (result.load || 0) - (result.unload || 0) : 0
-      }
+      // Results without a value for this metric aren't plotted (rather than as 0)
+      const value = metric === 'time'
+        ? result.timeSeconds ?? null
+        : result.load == null && result.unload == null ? null : (result.load || 0) - (result.unload || 0)
+      if (value === null) return
+
+      // Retested the same day: plot the best result
+      const previous = grouped[dateKey][label]
+      grouped[dateKey][label] = previous === undefined ? value : Math.max(previous, value)
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date))
+    return Object.values(grouped)
+      // Days with nothing to plot (other hangs only, or no value for this metric)
+      .filter((point) => Object.keys(point).length > 1)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .sort((a: any, b: any) => a.date.localeCompare(b.date))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testResults, metric, selectedHangId, protocol, language])
 
@@ -197,6 +204,8 @@ export default function FingerboardTestChart({ testResults, protocol, showHangFi
                 strokeWidth={2.5}
                 dot={{ fill: 'var(--uc-surface)', stroke: color, strokeWidth: 2, r: 4 }}
                 activeDot={{ r: 6, fill: color }}
+                // A day this hang wasn't tested has no value: draw the line straight over it
+                connectNulls
               />
             )
           })}
