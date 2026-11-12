@@ -9,6 +9,7 @@ const CreatePeriodSchema = z.object({
   startDate: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
   endDate: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).nullable().optional(),
   notes: z.string().max(1000).trim().nullable().optional(),
+  flow: z.number().int().min(1).max(3).nullable().optional(),
 })
 
 const UpdatePeriodSchema = CreatePeriodSchema.partial()
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { startDate, endDate, notes } = validationResult.data
+    const { startDate, endDate, notes, flow } = validationResult.data
 
     // Calculate cycle day if cycle settings exist
     let cycleDay: number | undefined
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : new Date(startDate),
         notes: notes || null,
+        flow: flow ?? null,
         cycleDay: cycleDay || null,
       },
     })

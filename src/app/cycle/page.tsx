@@ -22,6 +22,7 @@ import {
   Button,
   buttonClasses,
   Card,
+  ChoiceChip,
   EmptyState,
   Input,
   Label,
@@ -36,6 +37,7 @@ import {
 
 const PHASES: CyclePhase[] = ['menstrual', 'follicular', 'ovulation', 'early-luteal', 'late-luteal']
 const PERIODS_PREVIEW = 5
+const FLOW_LEVELS = [1, 2, 3] as const
 // Gaps outside this range are treated as missed logging, not a cycle
 const MIN_CYCLE_GAP = 15
 const MAX_CYCLE_GAP = 60
@@ -525,6 +527,21 @@ function PeriodStats({ periods }: { periods: Period[] }) {
   )
 }
 
+// Flow intensity as 3 rising bars, the first `level` filled in the period colour
+function FlowBars({ level }: { level: number }) {
+  return (
+    <span aria-hidden className="inline-flex h-4 items-end gap-[3px]">
+      {FLOW_LEVELS.map(bar => (
+        <span
+          key={bar}
+          className={`w-1 rounded-sm ${bar <= level ? phaseSolidBg.menstrual : 'bg-uc-skeleton'}`}
+          style={{ height: `${bar * 33}%` }}
+        />
+      ))}
+    </span>
+  )
+}
+
 // Recent periods: newest first, tap to edit
 function RecentPeriods({
   periods,
@@ -578,6 +595,15 @@ function RecentPeriods({
                   <span className="block text-[15px] font-bold text-uc-text uc-num">{formatRange(period)}</span>
                   {period.notes && <span className="block truncate text-[13px] text-uc-text-muted">{period.notes}</span>}
                 </span>
+                {period.flow && (
+                  <span
+                    role="img"
+                    aria-label={`${t('cycle.tracking.flow')}: ${t(`cycle.tracking.flowLevels.${period.flow}`)}`}
+                    title={t(`cycle.tracking.flowLevels.${period.flow}`)}
+                  >
+                    <FlowBars level={period.flow} />
+                  </span>
+                )}
                 <span aria-hidden className="text-lg text-uc-text-muted">›</span>
               </button>
             </li>
@@ -880,6 +906,7 @@ function PeriodFormModal({
     startDate: period?.startDate ? toStoredDateString(period.startDate) : toLocalDateString(defaultDate ?? new Date()),
     endDate: period?.endDate ? toStoredDateString(period.endDate) : undefined,
     notes: period?.notes || '',
+    flow: period?.flow ?? null,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -949,6 +976,24 @@ function PeriodFormModal({
               value={formData.endDate || ''}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value || undefined })}
             />
+          </div>
+        </div>
+
+        {/* Flow intensity: optional, tap again to clear */}
+        <div role="group" aria-labelledby="period-flow">
+          <Label id="period-flow">{t('cycle.tracking.flow')}</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {FLOW_LEVELS.map(level => (
+              <ChoiceChip
+                key={level}
+                selected={formData.flow === level}
+                onClick={() => setFormData({ ...formData, flow: formData.flow === level ? null : level })}
+                className="px-2"
+              >
+                <FlowBars level={level} />
+                {t(`cycle.tracking.flowLevels.${level}`)}
+              </ChoiceChip>
+            ))}
           </div>
         </div>
 

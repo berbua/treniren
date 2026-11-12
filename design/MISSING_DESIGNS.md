@@ -156,7 +156,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 
 ### Cycle
 - **Log symptoms** — doesn't exist.
-- **Flow bars on recent periods** — no flow intensity is recorded (period = start date, end date, notes).
+- **Flow intensity** (decision 38, built 2026-11-12): new nullable `Period.flow` (1 light, 2 medium, 3 heavy; migration
+  `20261112_add_period_flow`). Period sheet: "Flow" with Light / Medium / Heavy chips (optional, tap again to clear).
+  Recent periods: 3 rising bars in the menstrual colour after the date. One value per period, not per day.
 - **Avg cycle / Avg period / Logged tiles** (decision 39, built 2026-11-12; not in the mock images we have): one card
   with 3 columns under Add period / the injury warning, shown once a period is logged. Avg cycle = mean days between
   consecutive period starts (gaps under 15 or over 60 days are skipped as missed logging); Avg period = mean start–end

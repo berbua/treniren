@@ -295,6 +295,7 @@ model Period {
   startDate         DateTime
   endDate           DateTime? // Optional, defaults to startDate if single day
   notes             String?
+  flow              Int? // Flow intensity: 1 light, 2 medium, 3 heavy
   cycleDay          Int? // Calculated cycle day when period started
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

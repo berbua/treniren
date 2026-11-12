@@ -14,7 +14,7 @@ MISSING_DESIGNS.md, commit. Tick an item here when it's built.
 ## Cycle
 - [x] **14 Consent / setup**: design texts ("Train with your cycle?") + cycle-length slider in the setup sheet.
 - [ ] **37 Log symptoms** — new feature (new data).
-- [ ] **38 Flow intensity** on periods — new field (DB + period form + recent periods bars).
+- [x] **38 Flow intensity** on periods — new field (DB + period form + recent periods bars).
 - [x] **39 Avg cycle / Avg period / Logged tiles** — computed from logged periods.
 
 ## Log workout

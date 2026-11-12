@@ -434,3 +434,7 @@ note the answer.
 - 2026-11-12: Cycle 14 consent + setup with the mock texts (were hard-coded English): `cycle.consent.*`,
   `cycle.setupForm.*`, `common.back`. Setup cycle length is a 21–35 range slider. Stats card PL title now
   "Testy fingerboardu" (matches nav).
+- 2026-11-12: Cycle 38 flow intensity: `Period.flow Int?` + migration `prisma/migrations/20261112_add_period_flow`
+  (**apply to production before deploying** — Prisma selects the column, so /api/periods fails without it).
+  API accepts `flow` 1–3 or null; period sheet chips; `FlowBars` in Recent periods. Keys `cycle.tracking.flow`,
+  `flowLevels.1–3`.

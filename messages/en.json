@@ -940,6 +940,8 @@
       "dayLabel": "Day",
       "ofLengthNextPeriod": "of {{length}} · next period ~{{date}}",
       "recentPeriods": "Recent periods",
+      "flow": "Flow",
+      "flowLevels": {"1": "Light", "2": "Medium", "3": "Heavy"},
       "avgCycle": "Avg cycle",
       "avgPeriod": "Avg period",
       "logged": "Logged",

@@ -948,6 +948,8 @@
       "dayLabel": "Dzień",
       "ofLengthNextPeriod": "z {{length}} · następna miesiączka ~{{date}}",
       "recentPeriods": "Ostatnie miesiączki",
+      "flow": "Intensywność krwawienia",
+      "flowLevels": {"1": "Lekkie", "2": "Średnie", "3": "Obfite"},
       "avgCycle": "Śr. cykl",
       "avgPeriod": "Śr. miesiączka",
       "logged": "Zapisane",
