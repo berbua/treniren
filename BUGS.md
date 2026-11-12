@@ -26,7 +26,7 @@ Line numbers are from the review and may have shifted.
 14. ✅ Data export leaves out logged periods (`Period` model never exported); now exported as `periods` — `src/app/api/export/data/route.ts`
 
 ## Wrong numbers / dates
-15. ⬜ Calendar month view skips a month when navigating on the 29th–31st (`setMonth` overflow) — `src/app/calendar/page.tsx:454-472`
+15. ✅ Calendar month view skips a month when navigating on the 29th–31st (`setMonth` overflow; day now clamped to the target month) — `src/app/calendar/page.tsx:454-472`
 16. ⬜ Trip/deload "day N/M" one too low ("0/3" on first day; UTC-midnight start vs local-midnight cell) — `src/app/calendar/page.tsx:67-76`
 17. ⬜ Period end date can be before start date (no check client or server); period then vanishes from calendar and bypasses the overlap check; no DB constraint against double-tap duplicates — `src/app/cycle/page.tsx` (PeriodFormModal), `src/app/api/periods/route.ts:8-13`, `src/app/api/periods/[id]/route.ts:8-13`
 18. ⬜ "Max reps" record uses reps of the best (weight×reps) set, not highest reps — `src/lib/progression-service.ts:295-298, 316-319`

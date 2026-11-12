@@ -444,24 +444,33 @@ function CalendarPageContent() {
   }, [events, cycleSettings, isCycleTrackingEnabled])
 
   // Navigation functions
+  // setMonth overflows on the 29th-31st (Jan 31 + 1 month = Mar 3), so clamp
+  // the day to the target month's length.
+  const shiftMonth = (date: Date, delta: number) => {
+    const target = new Date(date.getFullYear(), date.getMonth() + delta, 1, date.getHours(), date.getMinutes())
+    const daysInTarget = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+    target.setDate(Math.min(date.getDate(), daysInTarget))
+    return target
+  }
+
   const navigatePrevious = () => {
-    const newDate = new Date(currentDate)
     if (viewMode === 'week') {
+      const newDate = new Date(currentDate)
       newDate.setDate(newDate.getDate() - 7)
+      setCurrentDate(newDate)
     } else {
-      newDate.setMonth(newDate.getMonth() - 1)
+      setCurrentDate(shiftMonth(currentDate, -1))
     }
-    setCurrentDate(newDate)
   }
 
   const navigateNext = () => {
-    const newDate = new Date(currentDate)
     if (viewMode === 'week') {
+      const newDate = new Date(currentDate)
       newDate.setDate(newDate.getDate() + 7)
+      setCurrentDate(newDate)
     } else {
-      newDate.setMonth(newDate.getMonth() + 1)
+      setCurrentDate(shiftMonth(currentDate, 1))
     }
-    setCurrentDate(newDate)
   }
 
   const goToToday = () => {
