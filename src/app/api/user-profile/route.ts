@@ -70,11 +70,18 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Update user nickname if provided
+    // Update user nickname if provided (empty clears it, so the first word of the Google name is used again)
     if (nickname !== undefined) {
+      if (nickname !== null && typeof nickname !== 'string') {
+        return NextResponse.json({ error: 'Invalid display name' }, { status: 400 })
+      }
+      const trimmed = nickname?.trim() || null
+      if (trimmed && trimmed.length > 50) {
+        return NextResponse.json({ error: 'Display name is too long' }, { status: 400 })
+      }
       await prisma.user.update({
         where: { id: user.id },
-        data: { nickname }
+        data: { nickname: trimmed }
       })
     }
     

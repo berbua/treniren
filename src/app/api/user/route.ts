@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
+      nickname: user.nickname,
       image: user.image,
+      createdAt: user.createdAt,
     })
   } catch (error) {
     console.error('Error fetching user data:', error)

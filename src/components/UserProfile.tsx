@@ -24,7 +24,7 @@ type ProfileTab = 'profile' | 'cycle' | 'settings' | 'export';
 
 export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: UserProfileProps) => {
   const { data: session } = useSession();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { cycleSettings, isCycleTrackingEnabled, setCycleSettings, disableCycleTracking } = useCycle();
   const { isOnline, storageSize } = useOffline();
   const { settings: notificationSettings, updateSettings } = useNotifications();
@@ -33,11 +33,13 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
   const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab);
   const [profileData, setProfileData] = useState({
     googleName: session?.user?.name || 'Training User',
-    displayName: session?.user?.name?.split(' ')[0] || 'Training User',
+    // Saved nickname; empty means the first word of the Google name is used
+    displayName: '',
     photoUrl: '',
     timezone: 'UTC',
     googleSheetsUrl: '',
   });
+  const [memberSince, setMemberSince] = useState<string | null>(null);
   const [cycleData, setCycleData] = useState({
     cycleLength: cycleSettings?.cycleLength || 28,
     lastPeriodDate: cycleSettings?.lastPeriodDate ? toPeriodDateString(cycleSettings.lastPeriodDate) : '',
@@ -211,8 +213,9 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
             setProfileData(prev => ({
               ...prev,
               googleName: user.name || 'Training User',
-              displayName: user.name?.split(' ')[0] || 'Training User',
+              displayName: user.nickname || '',
             }))
+            setMemberSince(user.createdAt || null)
           }
         }
       } catch (error) {
@@ -279,6 +282,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
         },
         credentials: 'include',
         body: JSON.stringify({
+          nickname: profileData.displayName.trim(),
           timezone: profileData.timezone,
           googleSheetsUrl: profileData.googleSheetsUrl,
         })
@@ -286,6 +290,8 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
       if (!response.ok) {
         throw new Error(`Failed to save profile: ${response.status}`);
       }
+      // The user menu shows the display name; let it update without a reload
+      window.dispatchEvent(new CustomEvent('display-name-changed', { detail: profileData.displayName.trim() || null }));
       showSuccess(t('profile.saved') || 'Profile saved');
       onClose();
     } catch (error) {
@@ -385,7 +391,12 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
     }
   };
 
-  const initial = (profileData.displayName || profileData.googleName || '?').charAt(0).toUpperCase();
+  const firstName = profileData.googleName.split(' ')[0];
+  const shownName = profileData.displayName.trim() || firstName;
+  const initial = (shownName || '?').charAt(0).toUpperCase();
+  const memberSinceLabel = memberSince
+    ? new Date(memberSince).toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB', { month: 'long', year: 'numeric' })
+    : null;
   const pushSupported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
   // Slider spans 21–35 but never hides a saved length outside that range
   const cycleMin = Math.min(21, cycleData.cycleLength || 21);
@@ -404,8 +415,12 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
       <div className="flex items-center gap-4">
         <Avatar photoUrl={profileData.photoUrl} initial={initial} className="size-14 text-2xl" />
         <div className="min-w-0">
-          <h1 className="text-[22px] font-extrabold leading-tight text-uc-text truncate">{profileData.displayName}</h1>
-          <p className="text-[13px] text-uc-text-muted">{t('profile.description') || 'Manage your profile settings, cycle tracking, and app preferences'}</p>
+          <h1 className="text-[22px] font-extrabold leading-tight text-uc-text truncate">{shownName}</h1>
+          <p className="text-[13px] text-uc-text-muted">
+            {memberSinceLabel
+              ? `${t('profile.memberSince') || 'Member since'} ${memberSinceLabel}`
+              : t('profile.description') || 'Manage your profile settings, cycle tracking, and app preferences'}
+          </p>
         </div>
       </div>
 
@@ -454,8 +469,9 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
               id="profile-display-name"
               type="text"
               value={profileData.displayName}
-              readOnly
-              className="border-dashed bg-transparent text-uc-text-muted cursor-not-allowed"
+              onChange={(e) => setProfileData(prev => ({ ...prev, displayName: e.target.value }))}
+              placeholder={firstName}
+              maxLength={50}
             />
             <p className="mt-1.5 text-xs text-uc-text-muted">{t('profile.displayNameHint') || 'Your first name, used in the app'}</p>
           </div>

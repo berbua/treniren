@@ -19,7 +19,9 @@ export async function getCurrentUser(request: NextRequest) {
         id: true,
         email: true,
         name: true,
+        nickname: true,
         image: true,
+        createdAt: true,
       }
     })
 

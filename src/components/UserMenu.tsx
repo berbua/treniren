@@ -49,6 +49,14 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
     }
   }, [session?.user])
 
+  // Display name saved on the profile page (null: back to the Google first name)
+  useEffect(() => {
+    const onDisplayNameChanged = (e: Event) =>
+      setUserNickname((e as CustomEvent<string | null>).detail || session?.user?.name?.split(' ')[0] || null)
+    window.addEventListener('display-name-changed', onDisplayNameChanged)
+    return () => window.removeEventListener('display-name-changed', onDisplayNameChanged)
+  }, [session?.user?.name])
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {

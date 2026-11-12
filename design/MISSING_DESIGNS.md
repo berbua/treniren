@@ -272,10 +272,12 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 
 ### Profile & settings
 - Built 2026-11-12 against `Profile & settings.png`. Kept where the mock differs:
-  - **"Member since March 2025"** isn't shown: `/api/user` doesn't return `createdAt`. The header shows the avatar,
-    display name and the app's profile description instead.
-  - **Display name** stays read-only (first word of the Google name), like Google name; both are dashed read-only
-    fields with their hints. Timezone keeps its four options.
+  - **"Member since March 2025"** (decision 59, built 2026-11-12): `/api/user` returns `createdAt`; the header shows
+    "Member since <month year>" (PL "Dołączono: <miesiąc rok>"), falling back to the profile description until it loads.
+  - **Display name** (decision 60, built 2026-11-12): editable, saved as `User.nickname` with "Save profile" (max 50,
+    empty = first word of the Google name, shown as the placeholder). `/api/user` now returns `nickname`, so the Today
+    greeting and the user menu use it (they already read it, but it was never returned). Google name stays a dashed
+    read-only field. Timezone keeps its four options.
   - **Privacy → "Anonymous usage data" checkbox** doesn't exist: the app shows a static "Data collection · Enabled"
     row. Cycle tracking shows "Enabled" or the tonal Setup button.
   - **Disable cycle tracking** (decision 62, 2026-11-12): checked first — it only clears the last period date; logged

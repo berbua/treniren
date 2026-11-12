@@ -414,3 +414,6 @@ note the answer.
   recent workouts showed raw keys for Lead Rock / Lead Wall / Mental practice (`workoutTypes.lead_rock` built from the
   enum in lower case); now `workouts.workoutTypes.<TYPE>`. Row meta "N exercises / N hangs" uses the plural keys (hangs
   were hard-coded English).
+- 2026-11-12: Profile 59 + 60. `/api/user` (via `getCurrentUser`) returns `nickname` and `createdAt`. Header: "Member
+  since …" (`profile.memberSince`). Display name editable → `nickname` (POST /api/user-profile trims, max 50, empty =
+  null = Google first name); hint text changed; user menu updates via a `display-name-changed` window event.

@@ -37,8 +37,8 @@ MISSING_DESIGNS.md, commit. Tick an item here when it's built.
 - [ ] **56 Fingerboard as one screen** (training protocols + testing protocols) — changes navigation.
 
 ## Profile
-- [ ] **59 "Member since"** — `/api/user` must return `createdAt`.
-- [ ] **60 Editable display name**.
+- [x] **59 "Member since"** — `/api/user` must return `createdAt`.
+- [x] **60 Editable display name**.
 - [ ] **61 "Anonymous usage data" toggle** in Privacy — needs to decide what it actually controls.
 
 ## Not on this list
