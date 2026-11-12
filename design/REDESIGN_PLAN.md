@@ -400,3 +400,6 @@ note the answer.
   events on /workouts, events on /events and /calendar; the per-card deleting spinners went. New keys `common.undo`,
   `workouts.deletedUndo`, `events.deletedUndo`. Known gap: a list refetch during the 5 s (e.g. saving another workout)
   shows the item again until the delete runs.
+- 2026-11-12: Decision 62 built (user approved). `disableCycleTracking` sends only `lastPeriodDate: null` (timezone and
+  cycle length are no longer overwritten); the profile form keeps the cycle length after disabling;
+  `profile.disableCycleConfirm` is the mock's text (EN + PL).

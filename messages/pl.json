@@ -1039,7 +1039,7 @@
     "cycleLength": "Długość cyklu (dni)",
     "lastPeriodDate": "Data ostatniej miesiączki",
     "disableCycle": "Wyłącz śledzenie cyklu",
-    "disableCycleConfirm": "Czy na pewno chcesz wyłączyć śledzenie cyklu? To usunie wszystkie dane związane z cyklem.",
+    "disableCycleConfirm": "Fazy i rekomendacje zostaną ukryte. Zapisane miesiączki zostaną zachowane.",
     "enableCycleTracking": "Włącz śledzenie cyklu",
     "cycleTrackingDescription": "Śledź swój cykl menstruacyjny, aby otrzymywać spersonalizowane rekomendacje treningowe i zrozumieć wzorce wydajności.",
     "enableCycle": "Włącz śledzenie cyklu",

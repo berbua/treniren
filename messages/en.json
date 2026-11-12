@@ -1031,7 +1031,7 @@
     "cycleLength": "Cycle Length (days)",
     "lastPeriodDate": "Last Period Date",
     "disableCycle": "Disable Cycle Tracking",
-    "disableCycleConfirm": "Are you sure you want to disable cycle tracking? This will remove all cycle-related data.",
+    "disableCycleConfirm": "Phases and recommendations will be hidden. Your logged periods are kept.",
     "enableCycleTracking": "Enable Cycle Tracking",
     "cycleTrackingDescription": "Track your menstrual cycle to get personalized training recommendations and understand your performance patterns.",
     "enableCycle": "Enable Cycle Tracking",

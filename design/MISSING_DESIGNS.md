@@ -270,8 +270,9 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     fields with their hints. Timezone keeps its four options.
   - **Privacy → "Anonymous usage data" checkbox** doesn't exist: the app shows a static "Data collection · Enabled"
     row. Cycle tracking shows "Enabled" or the tonal Setup button.
-  - **Disable cycle tracking** confirm copy keeps the app's text ("…will remove all cycle-related data"), not the mock's
-    "Your logged periods are kept". Which one is true should be checked before changing the text.
+  - **Disable cycle tracking** (decision 62, 2026-11-12): checked first — it only clears the last period date; logged
+    periods stay. Confirm copy is now the mock's ("Phases and recommendations will be hidden. Your logged periods are
+    kept."). Disabling no longer resets the timezone to Europe/Warsaw or the cycle length to 28.
   - Inactivity reminder and test reminders keep their own on/off checkboxes; the days / interval rows appear only when
     they're on (mock shows the value rows always).
   - The "Notifications blocked" banner shows when the browser permission is denied (on load or when enabling push).

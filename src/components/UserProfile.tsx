@@ -310,7 +310,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
   const handleCycleDisable = async () => {
     setShowDisableCycleConfirm(false);
     await disableCycleTracking();
-    setCycleData({ cycleLength: 28, lastPeriodDate: '' });
+    setCycleData((prev) => ({ ...prev, lastPeriodDate: '' }));
   };
 
 
