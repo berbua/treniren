@@ -33,15 +33,15 @@ add a line to the log at the bottom, commit. Branch: `redesign/unicorn-climb`.
 ## Steps
 
 ### 1. Foundation (cheap, biggest effect)
-- [ ] Bring `design/tokens.css` into `globals.css` (import or copy), keep `--uc-*` names.
-- [ ] Map tokens into Tailwind `@theme` (e.g. `--color-uc-bg: var(--uc-bg)`, surface, elevated,
+- [x] Bring `design/tokens.css` into `globals.css` (import or copy), keep `--uc-*` names.
+- [x] Map tokens into Tailwind `@theme` (e.g. `--color-uc-bg: var(--uc-bg)`, surface, elevated,
       text, muted, primary, accent, phases, bands, workouts, radii) so classes like `bg-uc-surface`
       exist; point the old `--color-uc-*` and `--color-training-*` names at the new tokens so
       existing screens change colour without edits.
-- [ ] Theme: set `data-theme` on `<html>`, make Tailwind `dark:` follow it
+- [x] Theme: set `data-theme` on `<html>`, make Tailwind `dark:` follow it
       (`@custom-variant dark`), keep the user's current theme behaviour.
-- [ ] Manrope via `next/font/google`; remove Montserrat and the Inter import.
-- [ ] Add `.uc-num` usage note; check the app still renders on Today, Calendar, a form.
+- [x] Manrope via `next/font/google`; remove Montserrat and the Inter import.
+- [x] Add `.uc-num` usage note; check the app still renders on Today, Calendar, a form.
 
 ### 2. Shared components (build once, reuse everywhere)
 Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — forms, navigation, data.png`,
@@ -74,6 +74,8 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 
 ### 4. Finish
 - [ ] Search for leftover hard-coded colors (`#`, `slate-`, `pink-`, …) and Montserrat.
+- [ ] Remove the legacy `--color-uc-*` / `--color-training-*` aliases from `globals.css` once no
+      component uses them; update the old palette section in `DEVELOPMENT_RULES.md`.
 - [ ] Check dark + light, EN + PL, 390px and desktop on each screen.
 - [ ] Update `design/MISSING_DESIGNS.md` (remove gaps the new mockups covered).
 - [ ] Open a PR from `redesign/unicorn-climb` to `main`.
@@ -87,3 +89,12 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 
 - 2026-11-12: Plan written. New mockups in `design/mockups/` (26 PNGs). Bug fixes merged to `main`.
 - 2026-11-12: Icons decided: keep current icons during the redesign; user provides custom SVGs later (step 5).
+- 2026-11-12: Step 1 done. Tokens copied to `src/app/tokens.css` (Manrope via `next/font`, no Google
+  Fonts import), mapped in `globals.css` `@theme inline` (`bg-uc-surface`, `bg-uc-phase-*`,
+  `bg-uc-workout-*`, `rounded-uc-card`, `shadow-uc`, …). Legacy names aliased to new tokens, with
+  per-property overrides (`--text-color-uc-black` → on-accent, `--background-color-uc-purple` →
+  primary-container, `--text-color-uc-mustard` → accent-text) so old text stays readable.
+  Theme: inline script sets `data-theme` from `prefers-color-scheme` (same as before: no in-app
+  setting); `dark:` follows `data-theme`. Removed dead `tailwind.config.ts` (v4 ignored it).
+  Dev server needs a restart to pick up the new CSS.
+

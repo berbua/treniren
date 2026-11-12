@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+const manrope = Manrope({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
 });
+
+// Theme follows the OS preference (as before the redesign); tokens switch on data-theme.
+// Runs before paint so there's no flash of the wrong theme.
+const themeScript = `(function(){try{var m=window.matchMedia('(prefers-color-scheme: light)');var a=function(){document.documentElement.setAttribute('data-theme',m.matches?'light':'dark')};a();m.addEventListener('change',a)}catch(e){}})()`;
 
 export const metadata: Metadata = {
   title: "Unicorn Climb - Train with your unicorn flow",
@@ -34,7 +39,11 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#6A1B9A",
+  // Same values as --uc-bg (metadata can't read CSS variables)
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#121016" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F4F8" },
+  ],
 };
 
 export default function RootLayout({
@@ -43,14 +52,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="dark" className={manrope.variable} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="apple-touch-icon" href="/icon-192.svg" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Unicorn Climb" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>

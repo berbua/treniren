@@ -1,0 +1,169 @@
+/* Unicorn Climb — design tokens v1.0 (copied from design/tokens.css; keep in sync)
+   Manrope is loaded with next/font in layout.tsx (--font-manrope), not from Google Fonts.
+   Dark-first. Set `data-theme="light"` on <html> for light mode
+   (from the user's setting, or from matchMedia('(prefers-color-scheme: light)')).
+   All text/chip pairings verified ≥ 4.5:1 (WCAG AA) in both modes. */
+
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Neutrals */
+  --uc-bg: #121016;
+  --uc-surface: #1B1820;
+  --uc-elevated: #25212B;
+  --uc-border: #3A3442;
+  --uc-text: #F4F0F6;
+  --uc-text-muted: #ABA2B4;
+  --uc-skeleton: #2C2733;
+  --uc-scrim: rgba(8, 6, 10, .6);
+  --uc-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+
+  /* Brand */
+  --uc-primary: #C4A8EE;
+  --uc-on-primary: #1B1426;
+  --uc-primary-container: #3B2A52;
+  --uc-on-primary-container: #E9DDFB;
+  --uc-accent: #EDB54E;          /* main CTAs only */
+  --uc-on-accent: #1F1505;
+  --uc-accent-text: #EDB54E;     /* accent used as text/link */
+
+  /* Semantic */
+  --uc-success: #5FCB98;
+  --uc-warning: #F2A65A;
+  --uc-error: #F28080;
+  --uc-warning-bg: #3A2A16;   /* banners: text in --uc-text, icon in --uc-warning */
+  --uc-error-bg: #3A1C1F;
+  --uc-success-bg: #16301F;
+
+  /* Tag colour picker (10 swatches) */
+  --uc-tag-1: #C4A8EE; --uc-tag-2: #EDB54E; --uc-tag-3: #3CC0A5; --uc-tag-4: #F48A6A; --uc-tag-5: #6A9BF5;
+  --uc-tag-6: #C9DC55; --uc-tag-7: #E37DD0; --uc-tag-8: #4CC8EA; --uc-tag-9: #DDA46A; --uc-tag-10: #CFC9D6;
+
+  /* Text on any solid phase / workout / scale chip */
+  --uc-chip-ink: #141118;
+
+  /* Cycle phases: solid (chips, ring) + band (calendar background) */
+  --uc-phase-menstruation: #E0688E;  --uc-band-menstruation: #3A1C29;
+  --uc-phase-follicular:   #3CC0A5;  --uc-band-follicular:   #14302B;
+  --uc-phase-ovulation:    #F48A6A;  --uc-band-ovulation:    #3A2420;
+  --uc-phase-early-luteal: #A796EE;  --uc-band-early-luteal: #262140;
+  --uc-phase-late-luteal:  #B99AAF;  --uc-band-late-luteal:  #2E242C;
+
+  /* Workout types (dots, icons, solid chips) */
+  --uc-workout-gym: #6A9BF5;
+  --uc-workout-bouldering: #C9DC55;
+  --uc-workout-circuits: #62CF78;
+  --uc-workout-lead-rock: #DDA46A;
+  --uc-workout-lead-wall: #4CC8EA;
+  --uc-workout-fingerboard: #E37DD0;
+  --uc-workout-mental: #CFC9D6;
+
+  /* Focus states: Choke → Flow */
+  --uc-focus-choke: #8A7FA0;
+  --uc-focus-distraction: #A291C4;
+  --uc-focus-present: #B79BE0;
+  --uc-focus-focused: #D9A0C8;
+  --uc-focus-clutch: #EDB27E;
+  --uc-focus-flow: #F5D06A;
+
+  /* Comfort zones: Comfort → Panic */
+  --uc-zone-comfort: #6FCBA0;
+  --uc-zone-stretch-1: #CFCB5E;
+  --uc-zone-stretch-2: #EF9C55;
+  --uc-zone-panic: #EF6B6E;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --uc-bg: #F7F4F8;
+  --uc-surface: #FFFFFF;
+  --uc-elevated: #FFFFFF;
+  --uc-border: #E5DEE9;
+  --uc-text: #1D1724;
+  --uc-text-muted: #655B6E;
+  --uc-skeleton: #EEE9F1;
+  --uc-scrim: rgba(29, 23, 36, .35);
+  --uc-shadow: 0 8px 24px rgba(40, 20, 60, .10);
+
+  --uc-primary: #5B3579;
+  --uc-on-primary: #FFFFFF;
+  --uc-primary-container: #EDE3F6;
+  --uc-on-primary-container: #3A1F52;
+  --uc-accent: #E9AC33;
+  --uc-on-accent: #251803;
+  --uc-accent-text: #8A5B00;
+
+  --uc-success: #1E7A4E;
+  --uc-warning: #9A5410;
+  --uc-error: #B3343A;
+  --uc-warning-bg: #FCEFD9;
+  --uc-error-bg: #FBE4E5;
+  --uc-success-bg: #DFF3E8;
+
+  --uc-tag-1: #5B3579; --uc-tag-2: #8A5B00; --uc-tag-3: #16765F; --uc-tag-4: #B4482C; --uc-tag-5: #2F62C9;
+  --uc-tag-6: #5E6E0E; --uc-tag-7: #9B2E87; --uc-tag-8: #0E6F8C; --uc-tag-9: #8F5A1E; --uc-tag-10: #5D5568;
+
+  --uc-chip-ink: #FFFFFF;
+
+  --uc-phase-menstruation: #A8325A;  --uc-band-menstruation: #F8E3EA;
+  --uc-phase-follicular:   #16765F;  --uc-band-follicular:   #DDF2EC;
+  --uc-phase-ovulation:    #B4482C;  --uc-band-ovulation:    #FCE7DF;
+  --uc-phase-early-luteal: #5E4BB5;  --uc-band-early-luteal: #E9E5F8;
+  --uc-phase-late-luteal:  #7A5A70;  --uc-band-late-luteal:  #F1E8EE;
+
+  --uc-workout-gym: #2F62C9;
+  --uc-workout-bouldering: #5E6E0E;
+  --uc-workout-circuits: #237A35;
+  --uc-workout-lead-rock: #8F5A1E;
+  --uc-workout-lead-wall: #0E6F8C;
+  --uc-workout-fingerboard: #9B2E87;
+  --uc-workout-mental: #5D5568;
+
+  --uc-focus-choke: #5D546E;
+  --uc-focus-distraction: #6A4F94;
+  --uc-focus-present: #7B44A8;
+  --uc-focus-focused: #A33B78;
+  --uc-focus-clutch: #A3501A;
+  --uc-focus-flow: #7E5E00;
+
+  --uc-zone-comfort: #1E7A4E;
+  --uc-zone-stretch-1: #6A6A0E;
+  --uc-zone-stretch-2: #A5520F;
+  --uc-zone-panic: #B3343A;
+}
+
+:root {
+  /* Type */
+  --uc-font: var(--font-manrope), 'Manrope', 'Segoe UI', system-ui, sans-serif;
+  --uc-text-display: 800 40px/44px var(--uc-font);   /* letter-spacing -0.02em */
+  --uc-text-h1: 800 28px/34px var(--uc-font);        /* letter-spacing -0.01em */
+  --uc-text-h2: 700 20px/26px var(--uc-font);
+  --uc-text-body: 500 15px/22px var(--uc-font);
+  --uc-text-small: 600 13px/18px var(--uc-font);
+  --uc-text-overline: 700 11px/14px var(--uc-font);  /* uppercase, +0.08em */
+  --uc-text-stat: 800 44px/48px var(--uc-font);      /* tabular-nums, -0.02em */
+
+  /* Spacing (4 pt base) */
+  --uc-space-xs: 4px;
+  --uc-space-sm: 8px;
+  --uc-space-md: 12px;
+  --uc-space-lg: 16px;
+  --uc-space-xl: 24px;
+  --uc-space-2xl: 32px;
+  --uc-space-3xl: 48px;
+
+  /* Radius */
+  --uc-radius-chip: 8px;
+  --uc-radius-input: 12px;
+  --uc-radius-card: 16px;
+  --uc-radius-sheet: 24px;
+  --uc-radius-pill: 999px;
+
+  /* Touch */
+  --uc-tap-min: 44px;
+}
+
+/* Numbers in stats, dates, TR values and counters: add `uc-num` (or Tailwind `tabular-nums`). */
+.uc-num { font-variant-numeric: tabular-nums; }
