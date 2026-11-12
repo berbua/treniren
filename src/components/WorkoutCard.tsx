@@ -2,6 +2,7 @@
 
 import { WorkoutType, TrainingVolume, MentalState, Tag } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { Card, Chip, Icon, IconName, Spinner, WorkoutIconTile } from '@/components/ui'
 
 interface WorkoutCardProps {
   workout: {
@@ -21,6 +22,7 @@ interface WorkoutCardProps {
     improvements?: string
     tags?: Tag[]
     workoutTags?: { tag: Tag }[]
+    workoutExercises?: unknown[]
     details?: any
   }
   onEdit?: (id: string) => void
@@ -28,41 +30,32 @@ interface WorkoutCardProps {
   isDeleting?: boolean
 }
 
-const getTrainingTypeColor = (type: WorkoutType) => {
-  switch (type) {
-    case 'GYM':
-      return 'bg-training-gym'
-    case 'BOULDERING':
-      return 'bg-training-bouldering'
-    case 'CIRCUITS':
-      return 'bg-training-circuits'
-    case 'LEAD_ROCK':
-      return 'bg-training-leadRock'
-    case 'LEAD_ARTIFICIAL':
-      return 'bg-training-leadArtificial'
-    case 'MENTAL_PRACTICE':
-      return 'bg-training-mentalPractice'
-    case 'FINGERBOARD':
-      return 'bg-training-fingerboard'
-    default:
-      return 'bg-gray-500'
-  }
+const getTrainingTypeLabel = (type: WorkoutType, t: (key: string) => string) =>
+  t(`workouts.workoutTypes.${type}`) || t(`workoutTypes.${type.toLowerCase()}`) || type
+
+// Text colours for the Strong Mind recap (full class strings so Tailwind can see them)
+const focusText: Record<string, string> = {
+  CHOKE: 'text-uc-focus-choke',
+  DISTRACTION: 'text-uc-focus-distraction',
+  PRESENT: 'text-uc-focus-present',
+  FOCUSED: 'text-uc-focus-focused',
+  CLUTCH: 'text-uc-focus-clutch',
+  FLOW: 'text-uc-focus-flow',
 }
 
-const getTrainingTypeLabel = (type: WorkoutType, t: (key: string) => string) => {
-  const emojiMap: { [key in WorkoutType]: string } = {
-    'GYM': '🏋️',
-    'BOULDERING': '🧗',
-    'CIRCUITS': '🔄',
-    'LEAD_ROCK': '🏔️',
-    'LEAD_ARTIFICIAL': '🧗‍♀️',
-    'MENTAL_PRACTICE': '🧘',
-    'FINGERBOARD': '🖐️',
-  }
-  
-  const emoji = emojiMap[type] || ''
-  const label = t(`workouts.workoutTypes.${type}`) || t(`workoutTypes.${type.toLowerCase()}`) || type
-  return `${emoji} ${label}`
+const zoneText: Record<string, string> = {
+  COMFORT: 'text-uc-zone-comfort',
+  STRETCH1: 'text-uc-zone-stretch-1',
+  STRETCH2: 'text-uc-zone-stretch-2',
+  PANIC: 'text-uc-zone-panic',
+}
+
+const beforeText: Record<number, string> = {
+  1: 'text-uc-zone-panic',
+  2: 'text-uc-zone-stretch-2',
+  3: 'text-uc-zone-stretch-1',
+  4: 'text-uc-focus-focused',
+  5: 'text-uc-zone-comfort',
 }
 
 const formatDate = (dateString: string) => {
@@ -73,285 +66,211 @@ const formatDate = (dateString: string) => {
   return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
 }
 
+/** Label + five read-only dots. */
+function DotsRow({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="min-w-0 flex-1 text-[13px] font-semibold text-uc-text-muted">{label}</span>
+      <span className="flex shrink-0 gap-1" aria-label={`${value}/5`}>
+        {[1, 2, 3, 4, 5].map((rating) => (
+          <span
+            key={rating}
+            aria-hidden
+            className={`size-2.5 rounded-full ${rating <= value ? 'bg-uc-primary' : 'border border-uc-text-muted'}`}
+          />
+        ))}
+      </span>
+    </div>
+  )
+}
+
+const iconButton =
+  'inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text-muted hover:text-uc-text hover:bg-uc-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+
 export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = false }: WorkoutCardProps) {
-  const { t } = useLanguage()
+  const { t, tPlural } = useLanguage()
   // List endpoints return tags as workoutTags join rows
   const tags = workout.tags ?? workout.workoutTags?.map(wt => wt.tag) ?? []
+  const details = workout.details as any
+  const isMental = workout.type === 'MENTAL_PRACTICE'
+  const exercisesCount = workout.type === 'GYM' ? workout.workoutExercises?.length ?? 0 : 0
+  const isLead = workout.type === 'LEAD_ROCK' || workout.type === 'LEAD_ARTIFICIAL'
+  const mentalState = workout.mentalState
+  const hasMentalState = !!mentalState && (!!mentalState.beforeClimbing || (mentalState.climbSections?.length ?? 0) > 0)
+  const timeLabel = (time: string) =>
+    time === 'MORNING'
+      ? (t('workouts.timeOfDayOptions.MORNING') || 'Morning')
+      : time === 'MIDDAY'
+      ? (t('workouts.timeOfDayOptions.MIDDAY') || 'Midday')
+      : (t('workouts.timeOfDayOptions.EVENING') || 'Evening')
+  const timeIcon = (time: string): IconName => (time === 'MORNING' ? 'morning' : time === 'MIDDAY' ? 'midday' : 'evening')
+
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 border border-slate-200 dark:border-slate-700">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="mb-1 relative">
-            <div className={`absolute -left-1 top-1.5 w-3 h-3 rounded-full ${getTrainingTypeColor(workout.type)}`} />
-            <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-50">
-                {getTrainingTypeLabel(workout.type, t)}
-              </h3>
-              {workout.details && (workout.details as any)?.quickLog && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
-                  ⚡ {t('quickLog.quickLogBadge') || 'Quick'}
-                </span>
-              )}
-            </div>
+    <Card className="flex flex-col gap-3">
+      <div className="flex items-start gap-3">
+        <WorkoutIconTile workoutType={workout.type} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="text-[17px] font-extrabold text-uc-text">{getTrainingTypeLabel(workout.type, t)}</h3>
+            {details?.quickLog && (
+              <span className="inline-flex items-center gap-1 min-h-6 px-2 rounded-uc-chip bg-uc-primary-container text-uc-on-primary-container text-xs font-bold">
+                <Icon name="quick-log" size={14} />
+                {t('quickLog.quickLogBadge') || 'Quick'}
+              </span>
+            )}
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            {formatDate(workout.startTime)}
-          </p>
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                  style={{ backgroundColor: tag.color }}
-                >
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          )}
+          <p className="text-[13px] font-medium text-uc-text-muted uc-num">{formatDate(workout.startTime)}</p>
         </div>
-        
-        <div className="flex space-x-2 ml-4">
+        <div className="-mr-2 -mt-1 flex shrink-0">
           {onEdit && (
-            <button
-              onClick={() => onEdit(workout.id)}
-              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-              title={t('workouts.editWorkout')}
-            >
-              ✏️
+            <button type="button" onClick={() => onEdit(workout.id)} className={iconButton} title={t('workouts.editWorkout')} aria-label={t('workouts.editWorkout')}>
+              <Icon name="edit" />
             </button>
           )}
           {onDelete && (
             <button
+              type="button"
               onClick={() => onDelete(workout.id)}
               disabled={isDeleting}
-              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={iconButton}
               title={isDeleting ? t('workouts.deleting') : t('workouts.deleteWorkout')}
+              aria-label={isDeleting ? t('workouts.deleting') : t('workouts.deleteWorkout')}
             >
-              {isDeleting ? (
-                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                '🗑️'
-              )}
+              {isDeleting ? <Spinner className="size-4 text-uc-error" /> : <Icon name="delete" />}
             </button>
           )}
         </div>
       </div>
 
-      <div className="mt-3 space-y-2">
-        {workout.trainingVolume && (
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">{t('workouts.trainingVolume')}:</span>
-            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
-              {workout.trainingVolume}
-            </span>
-          </div>
-        )}
+      {(workout.trainingVolume || exercisesCount > 0 || details?.routineVariation || details?.routeName || details?.wallAngle || details?.climbStyle || workout.sector || (isMental && (workout.mentalPracticeType || (workout.timeOfDay?.length ?? 0) > 0)) || tags.length > 0) && (
+        <div className="flex flex-wrap gap-1.5">
+          {workout.trainingVolume && (
+            <Chip title={t('workouts.trainingVolume')} className="uc-num">{workout.trainingVolume}</Chip>
+          )}
+          {exercisesCount > 0 && (
+            <Chip className="uc-num">{tPlural('workouts.exercisesCount', exercisesCount)}</Chip>
+          )}
+          {workout.type === 'GYM' && details?.routineVariation && (
+            <Chip title={t('workouts.labels.variation')}>
+              <Icon name="library" size={16} />
+              {details.routineVariation.routineName} – {details.routineVariation.variationName}
+            </Chip>
+          )}
+          {details?.routeName && (
+            <Chip title={t('workouts.routeName')}>{details.routeName}</Chip>
+          )}
+          {workout.sector && (
+            <Chip>{t('workouts.sector')}: {workout.sector}</Chip>
+          )}
+          {details?.wallAngle && (
+            <Chip title={t('workouts.wallAngle')}>{t(`workouts.wallAngles.${details.wallAngle}`)}</Chip>
+          )}
+          {details?.climbStyle && (
+            <Chip title={t('workouts.climbStyle')}>{t(`workouts.climbStyles.${details.climbStyle}`)}</Chip>
+          )}
+          {isMental && workout.mentalPracticeType && (
+            <Chip title={t('common.practiceType') || 'Practice type:'}>
+              <Icon name="type-mental" size={16} />
+              {t(`workouts.mentalPracticeTypes.${workout.mentalPracticeType.toLowerCase()}`)}
+            </Chip>
+          )}
+          {isMental && workout.timeOfDay?.map((time, index) => (
+            <Chip key={index} title={t('common.timeOfDay') || 'Time of day:'}>
+              <Icon name={timeIcon(time)} size={16} />
+              {timeLabel(time)}
+            </Chip>
+          ))}
+          {tags.map((tag) => (
+            <Chip key={tag.id} color={tag.color}>{tag.name}</Chip>
+          ))}
+        </div>
+      )}
 
-        {workout.type === 'GYM' && workout.details && (workout.details as any)?.routineVariation && (
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">{t('workouts.labels.variation')}:</span>
-            <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
-              📦 {(workout.details as any).routineVariation.routineName} - {(workout.details as any).routineVariation.variationName}
-            </span>
-          </div>
-        )}
+      {((!isMental && (workout.preSessionFeel || workout.dayAfterTiredness)) || (isMental && workout.focusLevel)) && (
+        <div className="space-y-1.5">
+          {!isMental && workout.preSessionFeel && <DotsRow label="Pre-session feel" value={workout.preSessionFeel} />}
+          {isMental && workout.focusLevel && (
+            <DotsRow label={(t('common.focusLevel') || 'Focus level:').replace(/:$/, '')} value={workout.focusLevel} />
+          )}
+          {!isMental && workout.dayAfterTiredness && (
+            <DotsRow label={(t('common.dayAfterTiredness') || 'Day after tiredness:').replace(/:$/, '')} value={workout.dayAfterTiredness} />
+          )}
+        </div>
+      )}
 
-        {workout.sector && (
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">{t('workouts.sector')}:</span>
-            <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
-              🏔️ {workout.sector}
-            </span>
-          </div>
-        )}
+      {workout.notes && <p className="text-sm text-uc-text whitespace-pre-line">{workout.notes}</p>}
 
-        {workout.type === 'MENTAL_PRACTICE' && workout.mentalPracticeType && (
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">{t('common.practiceType') || 'Practice type:'}</span>
-            <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
-              🧘 {t(`workouts.mentalPracticeTypes.${workout.mentalPracticeType.toLowerCase()}`)}
-            </span>
-          </div>
-        )}
-
-        {workout.type === 'MENTAL_PRACTICE' && workout.timeOfDay && workout.timeOfDay.length > 0 && (
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">{t('common.timeOfDay') || 'Time of day:'}</span>
-            <div className="flex space-x-1">
-              {workout.timeOfDay.map((time, index) => {
-                const timeEmoji = time === 'MORNING' ? '🌅' : time === 'MIDDAY' ? '☀️' : '🌙';
-                const timeLabel = time === 'MORNING' 
-                  ? (t('workouts.timeOfDayOptions.MORNING') || 'Morning')
-                  : time === 'MIDDAY'
-                  ? (t('workouts.timeOfDayOptions.MIDDAY') || 'Midday')
-                  : (t('workouts.timeOfDayOptions.EVENING') || 'Evening');
-                return (
-                  <span key={index} className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
-                    {timeEmoji} {timeLabel}
+      {(hasMentalState || workout.gratitude || workout.improvements) && (
+        <div className="space-y-1 rounded-xl bg-uc-elevated px-3 py-2.5 text-[13px]">
+          {hasMentalState && mentalState && (
+            <>
+              <p className="flex items-center gap-1.5 font-bold text-uc-primary">
+                <Icon name="strong-mind" size={16} />
+                {t('workouts.strongMind')}
+              </p>
+              {mentalState.beforeClimbing && (
+                <p className="font-semibold text-uc-text">
+                  {t('workouts.before')}:{' '}
+                  <span className={`font-bold ${beforeText[mentalState.beforeClimbing] ?? ''}`}>
+                    {t(`workouts.beforeClimbingLabels.${mentalState.beforeClimbing}`)}
                   </span>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {workout.type !== 'MENTAL_PRACTICE' && workout.preSessionFeel && (
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">Pre-session feel:</span>
-            <div className="flex space-x-1">
-              {[1, 2, 3, 4, 5].map((rating) => (
-                <div
-                  key={rating}
-                  className={`w-2 h-2 rounded-full ${
-                    rating <= (workout.preSessionFeel || 0)
-                      ? 'bg-green-500'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {workout.type === 'MENTAL_PRACTICE' && workout.focusLevel && (
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">{t('common.focusLevel') || 'Focus level:'}</span>
-            <div className="flex space-x-1">
-              {[1, 2, 3, 4, 5].map((rating) => (
-                <div
-                  key={rating}
-                  className={`w-2 h-2 rounded-full ${
-                    rating <= (workout.focusLevel || 0)
-                      ? 'bg-orange-500'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {workout.type !== 'MENTAL_PRACTICE' && workout.dayAfterTiredness && (
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-slate-500">{t('common.dayAfterTiredness') || 'Day after tiredness:'}</span>
-            <div className="flex space-x-1">
-              {[1, 2, 3, 4, 5].map((rating) => (
-                <div
-                  key={rating}
-                  className={`w-2 h-2 rounded-full ${
-                    rating <= (workout.dayAfterTiredness || 0)
-                      ? 'bg-red-500'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {workout.notes && (
-          <div className="mt-2">
-            <p className="text-sm text-slate-600 dark:text-slate-300">{workout.notes}</p>
-          </div>
-        )}
-
-        {/* Mental State Display */}
-        {workout.mentalState && (workout.mentalState.beforeClimbing || (workout.mentalState.climbSections && workout.mentalState.climbSections.length > 0)) && (
-          <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="text-sm">🧠</span>
-              <span className="text-xs font-semibold text-purple-800 dark:text-purple-200">{t('workouts.strongMind')}</span>
-            </div>
-            <div className="space-y-1 text-xs">
-              {workout.mentalState.beforeClimbing && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-purple-600 dark:text-purple-400">{t('workouts.before')}:</span>
-                  <span className={`font-medium ${
-                    workout.mentalState.beforeClimbing === 1 ? 'text-red-600' :
-                    workout.mentalState.beforeClimbing === 2 ? 'text-orange-600' :
-                    workout.mentalState.beforeClimbing === 3 ? 'text-yellow-600' :
-                    workout.mentalState.beforeClimbing === 4 ? 'text-blue-600' : 'text-green-600'
-                  }`}>
-                    {t(`workouts.beforeClimbingLabels.${workout.mentalState.beforeClimbing}`)}
-                  </span>
-                </div>
+                </p>
               )}
-              {(workout.type === 'LEAD_ROCK' || workout.type === 'LEAD_ARTIFICIAL') && workout.mentalState.climbSections && workout.mentalState.climbSections.length > 0 && (
-                <div className="space-y-1">
-                  <span className="text-purple-600 dark:text-purple-400">{t('workouts.climbs')}:</span>
-                  {workout.mentalState.climbSections.map((section, index) => (
-                    <div key={section.id} className="ml-2 text-xs">
-                      <span className="text-purple-600 dark:text-purple-400">{t('workouts.climbNumber', { number: index + 1 })}:</span>
-                      {section.focusState && (
-                        <span className={`ml-1 font-medium ${
-                          section.focusState === 'CHOKE' ? 'text-red-600' :
-                          section.focusState === 'DISTRACTION' ? 'text-orange-600' :
-                          section.focusState === 'PRESENT' ? 'text-yellow-600' :
-                          section.focusState === 'FOCUSED' ? 'text-blue-600' :
-                          section.focusState === 'CLUTCH' ? 'text-green-600' : 'text-purple-600'
-                        }`}>
-                          {t(`workouts.focusStates.${section.focusState}`)}
-                        </span>
-                      )}
-                      {section.tookFall !== undefined && (
-                        <span className={`ml-1 ${section.tookFall ? 'text-pink-600' : 'text-green-600'}`}>
-                          ({section.tookFall ? t('workouts.fell') : t('workouts.noFall')})
-                        </span>
-                      )}
-                      {section.comfortZone && (
-                        <span className={`ml-1 ${
-                          section.comfortZone === 'COMFORT' ? 'text-green-600' :
-                          section.comfortZone === 'STRETCH1' ? 'text-yellow-600' :
-                          section.comfortZone === 'STRETCH2' ? 'text-orange-600' : 'text-red-600'
-                        }`}>
-                          - {t(`workouts.comfortZones.${section.comfortZone}`)}
-                        </span>
-                      )}
-                    </div>
+              {isLead && mentalState.climbSections && mentalState.climbSections.length > 0 && (
+                <>
+                  <p className="sr-only">{t('workouts.climbs')}</p>
+                  {mentalState.climbSections.map((section, index) => (
+                    <p key={section.id} className="font-semibold text-uc-text">
+                      {section.name || t('workouts.climbNumber', { number: index + 1 })}:{' '}
+                      {[
+                        section.focusState && (
+                          <span key="focus" className={`font-bold ${focusText[section.focusState] ?? ''}`}>
+                            {t(`workouts.focusStates.${section.focusState}`)}
+                          </span>
+                        ),
+                        section.comfortZone && (
+                          <span key="zone" className={zoneText[section.comfortZone] ?? ''}>
+                            {t(`workouts.comfortZones.${section.comfortZone}`)}
+                          </span>
+                        ),
+                        section.tookFall !== undefined && (
+                          <span key="fall">{section.tookFall ? t('workouts.fell') : t('workouts.noFall')}</span>
+                        ),
+                      ]
+                        .filter(Boolean)
+                        .map((part, i) => (
+                          <span key={i}>
+                            {i > 0 && <span className="text-uc-text-muted"> · </span>}
+                            {part}
+                          </span>
+                        ))}
+                    </p>
                   ))}
-                </div>
+                </>
               )}
-              {workout.mentalState.reflections && (
-                <div className="mt-2">
-                  <p className="text-xs text-purple-700 dark:text-purple-300 italic">
-                    &ldquo;{workout.mentalState.reflections}&rdquo;
-                  </p>
-                </div>
+              {mentalState.reflections && (
+                <p className="italic text-uc-text-muted">&ldquo;{mentalState.reflections}&rdquo;</p>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* Gratitude and Improvements */}
-        {(workout.gratitude || workout.improvements) && (
-          <div className="mt-3 space-y-2">
-            {workout.gratitude && (
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-sm">🙏</span>
-                  <span className="text-xs font-semibold text-green-800 dark:text-green-200">Gratitude</span>
-                </div>
-                <p className="text-xs text-green-700 dark:text-green-300">
-                  {workout.gratitude}
-                </p>
-              </div>
-            )}
-            {workout.improvements && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-sm">🎯</span>
-                  <span className="text-xs font-semibold text-blue-800 dark:text-blue-200">Improvements</span>
-                </div>
-                <p className="text-xs text-blue-700 dark:text-blue-300">
-                  {workout.improvements}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+            </>
+          )}
+          {workout.gratitude && (
+            <p className="flex gap-1.5 text-uc-text-muted">
+              <Icon name="gratitude" size={16} className="mt-0.5" />
+              <span>
+              <span className="font-bold text-uc-text">Gratitude:</span> {workout.gratitude}
+              </span>
+            </p>
+          )}
+          {workout.improvements && (
+            <p className="flex gap-1.5 text-uc-text-muted">
+              <Icon name="improve" size={16} className="mt-0.5" />
+              <span>
+              <span className="font-bold text-uc-text">Improvements:</span> {workout.improvements}
+              </span>
+            </p>
+          )}
+        </div>
+      )}
+    </Card>
   )
 }

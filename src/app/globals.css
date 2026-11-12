@@ -1,31 +1,95 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
-@theme {
-  --color-uc-black: #1E1E1E;
-  --color-uc-dark-bg: #382740;
-  --color-uc-purple: #6A1B9A;
-  --color-uc-mustard: #FFC107;
-  --color-uc-text-light: #F5F5F5;
-  --color-uc-text-muted: #C7A256;
-  --color-uc-success: #5D7B5C;
-  --color-uc-alert: #A83F2F;
+/* `dark:` follows data-theme on <html> (set from the OS preference in layout.tsx). */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-  /* Training type colors (Tailwind v4 doesn't read tailwind.config.ts) */
-  --color-training-gym: #7C2D12;
-  --color-training-bouldering: #DC2626;
-  --color-training-circuits: #EA580C;
-  --color-training-leadRock: #D97706;
-  --color-training-leadArtificial: #059669;
-  --color-training-mentalPractice: #7C3AED;
-  --color-training-fingerboard: #DB2777;
+/* Unicorn Climb tokens as Tailwind utilities: bg-uc-surface, text-uc-text-muted,
+   bg-uc-phase-follicular, bg-uc-workout-gym, rounded-uc-card, shadow-uc, … */
+@theme inline {
+  --font-sans: var(--uc-font);
 
-  --font-sans: "Montserrat", sans-serif;
+  --color-uc-bg: var(--uc-bg);
+  --color-uc-surface: var(--uc-surface);
+  --color-uc-elevated: var(--uc-elevated);
+  --color-uc-border: var(--uc-border);
+  --color-uc-text: var(--uc-text);
+  --color-uc-text-muted: var(--uc-text-muted);
+  --color-uc-skeleton: var(--uc-skeleton);
+  --color-uc-scrim: var(--uc-scrim);
+
+  --color-uc-primary: var(--uc-primary);
+  --color-uc-on-primary: var(--uc-on-primary);
+  --color-uc-primary-container: var(--uc-primary-container);
+  --color-uc-on-primary-container: var(--uc-on-primary-container);
+  --color-uc-accent: var(--uc-accent);
+  --color-uc-on-accent: var(--uc-on-accent);
+  --color-uc-accent-text: var(--uc-accent-text);
+
+  --color-uc-success: var(--uc-success);
+  --color-uc-warning: var(--uc-warning);
+  --color-uc-error: var(--uc-error);
+  --color-uc-success-bg: var(--uc-success-bg);
+  --color-uc-warning-bg: var(--uc-warning-bg);
+  --color-uc-error-bg: var(--uc-error-bg);
+
+  --color-uc-chip-ink: var(--uc-chip-ink);
+
+  --color-uc-tag-1: var(--uc-tag-1);
+  --color-uc-tag-2: var(--uc-tag-2);
+  --color-uc-tag-3: var(--uc-tag-3);
+  --color-uc-tag-4: var(--uc-tag-4);
+  --color-uc-tag-5: var(--uc-tag-5);
+  --color-uc-tag-6: var(--uc-tag-6);
+  --color-uc-tag-7: var(--uc-tag-7);
+  --color-uc-tag-8: var(--uc-tag-8);
+  --color-uc-tag-9: var(--uc-tag-9);
+  --color-uc-tag-10: var(--uc-tag-10);
+
+  --color-uc-phase-menstruation: var(--uc-phase-menstruation);
+  --color-uc-phase-follicular: var(--uc-phase-follicular);
+  --color-uc-phase-ovulation: var(--uc-phase-ovulation);
+  --color-uc-phase-early-luteal: var(--uc-phase-early-luteal);
+  --color-uc-phase-late-luteal: var(--uc-phase-late-luteal);
+  --color-uc-band-menstruation: var(--uc-band-menstruation);
+  --color-uc-band-follicular: var(--uc-band-follicular);
+  --color-uc-band-ovulation: var(--uc-band-ovulation);
+  --color-uc-band-early-luteal: var(--uc-band-early-luteal);
+  --color-uc-band-late-luteal: var(--uc-band-late-luteal);
+
+  --color-uc-workout-gym: var(--uc-workout-gym);
+  --color-uc-workout-bouldering: var(--uc-workout-bouldering);
+  --color-uc-workout-circuits: var(--uc-workout-circuits);
+  --color-uc-workout-lead-rock: var(--uc-workout-lead-rock);
+  --color-uc-workout-lead-wall: var(--uc-workout-lead-wall);
+  --color-uc-workout-fingerboard: var(--uc-workout-fingerboard);
+  --color-uc-workout-mental: var(--uc-workout-mental);
+
+  --color-uc-focus-choke: var(--uc-focus-choke);
+  --color-uc-focus-distraction: var(--uc-focus-distraction);
+  --color-uc-focus-present: var(--uc-focus-present);
+  --color-uc-focus-focused: var(--uc-focus-focused);
+  --color-uc-focus-clutch: var(--uc-focus-clutch);
+  --color-uc-focus-flow: var(--uc-focus-flow);
+
+  --color-uc-zone-comfort: var(--uc-zone-comfort);
+  --color-uc-zone-stretch-1: var(--uc-zone-stretch-1);
+  --color-uc-zone-stretch-2: var(--uc-zone-stretch-2);
+  --color-uc-zone-panic: var(--uc-zone-panic);
+
+  --radius-uc-chip: var(--uc-radius-chip);
+  --radius-uc-input: var(--uc-radius-input);
+  --radius-uc-card: var(--uc-radius-card);
+  --radius-uc-sheet: var(--uc-radius-sheet);
+  --radius-uc-pill: var(--uc-radius-pill);
+
+  --shadow-uc: var(--uc-shadow);
 }
 
 body {
-  background: var(--color-uc-black);
-  color: var(--color-uc-text-light);
-  font-family: "Montserrat", sans-serif;
+  background: var(--uc-bg);
+  color: var(--uc-text);
+  font-family: var(--uc-font);
 }
 
 /* Custom scrollbar styling */
@@ -34,16 +98,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-uc-dark-bg);
+  background: var(--uc-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-uc-purple);
+  background: var(--uc-border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-uc-mustard);
+  background: var(--uc-text-muted);
 }
 
 /* Toast animations */
@@ -60,4 +124,24 @@ body {
 
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
+}
+
+/* Full-screen loading bar */
+@keyframes uc-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.animate-uc-indeterminate {
+  animation: uc-indeterminate 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-uc-indeterminate {
+    animation: none;
+  }
 }

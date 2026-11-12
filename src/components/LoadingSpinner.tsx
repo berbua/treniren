@@ -1,5 +1,7 @@
 'use client';
 
+import { Icon } from '@/components/ui';
+
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -17,17 +19,24 @@ export const LoadingSpinner = ({ message, size = 'md', fullScreen = false }: Loa
 
   const spinner = (
     <div className="flex flex-col items-center justify-center space-y-4">
-      <div className={`animate-spin rounded-full border-b-2 border-blue-600 ${sizeClasses[size]}`}></div>
+      <div className={`animate-spin rounded-full border-2 border-uc-primary border-r-transparent ${sizeClasses[size]}`}></div>
       {message && (
-        <p className="text-slate-600 dark:text-slate-300 text-sm">{message}</p>
+        <p className="text-uc-text-muted text-sm font-semibold">{message}</p>
       )}
     </div>
   );
 
+  // Brand tile + indeterminate bar, as in the app's launch screen
   if (fullScreen) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        {spinner}
+      <div role="status" className="min-h-screen bg-uc-bg flex flex-col items-center justify-center gap-5 px-4">
+        <span aria-hidden className="flex size-16 items-center justify-center rounded-uc-card bg-uc-primary-container text-uc-accent-text">
+          <Icon name="horn" size={32} />
+        </span>
+        <span aria-hidden className="block h-1 w-24 overflow-hidden rounded-uc-pill bg-uc-skeleton">
+          <span className="block h-full w-2/5 rounded-uc-pill bg-uc-primary animate-uc-indeterminate" />
+        </span>
+        {message && <p className="text-uc-text-muted text-sm font-semibold text-center">{message}</p>}
       </div>
     );
   }

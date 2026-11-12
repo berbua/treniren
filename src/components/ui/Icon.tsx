@@ -1,0 +1,107 @@
+import { SVGAttributes } from 'react'
+
+// Generated from public/icons/sprite.svg (24×24 line icons, 1.75 stroke, currentColor).
+// Inlined so icons render offline and without an extra request.
+const ICONS = {
+  'home': '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  'calendar': '<path d="M4 6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z M4 10h16 M8 3v4 M16 3v4"/>',
+  'plus': '<path d="M12 5v14 M5 12h14"/>',
+  'stats': '<path d="M5 20v-8 M12 20V5 M19 20v-5"/>',
+  'menu': '<path d="M4 7h16 M4 12h16 M4 17h16"/>',
+  'workouts': '<path d="M8 6h12 M8 12h12 M8 18h12 M4 6h.01 M4 12h.01 M4 18h.01"/>',
+  'cycle': '<path d="M20 12a8 8 0 1 1-3-6.2 M20 4v4h-4"/>',
+  'strong-mind': '<path d="M12 5a3 3 0 0 0-5.6-1.5A3 3 0 0 0 4 8a3 3 0 0 0 .5 5A3 3 0 0 0 7 18a3 3 0 0 0 5 1.5z M12 5a3 3 0 0 1 5.6-1.5A3 3 0 0 1 20 8a3 3 0 0 1-.5 5A3 3 0 0 1 17 18a3 3 0 0 1-5 1.5 M12 5v14.5"/>',
+  'library': '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/>',
+  'user': '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4.5 21a7.5 7.5 0 0 1 15 0"/>',
+  'bell': '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z M10 20.5a2 2 0 0 0 4 0"/>',
+  'search': '<path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M20 20l-4-4"/>',
+  'filter': '<path d="M4 6h16 M7 12h10 M10 18h4"/>',
+  'settings': '<path d="M4 7h10 M18 7h2 M16 5v4 M4 17h4 M12 17h8 M10 15v4"/>',
+  'globe': '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M3 12h18 M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z"/>',
+  'sign-out': '<path d="M15 4h4v16h-4 M10 8l-4 4 4 4 M6 12h10"/>',
+  'type-gym': '<path d="M6 7v10 M18 7v10 M3 9.5v5 M21 9.5v5 M6 12h12"/>',
+  'type-bouldering': '<path d="M3 19l2.5-7 5-4.5 5 1.5 4 5 1.5 5z M9 13h.01 M14 12h.01"/>',
+  'type-lead-rock': '<path d="M2 20l7-12 4 6 2.5-3.5L22 20z"/>',
+  'type-lead-wall': '<path d="M6 3h12v18H6z M10 7h.01 M14 10h.01 M10 13.5h.01 M14 17h.01"/>',
+  'type-circuits': '<path d="M17 3l3 3-3 3 M20 6H9a5 5 0 0 0-5 5 M7 21l-3-3 3-3 M4 18h11a5 5 0 0 0 5-5"/>',
+  'type-fingerboard': '<path d="M3 7h18v5H3z M7 9.5h2 M11 9.5h2 M15 9.5h2 M9 12v3a3 3 0 0 0 6 0v-3"/>',
+  'type-mental': '<path d="M12 20c-4 0-8-2.5-8-7 3 0 6 1.5 8 4 2-2.5 5-4 8-4 0 4.5-4 7-8 7z M12 17c-2-2.5-2-6.5 0-10 2 3.5 2 7.5 0 10z"/>',
+  'event-injury': '<path d="M12 4l9 16H3z M12 10v4 M12 17h.01"/>',
+  'event-physio': '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 8v8 M8 12h8"/>',
+  'event-competition': '<path d="M8 4h8v5a4 4 0 0 1-8 0z M8 6H5a3 3 0 0 0 3 4 M16 6h3a3 3 0 0 1-3 4 M12 13v4 M8 20h8"/>',
+  'event-trip': '<path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>',
+  'event-deload': '<path d="M4 8h13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z M21 11v2 M6.5 11v2"/>',
+  'event-other': '<path d="M5 12h.01 M12 12h.01 M19 12h.01"/>',
+  'injury-risk': '<path d="M12 8v5 M12 16.5h.01 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/>',
+  'period': '<path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3z"/>',
+  'morning': '<path d="M3 18h18 M7 18a5 5 0 0 1 10 0 M12 4v5 M9.5 6.5L12 4l2.5 2.5 M4.5 11.5l1.5 1 M19.5 11.5l-1.5 1"/>',
+  'midday': '<path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 2.5v2 M12 19.5v2 M2.5 12h2 M19.5 12h2 M5.3 5.3l1.4 1.4 M17.3 17.3l1.4 1.4 M5.3 18.7l1.4-1.4 M17.3 6.7l1.4-1.4"/>',
+  'evening': '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  'clock': '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 7.5V12l3 2"/>',
+  'streak': '<path d="M12 3c.8 3 5 5.5 5 10.5a5 5 0 0 1-10 0c0-2.2 1-3.8 2.2-4.8.1 2 1 3.2 2.3 3.3-.3-3.1-.6-5.9.5-9z"/>',
+  'goal': '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M12 12h.01"/>',
+  'quick-log': '<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',
+  'achieved': '<path d="M8 4h8v5a4 4 0 0 1-8 0z M8 6H5a3 3 0 0 0 3 4 M16 6h3a3 3 0 0 1-3 4 M12 13v4 M8 20h8"/>',
+  'gratitude': '<path d="M12 20s-8-4.8-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15.2 12 20 12 20z"/>',
+  'improve': '<path d="M3 17l6-6 4 4 8-8 M15 7h6v6"/>',
+  'falls': '<path d="M12 3v14 M6 11l6 6 6-6 M5 21h14"/>',
+  'test': '<path d="M4 20h16 M7 16V9 M12 16V5 M17 16v-4"/>',
+  'tag': '<path d="M3 12V4h8l10 10-8 8z M7.5 8h.01"/>',
+  'note': '<path d="M5 4h14v16H5z M8.5 9h7 M8.5 13h7 M8.5 17h4"/>',
+  'info': '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 11v5 M12 8h.01"/>',
+  'warning': '<path d="M12 4l9 16H3z M12 10v4 M12 17h.01"/>',
+  'error': '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 8v5 M12 16h.01"/>',
+  'success': '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  'offline': '<path d="M3 3l18 18 M8.5 16.5a5 5 0 0 1 7 0 M5 12.5a10 10 0 0 1 4-2.3 M19 12.5a10 10 0 0 0-3-2 M12 20h.01"/>',
+  'install': '<path d="M7 3h10v18H7z M11 18h2"/>',
+  'share': '<path d="M12 15V3 M8 7l4-4 4 4 M5 11v9h14v-9"/>',
+  'mail': '<path d="M3 6h18v12H3z M3 7l9 6 9-6"/>',
+  'link-expired': '<path d="M10 14a4 4 0 0 1 0-5.7l3-3a4 4 0 0 1 5.7 5.7l-1.5 1.5 M14 10a4 4 0 0 1 0 5.7l-3 3a4 4 0 0 1-5.7-5.7l1.5-1.5 M4 4l16 16"/>',
+  'download': '<path d="M12 4v11 M7 10l5 5 5-5 M5 20h14"/>',
+  'edit': '<path d="M4 20h4L19 9l-4-4L4 16z M13.5 6.5l4 4"/>',
+  'delete': '<path d="M4 7h16 M9 7V4h6v3 M6 7l1 13h10l1-13"/>',
+  'duplicate': '<path d="M9 9h11v11H9z M5 15H4V4h11v1"/>',
+  'close': '<path d="M6 6l12 12 M18 6L6 18"/>',
+  'chevron-left': '<path d="M15 6l-6 6 6 6"/>',
+  'chevron-right': '<path d="M9 6l6 6-6 6"/>',
+  'chevron-down': '<path d="M6 9l6 6 6-6"/>',
+  'chevron-up': '<path d="M6 15l6-6 6 6"/>',
+  'move-up': '<path d="M12 19V5 M6 11l6-6 6 6"/>',
+  'move-down': '<path d="M12 5v14 M6 13l6 6 6-6"/>',
+  'view-grid': '<path d="M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z"/>',
+  'view-list': '<path d="M8 6h12 M8 12h12 M8 18h12 M4 6h.01 M4 12h.01 M4 18h.01"/>',
+  'horn': '<path d="M12 2.5L16.5 21h-9z M10.2 10l3.9-1 M9.4 14l5.5-1.4 M8.6 18l7-1.8"/>',
+} as const
+
+export type IconName = keyof typeof ICONS
+
+interface IconProps extends Omit<SVGAttributes<SVGSVGElement>, 'name'> {
+  name: IconName
+  /** px; 16 inline in chips, 20 buttons and rows (default), 24 tab bar and headers. */
+  size?: number
+  /** Accessible name for a meaningful icon; without it the icon is decorative (aria-hidden). */
+  label?: string
+}
+
+/** Unicorn Climb line icon. Takes the colour of the surrounding text. */
+export function Icon({ name, size = 20, label, className = '', ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`shrink-0 ${className}`}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+      focusable="false"
+      dangerouslySetInnerHTML={{ __html: ICONS[name] }}
+      {...props}
+    />
+  )
+}

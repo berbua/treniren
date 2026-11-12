@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import AuthGuard from '@/components/AuthGuard'
-import { FingerboardTestingProtocol, FingerboardTestResult, FingerboardTestHang } from '@/types/workout'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { FingerboardTestingProtocol, FingerboardTestResult } from '@/types/workout'
+import Link from 'next/link'
 import FingerboardTestChart from '@/components/FingerboardTestChart'
+import FingerboardTestResultsTable from '@/components/FingerboardTestResultsTable'
 import PerformTestModal from '@/components/PerformTestModal'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { Button, Card, ChoiceChip, EmptyState, Icon, Overline, SkeletonRows } from '@/components/ui'
 
 export default function FingerboardTestResultsPage() {
   return (
@@ -71,162 +73,114 @@ function FingerboardTestResultsPageContent() {
     ? testResults.filter((tr) => tr.testHangId === selectedHangId)
     : testResults
 
+  const backLink = (
+    <Link
+      href="/fingerboard-testing"
+      aria-label={t('fingerboardTesting.back') || 'Back'}
+      className="-ml-3 inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text-muted transition-colors hover:bg-uc-surface hover:text-uc-text"
+    >
+      <svg aria-hidden className="size-6" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+        <path d="m15 6-6 6 6 6" />
+      </svg>
+    </Link>
+  )
+
   if (loading) {
-    return <LoadingSpinner message={t('fingerboardTesting.loadingResults')} fullScreen />
+    return (
+      <div className="min-h-screen bg-uc-bg">
+        <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+          <SkeletonRows />
+        </div>
+      </div>
+    )
   }
 
   if (!protocol) {
     return (
-      <div className="min-h-screen bg-uc-black flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-uc-text-muted">{t('fingerboardTesting.protocolNotFound')}</p>
+      <div className="min-h-screen bg-uc-bg">
+        <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+          {backLink}
+          <EmptyState icon={<Icon name="test" size={28} />} title={t('fingerboardTesting.protocolNotFound')} />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-uc-black">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-uc-text-light">
-                📊 {protocol.name}
-              </h1>
-              {protocol.description && (
-                <p className="text-uc-text-muted mt-2">{protocol.description}</p>
-              )}
-            </div>
-            <button
-              onClick={() => setShowPerformTest(true)}
-              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-            >
-              + {t('fingerboardTesting.performTest')}
-            </button>
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+        {/* Header */}
+        <div className="mb-5 flex items-start gap-1">
+          {backLink}
+          <div className="min-w-0 flex-1 pt-1">
+            <h1 className="text-[28px] font-extrabold leading-tight text-uc-text break-words">
+              {protocol.name}
+            </h1>
+            {protocol.description && (
+              <p className="mt-1 text-sm text-uc-text-muted">{protocol.description}</p>
+            )}
           </div>
+          <Button variant="accent" size="lg" className="hidden shrink-0 lg:inline-flex" onClick={() => setShowPerformTest(true)}>
+            {t('fingerboardTesting.performTest')}
+          </Button>
         </div>
+
+        <Button variant="accent" size="lg" className="mb-4 w-full lg:hidden" onClick={() => setShowPerformTest(true)}>
+          {t('fingerboardTesting.performTest')}
+        </Button>
 
         {/* Filter by hang type */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-uc-text-light mb-2">
-            {t('fingerboardTesting.filterByHang')}
-          </label>
-          <select
-            value={selectedHangId || ''}
-            onChange={(e) => setSelectedHangId(e.target.value || null)}
-            className="bg-uc-dark-bg border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
+        {protocol.testHangs.length > 1 && (
+          <div
+            role="group"
+            aria-label={t('fingerboardTesting.filterByHang')}
+            className="-mx-5 mb-4 flex gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-wrap lg:px-0"
           >
-            <option value="">{t('fingerboardTesting.allHangs')}</option>
-            {protocol.testHangs.map((hang) => (
-              <option key={hang.id || `hang-${hang.order}`} value={hang.id || `hang-${hang.order}`}>
-                {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize, hang.customDescription)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Charts */}
-        {filteredResults.length > 0 && (
-          <div className="mb-8">
-            <FingerboardTestChart testResults={filteredResults} protocol={protocol} />
+            <ChoiceChip selected={selectedHangId === null} className="shrink-0" onClick={() => setSelectedHangId(null)}>
+              {t('fingerboardTesting.allHangs')}
+            </ChoiceChip>
+            {protocol.testHangs.map((hang) => {
+              const hangId = hang.id || `hang-${hang.order}`
+              return (
+                <ChoiceChip
+                  key={hangId}
+                  selected={selectedHangId === hangId}
+                  className="shrink-0 whitespace-nowrap"
+                  onClick={() => setSelectedHangId(hangId)}
+                >
+                  {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize, hang.customDescription).replace(/ • /g, ' · ')}
+                </ChoiceChip>
+              )
+            })}
           </div>
         )}
 
-        {/* Test Results Table */}
-        <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 overflow-hidden">
-          <div className="p-6 border-b border-uc-purple/20">
-            <h2 className="text-xl font-semibold text-uc-text-light">
-              {t('fingerboardTesting.testResults')} ({filteredResults.length})
-            </h2>
-          </div>
-          {filteredResults.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="text-6xl mb-4">📊</div>
-              <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-                {t('fingerboard.noTestResults') || 'No test results yet'}
-              </h3>
-              <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-                {t('fingerboard.noTestResultsDescription') || 'Perform your first test to start tracking your fingerboard progress over time. Regular testing helps you see improvements and adjust your training.'}
-              </p>
-              <button
-                onClick={() => setShowPerformTest(true)}
-                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-              >
-                ➕ {t('fingerboard.performTest') || 'Perform Your First Test'}
-              </button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-uc-black/50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      {t('fingerboardTesting.columns.date')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      {t('fingerboardTesting.columns.hangType')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      {t('fingerboardTesting.columns.load')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      {t('fingerboardTesting.columns.time')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      {t('fingerboardTesting.columns.success')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-uc-text-muted uppercase tracking-wider">
-                      {t('fingerboardTesting.columns.notes')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-uc-purple/10">
-                  {filteredResults.map((result) => {
-                    const hang = protocol.testHangs.find((h) => (h.id || `hang-${h.order}`) === result.testHangId)
-                    return (
-                      <tr key={result.id} className="hover:bg-uc-black/30">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-uc-text-light">
-                          {new Date(result.date).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-uc-text-light">
-                          {formatHangDescription(
-                            t,
-                            result.handType,
-                            result.gripType,
-                            result.crimpSize,
-                            result.customDescription
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-uc-text-light">
-                          {result.load !== null && result.load !== undefined
-                            ? `+${result.load}`
-                            : result.unload !== null && result.unload !== undefined
-                            ? `-${result.unload}`
-                            : '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-uc-text-light">
-                          {result.timeSeconds || '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {result.success === true ? (
-                            <span className="text-green-400">✓</span>
-                          ) : result.success === false ? (
-                            <span className="text-red-400">✗</span>
-                          ) : (
-                            <span className="text-uc-text-muted">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-uc-text-muted">
-                          {result.notes || '-'}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          {/* Chart */}
+          {filteredResults.length > 0 && (
+            <FingerboardTestChart testResults={filteredResults} protocol={protocol} showHangFilter={false} />
           )}
+
+          {/* Test Results Table */}
+          <Card padded={false} className={`overflow-hidden ${filteredResults.length === 0 ? 'lg:col-span-2' : ''}`}>
+            <Overline className="px-4 pt-4 pb-1 uc-num">
+              {t('fingerboardTesting.testResults')} ({filteredResults.length})
+            </Overline>
+            {filteredResults.length === 0 ? (
+              <EmptyState
+                icon={<Icon name="test" size={28} />}
+                title={t('fingerboard.noTestResults') || 'No test results yet'}
+                description={t('fingerboard.noTestResultsDescription')}
+                action={
+                  <Button variant="accent" onClick={() => setShowPerformTest(true)}>
+                    + {t('fingerboard.performTest') || 'Perform Your First Test'}
+                  </Button>
+                }
+              />
+            ) : (
+              <FingerboardTestResultsTable testResults={filteredResults} />
+            )}
+          </Card>
         </div>
       </div>
 
@@ -240,4 +194,3 @@ function FingerboardTestResultsPageContent() {
     </div>
   )
 }
-

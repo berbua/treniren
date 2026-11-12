@@ -2,6 +2,7 @@
 
 import { WorkoutType } from '@/types/workout';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Overline, WorkoutTypeChip } from '@/components/ui';
 
 interface TrainingTypeFilterProps {
   selectedTypes: WorkoutType[];
@@ -9,13 +10,13 @@ interface TrainingTypeFilterProps {
 }
 
 const workoutTypeConfig = {
-  GYM: { labelKey: 'training.types.gym', emoji: '🏋️', color: 'bg-training-gym' },
-  BOULDERING: { labelKey: 'training.types.bouldering', emoji: '🧗', color: 'bg-training-bouldering' },
-  CIRCUITS: { labelKey: 'training.types.circuits', emoji: '🔄', color: 'bg-training-circuits' },
-  LEAD_ROCK: { labelKey: 'training.types.leadRock', emoji: '🏔️', color: 'bg-training-leadRock' },
-  LEAD_ARTIFICIAL: { labelKey: 'training.types.leadArtificial', emoji: '🧗‍♀️', color: 'bg-training-leadArtificial' },
-  MENTAL_PRACTICE: { labelKey: 'training.types.mentalPractice', emoji: '🧘', color: 'bg-training-mentalPractice' },
-  FINGERBOARD: { labelKey: 'training.types.fingerboard', emoji: '🖐️', color: 'bg-training-fingerboard' },
+  BOULDERING: { labelKey: 'training.types.bouldering' },
+  LEAD_ARTIFICIAL: { labelKey: 'training.types.leadArtificial' },
+  LEAD_ROCK: { labelKey: 'training.types.leadRock' },
+  CIRCUITS: { labelKey: 'training.types.circuits' },
+  GYM: { labelKey: 'training.types.gym' },
+  FINGERBOARD: { labelKey: 'training.types.fingerboard' },
+  MENTAL_PRACTICE: { labelKey: 'training.types.mentalPractice' },
 };
 
 export default function TrainingTypeFilter({ selectedTypes, onTypesChange }: TrainingTypeFilterProps) {
@@ -39,51 +40,41 @@ export default function TrainingTypeFilter({ selectedTypes, onTypesChange }: Tra
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          🔍 {t('calendar.filterByTrainingType')}
-        </label>
-        <div className="flex space-x-2">
+      <div className="flex items-center justify-between gap-3">
+        <Overline>{t('calendar.filterByTrainingType')}</Overline>
+        <div className="flex shrink-0">
           <button
+            type="button"
             onClick={handleSelectAll}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            className="min-h-11 px-2 text-sm font-bold text-uc-primary hover:underline"
           >
             {t('calendar.filterAll')}
           </button>
           <button
+            type="button"
             onClick={handleSelectNone}
-            className="text-xs text-slate-600 dark:text-slate-400 hover:underline"
+            className="min-h-11 px-2 text-sm font-bold text-uc-primary hover:underline"
           >
             {t('calendar.filterNone')}
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {Object.entries(workoutTypeConfig).map(([type, config]) => {
-          const isSelected = selectedTypes.includes(type as WorkoutType);
-          return (
-            <button
-              key={type}
-              onClick={() => handleTypeToggle(type as WorkoutType)}
-              className={`flex items-center space-x-2 p-2 rounded-lg border-2 text-left transition-all ${
-                isSelected
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
-              }`}
-            >
-              <div className={`w-3 h-3 rounded-full ${config.color}`} />
-              <span className="text-sm">{config.emoji}</span>
-              <span className="text-xs font-medium text-slate-900 dark:text-slate-50">
-                {t(config.labelKey)}
-              </span>
-            </button>
-          );
-        })}
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(workoutTypeConfig).map(([type, config]) => (
+          <WorkoutTypeChip
+            key={type}
+            workoutType={type as WorkoutType}
+            selected={selectedTypes.includes(type as WorkoutType)}
+            onClick={() => handleTypeToggle(type as WorkoutType)}
+          >
+            {t(config.labelKey)}
+          </WorkoutTypeChip>
+        ))}
       </div>
 
       {selectedTypes.length === 0 && (
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-[13px] text-uc-text-muted">
           {t('calendar.noTrainingTypesSelected')}
         </p>
       )}

@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { toLocalDateString } from '@/lib/date-utils'
 import { formatHangDescription } from '@/lib/fingerboard-utils'
+import { BottomSheet, Button, Icon, Input, Label, Overline, SegmentedControl, Select, Spinner, UnitInput } from './ui'
 
 interface PerformTestModalProps {
   protocol: FingerboardTestingProtocol
@@ -66,7 +67,7 @@ export default function PerformTestModal({
         onProtocolUpdated?.() // Refresh protocol list in parent
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        alert(`Failed to update protocol name: ${errorData.error || 'Unknown error'}`)
+        alert(`${t('fingerboardTesting.renameError') || 'Failed to update protocol name'}: ${errorData.error || 'Unknown error'}`)
         setProtocolName(protocol.name) // Revert on error
       }
     } catch (error) {
@@ -121,7 +122,7 @@ export default function PerformTestModal({
         onTestPerformed()
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        alert(`Failed to save test: ${errorData.error || 'Unknown error'}`)
+        alert(`${t('fingerboardTesting.saveTestError') || 'Failed to save test'}: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error saving test:', error)
@@ -131,245 +132,225 @@ export default function PerformTestModal({
     }
   }
 
+  const smallIconButton = 'inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text-muted transition-colors hover:bg-uc-surface hover:text-uc-text disabled:opacity-50'
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-uc-dark-bg border-b border-uc-purple/20 px-6 py-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex-1">
-              {isEditingName ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={protocolName}
-                    onChange={(e) => setProtocolName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleSaveProtocolName()
-                      } else if (e.key === 'Escape') {
-                        handleCancelEditName()
-                      }
-                    }}
-                    className="flex-1 bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light text-xl font-bold focus:outline-none focus:border-uc-purple"
-                    autoFocus
-                    disabled={isSavingName}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSaveProtocolName}
-                    disabled={isSavingName || !protocolName.trim()}
-                    className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                  >
-                    {isSavingName ? 'Saving...' : '✓'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelEditName}
-                    disabled={isSavingName}
-                    className="bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-uc-text-light">{t('workouts.labels.performTest') || 'Perform Test:'} {protocolName}</h2>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingName(true)}
-                    className="text-uc-text-muted hover:text-uc-text-light transition-colors text-sm"
-                    title="Edit protocol name"
-                  >
-                    ✏️
-                  </button>
-                </div>
-              )}
-            </div>
-            <button onClick={onClose} className="text-uc-text-muted hover:text-uc-text-light transition-colors ml-4">
-              ✕
-            </button>
-          </div>
+    <BottomSheet
+      isOpen
+      onClose={onClose}
+      dismissible={false}
+      closeLabel={t('common.close') || 'Close'}
+      title={
+        <span className="block min-w-0">
+          <span className="mb-0.5 block text-[11px] font-bold uppercase leading-[14px] tracking-[0.08em] text-uc-text-muted">
+            {t('fingerboardTesting.performTest') || 'Perform Test'}
+          </span>
+          {isEditingName ? (
+            <span className="flex items-center gap-1">
+              <Input
+                type="text"
+                value={protocolName}
+                onChange={(e) => setProtocolName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSaveProtocolName()
+                  } else if (e.key === 'Escape') {
+                    handleCancelEditName()
+                  }
+                }}
+                aria-label={t('fingerboardTesting.protocolName') || 'Protocol name'}
+                className="text-lg font-bold"
+                autoFocus
+                disabled={isSavingName}
+              />
+              <button
+                type="button"
+                onClick={handleSaveProtocolName}
+                disabled={isSavingName || !protocolName.trim()}
+                aria-label={t('common.save') || 'Save'}
+                className={`${smallIconButton} text-uc-success`}
+              >
+                {isSavingName ? <Spinner /> : <Icon name="success" />}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelEditName}
+                disabled={isSavingName}
+                aria-label={t('common.cancel') || 'Cancel'}
+                className={smallIconButton}
+              >
+                <Icon name="close" />
+              </button>
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              <span className="min-w-0 break-words">{protocolName}</span>
+              <button
+                type="button"
+                onClick={() => setIsEditingName(true)}
+                aria-label={t('fingerboardTesting.editName') || 'Edit protocol name'}
+                title={t('fingerboardTesting.editName') || 'Edit protocol name'}
+                className={`${smallIconButton} text-base`}
+              >
+                <Icon name="edit" />
+              </button>
+            </span>
+          )}
+        </span>
+      }
+      footer={
+        <div className="flex gap-3">
+          <Button variant="ghost" size="lg" className="flex-1" onClick={onClose}>
+            {t('common.cancel') || 'Cancel'}
+          </Button>
+          <Button type="submit" form="perform-test-form" variant="accent" size="lg" className="flex-[2]" isLoading={isSubmitting}>
+            {isSubmitting ? t('common.saving') || 'Saving...' : t('fingerboardTesting.saveResults') || 'Save results'}
+          </Button>
+        </div>
+      }
+    >
+      <form id="perform-test-form" onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Overline as="label" htmlFor="test-date" className="mb-2 block">
+            {t('fingerboardTesting.testDate') || 'Test date'} *
+          </Overline>
+          <Input
+            id="test-date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              Test Date *
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-            />
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-uc-text-light">{t('workouts.labels.testResults') || 'Test Results'}</h3>
-            {protocol.testHangs.map((hang, index) => {
-              const hangId = hang.id || `hang-${hang.order}`
-              const result = results[hangId] || {}
-              return (
-                <div
-                  key={hangId}
-                  className="bg-uc-black/50 rounded-lg p-4 border border-uc-purple/20"
-                >
-                  <div className="mb-4">
-                    <span className="text-uc-text-muted text-sm">#{index + 1}</span>
-                    <h4 className="text-uc-text-light font-medium mt-1">
-                      {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize, hang.customDescription)}
-                    </h4>
-                    {hang.targetLoad !== undefined && (
-                      <p className="text-xs text-uc-text-muted mt-1">
-                        Target: +{hang.targetLoad}kg
-                      </p>
-                    )}
-                    {hang.targetTimeSeconds && (
-                      <p className="text-xs text-uc-text-muted">
-                        Target: {hang.targetTimeSeconds}s
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">
-                      Load (kg) <span className="text-uc-text-muted/70">(negative value for unload)</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      value={result.load !== undefined ? result.load : (result.unload !== undefined ? -result.unload : '')}
-                      onChange={(e) => {
-                        const value = e.target.value ? parseFloat(e.target.value) : undefined
-                        if (value !== undefined && value < 0) {
-                          // Negative value means unload
-                          handleResultChange(hangId, 'load', undefined)
-                          handleResultChange(hangId, 'unload', Math.abs(value))
-                        } else {
-                          // Positive value means load
-                          handleResultChange(hangId, 'load', value)
-                          handleResultChange(hangId, 'unload', undefined)
-                        }
-                      }}
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                      placeholder={t('workouts.placeholders.testLoad') || '0'}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div>
-                      <label className="block text-xs text-uc-text-muted mb-1">
-                        Time (seconds)
-                      </label>
-                      <input
-                        type="number"
-                        value={result.timeSeconds || ''}
-                        onChange={(e) =>
-                          handleResultChange(hangId, 'timeSeconds', e.target.value ? parseInt(e.target.value) : undefined)
-                        }
-                        className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                        placeholder={t('workouts.placeholders.testUnload') || '10'}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-uc-text-muted mb-1">
-                        Success
-                      </label>
-                      <select
-                        value={result.success === undefined ? '' : result.success ? 'true' : 'false'}
-                        onChange={(e) =>
-                          handleResultChange(
-                            hangId,
-                            'success',
-                            e.target.value === '' ? undefined : e.target.value === 'true'
-                          )
-                        }
-                        className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                      >
-                        <option value="">-</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <label className="block text-xs text-uc-text-muted mb-1">
-                      Notes (optional)
-                    </label>
-                    <textarea
-                      value={result.notes || ''}
-                      onChange={(e) => handleResultChange(hangId, 'notes', e.target.value)}
-                      rows={1}
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple resize-none"
-                      placeholder={t('workouts.placeholders.testNotes') || 'Any notes...'}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Reminder Settings */}
-          <div className="bg-uc-black/50 rounded-lg p-4 border border-uc-purple/20">
-            <div className="flex items-start space-x-3">
-              <input
-                type="checkbox"
-                id="remindMeToRetest"
-                checked={remindMeToRetest}
-                onChange={(e) => setRemindMeToRetest(e.target.checked)}
-                className="mt-1 h-4 w-4 text-uc-purple focus:ring-uc-purple border-uc-purple/20 rounded"
-              />
-              <div className="flex-1">
-                <label htmlFor="remindMeToRetest" className="block text-sm font-medium text-uc-text-light cursor-pointer">
-                  Remind me to retest in
-                </label>
-                {remindMeToRetest && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <input
-                      type="number"
-                      min="1"
-                      max="12"
-                      value={reminderInterval}
-                      onChange={(e) => setReminderInterval(Math.max(1, Math.min(12, parseInt(e.target.value) || 1)))}
-                      className="w-20 bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                    />
-                    <select
-                      value={reminderUnit}
-                      onChange={(e) => setReminderUnit(e.target.value as 'days' | 'weeks' | 'months')}
-                      className="bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                    >
-                      <option value="days">days</option>
-                      <option value="weeks">weeks</option>
-                      <option value="months">months</option>
-                    </select>
-                  </div>
+        <Overline>{t('workouts.labels.testResults') || 'Test Results'}</Overline>
+        {protocol.testHangs.map((hang, index) => {
+          const hangId = hang.id || `hang-${hang.order}`
+          const result = results[hangId] || {}
+          const targets = [
+            hang.targetLoad !== undefined && hang.targetLoad !== null && `+${hang.targetLoad} kg`,
+            hang.targetTimeSeconds && `${hang.targetTimeSeconds} s`,
+          ].filter(Boolean).join(' · ')
+          return (
+            <div key={hangId} className="space-y-3 rounded-uc-card border border-uc-border bg-uc-surface p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                <h4 className="font-bold text-uc-text uc-num">
+                  {t('fingerboard.hangNumber', { number: index + 1 })} · {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize, hang.customDescription).replace(/ • /g, ' · ')}
+                </h4>
+                {targets && (
+                  <span className="text-[13px] font-semibold text-uc-text-muted uc-num">
+                    {t('fingerboardTesting.target') || 'target'} {targets}
+                  </span>
                 )}
               </div>
-            </div>
-          </div>
 
-          <div className="flex gap-4 pt-4 border-t border-uc-purple/20">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-3 rounded-xl font-medium transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
-            >
-              {isSubmitting ? 'Saving...' : 'Save Test Results'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col">
+                  <Label htmlFor={`${hangId}-load`} className="flex-1">{t('fingerboardTesting.metricLoad') || 'Load'}</Label>
+                  <UnitInput
+                    id={`${hangId}-load`}
+                    unit="kg"
+                    step="0.5"
+                    value={result.load !== undefined ? result.load : (result.unload !== undefined ? -result.unload : '')}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined
+                      if (value !== undefined && value < 0) {
+                        // Negative value means unload
+                        handleResultChange(hangId, 'load', undefined)
+                        handleResultChange(hangId, 'unload', Math.abs(value))
+                      } else {
+                        // Positive value means load
+                        handleResultChange(hangId, 'load', value)
+                        handleResultChange(hangId, 'unload', undefined)
+                      }
+                    }}
+                    placeholder={t('workouts.placeholders.testLoad') || '0'}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label htmlFor={`${hangId}-time`} className="flex-1">{t('fingerboardTesting.metricTime') || 'Time'}</Label>
+                  <UnitInput
+                    id={`${hangId}-time`}
+                    unit="s"
+                    value={result.timeSeconds || ''}
+                    onChange={(e) =>
+                      handleResultChange(hangId, 'timeSeconds', e.target.value ? parseInt(e.target.value) : undefined)
+                    }
+                    placeholder={t('workouts.placeholders.testUnload') || '10'}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>{t('fingerboardTesting.successQuestion') || 'Success?'}</Label>
+                <SegmentedControl
+                  ariaLabel={t('fingerboardTesting.successQuestion') || 'Success?'}
+                  options={[
+                    { value: 'true', label: t('fingerboardTesting.yes') || 'Yes' },
+                    { value: 'false', label: t('fingerboardTesting.no') || 'No' },
+                  ]}
+                  value={result.success === undefined ? null : result.success ? 'true' : 'false'}
+                  onChange={(value) => {
+                    // Tap the selected segment again to clear it (success stays optional)
+                    const next = value === 'true'
+                    handleResultChange(hangId, 'success', result.success === next ? undefined : next)
+                  }}
+                />
+              </div>
+
+              <Input
+                type="text"
+                value={result.notes || ''}
+                onChange={(e) => handleResultChange(hangId, 'notes', e.target.value)}
+                aria-label={t('protocolForm.notes') || 'Notes (optional)'}
+                placeholder={t('workouts.placeholders.testNotes') || 'Any notes...'}
+              />
+            </div>
+          )
+        })}
+        <p className="text-[13px] text-uc-text-muted">
+          {t('protocolForm.load')}: {t('protocolForm.loadHint')}
+        </p>
+
+        {/* Reminder Settings */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <label htmlFor="remindMeToRetest" className="flex min-h-11 cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              id="remindMeToRetest"
+              checked={remindMeToRetest}
+              onChange={(e) => setRemindMeToRetest(e.target.checked)}
+              className="size-5 shrink-0 cursor-pointer accent-[var(--uc-primary)]"
+            />
+            <span className="text-sm font-bold text-uc-text">
+              {t('fingerboardTesting.remindRetest') || 'Remind me to retest every'}
+            </span>
+          </label>
+          {remindMeToRetest && (
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min="1"
+                max="12"
+                value={reminderInterval}
+                onChange={(e) => setReminderInterval(Math.max(1, Math.min(12, parseInt(e.target.value) || 1)))}
+                aria-label={t('fingerboardTesting.reminderInterval') || 'Interval'}
+                className="w-20 text-center uc-num"
+              />
+              <Select
+                value={reminderUnit}
+                onChange={(e) => setReminderUnit(e.target.value as 'days' | 'weeks' | 'months')}
+                aria-label={t('fingerboardTesting.reminderUnit') || 'Unit'}
+              >
+                <option value="days">{t('fingerboardTesting.units.days') || 'days'}</option>
+                <option value="weeks">{t('fingerboardTesting.units.weeks') || 'weeks'}</option>
+                <option value="months">{t('fingerboardTesting.units.months') || 'months'}</option>
+              </Select>
+            </div>
+          )}
+        </div>
+      </form>
+    </BottomSheet>
   )
 }
-

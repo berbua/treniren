@@ -6,8 +6,18 @@ export type TimeOfDay = 'MORNING' | 'MIDDAY' | 'EVENING'
 export type FocusState = 'CHOKE' | 'DISTRACTION' | 'PRESENT' | 'FOCUSED' | 'CLUTCH' | 'FLOW'
 export type ComfortZone = 'COMFORT' | 'STRETCH1' | 'STRETCH2' | 'PANIC'
 
+// Wall angle and style, stored in workout.details (values match the Prisma Formation / BoulderType / BoulderFormation enums)
+export type WallAngle = 'SLAB' | 'VERTICAL' | 'SLIGHT_OVERHANG' | 'STRONG_OVERHANG' | 'OVERHANG' | 'ROOF' | 'COMPSTYLE'
+export type ClimbStyle = 'POWERFUL' | 'TECHNICAL' | 'COMPSTYLE'
+export const LEAD_WALL_ANGLES: WallAngle[] = ['SLAB', 'VERTICAL', 'SLIGHT_OVERHANG', 'STRONG_OVERHANG']
+export const BOULDER_WALL_ANGLES: WallAngle[] = ['SLAB', 'VERTICAL', 'OVERHANG', 'ROOF', 'COMPSTYLE']
+export const BOULDER_STYLES: ClimbStyle[] = ['POWERFUL', 'TECHNICAL', 'COMPSTYLE']
+export const wallAnglesFor = (type: WorkoutType): WallAngle[] =>
+  type === 'BOULDERING' ? BOULDER_WALL_ANGLES : type === 'LEAD_ROCK' || type === 'LEAD_ARTIFICIAL' ? LEAD_WALL_ANGLES : []
+
 export interface ClimbSection {
   id: string
+  name?: string // Empty = "Climb N"
   focusState?: FocusState
   tookFall?: boolean
   comfortZone?: ComfortZone

@@ -5,11 +5,11 @@ import AuthGuard from '@/components/AuthGuard'
 import { FingerboardTestingProtocol } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useConfirmation } from '@/hooks/useConfirmation'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import FingerboardTestingProtocolForm from '@/components/FingerboardTestingProtocolForm'
 import Link from 'next/link'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { Button, Card, EmptyState, Icon, SkeletonRows, Spinner } from '@/components/ui'
 
 export default function FingerboardTestingPage() {
   return (
@@ -124,105 +124,96 @@ function FingerboardTestingPageContent() {
     setEditingProtocol(null)
   }
 
-  if (loading) {
-    return <LoadingSpinner message={t('fingerboardTesting.loadingProtocols')} fullScreen />
-  }
-
   return (
-    <div className="min-h-screen bg-uc-black">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-uc-text-light">
-                📊 {t('fingerboardTesting.title')}
-              </h1>
-              <p className="text-uc-text-muted mt-2">
-                {t('fingerboardTesting.subtitle')}
-              </p>
-            </div>
-            <button
-              onClick={handleCreateProtocol}
-              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-            >
-              + {t('fingerboardTesting.createProtocol')}
-            </button>
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+        {/* Header */}
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-extrabold leading-tight text-uc-text">
+              {t('fingerboardTesting.title')}
+            </h1>
+            <p className="mt-1 text-sm text-uc-text-muted">
+              {t('fingerboardTesting.subtitle')}
+            </p>
           </div>
+          <Button
+            variant="accent"
+            className="shrink-0"
+            onClick={handleCreateProtocol}
+            aria-label={t('fingerboardTesting.createProtocol')}
+          >
+            <Icon name="plus" /><span className="hidden sm:inline">{t('fingerboardTesting.createProtocol')}</span>
+          </Button>
         </div>
 
-        {protocols.length === 0 ? (
-          <div className="bg-uc-dark-bg rounded-xl p-12 border border-uc-purple/20 text-center">
-            <div className="text-6xl mb-4">📊</div>
-            <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-              {t('fingerboardTesting.emptyTitle')}
-            </h2>
-            <p className="text-uc-text-muted mb-6">
-              {t('fingerboardTesting.emptyDescription')}
-            </p>
-            <button
-              onClick={handleCreateProtocol}
-              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-            >
-              {t('fingerboardTesting.createFirstProtocol')}
-            </button>
+        {loading ? (
+          <SkeletonRows />
+        ) : protocols.length === 0 ? (
+          <div className="rounded-uc-card border border-dashed border-uc-border">
+            <EmptyState
+              icon={<Icon name="test" size={28} />}
+              title={t('fingerboardTesting.emptyTitle')}
+              description={t('fingerboardTesting.emptyDescription')}
+              action={
+                <Button variant="accent" onClick={handleCreateProtocol}>
+                  + {t('fingerboardTesting.createFirstProtocol')}
+                </Button>
+              }
+            />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {protocols.map((protocol) => (
-              <div
-                key={protocol.id}
-                className="bg-uc-dark-bg rounded-xl p-6 border border-uc-purple/20 hover:border-uc-purple/40 transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-uc-text-light mb-1">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+            {protocols.map((protocol) => {
+              const resultsCount = (protocol as FingerboardTestingProtocol & { _count?: { testResults?: number } })._count?.testResults || 0
+              return (
+                <Card key={protocol.id} className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[17px] font-extrabold leading-snug text-uc-text break-words">
                       {protocol.name}
                     </h3>
+                    <p className="mt-0.5 text-[13px] font-semibold text-uc-text-muted uc-num">
+                      {protocol.testHangs.length} {protocol.testHangs.length === 1
+                        ? t('fingerboard.hang') || 'hang'
+                        : t('fingerboard.hangs') || 'hangs'}
+                      {' · '}
+                      {t('fingerboardTesting.resultsCount', { count: resultsCount })}
+                    </p>
                     {protocol.description && (
-                      <p className="text-sm text-uc-text-muted">
-                        {protocol.description}
-                      </p>
+                      <p className="mt-1 text-sm text-uc-text-muted">{protocol.description}</p>
                     )}
                   </div>
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-uc-text-muted">
-                    <span className="mr-2">🖐️</span>
-                    <span>
-                      {t('fingerboardTesting.testHangsCount', { count: protocol.testHangs.length })}
-                    </span>
+                  <div className="-mr-2 -mt-1 flex shrink-0 items-center">
+                    <Link
+                      href={`/fingerboard-testing/${protocol.id}`}
+                      title={t('fingerboardTesting.viewResults')}
+                      className="inline-flex min-h-11 items-center rounded-uc-input px-2 text-sm font-bold text-uc-primary transition-colors hover:bg-uc-elevated"
+                    >
+                      {t('fingerboardTesting.view')}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleEditProtocol(protocol)}
+                      aria-label={t('common.edit')}
+                      title={t('common.edit')}
+                      className="inline-flex size-11 items-center justify-center rounded-uc-input transition-colors hover:bg-uc-elevated"
+                    >
+                      <Icon name="edit" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteProtocol(protocol.id)}
+                      disabled={deletingProtocolId === protocol.id}
+                      aria-label={t('common.delete')}
+                      title={t('common.delete')}
+                      className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-error transition-colors hover:bg-uc-elevated disabled:opacity-50"
+                    >
+                      {deletingProtocolId === protocol.id ? <Spinner /> : <Icon name="delete" />}
+                    </button>
                   </div>
-                  <div className="flex items-center text-sm text-uc-text-muted">
-                    <span className="mr-2">📊</span>
-                    <span>
-                      {t('fingerboardTesting.testResultsCount', { count: (protocol as any)._count?.testResults || 0 })}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4 pt-4 border-t border-uc-purple/20">
-                  <Link
-                    href={`/fingerboard-testing/${protocol.id}`}
-                    className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg text-sm font-medium transition-colors text-center"
-                  >
-                    {t('fingerboardTesting.viewResults')}
-                  </Link>
-                  <button
-                    onClick={() => handleEditProtocol(protocol)}
-                    className="flex-1 bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    {t('common.edit')}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProtocol(protocol.id)}
-                    className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    {t('common.delete')}
-                  </button>
-                </div>
-              </div>
-            ))}
+                </Card>
+              )
+            })}
           </div>
         )}
 

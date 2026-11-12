@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Routine, RoutineFormData, Exercise, RoutineExercise, RoutineVariation } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { LoadingSpinner } from './LoadingSpinner'
+import { BottomSheet, Button, EmptyState, FieldError, Icon, Input, Overline, Textarea } from '@/components/ui'
 
 interface RoutineFormProps {
   routine?: Routine | null
@@ -268,48 +268,92 @@ export default function RoutineForm({
     ? formData.variations[editingVariationIndex]
     : null
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-uc-dark-bg border-b border-uc-purple/20 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-uc-text-light">
-            {routine ? (t('routines.form.editTitle') || 'Edit Routine') : (t('routines.form.createTitle') || 'Create Routine')}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-uc-text-muted hover:text-uc-text-light transition-colors"
-          >
-            ✕
-          </button>
-        </div>
+  const handleCancel = () => {
+    // Clear draft when canceling
+    if (!routine && typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(STORAGE_KEY)
+      } catch (error) {
+        console.error('Error clearing draft:', error)
+      }
+    }
+    onCancel()
+  }
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+  const closeExerciseSelector = () => {
+    setShowExerciseSelector(false)
+    setSearchQuery('')
+    setSelectedExerciseIds(new Set())
+  }
+
+  const allFilteredSelected = filteredExercises.length > 0 && filteredExercises.every(ex => selectedExerciseIds.has(ex.id))
+
+  const sectionHeader = (label: string, count: number, action: string, onClick: () => void) => (
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <Overline>{label} ({count})</Overline>
+      <button
+        type="button"
+        onClick={onClick}
+        className="min-h-11 px-1 text-sm font-bold text-uc-primary hover:underline"
+      >
+        + {action}
+      </button>
+    </div>
+  )
+
+  const iconButtonBase = 'inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text-muted transition-colors hover:bg-uc-elevated disabled:opacity-30 disabled:hover:bg-transparent'
+  const iconButton = `${iconButtonBase} hover:text-uc-text`
+  const removeButton = `${iconButtonBase} hover:text-uc-error`
+
+  return (
+    <>
+      <BottomSheet
+        isOpen
+        onClose={handleCancel}
+        title={routine ? (t('routines.form.editTitle') || 'Edit Routine') : (t('routines.form.createTitle') || 'Create Routine')}
+        closeLabel={t('common.close') || 'Close'}
+        dismissible={false}
+        footer={
+          <div className="flex gap-3">
+            <Button variant="ghost" size="lg" className="flex-1" onClick={handleCancel}>
+              {t('routines.form.cancel') || 'Cancel'}
+            </Button>
+            <Button type="submit" form="routine-form" variant="accent" size="lg" className="flex-[2]" isLoading={isSubmitting}>
+              {isSubmitting
+                ? (t('routines.form.saving') || 'Saving...')
+                : routine
+                  ? (t('routines.form.update') || 'Update Routine')
+                  : (t('routines.form.create') || 'Create Routine')}
+            </Button>
+          </div>
+        }
+      >
+        <form id="routine-form" onSubmit={handleSubmit} className="space-y-5">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
+            <Overline as="label" htmlFor="routine-name" className="mb-2 block">
               {t('routines.form.name') || 'Routine Name'} *
-            </label>
-            <input
+            </Overline>
+            <Input
+              id="routine-name"
               type="text"
               value={formData.name}
+              aria-invalid={!!errors.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               placeholder={t('routines.form.namePlaceholder') || 'e.g., Upper Body Push'}
             />
-            {errors.name && (
-              <p className="text-red-400 text-sm mt-1">{errors.name}</p>
-            )}
+            <FieldError>{errors.name}</FieldError>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
+            <Overline as="label" htmlFor="routine-description" className="mb-2 block">
               {t('routines.form.description') || 'Description (optional)'}
-            </label>
-            <textarea
+            </Overline>
+            <Textarea
+              id="routine-description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
               rows={2}
               placeholder={t('routines.form.descriptionPlaceholder') || 'Brief description of this routine'}
             />
@@ -317,67 +361,61 @@ export default function RoutineForm({
 
           {/* Exercises Section */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium text-uc-text-light">
-                {t('routines.form.exercises') || 'Exercises'} ({formData.exercises.length})
-              </label>
-              <button
-                type="button"
-                onClick={() => {
-                  // Refresh exercises if callback provided
-                  if (onRefreshExercises) {
-                    onRefreshExercises()
-                  }
-                  setShowExerciseSelector(true)
-                }}
-                className="bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                + {t('routines.form.addExercise') || 'Add Exercise'}
-              </button>
-            </div>
+            {sectionHeader(
+              t('routines.form.exercises') || 'Exercises',
+              formData.exercises.length,
+              t('routines.form.addExercise') || 'Add Exercise',
+              () => {
+                // Refresh exercises if callback provided
+                if (onRefreshExercises) {
+                  onRefreshExercises()
+                }
+                setShowExerciseSelector(true)
+              }
+            )}
 
             {formData.exercises.length === 0 ? (
-              <div className="bg-uc-black/50 rounded-lg p-8 text-center border border-uc-purple/20">
-                <p className="text-uc-text-muted">{t('routines.form.noExercises') || 'No exercises added yet'}</p>
-              </div>
+              <p className="rounded-uc-input border border-dashed border-uc-border px-4 py-6 text-center text-sm text-uc-text-muted">
+                {t('routines.form.noExercises') || 'No exercises added yet'}
+              </p>
             ) : (
               <div className="space-y-2">
                 {formData.exercises.map((ex, index) => (
                   <div
                     key={index}
-                    className="bg-uc-black/50 rounded-lg p-4 border border-uc-purple/20 flex items-center justify-between"
+                    className="flex min-h-14 items-center gap-1 rounded-uc-input border border-uc-border bg-uc-surface pl-4 pr-1"
                   >
-                    <div className="flex items-center gap-3 flex-1">
-                      <span className="text-uc-text-muted text-sm w-6">{index + 1}.</span>
-                      <span className="text-uc-text-light font-medium">
-                        {ex.exercise?.name || (t('routines.form.unknownExercise') || 'Unknown Exercise')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleMoveExercise(index, 'up')}
-                        disabled={index === 0}
-                        className="text-uc-text-muted hover:text-uc-text-light disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMoveExercise(index, 'down')}
-                        disabled={index === formData.exercises.length - 1}
-                        className="text-uc-text-muted hover:text-uc-text-light disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveExercise(index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        {t('routines.form.remove') || 'Remove'}
-                      </button>
-                    </div>
+                    <span className="w-6 shrink-0 text-sm font-bold text-uc-text-muted uc-num">{index + 1}</span>
+                    <span className="min-w-0 flex-1 font-bold text-uc-text break-words">
+                      {ex.exercise?.name || (t('routines.form.unknownExercise') || 'Unknown Exercise')}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveExercise(index, 'up')}
+                      disabled={index === 0}
+                      aria-label={t('routines.form.moveUp') || 'Move up'}
+                      className={iconButton}
+                    >
+                      <Icon name="move-up" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveExercise(index, 'down')}
+                      disabled={index === formData.exercises.length - 1}
+                      aria-label={t('routines.form.moveDown') || 'Move down'}
+                      className={iconButton}
+                    >
+                      <Icon name="move-down" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExercise(index)}
+                      aria-label={t('routines.form.remove') || 'Remove'}
+                      title={t('routines.form.remove') || 'Remove'}
+                      className={removeButton}
+                    >
+                      <Icon name="close" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -386,250 +424,177 @@ export default function RoutineForm({
 
           {/* Variations Section */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium text-uc-text-light">
-                {t('routines.form.variations') || 'Variations'} ({formData.variations.length})
-              </label>
-              <button
-                type="button"
-                onClick={handleAddVariation}
-                className="bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                + {t('routines.form.addVariation') || 'Add Variation'}
-              </button>
-            </div>
+            {sectionHeader(
+              t('routines.form.variations') || 'Variations',
+              formData.variations.length,
+              t('routines.form.addVariation') || 'Add Variation',
+              handleAddVariation
+            )}
 
             {formData.variations.length === 0 ? (
-              <div className="bg-uc-black/50 rounded-lg p-4 text-center border border-uc-purple/20">
-                <p className="text-uc-text-muted text-sm">
-                  {t('routines.form.variationsOptional') || 'Variations are optional. Add rep range presets (e.g., "Hypertrophy: 12-15 reps")'}
-                </p>
-              </div>
+              <p className="rounded-uc-input border border-dashed border-uc-border px-4 py-4 text-center text-[13px] text-uc-text-muted">
+                {t('routines.form.variationsOptional') || 'Variations are optional. Add rep range presets (e.g., "Hypertrophy: 12-15 reps")'}
+              </p>
             ) : (
               <div className="space-y-2">
                 {formData.variations.map((variation, index) => (
                   <div
                     key={index}
-                    className="bg-uc-black/50 rounded-lg p-4 border border-uc-purple/20 flex items-center justify-between"
+                    className="flex min-h-14 items-center gap-1 rounded-uc-input border border-uc-border bg-uc-surface py-2 pl-4 pr-1"
                   >
-                    <div>
-                      <div className="font-medium text-uc-text-light">{variation.name}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-uc-text break-words">{variation.name}</div>
                       {variation.defaultRepRangeMin && variation.defaultRepRangeMax && (
-                        <div className="text-sm text-uc-text-muted">
-                          {variation.defaultRepRangeMin}-{variation.defaultRepRangeMax} {t('routines.form.reps') || 'reps'}
-                          {variation.defaultSets && ` • ${variation.defaultSets} ${t('routines.form.sets') || 'sets'}`}
+                        <div className="text-[13px] font-semibold text-uc-text-muted uc-num">
+                          {variation.defaultRepRangeMin}–{variation.defaultRepRangeMax} {t('routines.form.reps') || 'reps'}
+                          {variation.defaultSets && ` · ${variation.defaultSets} ${t('routines.form.sets') || 'sets'}`}
                         </div>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleEditVariation(index)}
-                        className="text-uc-text-muted hover:text-uc-text-light"
-                      >
-                        {t('common.edit') || 'Edit'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveVariation(index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        {t('routines.form.remove') || 'Remove'}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleEditVariation(index)}
+                      aria-label={t('common.edit') || 'Edit'}
+                      title={t('common.edit') || 'Edit'}
+                      className={iconButton}
+                    >
+                      <Icon name="edit" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVariation(index)}
+                      aria-label={t('routines.form.remove') || 'Remove'}
+                      title={t('routines.form.remove') || 'Remove'}
+                      className={removeButton}
+                    >
+                      <Icon name="close" />
+                    </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Form Actions */}
-          <div className="flex gap-4 pt-4 border-t border-uc-purple/20">
-            <button
-              type="button"
-              onClick={() => {
-                // Clear draft when canceling
-                if (!routine && typeof window !== 'undefined') {
-                  try {
-                    localStorage.removeItem(STORAGE_KEY)
-                  } catch (error) {
-                    console.error('Error clearing draft:', error)
-                  }
-                }
-                onCancel()
-              }}
-              className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-3 rounded-xl font-medium transition-colors"
-            >
-              {t('routines.form.cancel') || 'Cancel'}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
-            >
-              {isSubmitting 
-                ? (t('routines.form.saving') || 'Saving...') 
-                : routine 
-                  ? (t('routines.form.update') || 'Update Routine') 
-                  : (t('routines.form.create') || 'Create Routine')}
-            </button>
-          </div>
         </form>
+      </BottomSheet>
 
-        {/* Exercise Selector Modal */}
-        {showExerciseSelector && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
-            <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-md">
-              <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-uc-text-light">
-                  {t('routines.form.selectExercises') || 'Select Exercises'}
-                  {selectedExerciseIds.size > 0 && (
-                    <span className="ml-2 text-sm text-uc-mustard">
-                      ({selectedExerciseIds.size} {t('routines.form.selected') || 'selected'})
-                    </span>
-                  )}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowExerciseSelector(false)
-                    setSearchQuery('')
-                    setSelectedExerciseIds(new Set())
-                  }}
-                  className="text-uc-text-muted hover:text-uc-text-light"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="p-4">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('routines.form.searchExercises') || 'Search exercises...'}
-                  className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple mb-4"
-                />
-                {filteredExercises.length > 0 && (
-                  <div className="flex gap-2 mb-4">
-                    <button
-                      type="button"
-                      onClick={handleSelectAll}
-                      className="text-xs bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-3 py-1 rounded-lg transition-colors"
-                    >
-                      {t('routines.form.selectAll') || 'Select All'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDeselectAll}
-                      className="text-xs bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-3 py-1 rounded-lg transition-colors"
-                    >
-                      {t('routines.form.deselectAll') || 'Deselect All'}
-                    </button>
-                  </div>
-                )}
-                <div className="max-h-64 overflow-y-auto space-y-2 mb-4">
-                  {filteredExercises.length === 0 ? (
-                    <div className="text-center py-6 space-y-4">
-                      <p className="text-uc-text-muted">
-                        {availableExercises.length === 0
-                          ? (t('routines.form.noExercisesAvailable') || 'No exercises available')
-                          : (t('routines.form.noExercisesFound') || 'No exercises found')}
-                      </p>
-                      {availableExercises.length === 0 && (
-                        <div className="space-y-2">
-                          <p className="text-sm text-uc-text-muted">
-                            {t('routines.form.createExercisesFirst') || 'You need to create exercises first before adding them to a routine.'}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowExerciseSelector(false)
-                              router.push('/exercises')
-                            }}
-                            className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
-                          >
-                            {t('routines.form.goToExercises') || 'Go to Exercises'}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    filteredExercises.map((exercise) => {
-                      const isSelected = selectedExerciseIds.has(exercise.id)
-                      const isAlreadyAdded = formData.exercises.some(ex => ex.exerciseId === exercise.id)
-                      return (
-                        <label
-                          key={exercise.id}
-                          className={`flex items-center gap-3 w-full text-left bg-uc-black/50 hover:bg-uc-black rounded-lg p-3 border transition-all cursor-pointer ${
-                            isSelected
-                              ? 'border-uc-mustard bg-uc-mustard/10'
-                              : 'border-uc-purple/20 hover:border-uc-purple/40'
-                          } ${isAlreadyAdded ? 'opacity-50' : ''}`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleToggleExerciseSelection(exercise.id)}
-                            disabled={isAlreadyAdded}
-                            className="w-4 h-4 text-uc-mustard bg-uc-black border-uc-purple/30 rounded focus:ring-uc-mustard focus:ring-2"
-                          />
-                          <div className="flex-1">
-                            <div className="font-medium text-uc-text-light">
-                              {exercise.name}
-                              {isAlreadyAdded && (
-                                <span className="ml-2 text-xs text-uc-text-muted">
-                                  ({t('routines.form.alreadyAdded') || 'already added'})
-                                </span>
-                              )}
-                            </div>
-                            {exercise.category && (
-                              <div className="text-sm text-uc-text-muted">{exercise.category}</div>
-                            )}
-                          </div>
-                        </label>
-                      )
-                    })
-                  )}
-                </div>
-                {selectedExerciseIds.size > 0 && (
-                  <div className="flex gap-2 pt-4 border-t border-uc-purple/20">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowExerciseSelector(false)
-                        setSearchQuery('')
-                        setSelectedExerciseIds(new Set())
-                      }}
-                      className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-4 py-2 rounded-lg font-medium transition-colors"
-                    >
-                      {t('common.cancel') || 'Cancel'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAddSelectedExercises}
-                      className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
-                    >
-                      {t('routines.form.addSelected') || `Add Selected (${selectedExerciseIds.size})`}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* Exercise Selector */}
+      <BottomSheet
+        isOpen={showExerciseSelector}
+        onClose={closeExerciseSelector}
+        closeLabel={t('common.close') || 'Close'}
+        title={
+          <span className="flex flex-wrap items-baseline gap-x-2">
+            {t('routines.form.selectExercises') || 'Select Exercises'}
+            {selectedExerciseIds.size > 0 && (
+              <span className="text-sm font-semibold text-uc-text-muted uc-num">
+                {selectedExerciseIds.size} {t('routines.form.selected') || 'selected'}
+              </span>
+            )}
+          </span>
+        }
+        footer={selectedExerciseIds.size > 0 && (
+          <div className="flex gap-3">
+            <Button variant="ghost" size="lg" className="flex-1" onClick={closeExerciseSelector}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" size="lg" className="flex-[2]" onClick={handleAddSelectedExercises}>
+              {t('routines.form.addSelected') || 'Add Selected'} ({selectedExerciseIds.size})
+            </Button>
           </div>
         )}
-
-        {/* Variation Form Modal */}
-        {showVariationForm && (
-          <VariationForm
-            variation={currentVariation}
-            onSave={handleSaveVariation}
-            onCancel={() => {
-              setShowVariationForm(false)
-              setEditingVariationIndex(null)
-            }}
-          />
+      >
+        <Input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label={t('routines.form.searchExercises') || 'Search exercises...'}
+          placeholder={t('routines.form.searchExercises') || 'Search exercises...'}
+          className="mb-3"
+        />
+        {filteredExercises.length > 0 && (
+          <label className="mb-2 flex min-h-11 cursor-pointer items-center gap-3 px-1">
+            <input
+              type="checkbox"
+              checked={allFilteredSelected}
+              onChange={allFilteredSelected ? handleDeselectAll : handleSelectAll}
+              className="size-5 shrink-0 cursor-pointer accent-[var(--uc-primary)]"
+            />
+            <span className="text-sm font-bold text-uc-primary uc-num">
+              {allFilteredSelected
+                ? (t('routines.form.deselectAll') || 'Deselect All')
+                : `${t('routines.form.selectAll') || 'Select All'} (${filteredExercises.length})`}
+            </span>
+          </label>
         )}
-      </div>
-    </div>
+        {filteredExercises.length === 0 ? (
+          <EmptyState
+            title={availableExercises.length === 0
+              ? (t('routines.form.noExercisesAvailable') || 'No exercises available')
+              : (t('routines.form.noExercisesFound') || 'No exercises found')}
+            description={availableExercises.length === 0
+              ? (t('routines.form.createExercisesFirst') || 'You need to create exercises first before adding them to a routine.')
+              : undefined}
+            action={availableExercises.length === 0 && (
+              <Button
+                variant="accent"
+                onClick={() => {
+                  setShowExerciseSelector(false)
+                  router.push('/exercises')
+                }}
+              >
+                {t('routines.form.goToExercises') || 'Go to Exercises'}
+              </Button>
+            )}
+          />
+        ) : (
+          <div className="space-y-2">
+            {filteredExercises.map((exercise) => {
+              const isSelected = selectedExerciseIds.has(exercise.id)
+              const isAlreadyAdded = formData.exercises.some(ex => ex.exerciseId === exercise.id)
+              return (
+                <label
+                  key={exercise.id}
+                  className={`flex min-h-14 items-center gap-3 rounded-uc-input border px-4 py-2 transition-colors ${
+                    isSelected ? 'border-uc-primary bg-uc-surface' : 'border-uc-border bg-uc-surface hover:border-uc-primary'
+                  } ${isAlreadyAdded ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => handleToggleExerciseSelection(exercise.id)}
+                    disabled={isAlreadyAdded}
+                    className="size-5 shrink-0 cursor-pointer accent-[var(--uc-primary)] disabled:cursor-not-allowed"
+                  />
+                  <span className="min-w-0 flex-1 font-bold text-uc-text break-words">
+                    {exercise.name}
+                    {isAlreadyAdded && (
+                      <span className="ml-2 text-xs font-semibold text-uc-text-muted">
+                        ({t('routines.form.alreadyAdded') || 'already added'})
+                      </span>
+                    )}
+                  </span>
+                  {exercise.category && (
+                    <span className="shrink-0 text-[13px] font-semibold text-uc-text-muted">{exercise.category}</span>
+                  )}
+                </label>
+              )
+            })}
+          </div>
+        )}
+      </BottomSheet>
+
+      {/* Variation Form */}
+      {showVariationForm && (
+        <VariationForm
+          variation={currentVariation}
+          onSave={handleSaveVariation}
+          onCancel={() => {
+            setShowVariationForm(false)
+            setEditingVariationIndex(null)
+          }}
+        />
+      )}
+    </>
   )
 }
 
@@ -650,126 +615,99 @@ function VariationForm({
     defaultRepRangeMax: variation?.defaultRepRangeMax || undefined,
     defaultRIR: variation?.defaultRIR || undefined,
   })
+  const [nameError, setNameError] = useState('')
 
   const { t } = useLanguage()
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name.trim()) {
-      alert(t('routines.form.variationForm.nameRequired') || 'Variation name is required')
+      setNameError(t('routines.form.variationForm.nameRequired') || 'Variation name is required')
       return
     }
     onSave(formData)
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
-      <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-md">
-        <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-uc-text-light">
-            {variation 
-              ? (t('routines.form.variationForm.editTitle') || 'Edit Variation') 
-              : (t('routines.form.variationForm.addTitle') || 'Add Variation')}
-          </h3>
-          <button onClick={onCancel} className="text-uc-text-muted hover:text-uc-text-light">
-            ✕
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              {t('routines.form.variationForm.name') || 'Name'} *
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder={t('routines.form.variationForm.namePlaceholder') || 'e.g., Hypertrophy, Strength'}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              {t('routines.form.variationForm.description') || 'Description (optional)'}
-            </label>
-            <input
-              type="text"
-              value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                {t('routines.form.variationForm.minReps') || 'Min Reps'}
-              </label>
-              <input
-                type="number"
-                value={formData.defaultRepRangeMin || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    defaultRepRangeMin: e.target.value ? parseInt(e.target.value) : undefined,
-                  })
-                }
-                className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder={t('workouts.placeholders.minReps') || '12'}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                {t('routines.form.variationForm.maxReps') || 'Max Reps'}
-              </label>
-              <input
-                type="number"
-                value={formData.defaultRepRangeMax || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    defaultRepRangeMax: e.target.value ? parseInt(e.target.value) : undefined,
-                  })
-                }
-                className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                placeholder={t('workouts.placeholders.maxReps') || '15'}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-uc-text-light mb-2">
-              {t('routines.form.variationForm.defaultSets') || 'Default Sets (optional)'}
-            </label>
-            <input
-              type="number"
-              value={formData.defaultSets || ''}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  defaultSets: e.target.value ? parseInt(e.target.value) : undefined,
-                })
-              }
-              className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-4 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-              placeholder={t('workouts.placeholders.defaultSets') || '3'}
-            />
-          </div>
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-4 py-2 rounded-lg transition-colors"
-            >
-              {t('routines.form.cancel') || 'Cancel'}
-            </button>
-            <button
-              type="submit"
-              className="flex-1 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              {t('routines.form.variationForm.save') || 'Save'}
-            </button>
-          </div>
-        </form>
-      </div>
+  const numberField = (
+    id: string,
+    label: string,
+    key: 'defaultRepRangeMin' | 'defaultRepRangeMax' | 'defaultSets',
+    placeholder: string
+  ) => (
+    <div className="flex flex-col">
+      <Overline as="label" htmlFor={id} className="mb-2 block flex-1">{label}</Overline>
+      <Input
+        id={id}
+        type="number"
+        inputMode="numeric"
+        value={formData[key] || ''}
+        onChange={(e) =>
+          setFormData({
+            ...formData,
+            [key]: e.target.value ? parseInt(e.target.value) : undefined,
+          })
+        }
+        className="text-center uc-num"
+        placeholder={placeholder}
+      />
     </div>
   )
-}
 
+  return (
+    <BottomSheet
+      isOpen
+      onClose={onCancel}
+      title={variation
+        ? (t('routines.form.variationForm.editTitle') || 'Edit Variation')
+        : (t('routines.form.variationForm.addTitle') || 'Add Variation')}
+      closeLabel={t('common.close') || 'Close'}
+      dismissible={false}
+      footer={
+        <div className="flex gap-3">
+          <Button variant="ghost" size="lg" className="flex-1" onClick={onCancel}>
+            {t('routines.form.cancel') || 'Cancel'}
+          </Button>
+          <Button type="submit" form="variation-form" variant="accent" size="lg" className="flex-[2]">
+            {t('routines.form.variationForm.save') || 'Save'}
+          </Button>
+        </div>
+      }
+    >
+      <form id="variation-form" onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <Overline as="label" htmlFor="variation-name" className="mb-2 block">
+            {t('routines.form.variationForm.name') || 'Name'} *
+          </Overline>
+          <Input
+            id="variation-name"
+            type="text"
+            value={formData.name}
+            aria-invalid={!!nameError}
+            onChange={(e) => {
+              setFormData({ ...formData, name: e.target.value })
+              if (nameError) setNameError('')
+            }}
+            placeholder={t('routines.form.variationForm.namePlaceholder') || 'e.g., Hypertrophy, Strength'}
+          />
+          <FieldError>{nameError}</FieldError>
+        </div>
+        <div>
+          <Overline as="label" htmlFor="variation-description" className="mb-2 block">
+            {t('routines.form.variationForm.description') || 'Description (optional)'}
+          </Overline>
+          <Input
+            id="variation-description"
+            type="text"
+            value={formData.description || ''}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {numberField('variation-min-reps', t('routines.form.variationForm.minReps') || 'Min Reps', 'defaultRepRangeMin', t('workouts.placeholders.minReps') || '12')}
+          {numberField('variation-max-reps', t('routines.form.variationForm.maxReps') || 'Max Reps', 'defaultRepRangeMax', t('workouts.placeholders.maxReps') || '15')}
+          {numberField('variation-sets', t('routines.form.variationForm.defaultSets') || 'Default Sets (optional)', 'defaultSets', t('workouts.placeholders.defaultSets') || '3')}
+        </div>
+      </form>
+    </BottomSheet>
+  )
+}

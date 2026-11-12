@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { Icon, buttonClasses } from '@/components/ui'
 
 interface UserMenuProps {
   isOnline?: boolean
@@ -48,6 +49,14 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
     }
   }, [session?.user])
 
+  // Display name saved on the profile page (null: back to the Google first name)
+  useEffect(() => {
+    const onDisplayNameChanged = (e: Event) =>
+      setUserNickname((e as CustomEvent<string | null>).detail || session?.user?.name?.split(' ')[0] || null)
+    window.addEventListener('display-name-changed', onDisplayNameChanged)
+    return () => window.removeEventListener('display-name-changed', onDisplayNameChanged)
+  }, [session?.user?.name])
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -68,16 +77,16 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
 
   if (!session?.user) {
     return (
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-2">
         <button
           onClick={() => router.push('/auth/signin')}
-          className="text-uc-text-muted hover:text-uc-mustard font-medium transition-colors"
+          className="min-h-11 px-3 text-sm font-bold text-uc-text-muted hover:text-uc-text transition-colors"
         >
           {t('auth.signIn') || 'Sign In'}
         </button>
         <button
           onClick={() => router.push('/auth/signup')}
-          className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-xl font-medium transition-colors shadow-lg"
+          className={buttonClasses('accent', 'md')}
         >
           {t('auth.signUp') || 'Sign Up'}
         </button>
@@ -89,61 +98,59 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
     setLanguage(newLanguage)
   }
 
+  const avatar = (sizeClass: string) => (
+    <div className={`${sizeClass} shrink-0 bg-uc-primary rounded-full flex items-center justify-center text-uc-on-primary font-extrabold overflow-hidden`}>
+      {userPhotoUrl ? (
+        <img 
+          src={userPhotoUrl} 
+          alt="Profile" 
+          className="w-full h-full object-cover rounded-full"
+        />
+      ) : (
+        <span>
+          {(userNickname || session.user.name)?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || 'U'}
+        </span>
+      )}
+    </div>
+  )
+
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-uc-text-light hover:text-uc-mustard transition-colors"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-label={userNickname || session.user.name?.split(' ')[0] || session.user.email || undefined}
+        className="flex items-center min-h-11 p-0.5 rounded-uc-pill text-uc-text hover:bg-uc-elevated transition-colors"
         title={isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}
       >
         <div className="relative">
-          <div className="w-8 h-8 bg-gradient-to-br from-uc-purple to-uc-mustard rounded-full flex items-center justify-center text-uc-black text-sm font-medium overflow-hidden">
-            {userPhotoUrl ? (
-              <img 
-                src={userPhotoUrl} 
-                alt="Profile" 
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              <span>
-                {(userNickname || session.user.name)?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || 'U'}
-              </span>
-            )}
+          <div className={`rounded-full transition-shadow ${isOpen ? 'ring-4 ring-uc-primary-container' : ''}`}>
+            {avatar('size-10 text-base')}
           </div>
-          {/* Online status dot badge - top right like notification badge */}
+          {/* Online status dot badge */}
           <div 
-            className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-uc-black ${
-              isOnline ? 'bg-uc-success' : 'bg-uc-mustard'
+            className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-uc-bg ${
+              isOnline ? 'bg-uc-success' : 'bg-uc-warning'
             }`}
             title={isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}
           />
         </div>
-        <span className="hidden sm:block font-medium">
-          {(() => {
-            const displayName = userNickname || session.user.name?.split(' ')[0] || session.user.email;
-            return displayName;
-          })()}
-        </span>
-        <svg
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-uc-dark-bg rounded-xl shadow-lg border border-uc-purple/20 py-1 z-50">
-          <div className="px-4 py-2 border-b border-uc-purple/20">
-            <p className="text-sm font-medium text-uc-text-light">
-              {userNickname || session.user.name?.split(' ')[0] || 'User'}
-            </p>
-            <p className="text-xs text-uc-text-muted mt-1 flex items-center space-x-2">
-              <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-uc-success' : 'bg-uc-mustard'}`} />
-              <span>{isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}</span>
-            </p>
+        <div role="menu" className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-32px)] bg-uc-elevated rounded-uc-card shadow-uc border border-uc-border p-1.5 z-50">
+          <div className="flex items-center gap-3 px-3 py-3 border-b border-uc-border mb-1">
+            {avatar('size-10 text-base')}
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-extrabold text-uc-text">
+                {userNickname || session.user.name?.split(' ')[0] || 'User'}
+              </p>
+              <p className="text-[13px] text-uc-text-muted flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-uc-success' : 'bg-uc-warning'}`} />
+                <span>{isOnline ? (t('common.online') || 'Online') : (t('common.offline') || 'Offline')}</span>
+              </p>
+            </div>
           </div>
           
           <button
@@ -151,36 +158,36 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
               router.push('/profile')
               setIsOpen(false)
             }}
-            className="w-full text-left px-4 py-2 text-sm text-uc-text-light hover:bg-uc-purple/20 transition-colors rounded-lg mx-1"
+            className="w-full flex items-center gap-3 text-left px-3 min-h-11 text-[15px] font-bold text-uc-text hover:bg-uc-primary-container hover:text-uc-on-primary-container transition-colors rounded-uc-input"
           >
-            👤 {t('nav.profile') || 'Profile'}
+            <Icon name="user" className="text-uc-text-muted" />
+            {t('nav.profile') || 'Profile'}
           </button>
           
           {/* Language Switcher */}
-          <div className="border-t border-uc-purple/20 my-1"></div>
-          <div className="px-4 py-2">
+          <div className="px-3 py-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-uc-text-light flex items-center space-x-2">
-                <span>{language === 'en' ? '🇺🇸' : '🇵🇱'}</span>
+              <span className="text-[15px] font-bold text-uc-text flex items-center gap-3">
+                <Icon name="globe" className="text-uc-text-muted" />
                 <span>{t('common.language') || 'Language'}</span>
               </span>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center p-0.5 rounded-uc-input border border-uc-border">
                 <button
                   onClick={() => handleLanguageChange('en')}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`min-w-10 min-h-9 px-2 rounded-[10px] text-xs font-extrabold transition-colors ${
                     language === 'en'
-                      ? 'bg-uc-purple/20 text-uc-mustard'
-                      : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-dark-bg/50'
+                      ? 'bg-uc-primary text-uc-on-primary'
+                      : 'text-uc-text-muted hover:text-uc-text'
                   }`}
                 >
                   EN
                 </button>
                 <button
                   onClick={() => handleLanguageChange('pl')}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`min-w-10 min-h-9 px-2 rounded-[10px] text-xs font-extrabold transition-colors ${
                     language === 'pl'
-                      ? 'bg-uc-purple/20 text-uc-mustard'
-                      : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-dark-bg/50'
+                      ? 'bg-uc-primary text-uc-on-primary'
+                      : 'text-uc-text-muted hover:text-uc-text'
                   }`}
                 >
                   PL
@@ -189,13 +196,16 @@ export default function UserMenu({ isOnline = true }: UserMenuProps) {
             </div>
           </div>
           
-          <div className="border-t border-uc-purple/20 my-1"></div>
+          <div className="border-t border-uc-border my-1"></div>
           
           <button
             onClick={handleSignOut}
-            className="w-full text-left px-4 py-2 text-sm text-uc-alert hover:bg-uc-alert/20 transition-colors rounded-lg mx-1"
+            className="w-full text-left px-3 min-h-11 text-[15px] font-bold text-uc-error hover:bg-uc-error-bg transition-colors rounded-uc-input"
           >
-            {t('auth.signOut') || 'Sign Out'}
+            <span className="flex items-center gap-3">
+              <Icon name="sign-out" />
+              {t('auth.signOut') || 'Sign Out'}
+            </span>
           </button>
         </div>
       )}

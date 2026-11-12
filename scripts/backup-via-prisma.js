@@ -12,7 +12,7 @@ try {
   process.exit(1);
 }
 
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient, Prisma } = require('@prisma/client');
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -58,7 +58,7 @@ async function backupDatabase() {
 
     const backup = {
       timestamp: new Date().toISOString(),
-      version: '1.0',
+      version: '1.1',
       data: {}
     };
 
@@ -212,6 +212,48 @@ async function backupDatabase() {
       backup.data.pushSubscriptions = [];
     }
 
+    // Periods (cycle tracking)
+    console.log('  📋 Periods...');
+    try {
+      backup.data.periods = await prisma.period.findMany();
+      console.log(`     ✅ ${backup.data.periods.length} periods`);
+    } catch (error) {
+      console.log(`     ⚠️  Error: ${error.message}`);
+      backup.data.periods = [];
+    }
+
+    // Password reset tokens
+    console.log('  📋 Password Reset Tokens...');
+    try {
+      backup.data.passwordResetTokens = await prisma.passwordResetToken.findMany();
+      console.log(`     ✅ ${backup.data.passwordResetTokens.length} password reset tokens`);
+    } catch (error) {
+      console.log(`     ⚠️  Error: ${error.message}`);
+      backup.data.passwordResetTokens = [];
+    }
+
+    // Any other model in the schema (added later and not listed above) is backed up as a flat table
+    const covered = new Set([
+      'User', 'Account', 'Session', 'UserProfile',
+      'Workout', 'WorkoutExercise', 'Set', 'WorkoutTag', 'FingerboardWorkoutHang',
+      'Exercise', 'Event', 'EventTag', 'Tag',
+      'Routine', 'RoutineExercise', 'RoutineVariation', 'Plan', 'PlanTag',
+      'FingerboardProtocol', 'FingerboardProtocolHang', 'FingerboardTestingProtocol', 'FingerboardTestHang',
+      'FingerboardTestResult', 'PushSubscription', 'Period', 'PasswordResetToken',
+    ]);
+    for (const model of Prisma.dmmf.datamodel.models) {
+      if (covered.has(model.name)) continue;
+      const key = model.name.charAt(0).toLowerCase() + model.name.slice(1);
+      console.log(`  📋 ${model.name} (not listed in the script — flat copy)...`);
+      try {
+        backup.data[key] = await prisma[key].findMany();
+        console.log(`     ✅ ${backup.data[key].length} rows`);
+      } catch (error) {
+        console.log(`     ⚠️  Error: ${error.message}`);
+        backup.data[key] = [];
+      }
+    }
+
     // Save backup
     console.log('\n💾 Saving backup...');
     fs.writeFileSync(backupFile, JSON.stringify(backup, null, 2));
@@ -221,13 +263,9 @@ async function backupDatabase() {
     console.log(`   File: ${backupFile}`);
     console.log(`   Size: ${size} KB`);
     console.log(`\n📊 Backup summary:`);
-    console.log(`   Users: ${backup.data.users.length}`);
-    console.log(`   Workouts: ${backup.data.workouts.length}`);
-    console.log(`   Exercises: ${backup.data.exercises.length}`);
-    console.log(`   Events: ${backup.data.events.length}`);
-    console.log(`   Tags: ${backup.data.tags.length}`);
-    console.log(`   Routines: ${backup.data.routines.length}`);
-    console.log(`   Plans: ${backup.data.plans.length}`);
+    for (const [key, rows] of Object.entries(backup.data)) {
+      console.log(`   ${key}: ${rows.length}`);
+    }
 
   } catch (error) {
     console.error('\n❌ Error creating backup:', error.message);

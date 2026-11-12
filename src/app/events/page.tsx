@@ -4,16 +4,19 @@ import { useState, useEffect } from 'react'
 import { Event, EventFormData, Tag } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useConfirmation } from '@/hooks/useConfirmation'
+import { useUndoableDelete } from '@/hooks/useUndoableDelete'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import EventForm from '@/components/EventForm'
 import EventCard from '@/components/EventCard'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { useApiError } from '@/hooks/useApiError'
 import { extractApiError } from '@/lib/errors'
+import { Button, EmptyState, Icon, SkeletonRows } from '@/components/ui'
 
 export default function EventsPage() {
   const { t } = useLanguage()
   const confirmation = useConfirmation()
+  const undoableDelete = useUndoableDelete()
   const { handleError } = useApiError()
   const { getToken } = useCsrfToken()
   const [events, setEvents] = useState<Event[]>([])
@@ -22,7 +25,6 @@ export default function EventsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
 
   // Fetch events and tags
   useEffect(() => {
@@ -120,26 +122,15 @@ export default function EventsPage() {
         variant: 'danger',
       },
       async () => {
-        try {
-          setDeletingEventId(eventId)
-          const token = await getToken()
-          const response = await fetch(`/api/events/${eventId}`, {
-            method: 'DELETE',
-            headers: {
-              'x-csrf-token': token,
-            },
-          })
-
-          if (response.ok) {
-            setEvents(prev => prev.filter(event => event.id !== eventId))
-          } else {
-            console.error('Failed to delete event')
-          }
-        } catch (error) {
-          console.error('Error deleting event:', error)
-        } finally {
-          setDeletingEventId(null)
-        }
+        const event = events.find((e) => e.id === eventId)
+        if (!event) return
+        undoableDelete({
+          url: `/api/events/${eventId}`,
+          item: event,
+          setItems: setEvents,
+          message: t('events.deletedUndo') || 'Event deleted',
+          errorFallback: 'Failed to delete event',
+        })
       }
     )
   }
@@ -207,63 +198,45 @@ export default function EventsPage() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading events...</p>
-        </div>
+  const header = (
+    <div className="mb-5 flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-[28px] font-extrabold leading-tight text-uc-text">{t('events.title') || 'Events'}</h1>
+        <p className="mt-1 text-sm text-uc-text-muted">
+          {t('events.subtitle') || 'Track injuries, physio visits, competitions, and other events'}
+        </p>
       </div>
-    )
-  }
+      <Button variant="accent" className="shrink-0" onClick={() => setShowForm(true)}>
+        + {t('common.add') || 'Add'}
+      </Button>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
-              Events
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
-              Track injuries, physio visits, competitions, and other events
-            </p>
-          </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="mt-4 lg:mt-0 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-full lg:w-auto"
-          >
-            <span>➕</span>
-            <span>Add Event</span>
-          </button>
-        </div>
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+        {header}
 
-        {/* Events Grid */}
-        {events.length === 0 ? (
-          <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-            <div className="text-6xl mb-4">📅</div>
-            <h3 className="text-xl font-semibold text-uc-text-light mb-2">
-              {t('events.noEvents') || 'No events yet'}
-            </h3>
-            <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
+        {isLoading ? (
+          <SkeletonRows />
+        ) : events.length === 0 ? (
+          <div className="rounded-uc-card border border-dashed border-uc-border">
+            <EmptyState
+              icon={<Icon name="calendar" size={28} />}
+              title={t('events.noEvents') || 'No events yet'}
+              description={t('events.trackInjuries') || 'Track injuries to see patterns with your cycle'}
+              action={
+                <Button variant="accent" onClick={() => setShowForm(true)}>
+                  + {t('events.addFirstEvent') || 'Add Your First Event'}
+                </Button>
+              }
+            />
+            <p className="-mt-2 px-4 pb-6 text-center text-[13px] text-uc-text-muted">
               {t('events.noEventsDescription') || 'Start tracking your injuries, physio visits, competitions, and climbing trips. This helps you understand patterns and plan better.'}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-              >
-                ➕ {t('events.addFirstEvent') || 'Add Your First Event'}
-              </button>
-              <p className="text-sm text-uc-text-muted">
-                {t('events.trackInjuries') || 'Track injuries to see patterns with your cycle'}
-              </p>
-            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
             {events.map((event) => (
               <EventCard
                 key={event.id}
@@ -271,7 +244,6 @@ export default function EventsPage() {
                 onEdit={handleEditEvent}
                 onDelete={handleDeleteEvent}
                 onCycleDayUpdate={handleCycleDayUpdate}
-                isDeleting={deletingEventId === event.id}
               />
             ))}
           </div>
@@ -286,6 +258,12 @@ export default function EventsPage() {
               setEditingEvent(undefined)
             }}
             initialData={editingEvent}
+            onDelete={editingEvent ? () => {
+              const id = editingEvent.id
+              setShowForm(false)
+              setEditingEvent(undefined)
+              handleDeleteEvent(id)
+            } : undefined}
             availableTags={tags}
             onCreateTag={handleCreateTag}
             isSubmitting={isSubmitting}
@@ -302,7 +280,6 @@ export default function EventsPage() {
           confirmText={confirmation.confirmText}
           cancelText={confirmation.cancelText}
           variant={confirmation.variant}
-          isLoading={deletingEventId !== null}
         />
       </div>
     </div>

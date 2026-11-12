@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { FingerboardWorkoutHang, FingerboardProtocol, HandType, GripType } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, getHandTypeLabel, getHandTypeEmoji, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
+import { HAND_TYPE_OPTIONS, GRIP_TYPE_OPTIONS, CRIMP_SIZE_OPTIONS, getHandTypeLabel, formatHangDescription, shouldShowCrimpSize } from '@/lib/fingerboard-utils'
 import Link from 'next/link'
+import { BottomSheet, Button, Card, EmptyState, Icon, Input, Label, Overline, SegmentedControl, Select, Textarea, UnitInput, WorkoutIcon } from './ui'
 
 interface FingerboardHangTrackerProps {
   hangs: FingerboardWorkoutHang[]
@@ -121,187 +122,128 @@ export default function FingerboardHangTracker({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          🖐️ Hangs
-        </label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setShowProtocolSelector(true)}
-            className="px-4 py-2 bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black rounded-lg text-sm font-medium transition-colors"
-          >
-            📦 Load Protocol
-          </button>
-          <button
-            type="button"
-            onClick={handleAddHang}
-            className="px-4 py-2 bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light rounded-lg text-sm font-medium transition-colors"
-          >
-            + Add Hang
-          </button>
-        </div>
+    <div className="space-y-3">
+      <Overline>Hangs</Overline>
+
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="tonal" onClick={() => setShowProtocolSelector(true)}>
+          <Icon name="library" /> {t('workouts.labels.loadProtocol') || 'Load Protocol'}
+        </Button>
+        <Button variant="ghost" onClick={handleAddHang}>
+          <Icon name="plus" /> {t('workouts.labels.addHang') || 'Add Hang'}
+        </Button>
       </div>
 
       {/* Hangs List */}
       {hangs.length === 0 ? (
-        <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-          <div className="text-6xl mb-4">🖐️</div>
-          <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-            {t('workouts.labels.noHangsAdded') || 'No hangs added yet'}
-          </h3>
-          <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-            {t('workouts.labels.noHangsDescription') || 'Add individual hangs or load a saved protocol to quickly set up your fingerboard training session.'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <button
-              type="button"
-              onClick={handleAddHang}
-              className="bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-            >
-              ➕ {t('workouts.labels.addHang') || 'Add Hang'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowProtocolSelector(true)}
-              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-            >
-              📦 {t('workouts.labels.loadProtocol') || 'Load Protocol'}
-            </button>
-          </div>
+        <div className="rounded-uc-card border border-dashed border-uc-border">
+          <EmptyState
+            icon={<WorkoutIcon workoutType="FINGERBOARD" size={28} />}
+            title={t('workouts.labels.noHangsAdded') || 'No hangs added yet'}
+            description={t('workouts.labels.noHangsDescription') || 'Add individual hangs or load a saved protocol to quickly set up your fingerboard training session.'}
+          />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {hangs.map((hang, index) => (
-            <div
-              key={index}
-              className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20"
-            >
+            <Card key={index}>
               {/* Hang Header */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-uc-text-muted text-sm">#{index + 1}</span>
-                  <span className="font-semibold text-uc-text-light">
-                    {getHandTypeEmoji(hang.handType)} {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize)}
-                    {hang.customDescription && ` • ${hang.customDescription}`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleMoveHang(index, 'up')}
-                    disabled={index === 0}
-                    className="text-uc-text-muted hover:text-uc-text-light disabled:opacity-30"
-                    title="Move up"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveHang(index, 'down')}
-                    disabled={index === hangs.length - 1}
-                    className="text-uc-text-muted hover:text-uc-text-light disabled:opacity-30"
-                    title="Move down"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveHang(index)}
-                    className="text-uc-text-muted hover:text-red-500 transition-colors"
-                    title="Remove hang"
-                  >
-                    🗑️
-                  </button>
-                </div>
+              <div className="flex items-center gap-1 mb-3">
+                <h4 className="flex-1 min-w-0 font-bold text-uc-text">
+                  <span className="text-uc-text-muted uc-num">#{index + 1}</span>{' '}
+                  {formatHangDescription(t, hang.handType, hang.gripType, hang.crimpSize)}
+                  {hang.customDescription && ` • ${hang.customDescription}`}
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => handleMoveHang(index, 'up')}
+                  disabled={index === 0}
+                  className={iconButtonClass}
+                  title="Move up"
+                  aria-label="Move up"
+                >
+                  <Icon name="move-up" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMoveHang(index, 'down')}
+                  disabled={index === hangs.length - 1}
+                  className={iconButtonClass}
+                  title="Move down"
+                  aria-label="Move down"
+                >
+                  <Icon name="move-down" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveHang(index)}
+                  className={`${iconButtonClass} hover:text-uc-error`}
+                  title="Remove hang"
+                  aria-label="Remove hang"
+                >
+                  <Icon name="delete" />
+                </button>
               </div>
 
               {/* Hang Fields */}
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">{t('workouts.labels.handType') || 'Hand Type'}</label>
-                    <select
-                      value={hang.handType}
-                      onChange={(e) => handleHangChange(index, 'handType', e.target.value as HandType)}
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                    >
-                      {HAND_TYPE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.emoji} {t(opt.labelKey)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">{t('workouts.labels.gripType') || 'Grip Type'}</label>
-                    <select
-                      value={hang.gripType}
-                      onChange={(e) => {
-                        const newGripType = e.target.value as GripType
-                        // Clear crimp size only if switching to sloper
-                        updateHang(index, newGripType === 'SLOPER'
-                          ? { gripType: newGripType, crimpSize: undefined }
-                          : { gripType: newGripType })
-                      }}
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                    >
-                      {GRIP_TYPE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.emoji} {t(opt.labelKey)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {shouldShowCrimpSize(hang.gripType) && (
-                  <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">
-                      Crimp Size (mm) {hang.gripType === 'CRIMP' && '*'}
-                    </label>
-                    <select
-                      value={hang.crimpSize || ''}
-                      onChange={(e) =>
-                        handleHangChange(
-                          index,
-                          'crimpSize',
-                          e.target.value === '' ? undefined : parseInt(e.target.value)
-                        )
-                      }
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                    >
-                      <option value="">{t('common.selectSize') || 'Select size...'}</option>
-                      {CRIMP_SIZE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.emoji} {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-xs text-uc-text-muted mb-1">{t('workouts.labels.customDescription') || 'Custom Description (optional)'}</label>
-                  <input
-                    type="text"
-                    value={hang.customDescription || ''}
-                    onChange={(e) => handleHangChange(index, 'customDescription', e.target.value)}
-                    placeholder={t('workouts.placeholders.customDescription') || 'e.g., 3-finger drag, half crimp'}
-                    className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
+                  <Label>{t('workouts.labels.handType') || 'Hand Type'}</Label>
+                  <SegmentedControl
+                    ariaLabel={t('workouts.labels.handType') || 'Hand Type'}
+                    options={HAND_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
+                    value={hang.handType}
+                    onChange={(value) => handleHangChange(index, 'handType', value as HandType)}
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>{t('workouts.labels.gripType') || 'Grip Type'}</Label>
+                  <SegmentedControl
+                    ariaLabel={t('workouts.labels.gripType') || 'Grip Type'}
+                    options={GRIP_TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }))}
+                    value={hang.gripType}
+                    onChange={(value) => {
+                      const newGripType = value as GripType
+                      // Clear crimp size only if switching to sloper
+                      updateHang(index, newGripType === 'SLOPER'
+                        ? { gripType: newGripType, crimpSize: undefined }
+                        : { gripType: newGripType })
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {shouldShowCrimpSize(hang.gripType) && (
+                    <div>
+                      <Label htmlFor={`hang-${index}-crimp`}>
+                        Crimp Size {hang.gripType === 'CRIMP' && '*'}
+                      </Label>
+                      <Select
+                        id={`hang-${index}-crimp`}
+                        value={hang.crimpSize || ''}
+                        onChange={(e) =>
+                          handleHangChange(
+                            index,
+                            'crimpSize',
+                            e.target.value === '' ? undefined : parseInt(e.target.value)
+                          )
+                        }
+                      >
+                        <option value="">{t('common.selectSize') || 'Select size...'}</option>
+                        {CRIMP_SIZE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  )}
                   <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">
-                      Load (kg) <span className="text-uc-text-muted/70">(negative for unload)</span>
-                    </label>
-                    <input
-                      type="number"
+                    <Label htmlFor={`hang-${index}-load`}>Load</Label>
+                    <UnitInput
+                      id={`hang-${index}-load`}
+                      unit="kg"
                       step="0.5"
                       value={hang.load !== undefined ? hang.load : (hang.unload !== undefined ? -hang.unload : '')}
                       onChange={(e) => {
@@ -315,13 +257,14 @@ export default function FingerboardHangTracker({
                         }
                       }}
                       placeholder={t('workouts.placeholders.load') || '0'}
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
+                      aria-describedby={`hang-${index}-load-hint`}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">Reps</label>
-                    <input
-                      type="number"
+                    <Label htmlFor={`hang-${index}-reps`}>Reps</Label>
+                    <UnitInput
+                      id={`hang-${index}-reps`}
+                      unit="×"
                       value={hang.reps || ''}
                       onChange={(e) =>
                         handleHangChange(
@@ -331,13 +274,13 @@ export default function FingerboardHangTracker({
                         )
                       }
                       placeholder={t('workouts.placeholders.unload') || '5'}
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-uc-text-muted mb-1">Time (s)</label>
-                    <input
-                      type="number"
+                    <Label htmlFor={`hang-${index}-time`}>Time</Label>
+                    <UnitInput
+                      id={`hang-${index}-time`}
+                      unit="s"
                       value={hang.timeSeconds || ''}
                       onChange={(e) =>
                         handleHangChange(
@@ -347,85 +290,78 @@ export default function FingerboardHangTracker({
                         )
                       }
                       placeholder={t('workouts.placeholders.timeSeconds') || '10'}
-                      className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
                     />
                   </div>
+                  <p id={`hang-${index}-load-hint`} className="col-span-2 -mt-1 text-[13px] text-uc-text-muted">
+                    Load: negative for unload
+                  </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs text-uc-text-muted mb-1">Notes</label>
-                  <textarea
+                  <Label htmlFor={`hang-${index}-description`}>{t('workouts.labels.customDescription') || 'Custom Description (optional)'}</Label>
+                  <Input
+                    id={`hang-${index}-description`}
+                    type="text"
+                    value={hang.customDescription || ''}
+                    onChange={(e) => handleHangChange(index, 'customDescription', e.target.value)}
+                    placeholder={t('workouts.placeholders.customDescription') || 'e.g., 3-finger drag, half crimp'}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor={`hang-${index}-notes`}>Notes</Label>
+                  <Textarea
+                    id={`hang-${index}-notes`}
                     value={hang.notes || ''}
                     onChange={(e) => handleHangChange(index, 'notes', e.target.value)}
                     placeholder={t('workouts.placeholders.notes') || 'Optional notes...'}
                     rows={2}
-                    className="w-full bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple resize-none"
                   />
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
 
-      {/* Protocol Selector Modal */}
-      {showProtocolSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4">
-          <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b border-uc-purple/20 flex items-center justify-between sticky top-0 bg-uc-dark-bg">
-              <h3 className="text-lg font-semibold text-uc-text-light">{t('workouts.labels.loadProtocol') || 'Load Protocol'}</h3>
-              <button
-                onClick={() => setShowProtocolSelector(false)}
-                className="text-uc-text-muted hover:text-uc-text-light"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-4">
-              {protocols.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-uc-text-muted mb-4">{t('workouts.labels.noProtocolsAvailable') || 'No protocols available'}</p>
-                  <Link
-                    href="/fingerboard-protocols"
-                    className="text-uc-mustard hover:text-uc-mustard/80 transition-colors"
-                  >
-                    Create your first protocol →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {protocols.map((protocol) => (
-                    <div
-                      key={protocol.id}
-                      className="bg-uc-black/50 rounded-lg p-4 border border-uc-purple/20"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold text-uc-text-light">{protocol.name}</h4>
-                          {protocol.description && (
-                            <p className="text-sm text-uc-text-muted mt-1">{protocol.description}</p>
-                          )}
-                          <div className="text-xs text-uc-text-muted mt-2">
-                            {protocol.hangs.length} {protocol.hangs.length === 1 ? 'hang' : 'hangs'}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleLoadProtocol(protocol)}
-                        className="w-full bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-lg font-medium transition-colors"
-                      >
-                        Load Protocol
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+      {/* Protocol Selector */}
+      <BottomSheet
+        isOpen={showProtocolSelector}
+        onClose={() => setShowProtocolSelector(false)}
+        title={t('workouts.labels.loadProtocol') || 'Load Protocol'}
+        closeLabel={t('common.close') || 'Close'}
+      >
+        {protocols.length === 0 ? (
+          <EmptyState
+            title={t('workouts.labels.noProtocolsAvailable') || 'No protocols available'}
+            action={
+              <Link href="/fingerboard-protocols" className="inline-flex items-center gap-1 text-sm font-bold text-uc-primary hover:underline">
+                Create your first protocol <Icon name="chevron-right" size={16} />
+              </Link>
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {protocols.map((protocol) => (
+              <Card key={protocol.id}>
+                <h4 className="font-bold text-uc-text">{protocol.name}</h4>
+                {protocol.description && (
+                  <p className="text-sm text-uc-text-muted mt-1">{protocol.description}</p>
+                )}
+                <p className="text-xs font-semibold text-uc-text-muted mt-2 mb-3 uc-num">
+                  {protocol.hangs.length} {protocol.hangs.length === 1 ? 'hang' : 'hangs'}
+                </p>
+                <Button variant="tonal" onClick={() => handleLoadProtocol(protocol)} className="w-full">
+                  Load Protocol
+                </Button>
+              </Card>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </BottomSheet>
     </div>
   )
 }
 
+const iconButtonClass =
+  'inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-lg text-uc-text-muted hover:text-uc-text hover:bg-uc-elevated disabled:opacity-30 disabled:pointer-events-none transition-colors'

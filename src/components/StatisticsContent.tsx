@@ -1,28 +1,76 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, ReactNode } from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { statisticsService, StatisticsData, TimeFrame } from '@/lib/statistics-service';
 import { Workout, Tag, WorkoutType } from '@/types/workout';
 import { Event } from '@/types/event';
 import { useCycle } from '@/contexts/CycleContext';
-import { calculateCycleInfo, getPhaseStartDay, getPhaseDisplayName, getPhaseDayRange } from '@/lib/cycle-utils';
+import { CyclePhase, getPhaseDisplayName, getPhaseDayRange } from '@/lib/cycle-utils';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { STREAK_MIN_SESSIONS } from '@/lib/streak';
+import { deloadDayNumbers } from '@/lib/deload';
+import { localDayNumber, storedDayNumber } from '@/lib/date-utils';
+import { WeeklyVolumeChart } from './WeeklyVolumeChart';
+import { StatsFingerboardTests } from './StatsFingerboardTests';
+import {
+  Button, Card, EmptyState, Icon, Overline, SegmentedControl, SkeletonRows, StatTile, WorkoutIconTile,
+  buttonClasses, phaseBandBg, phaseTranslationKey, workoutBg,
+} from '@/components/ui';
+
+type FrequencyPeriod = 'week' | 'month' | 'quarter' | 'year';
+
+const typeLabelKey: Record<WorkoutType, string> = {
+  GYM: 'gym',
+  BOULDERING: 'bouldering',
+  CIRCUITS: 'circuits',
+  LEAD_ROCK: 'leadRock',
+  LEAD_ARTIFICIAL: 'leadArtificial',
+  MENTAL_PRACTICE: 'mentalPractice',
+  FINGERBOARD: 'fingerboard',
+};
+
+// Range segments from the mockup (decision 42): 4W / 3M / 6M / 1Y
+const timeframes: { value: TimeFrame; key: string; short: string }[] = [
+  { value: '4weeks', key: '4weeks', short: '4W' },
+  { value: '3months', key: '3months', short: '3M' },
+  { value: '6months', key: '6months', short: '6M' },
+  { value: '1year', key: '1year', short: '1Y' },
+];
+
+const phases: CyclePhase[] = ['menstrual', 'follicular', 'ovulation', 'early-luteal', 'late-luteal'];
+
+/** Card with a 17px section title and optional line under it. */
+const Section = ({ title, subtitle, children }: { title: ReactNode; subtitle?: ReactNode; children: ReactNode }) => (
+  <Card className="p-5">
+    <h2 className="text-[17px] font-extrabold text-uc-text">{title}</h2>
+    {subtitle && <p className="mt-0.5 text-[13px] font-semibold text-uc-text-muted">{subtitle}</p>}
+    <div className="mt-4">{children}</div>
+  </Card>
+);
+
+const Bar = ({ percent, className }: { percent: number; className: string }) => (
+  <div className="h-2 rounded-uc-pill bg-uc-skeleton overflow-hidden">
+    <div className={`h-full rounded-uc-pill ${className}`} style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} />
+  </div>
+);
 
 export const StatisticsContent = () => {
-  const { t } = useLanguage();
+  const { t, tPlural, language } = useLanguage();
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB';
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { settings: notificationSettings, updateSettings } = useNotifications();
-  const [timeframe, setTimeframe] = useState<TimeFrame>('1month');
+  const [timeframe, setTimeframe] = useState<TimeFrame>('4weeks');
   const [isEnablingNotification, setIsEnablingNotification] = useState(false);
   const [statsData, setStatsData] = useState<StatisticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [gratitudeFilter, setGratitudeFilter] = useState<'all' | 'gratitude' | 'improvements'>('all');
-  const [variationFrequencyPeriod, setVariationFrequencyPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
+  const [variationFrequencyPeriod, setVariationFrequencyPeriod] = useState<FrequencyPeriod>('month');
   
   // Calculate variation frequency for GYM workouts
   const gymVariationFrequency = useMemo(() => {
@@ -57,9 +105,13 @@ export const StatisticsContent = () => {
         break;
     }
     
-    // Filter workouts within period
-    const periodWorkouts = gymWorkouts.filter(w => new Date(w.startTime) >= periodStart);
-    const periodDays = Math.max(1, (now.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000));
+    // Filter workouts within period; deload days (and their workouts) don't count towards the frequency
+    const deloadDays = deloadDayNumbers(events);
+    const periodWorkouts = gymWorkouts.filter(w => new Date(w.startTime) >= periodStart && !deloadDays.has(storedDayNumber(w.startTime)));
+    const firstDay = localDayNumber(periodStart);
+    const lastDay = localDayNumber(now);
+    const restDays = Array.from(deloadDays).filter(day => day >= firstDay && day <= lastDay).length;
+    const periodDays = Math.max(1, (now.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000) - restDays);
     
     // Calculate frequency per period
     const variationFreq: Array<{ name: string; frequency: number }> = [];
@@ -74,7 +126,7 @@ export const StatisticsContent = () => {
     });
     
     return variationFreq.sort((a, b) => b.frequency - a.frequency);
-  }, [workouts, variationFrequencyPeriod]);
+  }, [workouts, events, variationFrequencyPeriod]);
 
   // Load data
   useEffect(() => {
@@ -112,7 +164,7 @@ export const StatisticsContent = () => {
         }
         
         // Set last updated time on client side only
-        setLastUpdated(new Date().toLocaleTimeString('en-US', { hour12: false }));
+        setLastUpdated(new Date());
       } catch (error) {
         console.error('Error loading statistics data:', error);
       } finally {
@@ -138,46 +190,17 @@ export const StatisticsContent = () => {
     }
   }, [workouts, tags, timeframe, events, isCycleTrackingEnabled, cycleSettings]);
 
-  const getWorkoutTypeIcon = (type: string) => {
-    switch (type) {
-      case 'GYM': return '🏋️';
-      case 'BOULDERING': return '🧗';
-      case 'CIRCUITS': return '🔄';
-      case 'LEAD_ROCK': return '🏔️';
-      case 'LEAD_ARTIFICIAL': return '🧗‍♀️';
-      case 'MENTAL_PRACTICE': return '🧘';
-      default: return '📊';
-    }
-  };
+  const deloadDays = useMemo(() => deloadDayNumbers(events), [events]);
 
-  const getWorkoutTypeName = (type: string) => {
-    switch (type) {
-      case 'GYM': return 'Gym';
-      case 'BOULDERING': return 'Bouldering';
-      case 'CIRCUITS': return 'Circuits';
-      case 'LEAD_ROCK': return 'Lead Rock';
-      case 'LEAD_ARTIFICIAL': return 'Lead Artificial';
-      case 'MENTAL_PRACTICE': return 'Mental Practice';
-      default: return type;
-    }
-  };
-
-  const getVolumeName = (volume: string) => {
-    return volume.replace('TR', 'TR ');
-  };
-
-  const getTrainingTypeLabel = (type: WorkoutType) => {
-    const typeMap: Record<WorkoutType, string> = {
-      'GYM': 'gym',
-      'BOULDERING': 'bouldering',
-      'CIRCUITS': 'circuits',
-      'LEAD_ROCK': 'leadRock',
-      'LEAD_ARTIFICIAL': 'leadArtificial',
-      'MENTAL_PRACTICE': 'mentalPractice',
-      'FINGERBOARD': 'fingerboard',
-    };
-    return t(`training.types.${typeMap[type]}`) || type;
-  };
+  // Workouts in the stats range (weekly volume chart)
+  const workoutsInRange = useMemo(() => {
+    if (!statsData) return [];
+    const { start, end } = statsData.timeRange;
+    return workouts.filter(workout => {
+      const date = new Date(workout.startTime);
+      return date >= start && date <= end;
+    });
+  }, [workouts, statsData]);
 
   // Filter workouts with gratitude/improvements based on timeframe
   const filteredGratitudeWorkouts = useMemo(() => {
@@ -200,625 +223,405 @@ export const StatisticsContent = () => {
       return workoutsWithGratitude.filter(w => w.improvements);
     }
     return workoutsWithGratitude;
-  }, [workouts, timeframe, statsData, gratitudeFilter, t]);
+  }, [workouts, timeframe, statsData, gratitudeFilter]);
+
+
+
+  const periodLabel = t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod;
+  const formatFrequency = (frequency: number) =>
+    `${statisticsService.formatFrequency(frequency, variationFrequencyPeriod)}/${periodLabel}`;
+  const formatShortDate = (date: Date, withYear = false) =>
+    date.toLocaleDateString(locale, { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) });
+  const getTrainingTypeLabel = (type: WorkoutType) => t(`training.types.${typeLabelKey[type]}`) || type;
+
+  const handleEnableInjuryNotification = async () => {
+    if (!statsData) return;
+    setIsEnablingNotification(true);
+    try {
+      // Enable injury phase notification
+      if (!statsData.injuryCycle.phaseWithMostInjuries) {
+        throw new Error('No phase with most injuries found');
+      }
+
+      // Save notification preference
+      const currentSettings = notificationSettings || {};
+      updateSettings({
+        ...currentSettings,
+        injuryPhaseNotificationEnabled: true,
+        injuryPhaseNotificationPhase: statsData.injuryCycle.phaseWithMostInjuries,
+      });
+
+      // Show success message
+      alert(t('stats.injuryPhaseNotificationEnabled') || 'Notification enabled! You will receive a reminder 1 day before this phase starts.');
+    } catch (error) {
+      console.error('Error enabling notification:', error);
+      alert(t('stats.injuryPhaseNotificationError') || 'Failed to enable notification. Please try again.');
+    } finally {
+      setIsEnablingNotification(false);
+    }
+  };
+
+  const cycleLength = cycleSettings?.cycleLength || 28;
+  const injuryCycle = statsData?.injuryCycle;
+  const injuriesByPhase = injuryCycle
+    ? (Object.values(injuryCycle.injuriesByPhase) as number[])
+    : [];
+  const mostInjuriesPhase = injuryCycle?.phaseWithMostInjuries && injuryCycle.maxInjuriesInPhase > 0
+    ? getPhaseDisplayName(injuryCycle.phaseWithMostInjuries)
+    : null;
+  const notificationEnabled = notificationSettings?.injuryPhaseNotificationEnabled === true;
+
+  // One row per note; a workout with both shows two rows
+  const gratitudeRows = filteredGratitudeWorkouts.flatMap((workout) => [
+    ...(gratitudeFilter !== 'improvements' && workout.gratitude
+      ? [{ id: `gratitude-${workout.id}`, kind: 'gratitude' as const, text: workout.gratitude, workout }]
+      : []),
+    ...(gratitudeFilter !== 'gratitude' && workout.improvements
+      ? [{ id: `improvements-${workout.id}`, kind: 'improvements' as const, text: workout.improvements, workout }]
+      : []),
+  ]);
 
   return (
-    <div className="bg-uc-dark-bg rounded-2xl shadow-lg border border-uc-purple/20">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-6 border-b border-uc-purple/20">
-        <div className="flex items-center space-x-3">
-          <h2 className="text-2xl font-bold text-uc-text-light">
-            📊 {t('stats.title')}
-          </h2>
-          {loading && (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-uc-mustard"></div>
-          )}
-        </div>
-        
-        {/* Timeframe Selector */}
-        <div className="flex items-center space-x-2 mt-4 lg:mt-0">
-          <label className="text-sm font-medium text-uc-text-light">
-            {t('stats.timeframe')}:
-          </label>
-          <select
+    <div className="space-y-4">
+      {/* Selectors */}
+      <div className="space-y-4 lg:grid lg:grid-cols-[3fr_2fr] lg:gap-4 lg:space-y-0">
+        <div>
+          <Overline className="mb-2 flex items-center gap-2">
+            {t('stats.timeframe')}
+            {loading && <span aria-hidden className="size-3 animate-spin rounded-full border-2 border-uc-primary border-t-transparent" />}
+          </Overline>
+          <SegmentedControl
+            ariaLabel={t('stats.timeframe')}
             value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value as TimeFrame)}
-            className="border border-uc-purple/20 rounded-xl px-3 py-1 text-sm bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-          >
-            <option value="1week">{t('stats.1week') || '1 Week'}</option>
-            <option value="1month">{t('stats.1month') || '1 Month'}</option>
-            <option value="3months">{t('stats.3months') || '3 Months'}</option>
-            <option value="6months">{t('stats.6months') || '6 Months'}</option>
-            <option value="1year">{t('stats.1year') || '1 Year'}</option>
-            <option value="all">{t('stats.allTime') || 'All Time'}</option>
-          </select>
+            onChange={setTimeframe}
+            options={timeframes.map((tf) => ({
+              value: tf.value,
+              label: (
+                <>
+                  <span aria-hidden>{t(`stats.short.${tf.key}`) || tf.short}</span>
+                  <span className="sr-only">{t(`stats.${tf.key}`)}</span>
+                </>
+              ),
+            }))}
+          />
+        </div>
+        <div>
+          <Overline className="mb-2">{t('stats.showFrequencyPer') || 'Show frequency per'}</Overline>
+          <SegmentedControl
+            ariaLabel={t('stats.showFrequencyPer') || 'Show frequency per'}
+            value={variationFrequencyPeriod}
+            onChange={setVariationFrequencyPeriod}
+            options={(['week', 'month', 'quarter', 'year'] as const).map((period) => ({
+              value: period,
+              label: <span className="first-letter:uppercase">{t(`stats.frequencyPeriod.${period}`) || period}</span>,
+            }))}
+          />
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-6">
-        {!statsData ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-uc-mustard mx-auto mb-4"></div>
-              <p className="text-uc-text-muted">{t('common.loadingStatistics') || 'Loading statistics...'}</p>
-            </div>
+      {!statsData ? (
+        <Card>
+          <SkeletonRows />
+          <p className="sr-only">{t('common.loadingStatistics') || 'Loading statistics...'}</p>
+        </Card>
+      ) : statsData.overall.totalWorkouts === 0 ? (
+        <Card>
+          <EmptyState
+            icon={<Icon name="stats" size={28} />}
+            title={t('stats.noData') || 'No statistics available yet'}
+            description={t('stats.noDataDescription') || 'Start logging workouts to see detailed statistics about your training progress, volume, and performance over time.'}
+            action={
+              <Link href="/workouts" className={buttonClasses('accent', 'lg')}>
+                <Icon name="plus" /> {t('stats.logFirstWorkout') || 'Log Your First Workout'}
+              </Link>
+            }
+          />
+        </Card>
+      ) : (
+        <>
+          {/* Overall Stats */}
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <StatTile label={t('stats.totalWorkouts')} value={statsData.overall.totalWorkouts} />
+            <StatTile label={t('stats.thisMonth') || 'This month'} value={statsData.overall.averageWorkoutsThisMonth} />
+            <StatTile label={t('stats.avgPerWeek')} value={statsData.overall.averageWorkoutsPerWeek} />
+            <StatTile
+              label={t('stats.currentStreak')}
+              value={statsData.overall.currentStreak}
+              unit={tPlural('dashboard.weeksUnit', statsData.overall.currentStreak)}
+              footer={t('dashboard.streakRule', { min: STREAK_MIN_SESSIONS })}
+            />
           </div>
-        ) : statsData.overall.totalWorkouts === 0 ? (
-          <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-            <div className="text-6xl mb-4">📊</div>
-            <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-              {t('stats.noData') || 'No statistics available yet'}
-            </h3>
-            <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-              {t('stats.noDataDescription') || 'Start logging workouts to see detailed statistics about your training progress, volume, and performance over time.'}
-            </p>
-            <a
-              href="/workouts"
-              className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-            >
-              ➕ {t('stats.logFirstWorkout') || 'Log Your First Workout'}
-            </a>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Overall Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-uc-purple/20 p-4 rounded-xl border border-uc-purple/30">
-                <div className="text-2xl font-bold text-uc-purple">
-                  {statsData.overall.totalWorkouts}
-                </div>
-                <div className="text-sm text-uc-text-muted">
-                  {t('stats.totalWorkouts')}
-                </div>
-              </div>
-              <div className="bg-uc-mustard/20 p-4 rounded-xl border border-uc-mustard/30">
-                <div className="text-2xl font-bold text-uc-mustard">
-                  {statsData.overall.averageWorkoutsThisMonth}
-                </div>
-                <div className="text-sm text-uc-text-muted">
-                  Ten Miesiąc
-                </div>
-              </div>
-              <div className="bg-uc-success/20 p-4 rounded-xl border border-uc-success/30">
-                <div className="text-2xl font-bold text-uc-success">
-                  {statsData.overall.averageWorkoutsPerWeek}
-                </div>
-                <div className="text-sm text-uc-text-muted">
-                  {t('stats.avgPerWeek')}
-                </div>
-              </div>
-              <div className="bg-uc-alert/20 p-4 rounded-xl border border-uc-alert/30">
-                <div className="text-2xl font-bold text-uc-alert">
-                  {statsData.overall.currentStreak}
-                </div>
-                <div className="text-sm text-uc-text-muted">
-                  {t('stats.currentStreak')}
-                </div>
-              </div>
-            </div>
 
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
             {/* Workout Types */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-uc-text-light">
-                  🏋️ {t('stats.workoutTypes')}
-                </h3>
-                <select
-                  value={variationFrequencyPeriod}
-                  onChange={(e) => setVariationFrequencyPeriod(e.target.value as 'week' | 'month' | 'quarter' | 'year')}
-                  className="px-3 py-1.5 bg-uc-black/50 border border-uc-purple/20 rounded-lg text-sm text-uc-text-light focus:outline-none focus:ring-2 focus:ring-uc-purple/50"
-                >
-                  <option value="week">{t('stats.frequencyPeriod.week') || 'Per Week'}</option>
-                  <option value="month">{t('stats.frequencyPeriod.month') || 'Per Month'}</option>
-                  <option value="quarter">{t('stats.frequencyPeriod.quarter') || 'Per Quarter'}</option>
-                  <option value="year">{t('stats.frequencyPeriod.year') || 'Per Year'}</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {statsData.workoutTypes.map((typeStats) => (
-                  <div key={typeStats.type} className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xl">{getWorkoutTypeIcon(typeStats.type)}</span>
-                        <span className="font-medium text-uc-text-light">
-                          {getWorkoutTypeName(typeStats.type)}
-                        </span>
-                      </div>
-                      <span className="text-sm text-uc-text-muted">
-                        {typeStats.percentage}%
-                      </span>
+            <section className="space-y-3">
+              <h2 className="pt-2 text-[22px] font-extrabold text-uc-text">{t('stats.workoutTypes')}</h2>
+              {statsData.workoutTypes.map((typeStats) => (
+                <Card key={typeStats.type}>
+                  <div className="flex items-center gap-3">
+                    <WorkoutIconTile workoutType={typeStats.type} />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-extrabold text-uc-text">{getTrainingTypeLabel(typeStats.type)}</p>
+                      <p className="text-[13px] font-semibold text-uc-text-muted uc-num">
+                        {t('stats.count')}: {typeStats.count} · {formatFrequency(typeStats.frequency)}
+                      </p>
                     </div>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-uc-text-muted">{t('stats.count')}:</span>
-                        <span className="font-medium text-uc-text-light">{typeStats.count}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-uc-text-muted">{t('stats.frequency')}:</span>
-                        <span className="font-medium text-uc-text-light">
-                          {statisticsService.formatFrequency(typeStats.frequency, variationFrequencyPeriod)}/{t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod}
-                        </span>
-                      </div>
-                      {/* Variation frequency for GYM workouts */}
-                      {typeStats.type === 'GYM' && gymVariationFrequency && gymVariationFrequency.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-uc-purple/20">
-                          <div className="text-xs text-uc-text-muted mb-2">
-                            {t('stats.variationFrequency') || 'Variation Frequency'} ({t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod}):
-                          </div>
-                          <div className="space-y-1">
-                            {gymVariationFrequency.slice(0, 3).map((vf, idx) => (
-                              <div key={idx} className="flex justify-between text-xs">
-                                <span className="text-uc-text-muted truncate mr-2">{vf.name}</span>
-                                <span className="font-medium text-uc-text-light whitespace-nowrap">
-                                  {vf.frequency.toFixed(1)}/{t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <span className="text-xl font-extrabold text-uc-text uc-num">{typeStats.percentage}%</span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Tags */}
-            {statsData.tags.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                  🏷️ {t('stats.tags')}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {statsData.tags.map((tagStats) => (
-                    <div key={tagStats.tag.id} className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: tagStats.tag.color }}
-                          ></div>
-                          <span className="font-medium text-uc-text-light">
-                            {tagStats.tag.name}
-                          </span>
-                        </div>
-                        <span className="text-sm text-uc-text-muted">
-                          {tagStats.percentage}%
-                        </span>
-                      </div>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-uc-text-muted">{t('stats.count')}:</span>
-                          <span className="font-medium text-uc-text-light">{tagStats.count}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-uc-text-muted">{t('stats.frequency')}:</span>
-                          <span className="font-medium text-uc-text-light">
-                            {statisticsService.formatFrequency(tagStats.frequency, variationFrequencyPeriod)}/{t(`stats.frequencyPeriod.${variationFrequencyPeriod}`) || variationFrequencyPeriod}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Training Volumes */}
-            {statsData.trainingVolumes.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                  📈 {t('stats.trainingVolumes')}
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {statsData.trainingVolumes.map((volumeStats) => (
-                    <div key={volumeStats.volume} className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20 text-center">
-                      <div className="text-2xl font-bold text-uc-text-light mb-1">
-                        {volumeStats.count}
-                      </div>
-                      <div className="text-sm font-medium text-uc-text-muted mb-1">
-                        {getVolumeName(volumeStats.volume)}
-                      </div>
-                      <div className="text-xs text-uc-text-muted">
-                        {volumeStats.percentage}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Mental & Falls Statistics Info */}
-            <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
-              <div className="flex items-center space-x-3">
-                <div className="text-2xl">📊</div>
-                <div className="flex-1">
-                  <p className="text-sm text-uc-text-muted">
-                    {t('stats.mentalFallsStatsInfo') || 'Mental practice statistics and falls tracking are available in the Strong Mind section.'}
-                    {' '}
-                    <a 
-                      href="/strong-mind" 
-                      className="text-uc-purple hover:text-uc-purple/80 underline font-medium"
-                    >
-                      {t('stats.goToStrongMind') || 'Go to Strong Mind →'}
-                    </a>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Injury Cycle Analysis */}
-            {isCycleTrackingEnabled && (
-              <div>
-                <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                  🤕 Kontuzje według Fazy Cyklu
-                </h3>
-                <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-uc-text-light">
-                        {statsData.injuryCycle.totalInjuries}
-                      </div>
-                      <div className="text-sm text-uc-text-muted">
-                        Łącznie Kontuzji
-                      </div>
-                    </div>
-                    {statsData.injuryCycle.totalInjuries > 0 && (
-                      <>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-uc-text-light">
-                            {statsData.injuryCycle.daysSinceLastInjury}
-                          </div>
-                          <div className="text-sm text-uc-text-muted">
-                            {t('stats.daysSinceLast')}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-uc-text-light">
-                            {Math.max(...Object.values(statsData.injuryCycle.injuriesByPhase) as number[])}
-                          </div>
-                          <div className="text-sm text-uc-text-muted">
-                            Najwięcej w Fazie
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-uc-text-light">
-                            {(Object.values(statsData.injuryCycle.injuriesByPhase) as number[]).filter(count => count > 0).length}
-                          </div>
-                          <div className="text-sm text-uc-text-muted">
-                            Fazy z Kontuzjami
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    {statsData.injuryCycle.totalInjuries === 0 && (
-                      <div className="col-span-3 flex items-center justify-center">
-                        <p className="text-uc-text-muted text-sm">
-                          0 kontuzji ostatnio
-                        </p>
-                      </div>
-                    )}
+                  <div className="mt-3">
+                    <Bar percent={typeStats.percentage} className={workoutBg[typeStats.type]} />
                   </div>
-
-                  {/* Cycle Phase Breakdown */}
-                  {statsData.injuryCycle.totalInjuries > 0 && (
-                    <div>
-                      <h4 className="text-md font-medium text-uc-text-light mb-4">
-                        Liczba kontuzji w każdej fazie cyklu
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="text-center p-4 bg-red-500/20 rounded-xl border-2 border-red-500/30 hover:bg-red-500/30 transition-colors">
-                          <div className="text-3xl font-bold text-red-400 mb-2">
-                            {statsData.injuryCycle.injuriesByPhase.menstrual}
-                          </div>
-                          <div className="text-sm font-medium text-uc-text-light mb-1">
-                            {t('cycle.phases.menstrual')}
-                          </div>
-                          <div className="text-xs text-uc-text-muted">
-                            {t('stats.daysRange', { range: getPhaseDayRange('menstrual', cycleSettings?.cycleLength || 28) })}
-                          </div>
-                        </div>
-                        <div className="text-center p-4 bg-green-500/20 rounded-xl border-2 border-green-500/30 hover:bg-green-500/30 transition-colors">
-                          <div className="text-3xl font-bold text-green-400 mb-2">
-                            {statsData.injuryCycle.injuriesByPhase.follicular}
-                          </div>
-                          <div className="text-sm font-medium text-uc-text-light mb-1">
-                            {t('cycle.phases.follicular')}
-                          </div>
-                          <div className="text-xs text-uc-text-muted">
-                            {t('stats.daysRange', { range: getPhaseDayRange('follicular', cycleSettings?.cycleLength || 28) })}
-                          </div>
-                        </div>
-                        <div className="text-center p-4 bg-yellow-500/20 rounded-xl border-2 border-yellow-500/30 hover:bg-yellow-500/30 transition-colors">
-                          <div className="text-3xl font-bold text-yellow-400 mb-2">
-                            {statsData.injuryCycle.injuriesByPhase.ovulation}
-                          </div>
-                          <div className="text-sm font-medium text-uc-text-light mb-1">
-                            {t('cycle.phases.ovulation')}
-                          </div>
-                          <div className="text-xs text-uc-text-muted">
-                            {t('stats.daysRange', { range: getPhaseDayRange('ovulation', cycleSettings?.cycleLength || 28) })}
-                          </div>
-                        </div>
-                        <div className="text-center p-4 bg-blue-500/20 rounded-xl border-2 border-blue-500/30 hover:bg-blue-500/30 transition-colors">
-                          <div className="text-3xl font-bold text-blue-400 mb-2">
-                            {statsData.injuryCycle.injuriesByPhase.earlyLuteal}
-                          </div>
-                          <div className="text-sm font-medium text-uc-text-light mb-1">
-                            {t('cycle.phases.earlyLuteal')}
-                          </div>
-                          <div className="text-xs text-uc-text-muted">
-                            {t('stats.daysRange', { range: getPhaseDayRange('early-luteal', cycleSettings?.cycleLength || 28) })}
-                          </div>
-                        </div>
-                        <div className="text-center p-4 bg-purple-500/20 rounded-xl border-2 border-purple-500/30 hover:bg-purple-500/30 transition-colors">
-                          <div className="text-3xl font-bold text-purple-400 mb-2">
-                            {statsData.injuryCycle.injuriesByPhase.lateLuteal}
-                          </div>
-                          <div className="text-sm font-medium text-uc-text-light mb-1">
-                            {t('cycle.phases.lateLuteal')}
-                          </div>
-                          <div className="text-xs text-uc-text-muted">
-                            {t('stats.daysRange', { range: getPhaseDayRange('late-luteal', cycleSettings?.cycleLength || 28) })}
-                          </div>
-                        </div>
+                  {/* Variation frequency for GYM workouts */}
+                  {typeStats.type === 'GYM' && gymVariationFrequency && gymVariationFrequency.length > 0 && (
+                    <div className="mt-3">
+                      <Overline className="mb-2">
+                        {t('stats.variationFrequency') || 'Variation Frequency'} ({periodLabel})
+                      </Overline>
+                      <div className="flex flex-wrap gap-2">
+                        {gymVariationFrequency.slice(0, 3).map((vf) => (
+                          <span
+                            key={vf.name}
+                            className="inline-flex min-h-8 items-center gap-1.5 rounded-[10px] border border-uc-border px-2.5 text-xs font-bold text-uc-text"
+                          >
+                            {vf.name}
+                            <span className="text-uc-text-muted uc-num">{vf.frequency.toFixed(1)}/{periodLabel}</span>
+                          </span>
+                        ))}
                       </div>
-                      <div className="mt-4 text-xs text-uc-text-muted text-center">
-                        {t('stats.injuryPhaseDescription') || 'Each phase shows the number of injuries in the specified cycle day range'}
-                      </div>
-
-                      {/* Most injuries phase notification */}
-                      {statsData.injuryCycle.phaseWithMostInjuries && 
-                       statsData.injuryCycle.maxInjuriesInPhase > 0 && (
-                        <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-500/30">
-                          <div className="flex items-start space-x-3">
-                            <div className="text-2xl">⚠️</div>
-                            <div className="flex-1">
-                              <h5 className="font-medium text-uc-text-light mb-2">
-                                {t('stats.mostInjuriesPhaseTitle') || 'Most injuries in a phase'}
-                              </h5>
-                              <p className="text-sm text-uc-text-muted mb-3">
-                                {(() => {
-                                  const phaseKey = statsData.injuryCycle.phaseWithMostInjuries;
-                                  const phase = getPhaseDisplayName(phaseKey);
-                                  const cycleLength = cycleSettings?.cycleLength || 28;
-                                  const dayRange = getPhaseDayRange(phase, cycleLength);
-                                  const count = statsData.injuryCycle.maxInjuriesInPhase;
-                                  const messageTemplate = t('stats.mostInjuriesPhaseMessage') || 'Most injuries ({count}) occurred during cycle days {dayRange}.';
-                                  return messageTemplate
-                                    .replace('{count}', count.toString())
-                                    .replace('{dayRange}', dayRange);
-                                })()}
-                              </p>
-                              <p className="text-sm text-uc-text-muted mb-4">
-                                {t('stats.injuryPhaseNotificationHint') || 'Would you like to receive a push notification 1 day before this phase starts to be aware of the increased injury risk?'}
-                              </p>
-                              <button
-                                onClick={async () => {
-                                  setIsEnablingNotification(true);
-                                  try {
-                                    // Enable injury phase notification
-                                    if (!statsData.injuryCycle.phaseWithMostInjuries) {
-                                      throw new Error('No phase with most injuries found');
-                                    }
-                                    const phase = getPhaseDisplayName(statsData.injuryCycle.phaseWithMostInjuries);
-                                    const phaseStartDay = getPhaseStartDay(phase, cycleSettings?.cycleLength || 28);
-                                    
-                                    // Save notification preference
-                                    const currentSettings = notificationSettings || {};
-                                    updateSettings({
-                                      ...currentSettings,
-                                      injuryPhaseNotificationEnabled: true,
-                                      injuryPhaseNotificationPhase: statsData.injuryCycle.phaseWithMostInjuries,
-                                    });
-
-                                    // Show success message
-                                    alert(t('stats.injuryPhaseNotificationEnabled') || 'Notification enabled! You will receive a reminder 1 day before this phase starts.');
-                                  } catch (error) {
-                                    console.error('Error enabling notification:', error);
-                                    alert(t('stats.injuryPhaseNotificationError') || 'Failed to enable notification. Please try again.');
-                                  } finally {
-                                    setIsEnablingNotification(false);
-                                  }
-                                }}
-                                disabled={isEnablingNotification || (notificationSettings?.injuryPhaseNotificationEnabled === true)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                  notificationSettings?.injuryPhaseNotificationEnabled === true
-                                    ? 'bg-green-500 text-white cursor-not-allowed'
-                                    : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                                } disabled:opacity-50`}
-                              >
-                                {isEnablingNotification
-                                  ? (t('common.loading') || 'Loading...')
-                                  : notificationSettings?.injuryPhaseNotificationEnabled === true
-                                  ? (t('stats.injuryPhaseNotificationAlreadyEnabled') || '✓ Notification already enabled')
-                                  : (t('stats.enableInjuryPhaseNotification') || '🔔 Enable notification')}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
-                </div>
-              </div>
-            )}
+                </Card>
+              ))}
+            </section>
 
-            {/* Gratitude & Improvements */}
-            {filteredGratitudeWorkouts.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                  🙏 {t('strongMind.gratitudeAndImprovements') || 'Gratitude & Improvements'}
-                </h3>
-                <p className="text-uc-text-muted mb-4 text-sm">
-                  {t('strongMind.gratitudeAndImprovementsDescription') || 'Reflect on your recent workouts and what you\'re grateful for, and what you want to improve.'}
+            <div className="space-y-4 lg:pt-12">
+              {/* Tags */}
+              {statsData.tags.length > 0 && (
+                <Section title={t('stats.tags')}>
+                  <ul className="space-y-3">
+                    {statsData.tags.map((tagStats) => (
+                      <li key={tagStats.tag.id} className="flex items-center gap-3">
+                        <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: tagStats.tag.color }} />
+                        <span className="min-w-0 flex-1 truncate font-bold text-uc-text">{tagStats.tag.name}</span>
+                        <span className="text-[13px] font-semibold text-uc-text-muted uc-num">
+                          {tagStats.count} · {formatFrequency(tagStats.frequency)}
+                        </span>
+                        <span className="w-11 text-right text-sm font-extrabold text-uc-text uc-num">{tagStats.percentage}%</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              )}
+
+              {/* Training Volumes */}
+              {statsData.trainingVolumes.length > 0 && (
+                <Section title={t('stats.trainingVolumes')}>
+                  <ul className="space-y-3">
+                    {statsData.trainingVolumes.map((volumeStats) => (
+                      <li key={volumeStats.volume} className="flex items-center gap-3">
+                        <span className="w-9 text-sm font-extrabold text-uc-text uc-num">{volumeStats.volume}</span>
+                        <div className="flex-1">
+                          <Bar percent={volumeStats.percentage} className="bg-uc-primary" />
+                        </div>
+                        <span className="w-8 text-right text-[13px] font-semibold text-uc-text-muted uc-num">{volumeStats.count}</span>
+                        <span className="w-11 text-right text-sm font-extrabold text-uc-text uc-num">{volumeStats.percentage}%</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              )}
+
+              {/* Mental & Falls Statistics Info */}
+              <Card className="flex items-center gap-3">
+                <Icon name="strong-mind" size={24} className="text-uc-primary" />
+                <p className="text-sm text-uc-text-muted">
+                  {t('stats.mentalFallsStatsInfo') || 'Mental practice statistics and falls tracking are available in the Strong Mind section.'}{' '}
+                  <Link href="/strong-mind" className="font-bold text-uc-primary hover:underline">
+                    {t('stats.goToStrongMind') || 'Go to Strong Mind →'}
+                  </Link>
                 </p>
+              </Card>
+            </div>
+          </div>
 
-                {/* Filter buttons */}
-                <div className="flex space-x-2 mb-6">
-                  <button
-                    onClick={() => setGratitudeFilter('all')}
-                    className={`px-4 py-2 rounded-xl font-medium transition-colors text-sm ${
-                      gratitudeFilter === 'all'
-                        ? 'bg-uc-mustard text-uc-black shadow-lg'
-                        : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
-                    }`}
-                  >
-                    {t('common.all') || 'All'}
-                  </button>
-                  <button
-                    onClick={() => setGratitudeFilter('gratitude')}
-                    className={`px-4 py-2 rounded-xl font-medium transition-colors text-sm ${
-                      gratitudeFilter === 'gratitude'
-                        ? 'bg-yellow-500 text-uc-black shadow-lg'
-                        : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
-                    }`}
-                  >
-                    ✨ {t('strongMind.gratitude') || 'Gratitude'}
-                  </button>
-                  <button
-                    onClick={() => setGratitudeFilter('improvements')}
-                    className={`px-4 py-2 rounded-xl font-medium transition-colors text-sm ${
-                      gratitudeFilter === 'improvements'
-                        ? 'bg-orange-500 text-uc-black shadow-lg'
-                        : 'bg-uc-dark-bg/50 text-uc-text-light hover:bg-uc-dark-bg border border-uc-purple/20'
-                    }`}
-                  >
-                    📈 {t('strongMind.improvements') || 'Improvements'}
-                  </button>
-                </div>
+          {/* Weekly volume in TR points (decision 43) and fingerboard tests (decision 45) */}
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+            <Section
+              title={t('stats.weeklyVolume') || 'Weekly volume'}
+              subtitle={t('stats.weeklyVolumeSubtitle') || 'TR points per week: TR1 = 1 … TR5 = 5'}
+            >
+              <WeeklyVolumeChart
+                workouts={workoutsInRange}
+                start={statsData.timeRange.start}
+                end={statsData.timeRange.end}
+                deloadDays={deloadDays}
+              />
+            </Section>
+            <StatsFingerboardTests
+              renderSection={(title, subtitle, body) => <Section title={title} subtitle={subtitle}>{body}</Section>}
+            />
+          </div>
 
-                {/* Gratitude Tiles */}
-                {(gratitudeFilter === 'all' || gratitudeFilter === 'gratitude') && (
-                  <div className="mb-8">
-                    <h4 className="text-md font-semibold text-uc-text-light mb-4">
-                      ✨ {t('strongMind.gratefulFor') || 'Gratitude Thoughts'}
-                    </h4>
-                    {filteredGratitudeWorkouts.filter(w => w.gratitude).length === 0 ? (
-                      <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-                        <div className="text-6xl mb-4">🙏</div>
-                        <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-                          {t('strongMind.noGratitude') || 'No gratitude entries yet'}
-                        </h3>
-                        <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-                          {t('strongMind.noGratitudeDescription') || 'Start adding gratitude notes to your workouts to reflect on what you\'re thankful for in your training journey.'}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredGratitudeWorkouts.filter(w => w.gratitude).map((workout) => (
-                          <div key={workout.id} className="bg-uc-black/50 p-6 rounded-xl border border-yellow-500/20 hover:border-yellow-500/40 transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                              <div>
-                                <h5 className="text-lg font-semibold text-uc-text-light">
-                                  {new Date(workout.startTime).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  })}
-                                </h5>
-                                <div className="flex items-center gap-2 flex-wrap mt-1">
-                                  <p className="text-sm text-uc-text-muted">
-                                    {getTrainingTypeLabel(workout.type)}
-                                  </p>
-                                  {workout.sector && (
-                                    <>
-                                      <span className="text-uc-text-muted">•</span>
-                                      <p className="text-sm text-uc-text-muted">
-                                        📍 {workout.sector}
-                                      </p>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                              <p className="text-uc-text-light text-sm whitespace-pre-wrap">
-                                {workout.gratitude}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Improvements Tiles */}
-                {(gratitudeFilter === 'all' || gratitudeFilter === 'improvements') && (
-                  <div>
-                    <h4 className="text-md font-semibold text-uc-text-light mb-4">
-                      📈 {t('strongMind.improvements') || 'Improvements for Next Time'}
-                    </h4>
-                    {filteredGratitudeWorkouts.filter(w => w.improvements).length === 0 ? (
-                      <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-                        <div className="text-6xl mb-4">📈</div>
-                        <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-                          {t('strongMind.noImprovements') || 'No improvement notes yet'}
-                        </h3>
-                        <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-                          {t('strongMind.noImprovementsDescription') || 'Track what you\'re working on improving in your workouts. Add improvement notes to see your progress over time.'}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredGratitudeWorkouts.filter(w => w.improvements).map((workout) => (
-                          <div key={`improvements-${workout.id}`} className="bg-uc-black/50 p-6 rounded-xl border border-orange-500/20 hover:border-orange-500/40 transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                              <div>
-                                <h5 className="text-lg font-semibold text-uc-text-light">
-                                  {new Date(workout.startTime).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  })}
-                                </h5>
-                                <div className="flex items-center gap-2 flex-wrap mt-1">
-                                  <p className="text-sm text-uc-text-muted">
-                                    {getTrainingTypeLabel(workout.type)}
-                                  </p>
-                                  {workout.sector && (
-                                    <>
-                                      <span className="text-uc-text-muted">•</span>
-                                      <p className="text-sm text-uc-text-muted">
-                                        📍 {workout.sector}
-                                      </p>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
-                              <p className="text-uc-text-light text-sm whitespace-pre-wrap">
-                                {workout.improvements}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+          {/* Injury Cycle Analysis */}
+          {isCycleTrackingEnabled && injuryCycle && (
+            <Section title={t('stats.injuriesByPhase') || 'Injuries by cycle phase'}>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <InjuryTile value={injuryCycle.totalInjuries} label={t('stats.totalInjuries') || 'Injuries'} />
+                {injuryCycle.totalInjuries > 0 ? (
+                  <>
+                    <InjuryTile value={injuryCycle.daysSinceLastInjury} label={t('stats.daysSinceLast')} />
+                    <InjuryTile value={Math.max(...injuriesByPhase)} label={t('stats.maxInPhase') || 'Max in one phase'} />
+                    <InjuryTile value={injuriesByPhase.filter((count) => count > 0).length} label={t('stats.phasesAffected') || 'Phases affected'} />
+                  </>
+                ) : (
+                  <p className="flex items-center text-sm text-uc-text-muted lg:col-span-3">
+                    {t('stats.noRecentInjuries') || 'No injuries recently'}
+                  </p>
                 )}
               </div>
-            )}
-          </div>
-        )}
-      </div>
+
+              {/* Cycle Phase Breakdown */}
+              {injuryCycle.totalInjuries > 0 && (
+                <>
+                  <Overline className="mt-5 mb-2">{t('stats.injuriesPerPhase') || 'Injuries in each cycle phase'}</Overline>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {phases.map((phase) => {
+                      const key = phaseTranslationKey[phase] as keyof typeof injuryCycle.injuriesByPhase;
+                      const isMost = phase === mostInjuriesPhase;
+                      return (
+                        <div
+                          key={phase}
+                          className={`flex flex-col items-center rounded-xl px-1 py-2.5 text-center ${phaseBandBg[phase]} ${
+                            isMost ? 'ring-2 ring-inset ring-uc-warning' : ''
+                          }`}
+                        >
+                          <span className="text-[22px] font-extrabold leading-7 text-uc-text uc-num">{injuryCycle.injuriesByPhase[key]}</span>
+                          <span className="mt-1 text-[11px] font-bold leading-tight text-uc-text break-words hyphens-auto">
+                            {t(`cycle.phases.${phaseTranslationKey[phase]}`)}
+                          </span>
+                          <span className="mt-0.5 text-[10px] font-semibold text-uc-text-muted uc-num">
+                            {t('stats.daysRange', { range: getPhaseDayRange(phase, cycleLength) })}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs text-uc-text-muted">
+                    {t('stats.injuryPhaseDescription') || 'Each phase shows the number of injuries in the specified cycle day range'}
+                  </p>
+
+                  {/* Most injuries phase notification */}
+                  {mostInjuriesPhase && injuryCycle.phaseWithMostInjuries && (
+                    <div className="mt-4 rounded-uc-card bg-uc-warning-bg p-4 text-uc-text">
+                      <div className="flex items-start gap-3">
+                        <Icon name="injury-risk" size={24} className="text-uc-warning" />
+                        <div className="min-w-0">
+                          <h3 className="font-extrabold">
+                            {t('stats.mostInjuriesPhaseTitle') || 'Most injuries in a phase'}:{' '}
+                            {t(`cycle.phases.${injuryCycle.phaseWithMostInjuries}`)}
+                          </h3>
+                          <p className="mt-1 text-sm">
+                            {(t('stats.mostInjuriesPhaseMessage') || 'Most injuries ({count}) occurred during cycle days {dayRange}.')
+                              .replace('{count}', injuryCycle.maxInjuriesInPhase.toString())
+                              .replace('{dayRange}', getPhaseDayRange(mostInjuriesPhase, cycleLength))}
+                          </p>
+                          <p className="mt-1 text-sm text-uc-text-muted">
+                            {t('stats.injuryPhaseNotificationHint') || 'Would you like to receive a push notification 1 day before this phase starts to be aware of the increased injury risk?'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant={notificationEnabled ? 'tonal' : 'primary'}
+                        className="mt-4 w-full"
+                        onClick={handleEnableInjuryNotification}
+                        isLoading={isEnablingNotification}
+                        disabled={notificationEnabled}
+                      >
+                        <Icon name={notificationEnabled ? 'success' : 'bell'} />
+                        {notificationEnabled
+                          ? (t('stats.injuryPhaseNotificationAlreadyEnabled') || 'Notification already enabled')
+                          : (t('stats.enableInjuryPhaseNotification') || 'Enable notification')}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </Section>
+          )}
+
+          {/* Gratitude & Improvements */}
+          {filteredGratitudeWorkouts.length > 0 && (
+            <Section
+              title={t('strongMind.gratitudeAndImprovements') || 'Gratitude & Improvements'}
+              subtitle={t('strongMind.gratitudeAndImprovementsDescription') || 'Reflect on your recent workouts and what you\'re grateful for, and what you want to improve.'}
+            >
+              <SegmentedControl
+                ariaLabel={t('strongMind.gratitudeAndImprovements') || 'Gratitude & Improvements'}
+                value={gratitudeFilter}
+                onChange={setGratitudeFilter}
+                options={[
+                  { value: 'all', label: t('common.all') || 'All' },
+                  { value: 'gratitude', label: t('strongMind.gratitude') || 'Gratitude' },
+                  { value: 'improvements', label: t('stats.improvementsShort') || 'Improvements' },
+                ]}
+              />
+              {gratitudeRows.length === 0 ? (
+                <EmptyState
+                  icon={<Icon name={gratitudeFilter === 'improvements' ? 'improve' : 'gratitude'} size={28} />}
+                  title={gratitudeFilter === 'improvements'
+                    ? (t('strongMind.noImprovements') || 'No improvement notes yet')
+                    : (t('strongMind.noGratitude') || 'No gratitude entries yet')}
+                  description={gratitudeFilter === 'improvements'
+                    ? (t('strongMind.noImprovementsDescription') || 'Track what you\'re working on improving in your workouts. Add improvement notes to see your progress over time.')
+                    : (t('strongMind.noGratitudeDescription') || 'Start adding gratitude notes to your workouts to reflect on what you\'re thankful for in your training journey.')}
+                />
+              ) : (
+                <ul className="mt-2 divide-y divide-uc-border">
+                  {gratitudeRows.map((row) => (
+                    <li key={row.id} className="flex gap-3 py-3">
+                      <span
+                        aria-label={row.kind === 'gratitude'
+                          ? (t('strongMind.gratefulFor') || 'Gratitude')
+                          : (t('strongMind.improvements') || 'Improvements')}
+                        role="img"
+                        className={`flex h-6 shrink-0 items-center ${row.kind === 'gratitude' ? 'text-uc-accent-text' : 'text-uc-primary'}`}
+                      >
+                        <Icon name={row.kind === 'gratitude' ? 'gratitude' : 'improve'} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="whitespace-pre-wrap text-[15px] font-semibold text-uc-text">{row.text}</p>
+                        <p className="mt-0.5 text-[13px] font-semibold text-uc-text-muted">
+                          {getTrainingTypeLabel(row.workout.type)}
+                          {row.workout.sector && <> · <Icon name="event-trip" size={14} className="inline -mt-0.5" /> {row.workout.sector}</>}
+                          {' · '}
+                          {formatShortDate(new Date(row.workout.startTime), true)}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          )}
+        </>
+      )}
 
       {/* Footer */}
-      <div className="p-4 border-t border-uc-purple/20 bg-uc-black/30">
-        <div className="flex items-center justify-between text-sm text-uc-text-muted">
-          <span>
-            {statsData && `${statsData.timeRange.start.toLocaleDateString()} - ${statsData.timeRange.end.toLocaleDateString()}`}
-          </span>
-          <span>
-            {t('stats.lastUpdated')}: {lastUpdated}
-          </span>
-        </div>
-      </div>
+      {statsData && (
+        <p className="pt-2 text-center text-[13px] font-semibold text-uc-text-muted uc-num">
+          {formatShortDate(statsData.timeRange.start)} – {formatShortDate(statsData.timeRange.end, true)}
+          {lastUpdated && (
+            <> · {t('stats.lastUpdated')} {formatShortDate(lastUpdated)}, {lastUpdated.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</>
+          )}
+        </p>
+      )}
     </div>
   );
 };
+
+const InjuryTile = ({ value, label }: { value: number; label: ReactNode }) => (
+  <div className="rounded-xl bg-uc-elevated p-3">
+    <p className="text-[22px] font-extrabold leading-7 text-uc-text uc-num">{value}</p>
+    <p className="text-[13px] font-semibold text-uc-text-muted">{label}</p>
+  </div>
+);

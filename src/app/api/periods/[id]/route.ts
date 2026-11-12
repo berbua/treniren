@@ -9,6 +9,7 @@ const UpdatePeriodSchema = z.object({
   startDate: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional(),
   endDate: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).nullable().optional(),
   notes: z.string().max(1000).trim().nullable().optional(),
+  flow: z.number().int().min(1).max(3).nullable().optional(),
 })
 
 // GET /api/periods/[id] - Get a specific period
@@ -91,7 +92,7 @@ export async function PUT(
       )
     }
 
-    const { startDate, endDate, notes } = validationResult.data
+    const { startDate, endDate, notes, flow } = validationResult.data
 
     // Calculate cycle day if startDate changed
     let cycleDay: number | undefined = period.cycleDay || undefined
@@ -123,6 +124,7 @@ export async function PUT(
         ...(startDate && { startDate: new Date(startDate) }),
         ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
         ...(notes !== undefined && { notes: notes || null }),
+        ...(flow !== undefined && { flow }),
         ...(cycleDay !== undefined && { cycleDay: cycleDay || null }),
       },
     })

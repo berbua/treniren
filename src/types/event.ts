@@ -1,6 +1,10 @@
 // Event types for tracking injuries, physio visits, competitions, trips, etc.
 
-export type EventType = 'INJURY' | 'PHYSIO' | 'COMPETITION' | 'TRIP' | 'OTHER'
+export type EventType = 'INJURY' | 'PHYSIO' | 'COMPETITION' | 'TRIP' | 'DELOAD' | 'OTHER'
+
+// Events that span several days; both store their range in tripStartDate / tripEndDate
+export const RANGE_EVENT_TYPES: EventType[] = ['TRIP', 'DELOAD']
+export const isRangeEventType = (type: EventType) => RANGE_EVENT_TYPES.includes(type)
 
 export type TripClimbingType = 'BOULDERING' | 'SPORT_CLIMBING'
 

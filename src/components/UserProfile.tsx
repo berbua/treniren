@@ -12,28 +12,34 @@ import { generateDummyData } from '@/lib/generate-dummy-data';
 import { useCsrfToken } from '@/hooks/useCsrfToken';
 import { toLocalDateString, toPeriodDateString } from '@/lib/date-utils';
 import { useToast } from '@/contexts/ToastContext';
+import { Button, Card, EmptyState, Icon, IconName, Input, Label, Overline, SegmentedControl, Select, Spinner, inputClasses } from '@/components/ui';
 
 interface UserProfileProps {
   onClose: () => void;
   onPhotoUpdate?: (photoUrl: string | null) => void;
+  initialTab?: 'profile' | 'cycle' | 'settings' | 'export';
 }
 
-export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
+type ProfileTab = 'profile' | 'cycle' | 'settings' | 'export';
+
+export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: UserProfileProps) => {
   const { data: session } = useSession();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { cycleSettings, isCycleTrackingEnabled, setCycleSettings, disableCycleTracking } = useCycle();
   const { isOnline, storageSize } = useOffline();
   const { settings: notificationSettings, updateSettings } = useNotifications();
   const { getToken } = useCsrfToken();
   const { showSuccess, showError } = useToast();
-  const [activeTab, setActiveTab] = useState<'profile' | 'cycle' | 'settings' | 'export'>('profile');
+  const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab);
   const [profileData, setProfileData] = useState({
     googleName: session?.user?.name || 'Training User',
-    displayName: session?.user?.name?.split(' ')[0] || 'Training User',
+    // Saved nickname; empty means the first word of the Google name is used
+    displayName: '',
     photoUrl: '',
     timezone: 'UTC',
     googleSheetsUrl: '',
   });
+  const [memberSince, setMemberSince] = useState<string | null>(null);
   const [cycleData, setCycleData] = useState({
     cycleLength: cycleSettings?.cycleLength || 28,
     lastPeriodDate: cycleSettings?.lastPeriodDate ? toPeriodDateString(cycleSettings.lastPeriodDate) : '',
@@ -52,6 +58,8 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   const [isPushSubscribed, setIsPushSubscribed] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isPushBlocked, setIsPushBlocked] = useState(false);
+  const [showDisableCycleConfirm, setShowDisableCycleConfirm] = useState(false);
   
   // Check if we're in development mode
   const isDevelopment = typeof window !== 'undefined' && 
@@ -90,6 +98,9 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
       }
     };
     checkPushSubscription();
+    if ('Notification' in window && Notification.permission === 'denied') {
+      setIsPushBlocked(true);
+    }
   }, []);
 
   const handleTogglePushNotifications = async () => {
@@ -112,12 +123,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
           const currentPermission = Notification.permission;
           
           if (currentPermission === 'denied') {
-            alert(
-              t('profile.pushNotificationsDenied') || 
-              'Push notifications are blocked in your browser. Please enable them in browser settings:\n\n' +
-              'Chrome: Click 🔒 icon → Notifications → Allow\n' +
-              'Firefox: Click 🔒 icon → Notifications → Allow'
-            );
+            setIsPushBlocked(true);
             setIsSubscribing(false);
             return;
           }
@@ -207,8 +213,9 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
             setProfileData(prev => ({
               ...prev,
               googleName: user.name || 'Training User',
-              displayName: user.name?.split(' ')[0] || 'Training User',
+              displayName: user.nickname || '',
             }))
+            setMemberSince(user.createdAt || null)
           }
         }
       } catch (error) {
@@ -275,6 +282,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
         },
         credentials: 'include',
         body: JSON.stringify({
+          nickname: profileData.displayName.trim(),
           timezone: profileData.timezone,
           googleSheetsUrl: profileData.googleSheetsUrl,
         })
@@ -282,6 +290,8 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
       if (!response.ok) {
         throw new Error(`Failed to save profile: ${response.status}`);
       }
+      // The user menu shows the display name; let it update without a reload
+      window.dispatchEvent(new CustomEvent('display-name-changed', { detail: profileData.displayName.trim() || null }));
       showSuccess(t('profile.saved') || 'Profile saved');
       onClose();
     } catch (error) {
@@ -304,10 +314,9 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
   };
 
   const handleCycleDisable = async () => {
-    if (confirm(t('profile.disableCycleConfirm'))) {
-      await disableCycleTracking();
-      setCycleData({ cycleLength: 28, lastPeriodDate: '' });
-    }
+    setShowDisableCycleConfirm(false);
+    await disableCycleTracking();
+    setCycleData((prev) => ({ ...prev, lastPeriodDate: '' }));
   };
 
 
@@ -369,764 +378,667 @@ export const UserProfile = ({ onClose, onPhotoUpdate }: UserProfileProps) => {
     }
   };
 
+  const handleExport = async (format: 'json' | 'csv') => {
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      await exportAllData(format);
+    } catch (error) {
+      setExportError(t('profile.exportError') || 'Failed to export data. Please try again.');
+      console.error('Export error:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const firstName = profileData.googleName.split(' ')[0];
+  const shownName = profileData.displayName.trim() || firstName;
+  const initial = (shownName || '?').charAt(0).toUpperCase();
+  const memberSinceLabel = memberSince
+    ? new Date(memberSince).toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB', { month: 'long', year: 'numeric' })
+    : null;
+  const pushSupported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+  // Slider spans 21–35 but never hides a saved length outside that range
+  const cycleMin = Math.min(21, cycleData.cycleLength || 21);
+  const cycleMax = Math.max(35, cycleData.cycleLength || 35);
+
+  const tabs: { value: ProfileTab; label: string }[] = [
+    { value: 'profile', label: t('profile.tabs.profile') || 'Profile' },
+    { value: 'cycle', label: t('profile.tabs.cycle') || 'Cycle' },
+    { value: 'settings', label: t('profile.tabs.settings') || 'Settings' },
+    { value: 'export', label: t('profile.tabs.export') || 'Export' },
+  ];
+
   return (
-    <div className="fixed inset-0 bg-uc-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-uc-dark-bg rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-uc-purple/20">
-          <h2 className="text-2xl font-bold text-uc-text-light">
-            👤 {t('profile.title') || 'User Profile'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-uc-text-muted hover:text-uc-text-light transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-uc-purple/20">
-            {[
-              { id: 'profile', label: t('profile.tabs.profile') || 'Profile', icon: '👤' },
-              { id: 'cycle', label: t('profile.tabs.cycle') || 'Cycle', icon: '🔄' },
-              { id: 'settings', label: t('profile.tabs.settings') || 'Settings', icon: '⚙️' },
-              { id: 'export', label: t('profile.tabs.export') || 'Export', icon: '📤' },
-            ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'profile' | 'cycle' | 'settings' | 'export')}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'text-uc-mustard border-b-2 border-uc-mustard bg-uc-purple/20'
-                  : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-dark-bg/50'
-              }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
-          {activeTab === 'profile' && (
-            <div className="space-y-6">
-              {/* Profile Photo */}
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 rounded-full bg-uc-black/50 border border-uc-purple/20 flex items-center justify-center overflow-hidden">
-                  {profileData.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={profileData.photoUrl}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-2xl text-uc-text-muted">👤</span>
-                  )}
-                </div>
-                <div>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-xl font-medium transition-colors shadow-lg"
-                  >
-                    📷 {t('profile.uploadPhoto') || 'Upload Photo'}
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                    <p className="text-xs text-uc-text-muted mt-1">{t('profile.photoHint') || 'JPG, PNG up to 5MB'}</p>
-                </div>
-              </div>
-
-              {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-1">
-                    Google Name
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.googleName}
-                    readOnly
-                    className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-muted cursor-not-allowed"
-                    placeholder="Google account name"
-                  />
-                  <p className="text-xs text-uc-text-muted mt-1">
-                    This is your full name from Google account
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-1">
-                    Display Name
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.displayName}
-                    readOnly
-                    className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-muted cursor-not-allowed"
-                    placeholder="First name"
-                  />
-                  <p className="text-xs text-uc-text-muted mt-1">
-                    This is your first name used in the app
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-1">
-                    {t('profile.timezone') || 'Timezone'}
-                  </label>
-                  <select
-                    value={profileData.timezone}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, timezone: e.target.value }))}
-                    className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-light focus:ring-2 focus:ring-uc-mustard focus:border-uc-mustard"
-                  >
-                    <option value="Europe/Warsaw">Europe/Warsaw</option>
-                    <option value="Europe/London">Europe/London</option>
-                    <option value="America/New_York">America/New_York</option>
-                    <option value="America/Los_Angeles">America/Los_Angeles</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Google Sheets Integration */}
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-1">
-                  {t('profile.googleSheetsUrl')}
-                </label>
-                <input
-                  type="url"
-                  value={profileData.googleSheetsUrl}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, googleSheetsUrl: e.target.value }))}
-                  placeholder="https://docs.google.com/spreadsheets/..."
-                  className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-light focus:ring-2 focus:ring-uc-mustard focus:border-uc-mustard"
-                />
-                <p className="text-xs text-uc-text-muted mt-1">{t('profile.googleSheetsHint')}</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'cycle' && (
-            <div className="space-y-6">
-              {/* Cycle Status */}
-              <div className={`p-4 rounded-xl ${
-                isCycleTrackingEnabled 
-                  ? 'bg-uc-success/20 border border-uc-success/30'
-                  : 'bg-uc-dark-bg/50 border border-uc-purple/20'
-              }`}>
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg">{isCycleTrackingEnabled ? '✅' : '❌'}</span>
-                  <span className={`font-medium ${
-                    isCycleTrackingEnabled 
-                      ? 'text-uc-success'
-                      : 'text-uc-text-muted'
-                  }`}>
-                    {isCycleTrackingEnabled ? t('profile.cycleEnabled') : t('profile.cycleDisabled')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Cycle Settings */}
-              {isCycleTrackingEnabled ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-uc-text-light mb-1">
-                        {t('profile.cycleLength')}
-                      </label>
-                      <input
-                        type="number"
-                        min="21"
-                        max="35"
-                        value={cycleData.cycleLength}
-                        onChange={(e) => setCycleData(prev => ({ ...prev, cycleLength: parseInt(e.target.value) }))}
-                        className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-light focus:ring-2 focus:ring-uc-mustard focus:border-uc-mustard"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-uc-text-light mb-1">
-                        {t('profile.lastPeriodDate')}
-                      </label>
-                      <input
-                        type="date"
-                        value={cycleData.lastPeriodDate}
-                        onChange={(e) => setCycleData(prev => ({ ...prev, lastPeriodDate: e.target.value }))}
-                        className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black/50 text-uc-text-light focus:ring-2 focus:ring-uc-mustard focus:border-uc-mustard"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={handleCycleSave}
-                      className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 py-2 rounded-xl font-medium transition-colors shadow-lg"
-                    >
-                      💾 {t('common.save')}
-                    </button>
-                    <button
-                      onClick={handleCycleDisable}
-                      className="bg-uc-alert hover:bg-uc-alert/90 text-uc-text-light px-4 py-2 rounded-xl font-medium transition-colors shadow-lg"
-                    >
-                      🚫 {t('profile.disableCycle')}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-4">🔄</div>
-                  <h3 className="text-lg font-medium text-uc-text-light mb-2">
-                    {t('profile.enableCycleTracking')}
-                  </h3>
-                  <p className="text-uc-text-muted mb-4">
-                    {t('profile.cycleTrackingDescription')}
-                  </p>
-                  <button
-                    onClick={() => setCycleData({ cycleLength: 28, lastPeriodDate: typeof window !== 'undefined' ? toLocalDateString() : '2024-01-15' })}
-                    className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-                  >
-                    ✅ {t('profile.enableCycle')}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'settings' && (
-            <div className="space-y-6">
-              {/* App Status */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-uc-text-light">
-                  📱 {t('profile.appStatus')}
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className={`w-3 h-3 rounded-full ${isOnline ? 'bg-uc-success' : 'bg-uc-mustard'}`}></span>
-                      <span className="font-medium text-uc-text-light">
-                        {t('profile.connectionStatus')}
-                      </span>
-                    </div>
-                    <p className="text-sm text-uc-text-muted">
-                      {isOnline ? t('profile.online') : t('profile.offline')}
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-lg">💾</span>
-                      <span className="font-medium text-uc-text-light">
-                        {t('profile.storageUsed')}
-                      </span>
-                    </div>
-                    <p className="text-sm text-uc-text-muted">
-                      {formatStorageSize(storageSize.used)} / {formatStorageSize(storageSize.total)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Privacy Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-uc-text-light">
-                  🔒 {t('profile.privacy')}
-                </h3>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <div>
-                      <p className="font-medium text-uc-text-light">
-                        {t('profile.dataCollection')}
-                      </p>
-                      <p className="text-sm text-uc-text-muted">
-                        {t('profile.dataCollectionDesc')}
-                      </p>
-                    </div>
-                    <div className="text-uc-success">
-                      ✅ {t('profile.enabled')}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <div>
-                      <p className="font-medium text-uc-text-light">
-                        {t('profile.cycleTracking')}
-                      </p>
-                      <p className="text-sm text-uc-text-muted">
-                        {t('profile.cycleTrackingDesc')}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className={isCycleTrackingEnabled ? 'text-uc-success' : 'text-uc-text-muted'}>
-                        {isCycleTrackingEnabled ? '✅' : '❌'} {isCycleTrackingEnabled ? t('profile.enabled') : t('profile.disabled')}
-                      </div>
-                      {!isCycleTrackingEnabled && (
-                        <button
-                          onClick={() => {
-                            // Reset consent choice to show consent modal again
-                            if (typeof window !== 'undefined') {
-                              localStorage.removeItem('cycle-consent-declined')
-                            }
-                            // Force page reload to trigger consent modal
-                            window.location.reload()
-                          }}
-                          className="px-3 py-1 text-xs bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light rounded-xl transition-colors"
-                        >
-                          {t('profile.setupCycle')}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Push Notifications */}
-                  <div className="p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="font-medium text-uc-text-light">
-                          {t('profile.pushNotifications') || 'Push Notifications'}
-                        </p>
-                        <p className="text-sm text-uc-text-muted">
-                          {t('profile.pushNotificationsDesc') || 'Receive notifications even when the app is closed'}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {(() => {
-                          const hasServiceWorker = 'serviceWorker' in navigator;
-                          // Note: PushManager is not in window, it's in serviceWorkerRegistration.pushManager
-                          // So we only check for serviceWorker support
-                          const isDisabled = isSubscribing || !hasServiceWorker;
-                          
-                          return (
-                            <>
-                              <button
-                                onClick={handleTogglePushNotifications}
-                                disabled={isDisabled}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                  isPushSubscribed
-                                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                                    : 'bg-uc-purple hover:bg-uc-purple/90 text-uc-text-light'
-                                } disabled:opacity-50 disabled:cursor-not-allowed`}
-                              >
-                                {isSubscribing
-                                  ? (t('profile.loading') || 'Loading...')
-                                  : isPushSubscribed
-                                  ? (t('profile.disable') || 'Disable')
-                                  : (t('profile.enable') || 'Enable')}
-                              </button>
-                              <span className={isPushSubscribed ? 'text-uc-success' : 'text-uc-text-muted'}>
-                                {isPushSubscribed ? '✅' : '❌'}
-                              </span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                    {!('serviceWorker' in navigator) && (
-                      <p className="text-xs text-uc-text-muted mt-2">
-                        {t('profile.pushNotSupported') || 'Push notifications are not supported in this browser'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <div>
-                      <p className="font-medium text-uc-text-light">
-                        {t('profile.latePeriodNotifications')}
-                      </p>
-                      <p className="text-sm text-uc-text-muted">
-                        {t('profile.latePeriodNotificationsDesc')}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={notificationSettings.latePeriodNotificationsEnabled}
-                        onChange={(e) => updateSettings({
-                          ...notificationSettings,
-                          latePeriodNotificationsEnabled: e.target.checked
-                        })}
-                        className="h-4 w-4 text-uc-purple focus:ring-uc-purple border-uc-purple/20 rounded"
-                      />
-                      <span className={notificationSettings.latePeriodNotificationsEnabled ? 'text-uc-success' : 'text-uc-text-muted'}>
-                        {notificationSettings.latePeriodNotificationsEnabled ? '✅' : '❌'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Workout Inactivity Notifications */}
-                  <div className="p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="font-medium text-uc-text-light">
-                          {t('profile.workoutInactivityNotifications') || 'Workout Inactivity Reminders'}
-                        </p>
-                        <p className="text-sm text-uc-text-muted">
-                          {t('profile.workoutInactivityNotificationsDesc') || 'Get reminded when you haven\'t logged a workout in a while'}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={notificationSettings.workoutInactivityEnabled || false}
-                          onChange={(e) => updateSettings({
-                            ...notificationSettings,
-                            workoutInactivityEnabled: e.target.checked
-                          })}
-                          className="h-4 w-4 text-uc-purple focus:ring-uc-purple border-uc-purple/20 rounded"
-                        />
-                        <span className={notificationSettings.workoutInactivityEnabled ? 'text-uc-success' : 'text-uc-text-muted'}>
-                          {notificationSettings.workoutInactivityEnabled ? '✅' : '❌'}
-                        </span>
-                      </div>
-                    </div>
-                    {notificationSettings.workoutInactivityEnabled && (
-                      <div className="mt-3 pt-3 border-t border-uc-purple/20">
-                        <label className="block text-sm font-medium text-uc-text-light mb-2">
-                          {t('profile.workoutInactivityDays') || 'Days of inactivity before reminder'}
-                        </label>
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="number"
-                            min="1"
-                            max="14"
-                            value={notificationSettings.workoutInactivityDays || 3}
-                            onChange={(e) => updateSettings({
-                              ...notificationSettings,
-                              workoutInactivityDays: parseInt(e.target.value) || 3
-                            })}
-                            className="w-20 bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light focus:outline-none focus:border-uc-purple"
-                          />
-                          <span className="text-sm text-uc-text-muted">
-                            {t('profile.days') || 'days'}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Test Reminder Settings */}
-                  <div className="p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="font-medium text-uc-text-light">
-                          {t('profile.testReminderNotifications') || 'Test Reminders'}
-                        </p>
-                        <p className="text-sm text-uc-text-muted">
-                          {t('profile.testReminderNotificationsDesc') || 'Get reminded when you haven\'t performed a fingerboard test in a while'}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={testReminderEnabled}
-                          onChange={(e) => {
-                            setTestReminderEnabled(e.target.checked);
-                            if (e.target.checked) {
-                              // Auto-save when enabled
-                              setTimeout(() => handleSaveTestReminder(), 100);
-                            } else {
-                              // Auto-save when disabled
-                              setTimeout(() => handleSaveTestReminder(), 100);
-                            }
-                          }}
-                          disabled={isLoadingTestReminder || isSavingTestReminder}
-                          className="h-4 w-4 text-uc-purple focus:ring-uc-purple border-uc-purple/20 rounded"
-                        />
-                        <span className={testReminderEnabled ? 'text-uc-success' : 'text-uc-text-muted'}>
-                          {testReminderEnabled ? '✅' : '❌'}
-                        </span>
-                      </div>
-                    </div>
-                    {testReminderEnabled && (
-                      <div className="mt-3 pt-3 border-t border-uc-purple/20">
-                        <label className="block text-sm font-medium text-uc-text-light mb-2">
-                          {t('profile.testReminderInterval') || 'Remind me to retest in'}
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            min="1"
-                            max="12"
-                            value={testReminderInterval}
-                            onChange={(e) => {
-                              const value = Math.max(1, Math.min(12, parseInt(e.target.value) || 1));
-                              setTestReminderInterval(value);
-                              setTimeout(() => handleSaveTestReminder(), 500);
-                            }}
-                            disabled={isSavingTestReminder}
-                            className="w-20 bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                          />
-                          <select
-                            value={testReminderUnit}
-                            onChange={(e) => {
-                              setTestReminderUnit(e.target.value as 'days' | 'weeks' | 'months');
-                              setTimeout(() => handleSaveTestReminder(), 100);
-                            }}
-                            disabled={isSavingTestReminder}
-                            className="bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                          >
-                            <option value="days">{t('profile.days') || 'days'}</option>
-                            <option value="weeks">{t('profile.weeks') || 'weeks'}</option>
-                            <option value="months">{t('profile.months') || 'months'}</option>
-                          </select>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          )}
-
-          {activeTab === 'export' && (
-            <div className="space-y-6">
-              {/* Export Data */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-uc-text-light">
-                  📤 {t('profile.dataExport')}
-                </h3>
-                
-                <p className="text-sm text-uc-text-muted">
-                  {t('profile.dataExportDescription') || 'Export all your training data, events, exercises, and more in JSON or CSV format.'}
-                </p>
-                
-                {exportError && (
-                  <div className="p-3 bg-uc-alert/20 border border-uc-alert/30 rounded-xl text-sm text-uc-alert">
-                    {exportError}
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <button
-                    onClick={async () => {
-                      setIsExporting(true);
-                      setExportError(null);
-                      try {
-                        await exportAllData('json');
-                      } catch (error) {
-                        setExportError(t('profile.exportError') || 'Failed to export data. Please try again.');
-                        console.error('Export error:', error);
-                      } finally {
-                        setIsExporting(false);
-                      }
-                    }}
-                    disabled={isExporting}
-                    className="p-3 bg-uc-purple/20 border border-uc-purple/30 rounded-xl hover:bg-uc-purple/30 text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="font-medium text-uc-text-light">
-                      {isExporting ? '⏳' : '📊'} {t('profile.exportJSON') || 'Export as JSON'}
-                    </div>
-                    <div className="text-sm text-uc-text-muted">
-                      {t('profile.exportJSONDesc') || 'Download all your data as JSON file'}
-                    </div>
-                  </button>
-                  
-                  <button
-                    onClick={async () => {
-                      setIsExporting(true);
-                      setExportError(null);
-                      try {
-                        await exportAllData('csv');
-                      } catch (error) {
-                        setExportError(t('profile.exportError') || 'Failed to export data. Please try again.');
-                        console.error('Export error:', error);
-                      } finally {
-                        setIsExporting(false);
-                      }
-                    }}
-                    disabled={isExporting}
-                    className="p-3 bg-uc-success/20 border border-uc-success/30 rounded-xl hover:bg-uc-success/30 text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="font-medium text-uc-text-light">
-                      {isExporting ? '⏳' : '📈'} {t('profile.exportCSV') || 'Export as CSV'}
-                    </div>
-                    <div className="text-sm text-uc-text-muted">
-                      {t('profile.exportCSVDesc') || 'Download all your data as CSV file'}
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Development Tools - Only visible in development */}
-              {isDevelopment && (
-                <div className="space-y-4 mt-8 pt-8 border-t border-uc-purple/20">
-                  <h3 className="text-lg font-medium text-uc-text-light">
-                    🛠️ Development Tools
-                  </h3>
-                  
-                  <p className="text-sm text-uc-text-muted">
-                    These tools are only available in development mode for testing purposes.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {/* Generate Dummy Data */}
-                    <button
-                      onClick={() => {
-                        const dummyData = generateDummyData({
-                          workoutsCount: 30,
-                          eventsCount: 10,
-                          exercisesCount: 15,
-                          routinesCount: 5,
-                          tagsCount: 8,
-                          plansCount: 12,
-                          fingerboardProtocolsCount: 3,
-                          fingerboardTestingProtocolsCount: 2,
-                          fingerboardTestResultsCount: 20,
-                        });
-                        
-                        const jsonString = JSON.stringify(dummyData, null, 2);
-                        const blob = new Blob([jsonString], { type: 'application/json' });
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `treniren-dummy-data-${new Date().toISOString().split('T')[0]}.json`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        URL.revokeObjectURL(url);
-                      }}
-                      className="p-3 bg-uc-purple/20 border border-uc-purple/30 rounded-xl hover:bg-uc-purple/30 text-left transition-colors"
-                    >
-                      <div className="font-medium text-uc-text-light">
-                        🎲 Generate Dummy Data
-                      </div>
-                      <div className="text-sm text-uc-text-muted">
-                        Create and download sample data for testing
-                      </div>
-                    </button>
-                    
-                    {/* Import Dummy Data to Database */}
-                    <button
-                      onClick={async () => {
-                        if (!confirm(t('workouts.errors.importDummyDataConfirm') || 'This will import dummy data directly into your database. Continue?')) {
-                          return;
-                        }
-                        
-                        setIsImporting(true);
-                        setExportError(null);
-                        
-                        try {
-                          const response = await fetch('/api/import/dummy-data', {
-                            method: 'POST',
-                          });
-                          
-                          const data = await response.json();
-                          
-                          if (!response.ok) {
-                            throw new Error(data.error || data.message || 'Failed to import dummy data');
-                          }
-                          
-                          alert(
-                            `Dummy data imported successfully!\n\n` +
-                            `- Tags: ${data.results.tags}\n` +
-                            `- Exercises: ${data.results.exercises}\n` +
-                            `- Workouts: ${data.results.workouts}\n` +
-                            `- Events: ${data.results.events}\n` +
-                            `- Routines: ${data.results.routines}\n` +
-                            `- Plans: ${data.results.plans}\n` +
-                            `- Fingerboard Protocols: ${data.results.fingerboardProtocols}\n` +
-                            `- Testing Protocols: ${data.results.fingerboardTestingProtocols}\n` +
-                            `- Test Results: ${data.results.fingerboardTestResults}\n\n` +
-                            `Refresh the page to see your new data!`
-                          );
-                          
-                          // Optionally refresh the page
-                          window.location.reload();
-                        } catch (error) {
-                          const errorMessage = error instanceof Error ? error.message : 'Failed to import dummy data';
-                          setExportError(errorMessage);
-                          console.error('Import error:', error);
-                        } finally {
-                          setIsImporting(false);
-                        }
-                      }}
-                      disabled={isImporting}
-                      className="p-3 bg-uc-mustard/20 border border-uc-mustard/30 rounded-xl hover:bg-uc-mustard/30 text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <div className="font-medium text-uc-text-light">
-                        {isImporting ? '⏳' : '🚀'} Import Dummy Data to DB
-                      </div>
-                      <div className="text-sm text-uc-text-muted">
-                        {isImporting ? 'Importing...' : 'Import data directly to database (one-time)'}
-                      </div>
-                    </button>
-                    
-                    {/* Import Data (Development) */}
-                    <div>
-                      <input
-                        ref={importFileInputRef}
-                        type="file"
-                        accept=".json"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setImportFile(file);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                      <button
-                        onClick={() => {
-                          if (importFile) {
-                            handleImportData(importFile);
-                          } else {
-                            importFileInputRef.current?.click();
-                          }
-                        }}
-                        disabled={isImporting}
-                        className="w-full p-3 bg-uc-mustard/20 border border-uc-mustard/30 rounded-xl hover:bg-uc-mustard/30 text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <div className="font-medium text-uc-text-light">
-                          {isImporting ? '⏳' : '📥'} {importFile ? 'Import Selected File' : 'Import Data (Dev)'}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {importFile ? importFile.name : 'Import JSON file (development only)'}
-                        </div>
-                      </button>
-                      {importFile && (
-                        <button
-                          onClick={() => {
-                            setImportFile(null);
-                            if (importFileInputRef.current) {
-                              importFileInputRef.current.value = '';
-                            }
-                          }}
-                          className="mt-2 text-xs text-uc-text-muted hover:text-uc-text-light"
-                        >
-                          Clear selection
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-end space-x-3 p-6 border-t border-slate-200 dark:border-slate-700">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-300"
-          >
-            {t('common.close')}
-          </button>
-          <button
-            onClick={handleProfileSave}
-            disabled={isSavingProfile}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            💾 {isSavingProfile ? t('common.saving') || 'Saving...' : t('common.save')}
-          </button>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Avatar photoUrl={profileData.photoUrl} initial={initial} className="size-14 text-2xl" />
+        <div className="min-w-0">
+          <h1 className="text-[22px] font-extrabold leading-tight text-uc-text truncate">{shownName}</h1>
+          <p className="text-[13px] text-uc-text-muted">
+            {memberSinceLabel
+              ? `${t('profile.memberSince') || 'Member since'} ${memberSinceLabel}`
+              : t('profile.description') || 'Manage your profile settings, cycle tracking, and app preferences'}
+          </p>
         </div>
       </div>
+
+      <SegmentedControl
+        options={tabs}
+        value={activeTab}
+        onChange={setActiveTab}
+        ariaLabel={t('profile.title') || 'User Profile'}
+        equalWidth={false}
+      />
+
+      {activeTab === 'profile' && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Avatar photoUrl={profileData.photoUrl} initial={initial} className="size-20 text-3xl" />
+            <div>
+              <Button variant="ghost" onClick={() => fileInputRef.current?.click()}>
+                <Icon name="user" /> {t('profile.uploadPhoto') || 'Upload Photo'}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+              <p className="mt-1.5 text-xs text-uc-text-muted">{t('profile.photoHint') || 'JPG, PNG up to 5MB'}</p>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="profile-google-name">{t('profile.googleName') || 'Google name'}</Label>
+            <Input
+              id="profile-google-name"
+              type="text"
+              value={profileData.googleName}
+              readOnly
+              className="border-dashed bg-transparent text-uc-text-muted cursor-not-allowed"
+            />
+            <p className="mt-1.5 text-xs text-uc-text-muted">{t('profile.googleNameHint') || 'Your full name from your Google account'}</p>
+          </div>
+
+          <div>
+            <Label htmlFor="profile-display-name">{t('profile.displayName') || 'Display name'}</Label>
+            <Input
+              id="profile-display-name"
+              type="text"
+              value={profileData.displayName}
+              onChange={(e) => setProfileData(prev => ({ ...prev, displayName: e.target.value }))}
+              placeholder={firstName}
+              maxLength={50}
+            />
+            <p className="mt-1.5 text-xs text-uc-text-muted">{t('profile.displayNameHint') || 'Your first name, used in the app'}</p>
+          </div>
+
+          <div>
+            <Label htmlFor="profile-timezone">{t('profile.timezone') || 'Timezone'}</Label>
+            <Select
+              id="profile-timezone"
+              value={profileData.timezone}
+              onChange={(e) => setProfileData(prev => ({ ...prev, timezone: e.target.value }))}
+            >
+              <option value="Europe/Warsaw">Europe/Warsaw</option>
+              <option value="Europe/London">Europe/London</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="America/Los_Angeles">America/Los_Angeles</option>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="profile-sheets-url">{t('profile.googleSheetsUrl')}</Label>
+            <Input
+              id="profile-sheets-url"
+              type="url"
+              value={profileData.googleSheetsUrl}
+              onChange={(e) => setProfileData(prev => ({ ...prev, googleSheetsUrl: e.target.value }))}
+              placeholder="https://docs.google.com/spreadsheets/..."
+            />
+            <p className="mt-1.5 text-xs text-uc-text-muted">{t('profile.googleSheetsHint')}</p>
+          </div>
+
+          <Button variant="accent" size="lg" className="w-full" onClick={handleProfileSave} isLoading={isSavingProfile}>
+            {isSavingProfile ? t('common.saving') || 'Saving...' : t('profile.saveProfile') || 'Save profile'}
+          </Button>
+        </div>
+      )}
+
+      {activeTab === 'cycle' && (
+        <div className="space-y-4">
+          <div
+            className={`flex items-center gap-3 rounded-uc-card px-4 py-3 font-bold ${
+              isCycleTrackingEnabled ? 'bg-uc-success-bg text-uc-text' : 'bg-uc-surface border border-uc-border text-uc-text-muted'
+            }`}
+          >
+            <Icon
+              name={isCycleTrackingEnabled ? 'success' : 'close'}
+              className={isCycleTrackingEnabled ? 'text-uc-success' : undefined}
+            />
+            {isCycleTrackingEnabled ? t('profile.cycleEnabled') : t('profile.cycleDisabled')}
+          </div>
+
+          {isCycleTrackingEnabled ? (
+            <>
+              <div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <Label htmlFor="profile-cycle-length" className="mb-0">{t('profile.cycleLength')}</Label>
+                  <span className="text-[15px] font-extrabold text-uc-text uc-num">
+                    {cycleData.cycleLength} {t('profile.days') || 'days'}
+                  </span>
+                </div>
+                <input
+                  id="profile-cycle-length"
+                  type="range"
+                  min={cycleMin}
+                  max={cycleMax}
+                  value={cycleData.cycleLength}
+                  onChange={(e) => setCycleData(prev => ({ ...prev, cycleLength: parseInt(e.target.value) }))}
+                  className="h-11 w-full cursor-pointer accent-uc-primary"
+                />
+                <div className="flex justify-between text-xs text-uc-text-muted uc-num">
+                  <span>{cycleMin}</span>
+                  <span>{cycleMax}</span>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="profile-last-period">{t('profile.lastPeriodDate')}</Label>
+                <Input
+                  id="profile-last-period"
+                  type="date"
+                  value={cycleData.lastPeriodDate}
+                  onChange={(e) => setCycleData(prev => ({ ...prev, lastPeriodDate: e.target.value }))}
+                />
+              </div>
+
+              <Button variant="accent" size="lg" className="w-full" onClick={handleCycleSave}>
+                {t('common.save')}
+              </Button>
+
+              {showDisableCycleConfirm ? (
+                <Card tone="elevated" role="alertdialog" aria-labelledby="profile-disable-cycle-title">
+                  <h3 id="profile-disable-cycle-title" className="text-lg font-bold text-uc-text">
+                    {t('profile.disableCycleTitle') || 'Disable cycle tracking?'}
+                  </h3>
+                  <p className="mt-1 text-sm text-uc-text-muted">{t('profile.disableCycleConfirm')}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button variant="ghost" className="flex-1 basis-32" onClick={() => setShowDisableCycleConfirm(false)}>
+                      {t('profile.keepOn') || 'Keep on'}
+                    </Button>
+                    <Button variant="destructive" className="flex-1 basis-32" onClick={handleCycleDisable}>
+                      {t('profile.disable') || 'Disable'}
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <Button variant="ghost" className="w-full text-uc-error" onClick={() => setShowDisableCycleConfirm(true)}>
+                  {t('profile.disableCycle')}
+                </Button>
+              )}
+            </>
+          ) : (
+            <div className="rounded-uc-card border border-dashed border-uc-border">
+              <EmptyState
+                icon={<Icon name="cycle" size={28} />}
+                title={t('profile.enableCycleTracking')}
+                description={t('profile.cycleTrackingDescription')}
+                action={
+                  <Button
+                    variant="accent"
+                    onClick={() => setCycleData({ cycleLength: 28, lastPeriodDate: typeof window !== 'undefined' ? toLocalDateString() : '2024-01-15' })}
+                  >
+                    {t('profile.enableCycle')}
+                  </Button>
+                }
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'settings' && (
+        <div className="space-y-5">
+          <section className="space-y-2">
+            <Overline>{t('profile.appStatus')}</Overline>
+            <SettingsGroup>
+              <SettingsRow label={t('profile.connectionStatus')}>
+                <span className="flex items-center gap-2 font-bold text-uc-text">
+                  <span aria-hidden className={`size-2 rounded-full ${isOnline ? 'bg-uc-success' : 'bg-uc-warning'}`} />
+                  {isOnline ? t('profile.online') : t('profile.offline')}
+                </span>
+              </SettingsRow>
+              <SettingsRow label={t('profile.storageUsed')}>
+                <span className="font-bold text-uc-text uc-num">
+                  {formatStorageSize(storageSize.used)} / {formatStorageSize(storageSize.total)}
+                </span>
+              </SettingsRow>
+            </SettingsGroup>
+          </section>
+
+          <section className="space-y-2">
+            <Overline>{t('profile.privacy')}</Overline>
+            <SettingsGroup>
+              <SettingsRow label={t('profile.dataCollection')} description={t('profile.dataCollectionDesc')}>
+                <span className="text-sm font-bold text-uc-success">{t('profile.enabled')}</span>
+              </SettingsRow>
+              <SettingsRow label={t('profile.cycleTracking')} description={t('profile.cycleTrackingDesc')}>
+                {isCycleTrackingEnabled ? (
+                  <span className="text-sm font-bold text-uc-success">{t('profile.enabled')}</span>
+                ) : (
+                  <Button
+                    variant="tonal"
+                    onClick={() => {
+                      // Reset consent choice to show consent modal again
+                      if (typeof window !== 'undefined') {
+                        localStorage.removeItem('cycle-consent-declined')
+                      }
+                      // Force page reload to trigger consent modal
+                      window.location.reload()
+                    }}
+                  >
+                    {t('profile.setupCycle')}
+                  </Button>
+                )}
+              </SettingsRow>
+            </SettingsGroup>
+          </section>
+
+          <section className="space-y-2">
+            <Overline>{t('profile.notificationsSection') || 'Notifications'}</Overline>
+            <SettingsGroup>
+              <SettingsRow
+                label={t('profile.pushNotifications') || 'Push Notifications'}
+                description={
+                  pushSupported
+                    ? t('profile.pushNotificationsDesc') || 'Receive notifications even when the app is closed'
+                    : t('profile.pushNotSupported') || 'Push notifications are not supported in this browser'
+                }
+                htmlFor="profile-push"
+              >
+                <Checkbox
+                  id="profile-push"
+                  checked={isPushSubscribed}
+                  onChange={handleTogglePushNotifications}
+                  disabled={isSubscribing || !pushSupported}
+                  busy={isSubscribing}
+                />
+              </SettingsRow>
+
+              <SettingsRow
+                label={t('profile.latePeriodNotifications')}
+                description={t('profile.latePeriodNotificationsDesc')}
+                htmlFor="profile-late-period"
+              >
+                <Checkbox
+                  id="profile-late-period"
+                  checked={notificationSettings.latePeriodNotificationsEnabled}
+                  onChange={(e) => updateSettings({
+                    ...notificationSettings,
+                    latePeriodNotificationsEnabled: e.target.checked
+                  })}
+                />
+              </SettingsRow>
+
+              <SettingsRow
+                label={t('profile.workoutInactivityNotifications') || 'Workout Inactivity Reminders'}
+                description={t('profile.workoutInactivityNotificationsDesc') || 'Get reminded when you haven\'t logged a workout in a while'}
+                htmlFor="profile-inactivity"
+              >
+                <Checkbox
+                  id="profile-inactivity"
+                  checked={notificationSettings.workoutInactivityEnabled || false}
+                  onChange={(e) => updateSettings({
+                    ...notificationSettings,
+                    workoutInactivityEnabled: e.target.checked
+                  })}
+                />
+              </SettingsRow>
+              {notificationSettings.workoutInactivityEnabled && (
+                <SettingsRow label={t('profile.workoutInactivityDays') || 'Days of inactivity before reminder'} htmlFor="profile-inactivity-days">
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="profile-inactivity-days"
+                      type="number"
+                      min="1"
+                      max="14"
+                      value={notificationSettings.workoutInactivityDays || 3}
+                      onChange={(e) => updateSettings({
+                        ...notificationSettings,
+                        workoutInactivityDays: parseInt(e.target.value) || 3
+                      })}
+                      className={inputClasses('w-16 text-center uc-num')}
+                    />
+                    <span className="text-sm text-uc-text-muted">{t('profile.days') || 'days'}</span>
+                  </div>
+                </SettingsRow>
+              )}
+
+              <SettingsRow
+                label={t('profile.testReminderNotifications') || 'Test Reminders'}
+                description={t('profile.testReminderNotificationsDesc') || 'Get reminded when you haven\'t performed a fingerboard test in a while'}
+                htmlFor="profile-test-reminder"
+              >
+                <Checkbox
+                  id="profile-test-reminder"
+                  checked={testReminderEnabled}
+                  onChange={(e) => {
+                    setTestReminderEnabled(e.target.checked);
+                    // Auto-save on enable and disable
+                    setTimeout(() => handleSaveTestReminder(), 100);
+                  }}
+                  disabled={isLoadingTestReminder || isSavingTestReminder}
+                />
+              </SettingsRow>
+              {testReminderEnabled && (
+                <SettingsRow label={t('profile.testReminderInterval') || 'Remind me to retest in'} htmlFor="profile-test-interval">
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="profile-test-interval"
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={testReminderInterval}
+                      onChange={(e) => {
+                        const value = Math.max(1, Math.min(12, parseInt(e.target.value) || 1));
+                        setTestReminderInterval(value);
+                        setTimeout(() => handleSaveTestReminder(), 500);
+                      }}
+                      disabled={isSavingTestReminder}
+                      className={inputClasses('w-16 text-center uc-num')}
+                    />
+                    <Select
+                      aria-label={t('profile.testReminderInterval') || 'Remind me to retest in'}
+                      value={testReminderUnit}
+                      onChange={(e) => {
+                        setTestReminderUnit(e.target.value as 'days' | 'weeks' | 'months');
+                        setTimeout(() => handleSaveTestReminder(), 100);
+                      }}
+                      disabled={isSavingTestReminder}
+                    >
+                      <option value="days">{t('profile.days') || 'days'}</option>
+                      <option value="weeks">{t('profile.weeks') || 'weeks'}</option>
+                      <option value="months">{t('profile.months') || 'months'}</option>
+                    </Select>
+                  </div>
+                </SettingsRow>
+              )}
+            </SettingsGroup>
+
+            {isPushBlocked && (
+              <div role="alert" className="flex gap-3 rounded-uc-card bg-uc-warning-bg px-4 py-3 text-sm text-uc-text">
+                <Icon name="warning" className="mt-px text-uc-warning" />
+                <p>
+                  <strong>{t('profile.pushBlockedTitle') || 'Notifications blocked.'}</strong>{' '}
+                  {t('profile.pushNotificationsDenied') || 'Push notifications are blocked in your browser. Please enable them in browser settings.'}
+                </p>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      {activeTab === 'export' && (
+        <div className="space-y-3">
+          <p className="text-[15px] text-uc-text-muted">
+            {t('profile.dataExportDescription') || 'Export all your training data, events, exercises, and more in JSON or CSV format.'}
+          </p>
+
+          <ActionRow
+            icon="download"
+            busy={isExporting}
+            title={t('profile.exportJSON') || 'Export as JSON'}
+            description={t('profile.exportJSONDesc') || 'Download all your data as JSON file'}
+            onClick={() => handleExport('json')}
+            disabled={isExporting}
+          />
+          <ActionRow
+            icon="download"
+            busy={isExporting}
+            title={t('profile.exportCSV') || 'Export as CSV'}
+            description={t('profile.exportCSVDesc') || 'Download all your data as CSV file'}
+            onClick={() => handleExport('csv')}
+            disabled={isExporting}
+          />
+
+          {exportError && (
+            <div role="alert" className="rounded-uc-card bg-uc-error-bg px-4 py-3 text-sm font-semibold text-uc-text">
+              {exportError}
+            </div>
+          )}
+
+          {/* Development Tools - Only visible in development */}
+          {isDevelopment && (
+            <div className="space-y-3 mt-6 pt-6 border-t border-uc-border">
+              <Overline className="flex items-center gap-1.5"><Icon name="settings" size={14} /> Development Tools</Overline>
+              <p className="text-sm text-uc-text-muted">
+                These tools are only available in development mode for testing purposes.
+              </p>
+
+              {/* Generate Dummy Data */}
+              <ActionRow
+                icon="plus"
+                title="Generate Dummy Data"
+                description="Create and download sample data for testing"
+                onClick={() => {
+                  const dummyData = generateDummyData({
+                    workoutsCount: 30,
+                    eventsCount: 10,
+                    exercisesCount: 15,
+                    routinesCount: 5,
+                    tagsCount: 8,
+                    plansCount: 12,
+                    fingerboardProtocolsCount: 3,
+                    fingerboardTestingProtocolsCount: 2,
+                    fingerboardTestResultsCount: 20,
+                  });
+
+                  const jsonString = JSON.stringify(dummyData, null, 2);
+                  const blob = new Blob([jsonString], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `treniren-dummy-data-${new Date().toISOString().split('T')[0]}.json`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(url);
+                }}
+              />
+
+              {/* Import Dummy Data to Database */}
+              <ActionRow
+                icon="install"
+                busy={isImporting}
+                title="Import Dummy Data to DB"
+                description={isImporting ? 'Importing...' : 'Import data directly to database (one-time)'}
+                disabled={isImporting}
+                onClick={async () => {
+                  if (!confirm(t('workouts.errors.importDummyDataConfirm') || 'This will import dummy data directly into your database. Continue?')) {
+                    return;
+                  }
+
+                  setIsImporting(true);
+                  setExportError(null);
+
+                  try {
+                    const response = await fetch('/api/import/dummy-data', {
+                      method: 'POST',
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                      throw new Error(data.error || data.message || 'Failed to import dummy data');
+                    }
+
+                    alert(
+                      `Dummy data imported successfully!\n\n` +
+                      `- Tags: ${data.results.tags}\n` +
+                      `- Exercises: ${data.results.exercises}\n` +
+                      `- Workouts: ${data.results.workouts}\n` +
+                      `- Events: ${data.results.events}\n` +
+                      `- Routines: ${data.results.routines}\n` +
+                      `- Plans: ${data.results.plans}\n` +
+                      `- Fingerboard Protocols: ${data.results.fingerboardProtocols}\n` +
+                      `- Testing Protocols: ${data.results.fingerboardTestingProtocols}\n` +
+                      `- Test Results: ${data.results.fingerboardTestResults}\n\n` +
+                      `Refresh the page to see your new data!`
+                    );
+
+                    // Optionally refresh the page
+                    window.location.reload();
+                  } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to import dummy data';
+                    setExportError(errorMessage);
+                    console.error('Import error:', error);
+                  } finally {
+                    setIsImporting(false);
+                  }
+                }}
+              />
+
+              {/* Import Data (Development) */}
+              <div>
+                <input
+                  ref={importFileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImportFile(file);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <ActionRow
+                  icon="download"
+                  busy={isImporting}
+                  title={importFile ? 'Import Selected File' : 'Import Data (Dev)'}
+                  description={importFile ? importFile.name : 'Import JSON file (development only)'}
+                  disabled={isImporting}
+                  onClick={() => {
+                    if (importFile) {
+                      handleImportData(importFile);
+                    } else {
+                      importFileInputRef.current?.click();
+                    }
+                  }}
+                />
+                {importFile && (
+                  <Button
+                    variant="ghost"
+                    className="mt-2 border-0 text-uc-text-muted"
+                    onClick={() => {
+                      setImportFile(null);
+                      if (importFileInputRef.current) {
+                        importFileInputRef.current.value = '';
+                      }
+                    }}
+                  >
+                    Clear selection
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
+
+function Avatar({ photoUrl, initial, className }: { photoUrl: string; initial: string; className: string }) {
+  return (
+    <div
+      className={`shrink-0 overflow-hidden rounded-full bg-uc-primary text-uc-on-primary font-extrabold flex items-center justify-center ${className}`}
+    >
+      {photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photoUrl} alt="Profile" className="size-full object-cover" />
+      ) : (
+        <span aria-hidden>{initial}</span>
+      )}
+    </div>
+  );
+}
+
+function SettingsGroup({ children }: { children: React.ReactNode }) {
+  return <Card padded={false} className="divide-y divide-uc-border px-4">{children}</Card>;
+}
+
+function SettingsRow({
+  label,
+  description,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  description?: string;
+  htmlFor?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-14 items-center justify-between gap-3 py-2.5">
+      <div className="min-w-0">
+        <label htmlFor={htmlFor} className="block text-[15px] font-bold text-uc-text">{label}</label>
+        {description && <p className="text-xs text-uc-text-muted">{description}</p>}
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  );
+}
+
+function Checkbox({
+  busy,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { busy?: boolean }) {
+  return (
+    <span className="flex size-11 items-center justify-center">
+      {busy ? (
+        <span aria-hidden className="size-5 animate-spin rounded-full border-2 border-uc-primary border-r-transparent" />
+      ) : (
+        <input type="checkbox" className="size-6 cursor-pointer accent-uc-primary disabled:cursor-not-allowed" {...props} />
+      )}
+    </span>
+  );
+}
+
+function ActionRow({
+  icon,
+  busy = false,
+  title,
+  description,
+  onClick,
+  disabled,
+}: {
+  icon: IconName;
+  /** Spinner instead of the icon while the action runs. */
+  busy?: boolean;
+  title: string;
+  description: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full min-h-16 items-center gap-3 rounded-uc-card border border-uc-border bg-uc-surface px-4 py-3 text-left transition-colors hover:bg-uc-elevated disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <span aria-hidden className="flex size-6 shrink-0 items-center justify-center text-uc-primary">
+        {busy ? <Spinner /> : <Icon name={icon} />}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-bold text-uc-text">{title}</span>
+        <span className="block text-xs text-uc-text-muted">{description}</span>
+      </span>
+    </button>
+  );
+}

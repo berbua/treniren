@@ -1,5 +1,6 @@
 {
   "common": {
+    "back": "Back",
     "loading": "Loading...",
     "error": "Error",
     "errors": {
@@ -23,9 +24,11 @@
     "hide": "Hide",
     "showDetails": "Show Details",
     "today": "Today",
+    "yesterday": "Yesterday",
     "week": "Week",
     "month": "Month",
     "previous": "Previous",
+    "pageRange": "{{from}}–{{to}} of {{total}}",
     "next": "Next",
     "close": "Close",
     "online": "Online",
@@ -57,7 +60,8 @@
     "dayAfterTiredness": "Day after tiredness:",
     "nextPeriod": "Next period:",
     "nextOvulation": "Next ovulation:",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "undo": "Undo"
   },
   "auth": {
     "signIn": "Sign In",
@@ -92,7 +96,34 @@
     "backToSignIn": "Back to sign in",
     "sendResetEmail": "Send reset email",
     "forgotPasswordDescription": "Enter your email address and we'll send you a link to reset your password.",
-    "resetPasswordDescription": "Enter your new password below."
+    "resetPasswordDescription": "Enter your new password below.",
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "generic": "An error occurred. Please try again.",
+      "googleFailed": "Failed to sign in with Google",
+      "passwordsMismatch": "Passwords do not match",
+      "passwordWeak": "Password must be at least 8 characters long and contain uppercase, lowercase, and number",
+      "signInAfterSignupFailed": "Account created but failed to sign in. Please try signing in manually.",
+      "createAccountFailed": "Failed to create account",
+      "resetEmailFailed": "Failed to send reset email",
+      "resetFailed": "Failed to reset password",
+      "invalidToken": "Invalid reset token"
+    },
+    "passwordRules": {
+      "title": "Password requirements",
+      "minLength": "At least 8 characters",
+      "uppercase": "One uppercase letter",
+      "lowercase": "One lowercase letter",
+      "number": "One number"
+    },
+    "resetEmailSent": "Password reset email sent! Check your inbox.",
+    "resetSuccess": "Password reset successfully! You can now sign in with your new password.",
+    "invalidLinkTitle": "This reset link isn’t valid",
+    "invalidLinkMessage": "Invalid or missing reset token. Please request a new password reset.",
+    "requestNewLink": "Request new reset link",
+    "signInAgain": "Sign in again",
+    "expiredLinkTitle": "This link has expired",
+    "expiredLinkMessage": "Reset links work once and for 1 hour. Request a new one."
   },
   "messages": {
     "title": "Messages",
@@ -105,7 +136,10 @@
     "markRead": "Mark read",
     "message": "message",
     "messages_plural": "messages",
-    "unread": "unread"
+    "unread": "unread",
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low"
   },
   "nav": {
     "home": "Home",
@@ -118,9 +152,29 @@
     "exercises": "Exercises",
     "routines": "Routines",
     "fingerboardProtocols": "Fingerboard",
-    "cycle": "Cycle"
+    "cycle": "Cycle",
+    "events": "Events",
+    "fingerboardTesting": "Fingerboard testing",
+    "mainNavigation": "Main navigation",
+    "today": "Today",
+    "stats": "Stats",
+    "cycleDayOf": "Day {{day}} of {{length}}",
+    "log": "Log"
   },
   "stats": {
+    "deloadWeeksNote": "Deload weeks — not counted in the average",
+    "weeklyVolume": "Weekly volume",
+    "weeklyVolumeSubtitle": "TR points per week: TR1 = 1 … TR5 = 5",
+    "volumeTotal": "Total",
+    "trPoints": "TR points",
+    "volumeAvgPerWeek": "Avg per week",
+    "noTrValues": "No workouts with a TR value in this range",
+    "sessionsCount": "{{count}} sessions",
+    "week": "Week",
+    "fingerboardTests": "Fingerboard tests",
+    "fingerboardTestsSubtitle": "All tests · last on {{date}}",
+    "testProtocol": "Test protocol",
+    "openTestProtocol": "Open test protocol →",
     "title": "Statistics",
     "timeframe": "Timeframe",
     "1week": "1 Week",
@@ -163,14 +217,33 @@
     "mostInjuriesPhaseTitle": "Most injuries in a phase",
     "mostInjuriesPhaseMessage": "Most injuries ({count}) occurred during cycle days {dayRange}.",
     "injuryPhaseNotificationHint": "Would you like to receive a push notification 1 day before this phase starts to be aware of the increased injury risk?",
-    "enableInjuryPhaseNotification": "🔔 Enable notification",
+    "enableInjuryPhaseNotification": "Enable notification",
     "injuryPhaseNotificationEnabled": "Notification enabled! You will receive a reminder 1 day before this phase starts.",
     "injuryPhaseNotificationError": "Failed to enable notification. Please try again.",
-    "injuryPhaseNotificationAlreadyEnabled": "✓ Notification already enabled",
+    "injuryPhaseNotificationAlreadyEnabled": "Notification already enabled",
     "logFirstWorkout": "Log Your First Workout",
     "noData": "No statistics available yet",
     "noDataDescription": "Start logging workouts to see detailed statistics about your training progress, volume, and performance over time.",
-    "daysRange": "Days {{range}}"
+    "daysRange": "Days {{range}}",
+    "thisMonth": "This month",
+    "showFrequencyPer": "Show frequency per",
+    "injuriesByPhase": "Injuries by cycle phase",
+    "totalInjuries": "Injuries",
+    "maxInPhase": "Max in one phase",
+    "phasesAffected": "Phases affected",
+    "noRecentInjuries": "No injuries recently",
+    "injuriesPerPhase": "Injuries in each cycle phase",
+    "improvementsShort": "Improvements",
+    "short": {
+      "1week": "1W",
+      "1month": "1M",
+      "3months": "3M",
+      "6months": "6M",
+      "1year": "1Y",
+      "allTime": "All",
+      "4weeks": "4W"
+    },
+    "4weeks": "4 Weeks"
   },
   "app": {
     "title": "Unicorn Climb - Train with your unicorn flow",
@@ -220,6 +293,25 @@
     "notesPlaceholder": "Add any notes about your workout...",
     "sector": "Sector",
     "sectorPlaceholder": "Enter the climbing sector or area...",
+    "routeName": "Route name",
+    "routeNamePlaceholder": "e.g. Pochylec, 6c+",
+    "climbName": "Climb name",
+    "wallAngle": "Wall angle",
+    "wallAngles": {
+      "SLAB": "Slab",
+      "VERTICAL": "Vertical",
+      "SLIGHT_OVERHANG": "Slight overhang",
+      "STRONG_OVERHANG": "Steep overhang",
+      "OVERHANG": "Overhang",
+      "ROOF": "Roof",
+      "COMPSTYLE": "Comp style"
+    },
+    "climbStyle": "Style",
+    "climbStyles": {
+      "POWERFUL": "Powerful",
+      "TECHNICAL": "Technical",
+      "COMPSTYLE": "Comp style"
+    },
     "mentalPracticeType": "Practice Type",
     "mentalPracticeTypePlaceholder": "Select the type of mental practice...",
     "mentalPracticeTypes": {
@@ -345,7 +437,7 @@
       "improvements": "Note 3 things you want to improve or do better next time. This helps you learn and grow from each session.",
       "sector": "The climbing area or location where you trained (e.g., 'Fontainebleau - Bas Cuvier'). Useful for tracking where you climb.",
       "mentalPracticeType": "Type of mental practice: Meditation (mindfulness), Reflecting (self-reflection), Other (custom practice).",
-      "timeOfDay": "When you did the mental practice: Morning (🌅), Midday (☀️), Evening (🌙). Track patterns in your practice timing.",
+      "timeOfDay": "When you did the mental practice: Morning, Midday, Evening. Track patterns in your practice timing.",
       "showCountdown": "Enable this to show a countdown timer for this trip on the homepage. Great for building excitement before a climbing trip!",
       "injuryPhaseWarning": "This phase has the highest number of injuries in your history. Be extra cautious and consider adjusting training intensity during this phase."
     },
@@ -358,12 +450,26 @@
     "saveWorkout": "Save Workout",
     "updateWorkout": "Update Workout",
     "incompleteData": {
-      "title": "Incomplete Data",
+      "title": "Some sets are empty",
       "message": "Some exercises have missing weights or reps. Do you want to save the workout with incomplete data?",
       "incompleteItems": "Incomplete items:",
       "andMore": "...and {{count}} more",
-      "goBack": "Go Back & Fill",
-      "saveAnyway": "Save Anyway"
+      "goBack": "Go back & fill",
+      "saveAnyway": "Save anyway",
+      "setsIn": "{{sets}} in {{exercise}}",
+      "sets": {
+        "one": "{{count}} set",
+        "other": "{{count}} sets"
+      },
+      "hangs": {
+        "one": "{{count}} hang",
+        "other": "{{count}} hangs"
+      },
+      "and": "and",
+      "summary": {
+        "one": "{{items}} has no values. Empty rows won't count in your stats.",
+        "other": "{{items}} have no values. Empty rows won't count in your stats."
+      }
     },
     "errors": {
       "workoutTypeRequired": "Please select a workout type",
@@ -393,7 +499,7 @@
       "importDummyDataConfirm": "This will import dummy data directly into your database. Continue?"
     },
     "placeholders": {
-      "searchExercises": "🔍 Search exercises...",
+      "searchExercises": "Search exercises...",
       "reps": "Reps",
       "sets": "Sets",
       "weight": "Weight",
@@ -503,7 +609,28 @@
     },
     "addFirstWorkout": "Add Your First Workout",
     "eventDeleted": "Event deleted successfully",
-    "useQuickLog": "or use Quick Log for fast entry"
+    "useQuickLog": "or use Quick Log for fast entry",
+    "exercisesCount": {
+      "one": "{{count}} exercise",
+      "other": "{{count}} exercises"
+    },
+    "setErrors": {
+      "enterReps": {
+        "one": "Enter reps for set {{sets}}",
+        "other": "Enter reps for sets {{sets}}"
+      }
+    },
+    "saveSession": "Save session",
+    "updateSession": "Update session",
+    "hangsCount": {
+      "one": "{{count}} hang",
+      "other": "{{count}} hangs"
+    },
+    "climbsCount": {
+      "one": "{{count}} climb",
+      "other": "{{count}} climbs"
+    },
+    "deletedUndo": "Workout deleted"
   },
   "exercises": {
     "title": "Exercise Library",
@@ -521,7 +648,81 @@
     "noExercisesFoundDescription": "Try adjusting your search or filters to find what you're looking for.",
     "noWorkoutData": "No workout data yet",
     "noWorkoutDataDescription": "Start logging workouts with this exercise to see your progression over time. Track your sets, reps, and weights to visualize your strength gains.",
-    "orUseQuickAdd": "or use Quick Add above for common exercises"
+    "orUseQuickAdd": "or use Quick Add above for common exercises",
+    "gridView": "Grid view",
+    "listView": "List view",
+    "categories": "Categories",
+    "quickAdd": "Quick add",
+    "quickAddCount": "{{count}} common exercises",
+    "quickAddGroups": {
+      "pull": "Pull",
+      "push": "Push",
+      "lower": "Lower body",
+      "core": "Core",
+      "climbing": "Climbing specific"
+    },
+    "matching": "matching “{{query}}”",
+    "inCategory": "in {{category}}",
+    "usedTimes": "Used {{count}}×",
+    "lastShort": "Last {{date}}",
+    "lastSetShort": "Last set {{value}}",
+    "viewProgress": "View progress",
+    "form": {
+      "newTitle": "New exercise",
+      "editTitle": "Edit exercise",
+      "name": "Name",
+      "category": "Category",
+      "unit": "Unit",
+      "save": "Save exercise",
+      "nameRequired": "Exercise name is required"
+    },
+    "detail": {
+      "back": "Back to Exercise Library",
+      "notFound": "Exercise not found",
+      "timesUsed": "Times used",
+      "lastUsed": "Last used",
+      "lastSet": "Last set",
+      "status": "Status",
+      "statusTracking": "Tracking",
+      "statusImproving": "Improving",
+      "statusNew": "New",
+      "personalRecords": "Personal records",
+      "maxWeight": "Max weight",
+      "est1RM": "Est. 1RM",
+      "maxVolume": "Max volume",
+      "maxReps": "Max reps",
+      "progression": "Progression",
+      "metric": "Metric",
+      "timeframe": "Timeframe",
+      "chartType": "Chart type",
+      "totalVolume": "Total volume",
+      "averageReps": "Average reps",
+      "line": "Line",
+      "area": "Area",
+      "bar": "Bar",
+      "timeframes": {
+        "1week": "1 week",
+        "1month": "1 month",
+        "3months": "3 months",
+        "6months": "6 months",
+        "1year": "1 year",
+        "all": "All time"
+      },
+      "totalWorkouts": "Workouts",
+      "totalSets": "Sets",
+      "start": "Start",
+      "now": "Now",
+      "repsUnit": "reps",
+      "improvement": "Improvement",
+      "weightChange": "Weight change ({{period}})",
+      "recentWorkouts": "Recent workouts",
+      "sets": "{{count}} sets",
+      "notUsedYet": "This exercise hasn’t been used in any workouts yet",
+      "addToWorkout": "Add to Workout",
+      "workoutsInPeriod": "{{count}} workouts in this period",
+      "noData": "No progression data available yet",
+      "noDataHint": "Add this exercise to workouts to start tracking progress"
+    }
   },
   "fingerboard": {
     "title": "Fingerboard Protocols",
@@ -557,7 +758,9 @@
       "OPEN_HAND": "Open Hand",
       "CRIMP": "Crimp",
       "SLOPER": "Sloper"
-    }
+    },
+    "hangNumber": "Hang {{number}}",
+    "testYourselfSubtitle": "Measure strength and track it over time"
   },
   "routines": {
     "title": "My Routines",
@@ -628,13 +831,20 @@
         "maxReps": "Max Reps",
         "defaultSets": "Default Sets (optional)",
         "save": "Save"
-      }
+      },
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     }
   },
   "calendar": {
+    "upcoming": "Upcoming events",
+    "noUpcoming": "No upcoming events",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "inDays": "In {{count}} days",
     "title": "Training Calendar",
     "loading": "Loading calendar...",
-    "clickDateHint": "💡 Click on any date to add a workout, event, or quick log",
+    "clickDateHint": "Tap a day to see its workouts and events, edit or duplicate them, or add new ones.",
     "legend": "Legend",
     "cyclePhases": "Cycle Phases",
     "noWorkoutsToday": "No workouts today",
@@ -643,9 +853,37 @@
     "filterAll": "All",
     "filterNone": "None",
     "noTrainingTypesSelected": "No training types selected. All workouts will be shown.",
-    "noEventTypesSelected": "No event types selected. All events will be shown."
+    "noEventTypesSelected": "No event types selected. All events will be shown.",
+    "cycleDayShort": "d{{day}}",
+    "injuryRiskPhase": "Injury-risk phase",
+    "showWorkouts": "Show workouts",
+    "showEvents": "Show events",
+    "resetFilters": "Reset",
+    "showResults": "Show results"
   },
   "cycle": {
+    "consent": {
+      "title": "Train with your cycle?",
+      "description": "Turn on cycle tracking to see your phase on every screen. You can switch it off any time in Profile.",
+      "item1": "Your cycle day and phase on the dashboard and calendar",
+      "item2": "Training recommendations for each phase",
+      "item3": "Injury patterns across your cycle",
+      "item4": "Predicted next period and ovulation",
+      "remindLate": "Remind me if my period is late",
+      "skip": "Skip",
+      "enable": "Enable"
+    },
+    "setupForm": {
+      "title": "Set up your cycle",
+      "firstDay": "First day of your last period",
+      "cycleLength": "Average cycle length",
+      "days": "{{count}} days",
+      "timezone": "Timezone",
+      "timezoneHint": "Taken from your device.",
+      "lateReminders": "Late-period reminders",
+      "lateRemindersHint": "A message if your period is overdue",
+      "save": "Save and continue"
+    },
     "title": "Track Your Menstrual Cycle?",
     "description": "Enable cycle tracking to get personalized training recommendations based on your cycle phase. Your data will be kept private.",
     "accept": "Yes, enable cycle tracking",
@@ -697,7 +935,25 @@
       "add": "Add",
       "saving": "Saving...",
       "periodUpdated": "Period updated",
-      "periodAdded": "Period added"
+      "periodAdded": "Period added",
+      "cycleSettings": "Cycle settings",
+      "enableInProfile": "Enable in profile",
+      "dayLabel": "Day",
+      "ofLengthNextPeriod": "of {{length}} · next period ~{{date}}",
+      "recentPeriods": "Recent periods",
+      "flow": "Flow",
+      "flowLevels": {"1": "Light", "2": "Medium", "3": "Heavy"},
+      "avgCycle": "Avg cycle",
+      "avgPeriod": "Avg period",
+      "logged": "Logged",
+      "noPeriods": "No periods logged yet.",
+      "showAllPeriods": "Show all ({{count}})",
+      "tapDayHint": "Tap a day to add a period starting then.",
+      "now": "Now",
+      "most": "most",
+      "deletePeriodTitle": "Delete period?",
+      "deletePeriodMessage": "This period will be removed from your history.",
+      "periodDeleted": "Period deleted"
     },
     "phaseDetails": {
       "menstrual": {
@@ -844,7 +1100,7 @@
     "cycleLength": "Cycle Length (days)",
     "lastPeriodDate": "Last Period Date",
     "disableCycle": "Disable Cycle Tracking",
-    "disableCycleConfirm": "Are you sure you want to disable cycle tracking? This will remove all cycle-related data.",
+    "disableCycleConfirm": "Phases and recommendations will be hidden. Your logged periods are kept.",
     "enableCycleTracking": "Enable Cycle Tracking",
     "cycleTrackingDescription": "Track your menstrual cycle to get personalized training recommendations and understand your performance patterns.",
     "enableCycle": "Enable Cycle Tracking",
@@ -901,7 +1157,17 @@
     "saved": "Profile saved",
     "saveFailed": "Failed to save profile",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "googleName": "Google name",
+    "googleNameHint": "Your full name from your Google account",
+    "displayName": "Display name",
+    "displayNameHint": "Shown in the app. Leave empty to use your first name",
+    "memberSince": "Member since",
+    "saveProfile": "Save profile",
+    "disableCycleTitle": "Disable cycle tracking?",
+    "keepOn": "Keep on",
+    "pushBlockedTitle": "Notifications blocked.",
+    "notificationsSection": "Notifications"
   },
   "landing": {
     "tagline": "Train with your unicorn flow - Track your climbing journey with precision and mindfulness",
@@ -1014,6 +1280,8 @@
     "sync": "Auto Sync"
   },
   "dashboard": {
+    "deloadDay": "day {{day}}/{{total}}",
+    "deloadHint": "Rest and recover. Your streak is paused, not broken.",
     "welcome": "Welcome to Your Dashboard",
     "hi": "Hi",
     "there": "there",
@@ -1057,7 +1325,18 @@
     "loadingTrips": "Loading trips...",
     "noUpcomingTrips": "No upcoming trips with countdown",
     "noUpcomingTripsDescription": "Create a trip event and enable the 'Show countdown on homepage' option",
-    "addTrip": "Add Trip"
+    "addTrip": "Add Trip",
+    "recommendations": "Recommendations",
+    "streakLabel": "Streak",
+    "weeksUnit": {
+      "one": "week",
+      "other": "weeks"
+    },
+    "streakRule": "{{min}}+ sessions a week · deloads pause it",
+    "streakWeeksInRow": {
+      "one": "{{count}} week with {{min}}+ sessions. Keep it going!",
+      "other": "{{count}} weeks in a row with {{min}}+ sessions. Keep it going!"
+    }
   },
   "goals": {
     "title": "Training Goals",
@@ -1067,6 +1346,8 @@
     "monthlyGoal": "Monthly Goal",
     "weeklyGoalDesc": "Goal: {{count}} workouts per week",
     "monthlyGoalDesc": "Goal: {{count}} workouts per month",
+    "auto": "Auto (× 4)",
+    "manual": "Manual 1–40",
     "autoCalculateMonthly": "Auto-calculate monthly goal",
     "autoCalculateMonthlyDesc": "Monthly goal = weekly goal × 4 ({{count}} workouts)",
     "detailedGoals": "Detailed Goals (optional)",
@@ -1081,6 +1362,14 @@
     "saveFailed": "Failed to save goals"
   },
   "events": {
+    "daysCount": {"one": "{{count}} day", "other": "{{count}} days"},
+    "startDate": "Start date",
+    "endDate": "End date",
+    "startDateRequired": "Please select a start date",
+    "endDateRequired": "Please select an end date",
+    "deloadHint": "A rest period: lighter or no training on these days.",
+    "deloadDescription": "Plan & notes",
+    "deloadDescriptionPlaceholder": "e.g. 50% volume, no max hangs, mobility only...",
     "title": "Events",
     "addNew": "Add Event",
     "addFirst": "Add First Event",
@@ -1142,16 +1431,24 @@
     },
     "trainingTypesTitle": "Training Types to Track",
     "eventTypesTitle": "Event Types to Track",
-    "tip": "💡 Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.",
+    "tip": "Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.",
     "types": {
       "injury": "Injury",
       "physio": "Physio",
       "competition": "Competition",
       "trip": "Trip",
+      "deload": "Deload",
       "other": "Other"
     },
     "addFirstEvent": "Add Your First Event",
-    "trackInjuries": "Track injuries to see patterns with your cycle"
+    "trackInjuries": "Track injuries to see patterns with your cycle",
+    "subtitle": "Track injuries, physio visits, competitions, and other events",
+    "severity": "Severity",
+    "dates": "Dates",
+    "countdown": "Countdown",
+    "notes": "Notes",
+    "deleteEvent": "Delete event",
+    "deletedUndo": "Event deleted"
   },
   "strongMind": {
     "title": "Strong Mind",
@@ -1269,13 +1566,19 @@
       "3": "Great progress"
     },
     "achievedHint": "Tap the trophy if you sent this project in this session.",
-    "markAchieved": "Achieved in this session"
+    "markAchieved": "Achieved in this session",
+    "linkedTo": "Linked to",
+    "unknownGoal": "Unknown goal",
+    "deleteGoalTitle": "Delete goal?",
+    "noProgressYet": "No progress recorded yet",
+    "notAchievedYet": "Not achieved yet",
+    "classifiedAs": "Classified as"
   },
   "quickLog": {
-    "title": "⚡ Quick Log",
+    "title": "Quick Log",
     "description": "Quickly log a workout. You can add details later.",
     "button": "Quick Log",
-    "markAsDone": "⚡ Mark as Done",
+    "markAsDone": "Mark as Done",
     "saving": "Saving...",
     "quickLogBadge": "Quick",
     "noProtocols": "No protocols available. Create one in Fingerboard Protocols.",
@@ -1322,7 +1625,53 @@
       "time": "Time (s)",
       "success": "Success",
       "notes": "Notes"
-    }
+    },
+    "view": "View",
+    "back": "Back",
+    "stepOf": "Step {{step}} of {{total}}",
+    "chooseProtocol": "Choose a test protocol",
+    "results": "Results",
+    "resultsCount": "{{count}} results",
+    "clone": "Clone",
+    "cloneTitle": "Duplicate this protocol",
+    "performAnother": "Perform another test",
+    "createError": "Failed to create testing protocol",
+    "cloneError": "Failed to clone protocol",
+    "editProtocol": "Edit Testing Protocol",
+    "testHangs": "Test hangs",
+    "addTestHang": "Add test hang",
+    "editTestHang": "Edit test hang",
+    "noTestHangs": "No test hangs added yet",
+    "loadFromProtocol": "Load from protocol",
+    "target": "target",
+    "targetLoad": "Target load",
+    "targetTime": "Target time",
+    "protocolName": "Protocol name",
+    "editName": "Edit protocol name",
+    "renameError": "Failed to update protocol name",
+    "saveTestError": "Failed to save test",
+    "testDate": "Test date",
+    "successQuestion": "Success?",
+    "yes": "Yes",
+    "no": "No",
+    "remindRetest": "Remind me to retest every",
+    "reminderInterval": "Interval",
+    "reminderUnit": "Unit",
+    "units": {
+      "days": "days",
+      "weeks": "weeks",
+      "months": "months"
+    },
+    "saveResults": "Save results",
+    "metric": "Metric",
+    "metricLoad": "Load",
+    "metricTime": "Time",
+    "chartTitleLoad": "Added load per test",
+    "chartTitleTime": "Hang time per test",
+    "copyName": "{{name}} (Copy)",
+    "cloneSheetTitle": "Clone protocol",
+    "cloneSheetDescription": "A copy of {{name}} with the same hangs and targets.",
+    "cloneNameLabel": "Name of the copy"
   },
   "offlineForm": {
     "title": "Add Workout",
@@ -1345,10 +1694,17 @@
     "load": "Load (kg)",
     "loadHint": "negative value for unload",
     "time": "Time (seconds)",
-    "notes": "Notes (optional)"
+    "notes": "Notes (optional)",
+    "hangs": "Hangs"
   },
   "offlineSync": {
     "uploaded": "Uploaded {{count}} workout(s) saved offline",
     "failed": "{{count}} workout(s) saved offline couldn't be uploaded. We'll try again later."
+  },
+  "offlineBanner": {
+    "offline": "You're offline",
+    "backOnline": "Back online",
+    "pending": "{{count}} pending",
+    "savedLocally": "Your workouts will be saved locally and synced when you're back online."
   }
 }

@@ -49,11 +49,11 @@
 - Keep state as close to where it's used as possible
 
 ### **Styling**
-- Use Tailwind CSS classes with custom color palette
-- **Dark Mode First**: All components designed for dark mode
-- Use consistent spacing (`space-x-2`, `space-y-4`)
-- Use custom UC color classes (see Color Palette section below)
-- Use rounded corners (`rounded-xl`, `rounded-2xl`) for feminine aesthetic
+- Use Tailwind with the Unicorn Climb tokens (`--uc-*`, see Color Palette section below); no raw Tailwind colours
+  (`slate-*`, `pink-*`, …), hex values or `dark:` variants in components
+- **Dark first, light supported**: tokens switch with `data-theme` on `<html>`, so one class works in both themes
+- Build screens from the primitives in `src/components/ui` (Button, Card, Input, BottomSheet, …)
+- Radii via `rounded-uc-chip | input | card | sheet | pill`; font is Manrope (`--uc-font`)
 
 ### **Internationalization**
 - Always use `useLanguage()` hook for text
@@ -173,90 +173,58 @@
 - Responsive grid layouts
 
 ### **Colors & Themes**
-- **Primary Background**: `bg-uc-black` (#1E1E1E) - Deep charcoal/near black
-- **Secondary Background**: `bg-uc-dark-bg` (#382740) - Dark warm brown/plum
-- **Primary Accent**: `bg-uc-mustard` (#FFC107) - Vibrant mustard yellow for CTAs
-- **Secondary Accent**: `bg-uc-purple` (#6A1B9A) - Deep regal purple for headers
-- **Primary Text**: `text-uc-text-light` (#F5F5F5) - Off-white/cream
-- **Secondary Text**: `text-uc-text-muted` (#C7A256) - Soft gold/beige
-- **Success**: `bg-uc-success` (#5D7B5C) - Dark green/olive
-- **Alert/Warning**: `bg-uc-alert` (#A83F2F) - Burnt orange/rust
+Source of truth: `design/DESIGN.md` and `src/app/tokens.css` (copy of `design/tokens.css`), mapped to Tailwind in
+`src/app/globals.css` (`@theme inline`).
+- **Backgrounds**: `bg-uc-bg` (page), `bg-uc-surface` (cards), `bg-uc-elevated` (sheets, menus, dialogs)
+- **Text**: `text-uc-text`, `text-uc-text-muted`; borders `border-uc-border`
+- **Brand**: `bg-uc-primary` / `text-uc-on-primary`, `bg-uc-primary-container` / `text-uc-on-primary-container`
+- **Accent** (main CTA only, one per screen): `bg-uc-accent` / `text-uc-on-accent`; as text `text-uc-accent-text`
+- **Semantic**: `uc-success`, `uc-warning`, `uc-error` + banner backgrounds `bg-uc-*-bg`
+- **Domain colours**: cycle phases `bg-uc-phase-*` (solid) / `bg-uc-band-*` (calendar band), workout types
+  `bg-uc-workout-*`, Strong Mind `uc-focus-*` / `uc-zone-*`, tag swatches `uc-tag-1…10`; text on solid chips
+  `text-uc-chip-ink`
+- **Numbers**: add `uc-num` (tabular figures) to counts, dates and stats
 
 ### **CTA Button Guidelines**
-- **Primary CTAs**: Use `bg-uc-mustard text-uc-black` with `shadow-lg`
-- **Secondary CTAs**: Use `bg-uc-dark-bg/50` or `border-uc-purple/20` with `text-uc-text-light`
-- **Links**: Use `text-uc-purple hover:text-uc-mustard` with `transition-colors`
-- **Active States**: Use `text-uc-mustard` or `bg-uc-purple/20`
+Use `Button` / `buttonClasses(variant, size)` from `@/components/ui`:
+- `accent` — the main CTA (Save, Log, Get started); `primary` — secondary filled; `tonal` — inline actions;
+  `ghost` — Cancel and outline actions; `destructive` — delete confirmations
+- Sizes: `md` (44px), `lg` (56px), `icon` (44×44). Minimum tap target is 44×44px.
+- Links: `text-uc-primary` (underlined in running text)
 
 ---
 
 ## 🎨 **Color Palette Configuration**
 
-### **Tailwind Config Setup**
-```typescript
-// tailwind.config.ts
-theme: {
-  extend: {
-    colors: {
-      // Base Palette
-      'uc-black': '#1E1E1E', 
-      'uc-dark-bg': '#382740',
-      'uc-purple': '#6A1B9A',
-      'uc-mustard': '#FFC107', 
-      'uc-text-light': '#F5F5F5',
-      'uc-text-muted': '#C7A256',
-      
-      // Semantic Colors
-      'uc-success': '#5D7B5C',
-      'uc-alert': '#A83F2F',
-    },
-    fontFamily: {
-      sans: ['"Montserrat"', 'sans-serif'], 
-    },
-  },
-}
-```
+Tokens live in `src/app/tokens.css` (dark under `:root` / `[data-theme="dark"]`, light under `[data-theme="light"]`)
+and are exposed to Tailwind in `globals.css`:
 
-### **Global CSS Setup**
 ```css
-/* globals.css */
-body {
-  background: #1E1E1E; /* uc-black */
-  color: #F5F5F5; /* uc-text-light */
-  font-family: "Montserrat", sans-serif;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar-thumb {
-  background: #6A1B9A; /* uc-purple */
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #FFC107; /* uc-mustard */
+@theme inline {
+  --color-uc-bg: var(--uc-bg);
+  --color-uc-surface: var(--uc-surface);
+  --color-uc-primary: var(--uc-primary);
+  --color-uc-accent: var(--uc-accent);
+  /* … phases, bands, workouts, radii, shadow */
 }
 ```
+
+To add a colour: add the token to `design/tokens.css` and `src/app/tokens.css` (both themes), then map it in
+`@theme inline`. Charts (Recharts) take `var(--uc-*)` strings directly.
 
 ### **Component Styling Examples**
 ```tsx
-// Primary CTA Button
-<button className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg">
-  Primary Action
-</button>
+import { Button, Card, Overline, buttonClasses } from '@/components/ui'
 
-// Secondary Button
-<button className="bg-uc-dark-bg/50 hover:bg-uc-dark-bg text-uc-text-light px-4 py-2 rounded-xl font-medium transition-colors border border-uc-purple/20">
-  Secondary Action
-</button>
+<Button variant="accent" size="lg">Save</Button>
+<Button variant="ghost">Cancel</Button>
+<Link href="/workouts" className={buttonClasses('tonal')}>Workouts</Link>
 
-// Card Container
-<div className="bg-uc-dark-bg p-6 rounded-2xl shadow-lg border border-uc-purple/20">
-  <h3 className="text-uc-text-light">Card Title</h3>
-  <p className="text-uc-text-muted">Card content</p>
-</div>
-
-// Navigation Link
-<Link className="text-uc-purple hover:text-uc-mustard transition-colors">
-  Navigation Link
-</Link>
+<Card>
+  <Overline>Training volume</Overline>
+  <h3 className="text-[17px] font-extrabold text-uc-text">Card title</h3>
+  <p className="text-sm text-uc-text-muted">Card content</p>
+</Card>
 ```
 
 ---

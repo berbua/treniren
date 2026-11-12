@@ -4,8 +4,8 @@
   "description": "Personal training diary for tracking workouts and climbing sessions",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
+  "background_color": "#121016",
+  "theme_color": "#121016",
   "orientation": "portrait-primary",
   "icons": [
     {

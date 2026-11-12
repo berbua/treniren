@@ -5,6 +5,8 @@ import { EventType, Tag, TripClimbingType } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useCycle } from '@/contexts/CycleContext'
 import { calculateCycleInfo } from '@/lib/cycle-utils'
+import { storedDayNumber } from '@/lib/date-utils'
+import { Card, Chip, EventIconTile, eventTypeMeta, Icon } from '@/components/ui'
 
 interface EventCardProps {
   event: {
@@ -37,60 +39,10 @@ interface EventCardProps {
   isDeleting?: boolean
 }
 
-const getEventTypeColor = (type: EventType) => {
-  switch (type) {
-    case 'INJURY':
-      return 'bg-red-500'
-    case 'PHYSIO':
-      return 'bg-blue-500'
-    case 'COMPETITION':
-      return 'bg-yellow-500'
-    case 'TRIP':
-      return 'bg-purple-500'
-    case 'OTHER':
-      return 'bg-gray-500'
-    default:
-      return 'bg-gray-500'
-  }
-}
-
-const getEventTypeLabel = (type: EventType) => {
-  switch (type) {
-    case 'INJURY':
-      return '🤕 Injury'
-    case 'PHYSIO':
-      return '🏥 Physio'
-    case 'COMPETITION':
-      return '🏆 Competition'
-    case 'TRIP':
-      return '✈️ Trip'
-    case 'OTHER':
-      return '📅 Other'
-    default:
-      return type
-  }
-}
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
-}
-
-const formatTime = (timeString: string) => {
-  const time = new Date(`2000-01-01T${timeString}`)
-  return time.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  })
-}
-
 export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, isDeleting = false }: EventCardProps) {
-  const { t } = useLanguage()
+  const { t, tPlural, language } = useLanguage()
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
+  const meta = eventTypeMeta(event.type)
   // List endpoints return tags as eventTags join rows
   const eventTags = event.tags ?? event.eventTags?.map(et => et.tag) ?? []
   const [isEditingCycleDay, setIsEditingCycleDay] = useState(false)
@@ -149,243 +101,225 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
     }
   }
 
+
+  const formatDate = (value: string, options: Intl.DateTimeFormatOptions) =>
+    new Date(value).toLocaleDateString(locale, options)
+  const formatTime = (timeString: string) =>
+    new Date(`2000-01-01T${timeString}`).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+  const tripRange = () => {
+    if (!event.tripStartDate || !event.tripEndDate) {
+      const single = event.tripStartDate || event.tripEndDate
+      return single ? formatDate(single, { day: 'numeric', month: 'short' }) : '—'
+    }
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
+      .formatRange(new Date(event.tripStartDate), new Date(event.tripEndDate))
+  }
+  const timeRange = (event.startTime || event.endTime)
+    ? [event.startTime && formatTime(event.startTime), event.endTime && formatTime(event.endTime)].filter(Boolean).join('–')
+    : null
+  const isInjury = event.type === 'INJURY'
+  const isTrip = event.type === 'TRIP'
+  const isDeload = event.type === 'DELOAD'
+  // Deload: inclusive number of days (dates are stored as UTC midnight)
+  const deloadDays = isDeload && event.tripStartDate && event.tripEndDate
+    ? storedDayNumber(event.tripEndDate) - storedDayNumber(event.tripStartDate) + 1
+    : null
+  const showCycleDay = isInjury && (displayCycleDay !== undefined || isCycleTrackingEnabled)
+
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className={`w-3 h-3 rounded-full ${getEventTypeColor(event.type)}`}></div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-50">
-              {getEventTypeLabel(event.type)}
-            </h3>
-            <span className="text-sm text-slate-500 dark:text-slate-400">
-              {formatDate(event.date)}
-            </span>
-          </div>
-          
-          <h4 className="text-lg font-medium text-slate-900 dark:text-slate-50 mb-2">
-            {event.title}
-          </h4>
-
-          {/* Tags */}
-          {eventTags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
-              {eventTags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="px-2 py-1 text-xs rounded-full text-white"
-                  style={{ backgroundColor: tag.color }}
-                >
-                  {tag.name}
-                </span>
-              ))}
-            </div>
+    <Card className="flex flex-col gap-3">
+      {/* Header */}
+      <div className="flex items-start gap-3">
+        <EventIconTile type={event.type} />
+        <div className="min-w-0 flex-1">
+          <p className={`text-[11px] font-bold uppercase leading-[14px] tracking-[0.08em] ${meta.text}`}>
+            {t(`events.types.${meta.key}`) || event.type}
+          </p>
+          <h3 className="mt-0.5 text-[17px] font-extrabold leading-6 text-uc-text break-words uc-num">
+            {isDeload ? tripRange() : event.title}
+          </h3>
+          {deloadDays !== null && (
+            <p className="text-[13px] font-semibold text-uc-text-muted uc-num">{tPlural('events.daysCount', deloadDays)}</p>
           )}
-
-          <div className="space-y-2">
-            {/* Time */}
-            {(event.startTime || event.endTime) && (
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-medium text-slate-500">Time:</span>
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  {event.startTime && formatTime(event.startTime)}
-                  {event.startTime && event.endTime && ' - '}
-                  {event.endTime && formatTime(event.endTime)}
-                </span>
-              </div>
-            )}
-
-            {/* Location - Only for non-trip events */}
-            {event.location && event.type !== 'TRIP' && (
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-medium text-slate-500">Location:</span>
-                <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
-                  📍 {event.location}
-                </span>
-              </div>
-            )}
-
-            {/* Trip-specific information */}
-            {event.type === 'TRIP' && (
-              <>
-                {/* Destination */}
-                {event.destination && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium text-slate-500">Destination:</span>
-                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
-                      🌍 {event.destination}
-                    </span>
-                  </div>
-                )}
-
-                {/* Trip Dates */}
-                {(event.tripStartDate || event.tripEndDate) && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium text-slate-500">{t('common.tripDates') || 'Trip Dates:'}</span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300">
-                      {event.tripStartDate && formatDate(event.tripStartDate)}
-                      {event.tripStartDate && event.tripEndDate && ' - '}
-                      {event.tripEndDate && formatDate(event.tripEndDate)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Climbing Type */}
-                {event.climbingType && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium text-slate-500">Climbing:</span>
-                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
-                      {event.climbingType === 'BOULDERING' ? '🧗 Bouldering' : '🧗‍♀️ Sport Climbing'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Countdown Status */}
-                {event.showCountdown && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium text-slate-500">Countdown:</span>
-                    <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
-                      📅 Enabled
-                    </span>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Severity (for injuries) */}
-            {event.type === 'INJURY' && event.severity && (
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-medium text-slate-500">Severity:</span>
-                <div className="flex space-x-1">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <div
-                      key={rating}
-                      className={`w-2 h-2 rounded-full ${
-                        rating <= (event.severity || 0)
-                          ? 'bg-red-500'
-                          : 'bg-gray-300 dark:bg-gray-600'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  ({event.severity}/5)
-                </span>
-              </div>
-            )}
-
-            {/* Status (for injuries) */}
-            {event.type === 'INJURY' && event.status && (
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-medium text-slate-500">Status:</span>
-                <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
-                  {event.status}
-                </span>
-              </div>
-            )}
-
-            {/* Cycle Day (for injuries, if cycle tracking is enabled) */}
-            {event.type === 'INJURY' && (displayCycleDay !== undefined || isCycleTrackingEnabled) && (
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-medium text-slate-500">🌸 {t('cycle.day') || 'Cycle Day'}:</span>
-                {isEditingCycleDay ? (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="number"
-                      min="1"
-                      max="50"
-                      value={cycleDayValue}
-                      onChange={(e) => setCycleDayValue(e.target.value)}
-                      className="w-16 px-2 py-1 text-xs border border-pink-300 dark:border-pink-700 rounded bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
-                      disabled={isUpdating}
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSaveCycleDay}
-                      disabled={isUpdating}
-                      className="px-2 py-1 text-xs bg-pink-500 hover:bg-pink-600 text-white rounded disabled:opacity-50"
-                      title={t('common.save') || 'Save'}
-                    >
-                      ✓
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsEditingCycleDay(false)
-                        setCycleDayValue('')
-                      }}
-                      disabled={isUpdating}
-                      className="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded disabled:opacity-50"
-                      title={t('common.cancel') || 'Cancel'}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      event.cycleDayManuallySet
-                        ? 'bg-pink-200 dark:bg-pink-800 text-pink-900 dark:text-pink-100 border border-pink-400 dark:border-pink-600'
-                        : 'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200'
-                    }`}>
-                      {displayCycleDay || '?'}
-                      {event.cycleDayManuallySet && ' ✏️'}
-                    </span>
-                    {onCycleDayUpdate && (
-                      <button
-                        onClick={() => setIsEditingCycleDay(true)}
-                        className="text-xs text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200"
-                        title={t('events.editCycleDay') || 'Edit cycle day'}
-                      >
-                        ✏️
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Description */}
-            {event.description && (
-              <div className="text-sm text-slate-600 dark:text-slate-300">
-                {event.description}
-              </div>
-            )}
-
-            {/* Notes */}
-            {event.notes && (
-              <div className="text-sm text-slate-600 dark:text-slate-300 italic">
-                <span className="font-medium">Notes:</span> {event.notes}
-              </div>
-            )}
-          </div>
         </div>
-        
-        <div className="flex space-x-2">
+        <div className="-mr-2 -mt-2 flex shrink-0">
           {onEdit && (
             <button
+              type="button"
               onClick={() => onEdit(event.id)}
-              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-              title="Edit event"
+              aria-label={t('events.editEvent') || 'Edit event'}
+              className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-elevated hover:text-uc-text"
             >
-              ✏️
+              <Icon name="edit" />
             </button>
           )}
           {onDelete && (
             <button
+              type="button"
               onClick={() => onDelete(event.id)}
               disabled={isDeleting}
-              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isDeleting ? "Deleting..." : "Delete event"}
+              aria-label={t('events.deleteConfirmTitle') || 'Delete event'}
+              className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-elevated hover:text-uc-error disabled:opacity-50"
             >
               {isDeleting ? (
-                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                <span aria-hidden className="size-4 animate-spin rounded-full border-2 border-uc-error border-t-transparent" />
               ) : (
-                '🗑️'
+                <Icon name="delete" />
               )}
             </button>
           )}
         </div>
       </div>
+
+      {/* Injury: date, status, cycle day */}
+      {isInjury && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex min-h-8 items-center rounded-uc-chip border border-uc-border bg-uc-elevated px-2.5 text-[13px] font-bold text-uc-text uc-num">
+            {formatDate(event.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+          {event.status && (
+            <span className="inline-flex min-h-8 items-center rounded-uc-chip bg-uc-warning-bg px-2.5 text-[13px] font-bold text-uc-warning">
+              {event.status}
+            </span>
+          )}
+          {showCycleDay && (
+            isEditingCycleDay ? (
+              <span className="inline-flex items-center gap-1">
+                <label className="sr-only" htmlFor={`cycle-day-${event.id}`}>{t('events.cycleDay') || 'Cycle Day'}</label>
+                <input
+                  id={`cycle-day-${event.id}`}
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={cycleDayValue}
+                  onChange={(e) => setCycleDayValue(e.target.value)}
+                  className="h-11 w-16 rounded-uc-input border border-uc-border bg-uc-surface px-2 text-center text-[15px] font-bold text-uc-text uc-num focus:border-uc-primary focus:outline-none"
+                  disabled={isUpdating}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveCycleDay}
+                  disabled={isUpdating}
+                  aria-label={t('common.save') || 'Save'}
+                  className="inline-flex size-11 items-center justify-center rounded-uc-input bg-uc-primary font-bold text-uc-on-primary disabled:opacity-50"
+                >
+                  <Icon name="success" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingCycleDay(false)
+                    setCycleDayValue('')
+                  }}
+                  disabled={isUpdating}
+                  aria-label={t('common.cancel') || 'Cancel'}
+                  className="inline-flex size-11 items-center justify-center rounded-uc-input border border-uc-border text-uc-text-muted disabled:opacity-50"
+                >
+                  <Icon name="close" />
+                </button>
+              </span>
+            ) : (
+              <span
+                className={`inline-flex min-h-8 items-center gap-1.5 rounded-uc-chip border bg-uc-elevated pl-2.5 text-[13px] font-bold text-uc-text ${
+                  event.cycleDayManuallySet ? 'border-uc-primary' : 'border-uc-border'
+                } ${onCycleDayUpdate ? '' : 'pr-2.5'}`}
+              >
+                <span aria-hidden className="size-2 rounded-full bg-uc-text-muted" />
+                <span className="uc-num">{t('events.cycleDay') || 'Cycle Day'} {displayCycleDay || '?'}</span>
+                {onCycleDayUpdate && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingCycleDay(true)}
+                    aria-label={t('events.editCycleDay') || 'Edit cycle day'}
+                    title={event.cycleDayManuallySet ? (t('events.cycleDayManuallySet') || 'Manually set') : undefined}
+                    className="-my-1.5 inline-flex size-11 items-center justify-center text-uc-text-muted hover:text-uc-text"
+                  >
+                    <Icon name="edit" size={16} />
+                  </button>
+                )}
+              </span>
+            )
+          )}
+        </div>
+      )}
+
+      {isInjury && event.severity && (
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-uc-text-muted">
+          {t('events.severity') || 'Severity'}
+          <span className="flex gap-1" role="img" aria-label={`${event.severity}/5`}>
+            {[1, 2, 3, 4, 5].map((rating) => (
+              <span
+                key={rating}
+                className={`size-2.5 rounded-full border-[1.5px] border-uc-error ${rating <= (event.severity || 0) ? 'bg-uc-error' : ''}`}
+              />
+            ))}
+          </span>
+        </div>
+      )}
+
+      {/* Trip: dates, climbing type, countdown */}
+      {isTrip && (
+        <>
+          {event.destination && !event.title.includes(event.destination) && (
+            <p className="flex items-center gap-1.5 text-[13px] font-semibold text-uc-text-muted"><Icon name="event-trip" size={16} />{event.destination}</p>
+          )}
+          <div className="grid grid-cols-3 gap-2">
+            <InfoTile label={t('events.dates') || 'Dates'} value={tripRange()} />
+            {event.climbingType && (
+              <InfoTile
+                label={t('events.climbingType') || 'Climbing Type'}
+                value={event.climbingType === 'BOULDERING' ? (t('events.bouldering') || 'Bouldering') : (t('events.sportClimbing') || 'Sport Climbing')}
+              />
+            )}
+            {event.showCountdown && (
+              <InfoTile label={t('events.countdown') || 'Countdown'} value={t('common.enabled') || 'Enabled'} success />
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Other types: date · time · location */}
+      {!isInjury && !isTrip && !isDeload && (
+        <p className="flex flex-wrap gap-x-3 gap-y-1 text-[13px] font-semibold text-uc-text-muted">
+          <span className="uc-num">
+            {formatDate(event.date, { weekday: 'short', day: 'numeric', month: 'short' })}
+            {timeRange && <> · {timeRange}</>}
+          </span>
+          {event.location && <span className="inline-flex items-center gap-1"><Icon name="event-trip" size={16} />{event.location}</span>}
+        </p>
+      )}
+      {isInjury && timeRange && (
+        <p className="text-[13px] font-semibold text-uc-text-muted uc-num">{timeRange}</p>
+      )}
+
+      {eventTags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {eventTags.map((tag) => (
+            <Chip key={tag.id} color={tag.color} className="bg-uc-elevated text-uc-text">
+              {tag.name}
+            </Chip>
+          ))}
+        </div>
+      )}
+
+      {event.description && (
+        <p className="whitespace-pre-wrap text-[15px] leading-snug text-uc-text">{event.description}</p>
+      )}
+      {event.notes && (
+        <p className="whitespace-pre-wrap text-[15px] leading-snug text-uc-text">
+          <span className="font-bold">{t('events.notes') || 'Notes'}:</span> {event.notes}
+        </p>
+      )}
+    </Card>
+  )
+}
+
+function InfoTile({ label, value, success = false }: { label: string; value: string; success?: boolean }) {
+  return (
+    <div className={`min-w-0 rounded-xl px-3 py-2 ${success ? 'bg-uc-success-bg' : 'bg-uc-elevated'}`}>
+      <p className={`text-[12px] font-semibold ${success ? 'text-uc-success' : 'text-uc-text-muted'}`}>{label}</p>
+      <p className={`text-[15px] font-extrabold leading-5 uc-num break-words ${success ? 'text-uc-success' : 'text-uc-text'}`}>{value}</p>
     </div>
   )
 }

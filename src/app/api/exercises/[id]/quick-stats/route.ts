@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth-helpers'
+import { calculate1RM } from '@/lib/1rm-calculator'
+
+const IMPROVING_WINDOW = 3 // sessions compared: last 3 vs the 3 before
+const IMPROVING_MAX_AGE_DAYS = 42
+
+// Best set of a session: est. 1RM for weighted sets, otherwise max reps
+const sessionBest = (sets: { weight: number | null; reps: number | null; rir: number | null }[]) => {
+  const valid = sets.filter(s => s.reps !== null && s.reps > 0)
+  const weighted = valid.filter(s => s.weight !== null && s.weight > 0)
+  if (weighted.length > 0) {
+    return Math.max(...weighted.map(s => calculate1RM(s.weight!, s.reps!, s.rir ?? undefined)))
+  }
+  return valid.length > 0 ? Math.max(...valid.map(s => s.reps!)) : null
+}
 
 // GET /api/exercises/[id]/quick-stats - Get quick stats for an exercise
 export async function GET(
@@ -67,6 +81,7 @@ export async function GET(
         lastWeight: null,
         lastReps: null,
         timesUsed: 0,
+        improving: false,
       })
     }
 
@@ -83,11 +98,26 @@ export async function GET(
       }
     })
 
+    // "Improving": recent best set beats the previous sessions' best, and the exercise is still in use
+    const recentSessions = await prisma.workoutExercise.findMany({
+      where: { exerciseId: id, workout: { userId: user.id } },
+      select: { sets: { select: { weight: true, reps: true, rir: true } } },
+      orderBy: { workout: { startTime: 'desc' } },
+      take: IMPROVING_WINDOW * 2,
+    })
+    const bests = recentSessions.map(session => sessionBest(session.sets)).filter((b): b is number => b !== null)
+    const recentBest = Math.max(...bests.slice(0, IMPROVING_WINDOW))
+    const previousBest = Math.max(...bests.slice(IMPROVING_WINDOW))
+    const daysSinceLastUse = (Date.now() - lastWorkout.startTime.getTime()) / (24 * 60 * 60 * 1000)
+    const improving =
+      bests.length > IMPROVING_WINDOW && recentBest > previousBest && daysSinceLastUse <= IMPROVING_MAX_AGE_DAYS
+
     return NextResponse.json({
       lastUsed: lastWorkout.startTime.toISOString(),
       lastWeight: lastSet.weight || null,
       lastReps: lastSet.reps || null,
       timesUsed,
+      improving,
     })
   } catch (error) {
     console.error('Error fetching exercise quick stats:', error)

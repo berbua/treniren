@@ -6,6 +6,7 @@ import { processCycleNotifications, scheduleDailyCycleCheck } from '@/lib/cycle-
 import { processActivityNotifications, scheduleDailyActivityCheck } from '@/lib/activity-notifications';
 import { processWorkoutInactivityNotifications, scheduleDailyWorkoutInactivityCheck } from '@/lib/workout-inactivity-notifications';
 import { processTestReminderNotifications, scheduleDailyTestReminderCheck } from '@/lib/test-reminder-notifications';
+import { useSession } from 'next-auth/react';
 import { useCycle } from './CycleContext';
 
 interface NotificationContextType {
@@ -27,6 +28,8 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
+  // The workout / test APIs need a session; logged out they only return 401
+  const isAuthenticated = useSession().status === 'authenticated';
   const [messages, setMessages] = useState<NotificationMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [settings, setSettings] = useState<NotificationSettings>(notificationService.getDefaultSettings());
@@ -86,6 +89,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Process activity notifications when workouts change
   useEffect(() => {
+    if (!isAuthenticated) return;
     const loadWorkouts = async () => {
       try {
         // Fetch all workouts for notifications (use large limit)
@@ -141,10 +145,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     };
 
     loadWorkouts();
-  }, [settings.pushNotificationsEnabled, settings.workoutInactivityEnabled, settings.workoutInactivityDays]);
+  }, [isAuthenticated, settings.pushNotificationsEnabled, settings.workoutInactivityEnabled, settings.workoutInactivityDays]);
 
   // Process test reminder notifications
   useEffect(() => {
+    if (!isAuthenticated) return;
     const loadTestReminders = async () => {
       try {
         // Load test reminder settings
@@ -201,7 +206,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     };
 
     loadTestReminders();
-  }, [settings.pushNotificationsEnabled]);
+  }, [isAuthenticated, settings.pushNotificationsEnabled]);
 
   // Schedule daily cycle checks
   useEffect(() => {
@@ -213,6 +218,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Schedule daily activity checks
   useEffect(() => {
+    if (!isAuthenticated) return;
     // Fetch all workouts for scheduling (use large limit)
     const fetchWorkouts = async () => {
       const response = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' });
@@ -248,10 +254,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return () => {
       cleanupPromise.then(cleanup => cleanup());
     };
-  }, [settings.workoutInactivityEnabled, settings.workoutInactivityDays]);
+  }, [isAuthenticated, settings.workoutInactivityEnabled, settings.workoutInactivityDays]);
 
   // Schedule daily test reminder checks
   useEffect(() => {
+    if (!isAuthenticated) return;
     const loadTestRemindersForScheduling = async () => {
       try {
         const settingsResponse = await fetch('/api/test-reminder');
@@ -285,7 +292,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return () => {
       cleanupPromise.then(cleanup => cleanup());
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const updateSettings = (newSettings: NotificationSettings) => {
     setSettings(newSettings);

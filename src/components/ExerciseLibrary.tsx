@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Exercise } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
+import { Button, Card, Chip, ChoiceChip, EmptyState, Icon, IconName, Input, Spinner } from '@/components/ui'
 
 interface ExerciseQuickStats {
   lastUsed: string | null
@@ -29,42 +30,44 @@ interface ExerciseLibraryProps {
 // Common exercises for quick-add
 const commonExercises = [
   // Upper Body / Pull
-  { name: 'Pull-ups', category: 'Pull', defaultUnit: 'reps' },
-  { name: 'Chin-ups', category: 'Pull', defaultUnit: 'reps' },
-  { name: 'Weighted Pull-ups', category: 'Pull', defaultUnit: 'kg' },
-  { name: 'Lat Pulldown', category: 'Pull', defaultUnit: 'kg' },
-  { name: 'Barbell Row', category: 'Back', defaultUnit: 'kg' },
-  { name: 'Dumbbell Row', category: 'Back', defaultUnit: 'kg' },
-  { name: 'Face Pulls', category: 'Back', defaultUnit: 'kg' },
+  { name: 'Pull-ups', category: 'Pull', defaultUnit: 'reps', group: 'pull' },
+  { name: 'Chin-ups', category: 'Pull', defaultUnit: 'reps', group: 'pull' },
+  { name: 'Weighted Pull-ups', category: 'Pull', defaultUnit: 'kg', group: 'pull' },
+  { name: 'Lat Pulldown', category: 'Pull', defaultUnit: 'kg', group: 'pull' },
+  { name: 'Barbell Row', category: 'Back', defaultUnit: 'kg', group: 'pull' },
+  { name: 'Dumbbell Row', category: 'Back', defaultUnit: 'kg', group: 'pull' },
+  { name: 'Face Pulls', category: 'Back', defaultUnit: 'kg', group: 'pull' },
   
   // Upper Body / Push
-  { name: 'Push-ups', category: 'Push', defaultUnit: 'reps' },
-  { name: 'Bench Press', category: 'Chest', defaultUnit: 'kg' },
-  { name: 'Overhead Press', category: 'Shoulders', defaultUnit: 'kg' },
-  { name: 'Dips', category: 'Push', defaultUnit: 'reps' },
-  { name: 'Dumbbell Press', category: 'Chest', defaultUnit: 'kg' },
+  { name: 'Push-ups', category: 'Push', defaultUnit: 'reps', group: 'push' },
+  { name: 'Bench Press', category: 'Chest', defaultUnit: 'kg', group: 'push' },
+  { name: 'Overhead Press', category: 'Shoulders', defaultUnit: 'kg', group: 'push' },
+  { name: 'Dips', category: 'Push', defaultUnit: 'reps', group: 'push' },
+  { name: 'Dumbbell Press', category: 'Chest', defaultUnit: 'kg', group: 'push' },
   
   // Lower Body
-  { name: 'Squats', category: 'Legs', defaultUnit: 'kg' },
-  { name: 'Deadlift', category: 'Lower Body', defaultUnit: 'kg' },
-  { name: 'Romanian Deadlift', category: 'Lower Body', defaultUnit: 'kg' },
-  { name: 'Lunges', category: 'Legs', defaultUnit: 'reps' },
-  { name: 'Leg Press', category: 'Legs', defaultUnit: 'kg' },
+  { name: 'Squats', category: 'Legs', defaultUnit: 'kg', group: 'lower' },
+  { name: 'Deadlift', category: 'Lower Body', defaultUnit: 'kg', group: 'lower' },
+  { name: 'Romanian Deadlift', category: 'Lower Body', defaultUnit: 'kg', group: 'lower' },
+  { name: 'Lunges', category: 'Legs', defaultUnit: 'reps', group: 'lower' },
+  { name: 'Leg Press', category: 'Legs', defaultUnit: 'kg', group: 'lower' },
   
   // Core
-  { name: 'Plank', category: 'Core', defaultUnit: 'time' },
-  { name: 'Hanging Leg Raises', category: 'Core', defaultUnit: 'reps' },
-  { name: 'Russian Twists', category: 'Core', defaultUnit: 'reps' },
-  { name: 'Dead Bug', category: 'Core', defaultUnit: 'reps' },
+  { name: 'Plank', category: 'Core', defaultUnit: 'time', group: 'core' },
+  { name: 'Hanging Leg Raises', category: 'Core', defaultUnit: 'reps', group: 'core' },
+  { name: 'Russian Twists', category: 'Core', defaultUnit: 'reps', group: 'core' },
+  { name: 'Dead Bug', category: 'Core', defaultUnit: 'reps', group: 'core' },
   
   // Climbing Specific
-  { name: 'Fingerboard Hangs', category: 'Climbing Specific', defaultUnit: 'time' },
-  { name: 'Campus Board', category: 'Climbing Specific', defaultUnit: 'reps' },
-  { name: 'Hangboard Repeaters', category: 'Climbing Specific', defaultUnit: 'reps' },
-  { name: 'Crimp Training', category: 'Climbing Specific', defaultUnit: 'time' },
-  { name: 'Pinch Training', category: 'Climbing Specific', defaultUnit: 'time' },
-  { name: 'Sloper Training', category: 'Climbing Specific', defaultUnit: 'time' },
+  { name: 'Fingerboard Hangs', category: 'Climbing Specific', defaultUnit: 'time', group: 'climbing' },
+  { name: 'Campus Board', category: 'Climbing Specific', defaultUnit: 'reps', group: 'climbing' },
+  { name: 'Hangboard Repeaters', category: 'Climbing Specific', defaultUnit: 'reps', group: 'climbing' },
+  { name: 'Crimp Training', category: 'Climbing Specific', defaultUnit: 'time', group: 'climbing' },
+  { name: 'Pinch Training', category: 'Climbing Specific', defaultUnit: 'time', group: 'climbing' },
+  { name: 'Sloper Training', category: 'Climbing Specific', defaultUnit: 'time', group: 'climbing' },
 ]
+
+const quickAddGroups = ['pull', 'push', 'lower', 'core', 'climbing']
 
 export function ExerciseLibrary({
   exercises,
@@ -79,7 +82,8 @@ export function ExerciseLibrary({
   deletingExerciseId = null,
   onCreateExercise,
 }: ExerciseLibraryProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [quickStats, setQuickStats] = useState<Record<string, ExerciseQuickStats>>({})
@@ -113,392 +117,276 @@ export function ExerciseLibrary({
     }
   }
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never'
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - date.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Yesterday'
-    if (diffDays < 7) return `${diffDays} days ago`
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
-    return date.toLocaleDateString()
-  }
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      'Pull': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-      'Push': 'bg-red-500/20 text-red-400 border-red-500/30',
-      'Legs': 'bg-green-500/20 text-green-400 border-green-500/30',
-      'Core': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-      'Back': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-      'Chest': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-      'Shoulders': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-      'Climbing Specific': 'bg-uc-purple/20 text-uc-purple border-uc-purple/30',
-    }
-    return colors[category || 'Other'] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-  }
+  const availableCommonExercises = commonExercises.filter(
+    ex => !exercises.some(e => e.name.toLowerCase() === ex.name.toLowerCase())
+  )
+  const isFiltered = !!searchQuery || selectedCategory !== 'all'
+
+  const viewToggle = (mode: 'grid' | 'list', icon: IconName, label: string) => (
+    <button
+      type="button"
+      onClick={() => setViewMode(mode)}
+      aria-pressed={viewMode === mode}
+      aria-label={label}
+      title={label}
+      className={`inline-flex size-11 items-center justify-center rounded-[10px] transition-colors ${
+        viewMode === mode ? 'bg-uc-primary text-uc-on-primary' : 'text-uc-text hover:bg-uc-elevated'
+      }`}
+    >
+      <Icon name={icon} />
+    </button>
+  )
 
   return (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={t('workouts.placeholders.searchExercises') || '🔍 Search exercises...'}
-              className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
-            />
-          </div>
-
-          {/* Category Filter */}
-          <div className="md:w-48">
-            <select
-              value={selectedCategory}
-              onChange={(e) => onCategoryChange(e.target.value)}
-              className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50"
-            >
-              {categories.map(cat => (
-                <option key={cat} value={cat}>
-                  {cat === 'all' ? 'All Categories' : cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-uc-mustard text-uc-black'
-                  : 'bg-uc-black/50 text-uc-text-muted hover:text-uc-text-light'
-              }`}
-            >
-              ⏹️ Grid
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-uc-mustard text-uc-black'
-                  : 'bg-uc-black/50 text-uc-text-muted hover:text-uc-text-light'
-              }`}
-            >
-              ☰ List
-            </button>
-          </div>
-
-          {/* Quick Add Toggle */}
-          <button
-            onClick={() => setShowQuickAdd(!showQuickAdd)}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              showQuickAdd
-                ? 'bg-uc-purple text-uc-text-light'
-                : 'bg-uc-black/50 text-uc-text-muted hover:text-uc-text-light'
-            }`}
-          >
-            ⚡ Quick Add
-          </button>
+    <div className="space-y-4">
+      {/* Search and view mode */}
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          aria-label={t('common.search') || 'Search'}
+          placeholder={t('workouts.placeholders.searchExercises') || 'Search exercises...'}
+          className="flex-1 min-h-12"
+        />
+        <div className="flex shrink-0 gap-0.5 p-0.5 bg-uc-surface border border-uc-border rounded-uc-input">
+          {viewToggle('grid', 'view-grid', t('exercises.gridView') || 'Grid view')}
+          {viewToggle('list', 'view-list', t('exercises.listView') || 'List view')}
         </div>
       </div>
 
-      {/* Quick Add Panel */}
-      {showQuickAdd && (
-        <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-          <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-            ⚡ Quick Add Common Exercises
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            {commonExercises
-              .filter(ex => !exercises.some(e => e.name.toLowerCase() === ex.name.toLowerCase()))
-              .map((exercise, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    onQuickAdd(exercise)
-                    setShowQuickAdd(false)
-                  }}
-                  className="p-3 rounded-lg bg-uc-black/50 hover:bg-uc-black text-left transition-colors border border-uc-purple/20 hover:border-uc-purple/40"
-                >
-                  <div className="font-medium text-uc-text-light">{exercise.name}</div>
-                  <div className="text-xs text-uc-text-muted mt-1">{exercise.category}</div>
-                </button>
-              ))}
-          </div>
-          {commonExercises.filter(ex => !exercises.some(e => e.name.toLowerCase() === ex.name.toLowerCase())).length === 0 && (
-            <p className="text-uc-text-muted text-center py-4">{t('workouts.labels.allCommonExercisesAdded') || 'All common exercises have been added!'}</p>
-          )}
+      {/* Category filter */}
+      {categories.length > 1 && (
+        <div
+          role="group"
+          aria-label={t('exercises.categories') || 'Categories'}
+          className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-wrap lg:px-0"
+        >
+          {categories.map(cat => (
+            <ChoiceChip
+              key={cat}
+              selected={selectedCategory === cat}
+              onClick={() => onCategoryChange(cat)}
+              className="shrink-0 rounded-uc-pill"
+            >
+              {cat === 'all' ? (t('common.all') || 'All') : cat}
+            </ChoiceChip>
+          ))}
         </div>
       )}
 
-      {/* Exercise Count */}
-      <div className="text-uc-text-muted">
-        {exercises.length} {exercises.length === 1 ? 'exercise' : 'exercises'}
-        {searchQuery && ` matching "${searchQuery}"`}
-        {selectedCategory !== 'all' && ` in ${selectedCategory}`}
+      {/* Quick Add Panel */}
+      <div className="rounded-uc-card bg-uc-primary-container text-uc-on-primary-container">
+        <button
+          type="button"
+          onClick={() => setShowQuickAdd(!showQuickAdd)}
+          aria-expanded={showQuickAdd}
+          className="flex w-full min-h-14 items-center gap-2 px-4 text-left font-extrabold"
+        >
+          <Icon name="quick-log" className="text-uc-accent-text" />
+          <span className="flex-1">
+            {t('exercises.quickAdd') || 'Quick add'}
+            {availableCommonExercises.length > 0 && (
+              <> · {t('exercises.quickAddCount', { count: availableCommonExercises.length }) || `${availableCommonExercises.length} common exercises`}</>
+            )}
+          </span>
+          <svg
+            aria-hidden
+            className={`size-5 shrink-0 transition-transform ${showQuickAdd ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.75}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            viewBox="0 0 24 24"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+        {showQuickAdd && (
+          <div className="space-y-4 px-4 pb-4">
+            {quickAddGroups.map(group => {
+              const groupExercises = availableCommonExercises.filter(ex => ex.group === group)
+              if (groupExercises.length === 0) return null
+              return (
+                <div key={group}>
+                  <p className="mb-2 text-[11px] leading-[14px] font-bold uppercase tracking-[0.08em] opacity-80">
+                    {t(`exercises.quickAddGroups.${group}`)}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {groupExercises.map(({ name, category, defaultUnit }) => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => {
+                          onQuickAdd({ name, category, defaultUnit })
+                          setShowQuickAdd(false)
+                        }}
+                        className="min-h-11 rounded-uc-input bg-uc-bg px-3 text-sm font-bold text-uc-text transition-colors hover:bg-uc-elevated"
+                      >
+                        + {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+            {availableCommonExercises.length === 0 && (
+              <p className="py-2 text-center text-sm">{t('workouts.labels.allCommonExercisesAdded') || 'All common exercises have been added!'}</p>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Exercise Count */}
+      <p className="text-[13px] font-semibold text-uc-text-muted">
+        {exercises.length} {exercises.length === 1 ? (t('exercises.exercise') || 'exercise') : (t('exercises.exercises') || 'exercises')}
+        {searchQuery && ` ${t('exercises.matching', { query: searchQuery })}`}
+        {selectedCategory !== 'all' && ` ${t('exercises.inCategory', { category: selectedCategory })}`}
+      </p>
 
       {/* Exercises Grid/List */}
       {exercises.length === 0 ? (
-        <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-          <div className="text-6xl mb-4">💪</div>
-          <h3 className="text-xl font-semibold text-uc-text-light mb-2">
-            {searchQuery || selectedCategory !== 'all'
+        <div className="rounded-uc-card border border-dashed border-uc-border">
+          <EmptyState
+            icon={<Icon name="library" size={28} />}
+            title={isFiltered
               ? (t('exercises.noExercisesFound') || 'No exercises found')
               : (t('exercises.noExercises') || 'No exercises yet')}
-          </h3>
-          <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-            {searchQuery || selectedCategory !== 'all'
+            description={isFiltered
               ? (t('exercises.noExercisesFoundDescription') || 'Try adjusting your search or filters to find what you\'re looking for.')
               : (t('exercises.noExercisesDescription') || 'Create your exercise library to track your progress. Add exercises you use in your workouts, and we\'ll help you monitor your strength gains over time.')}
-          </p>
-          {!(searchQuery || selectedCategory !== 'all') && onCreateExercise && (
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <button
-                onClick={onCreateExercise}
-                className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-              >
-                ➕ {t('exercises.addFirstExercise') || 'Add Your First Exercise'}
-              </button>
-              <p className="text-sm text-uc-text-muted">
-                {t('exercises.orUseQuickAdd') || 'or use Quick Add above for common exercises'}
-              </p>
-            </div>
+            action={!isFiltered && onCreateExercise && (
+              <Button variant="accent" onClick={onCreateExercise}>
+                + {t('exercises.addFirstExercise') || 'Add Your First Exercise'}
+              </Button>
+            )}
+          />
+          {!isFiltered && onCreateExercise && (
+            <p className="-mt-2 px-4 pb-6 text-center text-[13px] text-uc-text-muted">
+              {t('exercises.orUseQuickAdd') || 'or use Quick Add above for common exercises'}
+            </p>
           )}
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
           {exercises.map(exercise => (
-            <ExerciseCard
-              key={exercise.id}
-              exercise={exercise}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              formatDate={formatDate}
-              getCategoryColor={getCategoryColor}
-              quickStats={quickStats[exercise.id]}
-              isDeleting={deletingExerciseId === exercise.id}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="bg-uc-dark-bg rounded-xl border border-uc-purple/20 overflow-hidden">
-          <div className="divide-y divide-uc-purple/20">
-            {exercises.map(exercise => (
-              <ExerciseListItem
-                key={exercise.id}
+            <Card key={exercise.id}>
+              <ExerciseItem
                 exercise={exercise}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 formatDate={formatDate}
-                getCategoryColor={getCategoryColor}
                 quickStats={quickStats[exercise.id]}
                 isDeleting={deletingExerciseId === exercise.id}
               />
-            ))}
-          </div>
+            </Card>
+          ))}
         </div>
+      ) : (
+        <Card padded={false} className="divide-y divide-uc-border overflow-hidden">
+          {exercises.map(exercise => (
+            <div key={exercise.id} className="px-4 py-3">
+              <ExerciseItem
+                exercise={exercise}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                formatDate={formatDate}
+                quickStats={quickStats[exercise.id]}
+                isDeleting={deletingExerciseId === exercise.id}
+                compact
+              />
+            </div>
+          ))}
+        </Card>
       )}
     </div>
   )
 }
 
-function ExerciseCard({
+function ExerciseItem({
   exercise,
   onEdit,
   onDelete,
   formatDate,
-  getCategoryColor,
   quickStats,
   isDeleting = false,
+  compact = false,
 }: {
   exercise: Exercise
   onEdit: (exercise: Exercise) => void
   onDelete: (id: string) => void
-  formatDate: (date: string | null) => string
-  getCategoryColor: (category: string) => string
+  formatDate: (date: string) => string
   quickStats?: ExerciseQuickStats
   isDeleting?: boolean
+  /** List view: name, category and unit on one line, progress link inline. */
+  compact?: boolean
 }) {
   const { t } = useLanguage()
   const stats = quickStats || exercise.stats
+  const hasProgress = !!stats && stats.timesUsed > 0
+
+  const lastSet = stats && stats.lastWeight !== null && stats.lastReps !== null
+    ? (exercise.defaultUnit === 'reps'
+        ? `${stats.lastReps} reps`
+        : `${stats.lastWeight} ${exercise.defaultUnit} × ${stats.lastReps}`)
+    : null
+
+  const progressLink = hasProgress && (
+    <Link
+      href={`/exercises/${exercise.id}`}
+      className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-uc-primary hover:underline"
+    >
+      {t('exercises.viewProgress') || 'View progress'}
+      <span aria-hidden>›</span>
+    </Link>
+  )
 
   return (
-    <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20 hover:border-uc-purple/40 transition-all">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-semibold text-uc-text-light">
-              {exercise.name}
-            </h3>
-            {stats && stats.timesUsed > 0 && (
-              <Link
-                href={`/exercises/${exercise.id}`}
-                className="text-xs text-uc-mustard hover:text-uc-mustard/80 transition-colors"
-                title="View Progress"
-              >
-                📊
-              </Link>
-            )}
+    <div className="flex items-start gap-2">
+      <div className="min-w-0 flex-1">
+        <div className={compact ? 'flex flex-wrap items-center gap-x-2.5 gap-y-1' : ''}>
+          <h3 className="text-[17px] font-extrabold leading-snug text-uc-text break-words">{exercise.name}</h3>
+          <div className={`flex flex-wrap items-center gap-2 ${compact ? '' : 'mt-1.5'}`}>
+            {exercise.category && <Chip className="min-h-6 px-2 text-xs">{exercise.category}</Chip>}
+            <span className="text-[13px] font-semibold text-uc-text-muted">{exercise.defaultUnit}</span>
           </div>
-          {exercise.category && (
-            <span className={`inline-block px-2 py-1 rounded text-xs font-medium border ${getCategoryColor(exercise.category)}`}>
-              {exercise.category}
-            </span>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => onEdit(exercise)}
-            className="p-2 text-uc-text-muted hover:text-uc-mustard transition-colors"
-            title="Edit"
-          >
-            ✏️
-          </button>
-          <button
-            onClick={() => onDelete(exercise.id)}
-            className="p-2 text-uc-text-muted hover:text-red-500 transition-colors"
-            title="Delete"
-          >
-            🗑️
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center justify-between text-uc-text-muted">
-          <span>Unit:</span>
-          <span className="text-uc-text-light font-medium">{exercise.defaultUnit}</span>
         </div>
         {stats && (
-          <>
-            <div className="flex items-center justify-between text-uc-text-muted">
-              <span>{t('common.timesUsed') || 'Times Used:'}</span>
-              <span className="text-uc-text-light font-medium">{stats.timesUsed}</span>
-            </div>
+          <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-semibold text-uc-text-muted uc-num">
+            <span>{t('exercises.usedTimes', { count: stats.timesUsed }) || `Used ${stats.timesUsed}×`}</span>
             {stats.lastUsed && (
-              <div className="flex items-center justify-between text-uc-text-muted">
-                <span>{t('common.lastUsed') || 'Last Used:'}</span>
-                <span className="text-uc-text-light font-medium">{formatDate(stats.lastUsed)}</span>
-              </div>
+              <span>{t('exercises.lastShort', { date: formatDate(stats.lastUsed) })}</span>
             )}
-            {stats.lastWeight !== null && stats.lastReps !== null && (
-              <div className="flex items-center justify-between text-uc-text-muted">
-                <span>Last:</span>
-                <span className="text-uc-text-light font-medium">
-                  {stats.lastReps}×{stats.lastWeight}{exercise.defaultUnit}
-                </span>
-              </div>
-            )}
-          </>
+            {lastSet && <span>{t('exercises.lastSetShort', { value: lastSet })}</span>}
+          </p>
         )}
-        {stats && stats.timesUsed > 0 && (
-          <Link
-            href={`/exercises/${exercise.id}`}
-            className="block w-full mt-3 px-3 py-2 bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-purple rounded-lg text-sm font-medium text-center transition-colors"
-          >
-            View Progress →
-          </Link>
-        )}
+        {progressLink && <div className={compact ? '' : 'mt-1'}>{progressLink}</div>}
+      </div>
+      <div className="flex shrink-0">
+        <button
+          type="button"
+          onClick={() => onEdit(exercise)}
+          aria-label={t('common.edit') || 'Edit'}
+          title={t('common.edit') || 'Edit'}
+          className="inline-flex size-11 items-center justify-center rounded-uc-input transition-colors hover:bg-uc-elevated"
+        >
+          <Icon name="edit" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(exercise.id)}
+          disabled={isDeleting}
+          aria-label={t('common.delete') || 'Delete'}
+          title={t('common.delete') || 'Delete'}
+          className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-error transition-colors hover:bg-uc-elevated disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isDeleting ? <Spinner /> : <Icon name="delete" />}
+        </button>
       </div>
     </div>
   )
 }
-
-function ExerciseListItem({
-  exercise,
-  onEdit,
-  onDelete,
-  formatDate,
-  getCategoryColor,
-  quickStats,
-  isDeleting = false,
-}: {
-  exercise: Exercise
-  onEdit: (exercise: Exercise) => void
-  onDelete: (id: string) => void
-  formatDate: (date: string | null) => string
-  getCategoryColor: (category: string) => string
-  quickStats?: ExerciseQuickStats
-  isDeleting?: boolean
-}) {
-  const stats = quickStats || exercise.stats
-
-  return (
-    <div className="p-4 hover:bg-uc-black/50 transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="text-lg font-semibold text-uc-text-light">
-              {exercise.name}
-            </h3>
-            {exercise.category && (
-              <span className={`px-2 py-1 rounded text-xs font-medium border ${getCategoryColor(exercise.category)}`}>
-                {exercise.category}
-              </span>
-            )}
-            <span className="text-sm text-uc-text-muted">
-              {exercise.defaultUnit}
-            </span>
-            {stats && stats.timesUsed > 0 && (
-              <Link
-                href={`/exercises/${exercise.id}`}
-                className="text-xs text-uc-mustard hover:text-uc-mustard/80 transition-colors"
-                title="View Progress"
-              >
-                📊 View Progress
-              </Link>
-            )}
-          </div>
-          {stats && (
-            <div className="flex items-center gap-4 mt-2 text-sm text-uc-text-muted">
-              <span>Used {stats.timesUsed} times</span>
-              {stats.lastUsed && (
-                <>
-                  <span>•</span>
-                  <span>Last: {formatDate(stats.lastUsed)}</span>
-                </>
-              )}
-              {stats.lastWeight !== null && stats.lastReps !== null && (
-                <>
-                  <span>•</span>
-                  <span>Last: {stats.lastReps}×{stats.lastWeight}{exercise.defaultUnit}</span>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => onEdit(exercise)}
-            className="p-2 text-uc-text-muted hover:text-uc-mustard transition-colors"
-            title="Edit"
-          >
-            ✏️
-          </button>
-          <button
-            onClick={() => onDelete(exercise.id)}
-            disabled={isDeleting}
-            className="p-2 text-uc-text-muted hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title={isDeleting ? "Deleting..." : "Delete"}
-          >
-            {isDeleting ? (
-              <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              '🗑️'
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-

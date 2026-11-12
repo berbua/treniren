@@ -119,16 +119,15 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     setCycleInfo(null)
     setIsCycleTrackingEnabled(false)
     
-    // Remove from database
+    // Tracking is "on" while a last period date is stored: clear only that. Logged periods, the cycle length and the
+    // user's timezone stay (the timezone used to be reset to Europe/Warsaw here)
     try {
       await fetch('/api/user-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          cycleAvgLengthDays: 28,
           lastPeriodDate: null,
-          timezone: 'Europe/Warsaw'
         })
       })
     } catch (error) {

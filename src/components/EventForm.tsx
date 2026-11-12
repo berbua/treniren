@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { EventType, EventFormData, Event, Tag, TripClimbingType } from '@/types/event';
+import { EventType, EventFormData, Event, Tag, TripClimbingType, isRangeEventType } from '@/types/event';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCycle } from '@/contexts/CycleContext';
 import { toLocalDateString } from '@/lib/date-utils';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
-import TagSelector from './TagSelector';
 import { Tooltip } from './Tooltip';
+import { BottomSheet, Button, FieldError, Input, Label, SegmentedControl, Textarea, eventTypeMeta, Icon } from '@/components/ui';
 
 interface EventFormProps {
   onSubmit: (event: EventFormData) => void | Promise<void>;
@@ -17,17 +17,13 @@ interface EventFormProps {
   onCreateTag?: (name: string, color: string) => void;
   isSubmitting?: boolean;
   defaultDate?: string; // Optional default date to pre-fill
+  /** Editing only: shows "Delete event" at the end of the form (the caller confirms and deletes). */
+  onDelete?: () => void;
 }
 
-const eventTypes: { value: EventType; label: string; emoji: string; description: string }[] = [
-  { value: 'INJURY', label: 'Injury', emoji: '🤕', description: 'Track injuries and recovery' },
-  { value: 'PHYSIO', label: 'Physio Visit', emoji: '🏥', description: 'Physical therapy appointments' },
-  { value: 'COMPETITION', label: 'Competition', emoji: '🏆', description: 'Climbing competitions' },
-  { value: 'TRIP', label: 'Trip', emoji: '✈️', description: 'Climbing trips and adventures' },
-  { value: 'OTHER', label: 'Other', emoji: '📅', description: 'Other events' },
-];
+const eventTypes: EventType[] = ['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'DELOAD', 'OTHER'];
 
-export default function EventForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, defaultDate }: EventFormProps) {
+export default function EventForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, defaultDate, onDelete }: EventFormProps) {
   const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
@@ -98,25 +94,29 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
       newErrors.type = t('events.eventTypeRequired') || 'Please select an event type';
     }
 
-    // For non-trip events, require a date
-    if (formData.type !== 'TRIP' && !formData.date) {
+    // Single-day events need a date; trips and deloads a start and end date
+    const isRange = isRangeEventType(formData.type);
+    if (!isRange && !formData.date) {
       newErrors.date = t('events.dateRequired') || 'Please select a date';
     }
 
-    // Trip-specific validation
-    if (formData.type === 'TRIP') {
+    if (isRange) {
       if (!formData.tripStartDate) {
-        newErrors.tripStartDate = t('events.tripStartDateRequired') || 'Please select a start date for the trip';
+        newErrors.tripStartDate = formData.type === 'TRIP'
+          ? t('events.tripStartDateRequired') || 'Please select a start date for the trip'
+          : t('events.startDateRequired');
       }
       if (!formData.tripEndDate) {
-        newErrors.tripEndDate = t('events.tripEndDateRequired') || 'Please select an end date for the trip';
-      }
-      if (!formData.destination.trim()) {
-        newErrors.destination = t('events.destinationRequired') || 'Please enter a destination';
+        newErrors.tripEndDate = formData.type === 'TRIP'
+          ? t('events.tripEndDateRequired') || 'Please select an end date for the trip'
+          : t('events.endDateRequired');
       }
       if (formData.tripStartDate && formData.tripEndDate && formData.tripStartDate > formData.tripEndDate) {
         newErrors.tripEndDate = t('events.tripEndDateAfterStart') || 'End date must be after start date';
       }
+    }
+    if (formData.type === 'TRIP' && !formData.destination.trim()) {
+      newErrors.destination = t('events.destinationRequired') || 'Please enter a destination';
     }
 
     setErrors(newErrors);
@@ -130,23 +130,26 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
       return;
     }
 
+    const isRange = isRangeEventType(formData.type);
     const eventData: EventFormData = {
       type: formData.type,
       title: formData.type === 'TRIP' ? `${formData.destination} Trip` : 
+             formData.type === 'DELOAD' ? 'Deload' :
              formData.type === 'INJURY' ? formData.bodyPart || 'Injury' : 
              formData.location || 'Event',
-      date: formData.type === 'TRIP' ? formData.tripStartDate : formData.date,
+      date: isRange ? formData.tripStartDate : formData.date,
       description: formData.description,
       location: formData.type === 'TRIP' ? formData.destination : 
-                formData.type === 'INJURY' ? formData.bodyPart : formData.location,
+                formData.type === 'INJURY' ? formData.bodyPart :
+                formData.type === 'DELOAD' ? '' : formData.location,
       notes: '', // We're consolidating into description field
       tagIds: formData.tagIds,
       // Cycle tracking for injuries
       cycleDay: formData.type === 'INJURY' ? formData.cycleDay ?? null : undefined,
       cycleDayManuallySet: formData.type === 'INJURY' ? formData.cycleDayManuallySet : false,
       // Trip-specific fields
-      tripStartDate: formData.type === 'TRIP' ? formData.tripStartDate : undefined,
-      tripEndDate: formData.type === 'TRIP' ? formData.tripEndDate : undefined,
+      tripStartDate: isRange ? formData.tripStartDate : undefined,
+      tripEndDate: isRange ? formData.tripEndDate : undefined,
       destination: formData.type === 'TRIP' ? formData.destination : undefined,
       climbingType: formData.type === 'TRIP' ? formData.climbingType : undefined,
       showCountdown: formData.type === 'TRIP' ? formData.showCountdown : undefined,
@@ -168,85 +171,156 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
     }
   };
 
+  const descriptionLabel =
+    formData.type === 'INJURY' ? (t('events.injuryDescription') || 'Injury Description') :
+    formData.type === 'PHYSIO' ? (t('events.physioDescription') || 'Visit Description') :
+    formData.type === 'COMPETITION' ? (t('events.competitionDescription') || 'Competition Description') :
+    formData.type === 'DELOAD' ? t('events.deloadDescription') :
+    (t('events.description') || 'Description');
+  const descriptionPlaceholder =
+    formData.type === 'INJURY' ? (t('events.injuryDescriptionPlaceholder') || 'Describe the injury, symptoms, causes...') :
+    formData.type === 'PHYSIO' ? (t('events.physioDescriptionPlaceholder') || 'Describe the visit, recommendations, progress...') :
+    formData.type === 'COMPETITION' ? (t('events.competitionDescriptionPlaceholder') || 'Describe the competition, results, impressions...') :
+    formData.type === 'DELOAD' ? t('events.deloadDescriptionPlaceholder') :
+    (t('events.eventDescriptionPlaceholder') || 'Enter event description...');
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-uc-dark-bg rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-uc-purple/20">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-uc-purple/20">
-          <h2 className="text-2xl font-bold text-uc-text-light">
-            {initialData ? `✏️ ${t('events.editEvent') || 'Edit Event'}` : `➕ ${t('events.addEvent') || 'Add Event'}`}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-uc-text-muted hover:text-uc-text-light transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <BottomSheet
+      isOpen
+      onClose={onCancel}
+      dismissible={false}
+      closeLabel={t('common.close') || 'Close'}
+      title={initialData ? (t('events.editEvent') || 'Edit Event') : (t('events.addEvent') || 'Add Event')}
+      footer={
+        <div className="flex gap-3">
+          <Button variant="ghost" size="lg" className="flex-1" onClick={onCancel}>
+            {t('common.cancel') || 'Cancel'}
+          </Button>
+          <Button type="submit" form="event-form" variant="accent" size="lg" className="flex-[1.4]" isLoading={isSubmitting}>
+            {initialData ? (t('events.updateEvent') || 'Update Event') : (t('events.saveEvent') || 'Save Event')}
+          </Button>
         </div>
+      }
+    >
+      <form id="event-form" onSubmit={handleSubmit} className="space-y-5" noValidate>
+        {/* Event type */}
+        <fieldset>
+          <legend className="mb-2 text-[11px] font-bold uppercase leading-[14px] tracking-[0.08em] text-uc-text-muted">
+            {t('events.eventType') || 'Event Type'}
+          </legend>
+          <div className="grid grid-cols-3 gap-2">
+            {eventTypes.map((type) => {
+              const meta = eventTypeMeta(type);
+              const selected = formData.type === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => {
+                    updateFormData('type', type);
+                    // Start a new date range on the chosen day (e.g. the day tapped in the calendar)
+                    if (isRangeEventType(type) && !formData.tripStartDate) updateFormData('tripStartDate', formData.date);
+                  }}
+                  className={`flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-uc-input border-2 px-1 py-2 text-center transition-colors ${
+                    selected ? `${meta.border} ${meta.tint}` : 'border-uc-border bg-uc-surface hover:border-uc-text-muted'
+                  }`}
+                >
+                  <Icon name={meta.icon} size={22} className={meta.text} />
+                  <span className={`text-sm font-bold leading-tight ${meta.text}`}>
+                    {t(`events.types.${meta.key}`) || type}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <FieldError>{errors.type}</FieldError>
+        </fieldset>
 
-        {/* Form Content */}
-        <div className="p-6 overflow-y-auto max-h-[70vh]">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Event Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                📅 {t('events.eventType') || 'Event Type'} *
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {eventTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    type="button"
-                    onClick={() => updateFormData('type', type.value)}
-                    className={`p-3 rounded-xl border-2 text-center transition-all ${
-                      formData.type === type.value
-                        ? 'border-uc-purple bg-uc-purple/20'
-                        : 'border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black/50'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">{type.emoji}</span>
-                      <div className="text-sm font-medium text-uc-text-light">
-                        {type.label}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              {errors.type && (
-                <p className="mt-2 text-sm text-uc-alert">{t('events.eventTypeRequired') || errors.type}</p>
-              )}
-            </div>
+        {/* Body part — injuries */}
+        {formData.type === 'INJURY' && (
+          <div>
+            <Label htmlFor="event-body-part">{t('events.bodyPart') || 'Body Part'}</Label>
+            <Input
+              id="event-body-part"
+              value={formData.bodyPart}
+              onChange={(e) => updateFormData('bodyPart', e.target.value)}
+              placeholder={t('events.bodyPartPlaceholder') || 'e.g. left wrist, right shoulder, lower back...'}
+            />
+          </div>
+        )}
 
-            {/* Body Part - Only for injury events */}
-            {formData.type === 'INJURY' && (
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  🦵 {t('events.bodyPart') || 'Body Part'}
-                </label>
-                <input
-                  type="text"
-                  value={formData.bodyPart}
-                  onChange={(e) => updateFormData('bodyPart', e.target.value)}
-                  placeholder={t('events.bodyPartPlaceholder') || 'e.g. left wrist, right shoulder, lower back...'}
-                  className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
+        {/* Location — physio, competition, other */}
+        {!isRangeEventType(formData.type) && formData.type !== 'INJURY' && (
+          <div>
+            <Label htmlFor="event-location">{t('events.location') || 'Location'}</Label>
+            <Input
+              id="event-location"
+              value={formData.location}
+              onChange={(e) => updateFormData('location', e.target.value)}
+              placeholder={t('events.locationPlaceholder') || 'Enter location...'}
+            />
+          </div>
+        )}
+
+        {/* Date — single-day events */}
+        {!isRangeEventType(formData.type) && (
+          <div>
+            <Label htmlFor="event-date">{t('events.date') || 'Date'} *</Label>
+            <Input
+              id="event-date"
+              type="date"
+              value={formData.date}
+              onChange={(e) => updateFormData('date', e.target.value)}
+              aria-invalid={!!errors.date}
+            />
+            <FieldError>{errors.date}</FieldError>
+          </div>
+        )}
+
+        {/* Cycle day — injuries */}
+        {formData.type === 'INJURY' && (
+          <div>
+            <Label htmlFor="event-cycle-day" className="flex items-center gap-1.5">
+              {t('events.cycleDay') || 'Cycle Day'}
+              <Tooltip content={t('workouts.tooltips.cycleDay') || 'The day of your menstrual cycle (1-28+). Day 1 is the first day of your period. This helps correlate injuries and performance with your cycle phase.'}>
+                <span className="inline-flex cursor-help text-uc-text-muted"><Icon name="info" size={16} /></span>
+              </Tooltip>
+            </Label>
+            <div className="flex items-start gap-3">
+              <div className="flex shrink-0 items-center gap-1">
+                <Input
+                  id="event-cycle-day"
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={formData.cycleDay || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? undefined : parseInt(e.target.value, 10)
+                    updateFormData('cycleDay', value)
+                    updateFormData('cycleDayManuallySet', value !== undefined)
+                  }}
+                  placeholder={calculatedCycleDay?.toString() || t('events.cycleDayPlaceholder') || 'Enter cycle day...'}
+                  className="w-20 text-center font-bold uc-num"
                 />
+                {formData.cycleDay && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateFormData('cycleDay', undefined)
+                      updateFormData('cycleDayManuallySet', false)
+                    }}
+                    aria-label={t('events.clearCycleDay') || 'Clear and use calculated value'}
+                    title={t('events.clearCycleDay') || 'Clear and use calculated value'}
+                    className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-surface hover:text-uc-text"
+                  >
+                    <Icon name="close" />
+                  </button>
+                )}
               </div>
-            )}
-
-            {/* Cycle Day - Only for injury events */}
-            {formData.type === 'INJURY' && (
-              <div className="p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl border border-pink-200 dark:border-pink-800">
-                <label className="block text-sm font-medium text-uc-text-light mb-2 flex items-center gap-2">
-                  🌸 {t('events.cycleDay') || 'Cycle Day'}
-                  <Tooltip content={t('workouts.tooltips.cycleDay') || 'The day of your menstrual cycle (1-28+). Day 1 is the first day of your period. This helps correlate injuries and performance with your cycle phase.'}>
-                    <span className="text-pink-500 dark:text-pink-400 cursor-help">ℹ️</span>
-                  </Tooltip>
-                </label>
+              <div className="min-w-0 text-[13px] leading-snug text-uc-text-muted">
                 {calculatedCycleDay !== undefined && !formData.cycleDayManuallySet && (
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
+                  <p>
                     {(t('events.calculatedCycleDay') || `Based on cycle calculation ({cycleLength} days), this is cycle day {day}.`)
                       .replace('{cycleLength}', (cycleSettings?.cycleLength || 28).toString())
                       .replace('{day}', calculatedCycleDay.toString())}
@@ -254,262 +328,119 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                     {t('events.cycleDayHint') || 'If you use a cycle tracking app, you can set this manually for better accuracy.'}
                   </p>
                 )}
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={formData.cycleDay || ''}
-                    onChange={(e) => {
-                      const value = e.target.value === '' ? undefined : parseInt(e.target.value, 10)
-                      updateFormData('cycleDay', value)
-                      updateFormData('cycleDayManuallySet', value !== undefined)
-                    }}
-                    placeholder={calculatedCycleDay?.toString() || t('events.cycleDayPlaceholder') || 'Enter cycle day...'}
-                    className="w-24 border border-pink-300 dark:border-pink-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 focus:border-pink-500 focus:outline-none"
-                  />
-                  {formData.cycleDay && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        updateFormData('cycleDay', undefined)
-                        updateFormData('cycleDayManuallySet', false)
-                      }}
-                      className="text-xs text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200"
-                      title={t('events.clearCycleDay') || 'Clear and use calculated value'}
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
                 {formData.cycleDayManuallySet && formData.cycleDay && (
-                  <p className="text-xs text-pink-600 dark:text-pink-400 mt-2">
-                    ✏️ {t('events.cycleDayManuallySet') || 'Manually set - will not be overwritten by calculations'}
+                  <p className="text-uc-primary">
+                    {t('events.cycleDayManuallySet') || 'Manually set - will not be overwritten by calculations'}
                   </p>
                 )}
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* Location - Only for non-trip, non-injury events */}
-            {formData.type !== 'TRIP' && formData.type !== 'INJURY' && (
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  📍 {t('events.location') || 'Location'}
-                </label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => updateFormData('location', e.target.value)}
-                  placeholder={t('events.locationPlaceholder') || 'Enter location...'}
-                  className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                />
-              </div>
-            )}
-
-            {/* Date - Only for non-trip events */}
-            {formData.type !== 'TRIP' && (
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  📅 {t('events.date') || 'Date'} *
-                </label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => updateFormData('date', e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:outline-none ${
-                    errors.date ? 'border-uc-alert' : 'border-uc-purple/20 focus:border-uc-purple'
-                  }`}
-                />
-                {errors.date && (
-                  <p className="mt-2 text-sm text-uc-alert">{t('events.dateRequired') || errors.date}</p>
-                )}
-              </div>
-            )}
-
-
-            {/* Description/Notes - Consolidated field */}
+        {/* Date range — trips and deloads */}
+        {isRangeEventType(formData.type) && (
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-uc-text-light mb-2">
-                📝 {formData.type === 'INJURY' ? (t('events.injuryDescription') || 'Injury Description') : 
-                     formData.type === 'PHYSIO' ? (t('events.physioDescription') || 'Visit Description') :
-                     formData.type === 'COMPETITION' ? (t('events.competitionDescription') || 'Competition Description') :
-                     (t('events.description') || 'Description')}
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => updateFormData('description', e.target.value)}
-                placeholder={
-                  formData.type === 'INJURY' ? (t('events.injuryDescriptionPlaceholder') || 'Describe the injury, symptoms, causes...') :
-                  formData.type === 'PHYSIO' ? (t('events.physioDescriptionPlaceholder') || 'Describe the visit, recommendations, progress...') :
-                  formData.type === 'COMPETITION' ? (t('events.competitionDescriptionPlaceholder') || 'Describe the competition, results, impressions...') :
-                  (t('events.eventDescriptionPlaceholder') || 'Enter event description...')
-                }
-                rows={4}
-                className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none resize-none"
+              <Label htmlFor="event-trip-start">
+                {formData.type === 'TRIP' ? t('events.tripStartDate') || 'Trip Start Date' : t('events.startDate')} *
+              </Label>
+              <Input
+                id="event-trip-start"
+                type="date"
+                value={formData.tripStartDate}
+                onChange={(e) => updateFormData('tripStartDate', e.target.value)}
+                aria-invalid={!!errors.tripStartDate}
+              />
+              <FieldError>{errors.tripStartDate}</FieldError>
+            </div>
+            <div>
+              <Label htmlFor="event-trip-end">
+                {formData.type === 'TRIP' ? t('events.tripEndDate') || 'Trip End Date' : t('events.endDate')} *
+              </Label>
+              <Input
+                id="event-trip-end"
+                type="date"
+                value={formData.tripEndDate}
+                onChange={(e) => updateFormData('tripEndDate', e.target.value)}
+                aria-invalid={!!errors.tripEndDate}
+              />
+              <FieldError>{errors.tripEndDate}</FieldError>
+            </div>
+          </div>
+        )}
+        {formData.type === 'DELOAD' && (
+          <p className="-mt-2 text-[13px] text-uc-text-muted">{t('events.deloadHint')}</p>
+        )}
+
+        {/* Trip */}
+        {formData.type === 'TRIP' && (
+          <>
+            <div>
+              <Label htmlFor="event-destination">{t('events.destination') || 'Destination'} *</Label>
+              <Input
+                id="event-destination"
+                value={formData.destination}
+                onChange={(e) => updateFormData('destination', e.target.value)}
+                placeholder={t('events.destinationPlaceholder') || 'Enter destination (e.g. Fontainebleau, France)'}
+                aria-invalid={!!errors.destination}
+              />
+              <FieldError>{errors.destination}</FieldError>
+            </div>
+
+            <div>
+              <Label>{t('events.climbingType') || 'Climbing Type'}</Label>
+              <SegmentedControl<TripClimbingType>
+                ariaLabel={t('events.climbingType') || 'Climbing Type'}
+                value={formData.climbingType}
+                onChange={(value) => updateFormData('climbingType', value)}
+                options={[
+                  { value: 'BOULDERING', label: t('events.bouldering') || 'Bouldering' },
+                  { value: 'SPORT_CLIMBING', label: t('events.sportClimbing') || 'Sport Climbing' },
+                ]}
               />
             </div>
 
+            <label className="flex min-h-14 cursor-pointer items-center gap-3 rounded-uc-input border border-uc-border bg-uc-surface px-4 py-3">
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5 text-[15px] font-bold text-uc-text">
+                  {t('events.showCountdown') || 'Show countdown on homepage'}
+                  <Tooltip content={t('workouts.tooltips.showCountdown') || 'Enable this to show a countdown timer for this trip on the homepage. Great for building excitement before a climbing trip!'}>
+                    <span className="inline-flex cursor-help text-uc-text-muted"><Icon name="info" size={16} /></span>
+                  </Tooltip>
+                </span>
+                <span className="mt-0.5 block text-[13px] text-uc-text-muted">
+                  {t('events.showCountdownDescription') || 'Enable this to show the trip on the homepage with a countdown'}
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={formData.showCountdown}
+                onChange={(e) => updateFormData('showCountdown', e.target.checked)}
+                className="size-6 shrink-0 cursor-pointer accent-[var(--uc-primary)]"
+              />
+            </label>
+          </>
+        )}
 
-            {/* Trip-specific fields */}
-            {formData.type === 'TRIP' && (
-              <>
-                {/* Trip Start Date */}
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🛫 {t('events.tripStartDate') || 'Trip Start Date'} *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.tripStartDate}
-                    onChange={(e) => updateFormData('tripStartDate', e.target.value)}
-                    className={`w-full border rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:outline-none ${
-                      errors.tripStartDate ? 'border-uc-alert' : 'border-uc-purple/20 focus:border-uc-purple'
-                    }`}
-                  />
-                  {errors.tripStartDate && (
-                    <p className="mt-2 text-sm text-uc-alert">{t('events.tripStartDateRequired') || errors.tripStartDate}</p>
-                  )}
-                </div>
-
-                {/* Trip End Date */}
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🛬 {t('events.tripEndDate') || 'Trip End Date'} *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.tripEndDate}
-                    onChange={(e) => updateFormData('tripEndDate', e.target.value)}
-                    className={`w-full border rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:outline-none ${
-                      errors.tripEndDate ? 'border-uc-alert' : 'border-uc-purple/20 focus:border-uc-purple'
-                    }`}
-                  />
-                  {errors.tripEndDate && (
-                    <p className="mt-2 text-sm text-uc-alert">
-                      {errors.tripEndDate === 'End date must be after start date' 
-                        ? (t('events.tripEndDateAfterStart') || errors.tripEndDate)
-                        : (t('events.tripEndDateRequired') || errors.tripEndDate)}
-                    </p>
-                  )}
-                </div>
-
-                {/* Destination - Moved below date fields */}
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🌍 {t('events.destination') || 'Destination'} *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.destination}
-                    onChange={(e) => updateFormData('destination', e.target.value)}
-                    placeholder={t('events.destinationPlaceholder') || 'Enter destination (e.g. Fontainebleau, France)'}
-                    className={`w-full border rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:outline-none ${
-                      errors.destination ? 'border-uc-alert' : 'border-uc-purple/20 focus:border-uc-purple'
-                    }`}
-                  />
-                  {errors.destination && (
-                    <p className="mt-2 text-sm text-uc-alert">{t('events.destinationRequired') || errors.destination}</p>
-                  )}
-                </div>
-
-                {/* Climbing Type */}
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🧗 {t('events.climbingType') || 'Climbing Type'}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateFormData('climbingType', 'BOULDERING')}
-                      className={`p-3 rounded-xl border-2 text-center transition-all ${
-                        formData.climbingType === 'BOULDERING'
-                          ? 'border-uc-purple bg-uc-purple/20'
-                          : 'border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black/50'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">🧗</span>
-                        <div className="text-sm font-medium text-uc-text-light">
-                          {t('events.bouldering') || 'Bouldering'}
-                        </div>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateFormData('climbingType', 'SPORT_CLIMBING')}
-                      className={`p-3 rounded-xl border-2 text-center transition-all ${
-                        formData.climbingType === 'SPORT_CLIMBING'
-                          ? 'border-uc-purple bg-uc-purple/20'
-                          : 'border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black/50'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">🧗‍♀️</span>
-                        <div className="text-sm font-medium text-uc-text-light">
-                          {t('events.sportClimbing') || 'Sport Climbing'}
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Show Countdown Toggle */}
-                <div className="p-4 bg-uc-purple/10 rounded-xl border border-uc-purple/20">
-                  <label className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      checked={formData.showCountdown}
-                      onChange={(e) => updateFormData('showCountdown', e.target.checked)}
-                      className="w-4 h-4 text-uc-purple bg-uc-black border-uc-purple/20 rounded focus:ring-uc-purple focus:ring-2"
-                    />
-                    <span className="text-sm font-medium text-uc-text-light flex items-center gap-2">
-                      📅 {t('events.showCountdown') || 'Show countdown on homepage'}: &quot;{t('dashboard.daysToGo') || 'days to go'} {formData.destination || (t('events.destination') || 'destination')}: XX {t('dashboard.daysToGo') || 'days'}&quot;
-                      <Tooltip content={t('workouts.tooltips.showCountdown') || 'Enable this to show a countdown timer for this trip on the homepage. Great for building excitement before a climbing trip!'}>
-                        <span className="text-uc-purple cursor-help">ℹ️</span>
-                      </Tooltip>
-                    </span>
-                  </label>
-                  <p className="text-xs text-uc-text-muted mt-2">
-                    {t('events.showCountdownDescription') || 'Enable this to show the trip on the homepage with a countdown'}
-                  </p>
-                </div>
-              </>
-            )}
-
-
-
-          </form>
+        {/* Description */}
+        <div>
+          <Label htmlFor="event-description">{descriptionLabel}</Label>
+          <Textarea
+            id="event-description"
+            value={formData.description}
+            onChange={(e) => updateFormData('description', e.target.value)}
+            placeholder={descriptionPlaceholder}
+            rows={3}
+          />
         </div>
-
-        {/* Footer */}
-        <div className="flex justify-end space-x-3 p-6 border-t border-uc-purple/20">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-uc-text-muted hover:text-uc-text-light transition-colors bg-uc-dark-bg/50 hover:bg-uc-dark-bg rounded-xl border border-uc-purple/20"
-          >
-            {t('common.cancel')}
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 shadow-lg"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-uc-black"></div>
-                <span>{t('common.save')}...</span>
-              </>
-            ) : (
-              <>
-                <span>💾</span>
-                <span>{initialData ? (t('events.updateEvent') || 'Update Event') : (t('events.saveEvent') || 'Save Event')}</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
+        {initialData && onDelete && (
+          <Button variant="ghost" size="lg" className="w-full text-uc-error" onClick={onDelete}>
+            <Icon name="delete" />
+            {t('events.deleteEvent') || 'Delete event'}
+          </Button>
+        )}
+      </form>
+    </BottomSheet>
   );
 }

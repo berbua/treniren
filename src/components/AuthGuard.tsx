@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -18,6 +19,7 @@ export default function AuthGuard({
 }: AuthGuardProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { t } = useLanguage()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -40,16 +42,7 @@ export default function AuthGuard({
   }, [session, status, requireAuth, redirectTo, router])
 
   if (status === 'loading' || isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <p className="mt-4 text-slate-600 dark:text-slate-300">
-            Loading...
-          </p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner message={t('common.loading')} fullScreen />
   }
 
   if (requireAuth && !session) {

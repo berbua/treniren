@@ -1,11 +1,42 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import AuthGuard from '@/components/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { GoalProgressDisplay } from '@/components/GoalProgressDisplay'
 import { statisticsService, StatisticsData, TimeFrame } from '@/lib/statistics-service'
 import { Workout } from '@/types/workout'
+import { ConfirmationDialog } from '@/components/ConfirmationDialog'
+import {
+  BottomSheet,
+  Button,
+  buttonClasses,
+  Card,
+  Chip,
+  ChoiceChip,
+  EmptyState,
+  Input,
+  Label,
+  Icon,
+  Overline,
+  SegmentedControl,
+  Select,
+  SkeletonRows,
+  Textarea,
+  workoutBg,
+} from '@/components/ui'
+
+type GoalKind = 'process' | 'project'
+
+const typeLabelKey: Record<string, string> = {
+  GYM: 'gym',
+  BOULDERING: 'bouldering',
+  CIRCUITS: 'circuits',
+  LEAD_ROCK: 'leadRock',
+  LEAD_ARTIFICIAL: 'leadArtificial',
+  MENTAL_PRACTICE: 'mentalPractice',
+  FINGERBOARD: 'fingerboard',
+}
 
 export default function StrongMindPage() {
   return (
@@ -16,9 +47,12 @@ export default function StrongMindPage() {
 }
 
 function StrongMindPageContent() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
   const [activeTab, setActiveTab] = useState<'goals' | 'gratitude' | 'statistics'>('goals')
-  const [goalsSubTab, setGoalsSubTab] = useState<'process' | 'project'>('process')
+  const [processSheetOpen, setProcessSheetOpen] = useState(false)
+  const [projectSheetOpen, setProjectSheetOpen] = useState(false)
+  const [deletingGoal, setDeletingGoal] = useState<{ kind: GoalKind; id: string } | null>(null)
   const [gratitudeFilter, setGratitudeFilter] = useState<'all' | 'gratitude' | 'improvements'>('all')
   const [gratitudeWorkouts, setGratitudeWorkouts] = useState<Array<{
     id: string
@@ -179,6 +213,34 @@ function StrongMindPageContent() {
     !isLongTerm(goal.timeframeValue, goal.timeframeUnit)
   ) : []
 
+  const resetProcessForm = () => {
+    setEditingProcessGoalId(null)
+    setTimeframeValue('1')
+    setTimeframeUnit('weeks')
+    setStartDate('')
+    setGoalDescription('')
+  }
+
+  const resetProjectForm = () => {
+    setEditingProjectGoalId(null)
+    setClimbingType('route')
+    setRouteGrade('')
+    setGradeSystem('french')
+    setRouteName('')
+    setSectorLocation('')
+    setRelatedProcessGoal('')
+  }
+
+  const closeProcessSheet = () => {
+    setProcessSheetOpen(false)
+    resetProcessForm()
+  }
+
+  const closeProjectSheet = () => {
+    setProjectSheetOpen(false)
+    resetProjectForm()
+  }
+
   const handleAddGoal = () => {
     if (!goalDescription.trim()) return
     
@@ -215,11 +277,7 @@ function StrongMindPageContent() {
       setIdCounter(prev => prev + 1)
     }
     
-    // Reset form
-    setTimeframeValue('1')
-    setTimeframeUnit('weeks')
-    setStartDate('')
-    setGoalDescription('')
+    closeProcessSheet()
   }
 
   const handleEditProcessGoal = (goalId: string) => {
@@ -230,25 +288,15 @@ function StrongMindPageContent() {
       setStartDate(goal.startDate)
       setGoalDescription(goal.goalDescription)
       setEditingProcessGoalId(goalId)
-      // Scroll to form
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      setProcessSheetOpen(true)
     }
   }
 
   const handleDeleteProcessGoal = (goalId: string) => {
-    if (confirm(t('strongMind.deleteGoalConfirm') || 'Are you sure you want to delete this goal?')) {
-      const updatedGoals = processGoals.filter(g => g.id !== goalId)
-      setProcessGoals(updatedGoals)
-      localStorage.setItem('processGoals', JSON.stringify(updatedGoals))
-      if (editingProcessGoalId === goalId) {
-        setEditingProcessGoalId(null)
-        // Reset form
-        setTimeframeValue('1')
-        setTimeframeUnit('weeks')
-        setStartDate('')
-        setGoalDescription('')
-      }
-    }
+    const updatedGoals = processGoals.filter(g => g.id !== goalId)
+    setProcessGoals(updatedGoals)
+    localStorage.setItem('processGoals', JSON.stringify(updatedGoals))
+    if (editingProcessGoalId === goalId) resetProcessForm()
   }
 
   const handleAddRouteGoal = () => {
@@ -291,13 +339,7 @@ function StrongMindPageContent() {
       setIdCounter(prev => prev + 1)
     }
     
-    // Reset form
-    setClimbingType('route')
-    setRouteGrade('')
-    setGradeSystem('french')
-    setRouteName('')
-    setSectorLocation('')
-    setRelatedProcessGoal('')
+    closeProjectSheet()
   }
 
   const handleEditProjectGoal = (goalId: string) => {
@@ -310,27 +352,22 @@ function StrongMindPageContent() {
       setSectorLocation(goal.sectorLocation)
       setRelatedProcessGoal(goal.relatedProcessGoal)
       setEditingProjectGoalId(goalId)
-      // Scroll to form
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      setProjectSheetOpen(true)
     }
   }
 
   const handleDeleteProjectGoal = (goalId: string) => {
-    if (confirm(t('strongMind.deleteGoalConfirm') || 'Are you sure you want to delete this goal?')) {
-      const updatedGoals = projectGoals.filter(g => g.id !== goalId)
-      setProjectGoals(updatedGoals)
-      localStorage.setItem('projectGoals', JSON.stringify(updatedGoals))
-      if (editingProjectGoalId === goalId) {
-        setEditingProjectGoalId(null)
-        // Reset form
-        setClimbingType('route')
-        setRouteGrade('')
-        setGradeSystem('french')
-        setRouteName('')
-        setSectorLocation('')
-        setRelatedProcessGoal('')
-      }
-    }
+    const updatedGoals = projectGoals.filter(g => g.id !== goalId)
+    setProjectGoals(updatedGoals)
+    localStorage.setItem('projectGoals', JSON.stringify(updatedGoals))
+    if (editingProjectGoalId === goalId) resetProjectForm()
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deletingGoal) return
+    if (deletingGoal.kind === 'process') handleDeleteProcessGoal(deletingGoal.id)
+    else handleDeleteProjectGoal(deletingGoal.id)
+    setDeletingGoal(null)
   }
 
   // Get available grade systems based on climbing type
@@ -374,815 +411,276 @@ function StrongMindPageContent() {
     }
   }
 
+  const formatShortDate = (value: string) =>
+    new Date(value).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+  const timeframeLabel = (value: string, unit: string) =>
+    `${value} ${(t(`strongMind.${unit}`) || unit).toLowerCase()}`
+  const workoutTypeLabel = (type: string) =>
+    typeLabelKey[type] ? t(`training.types.${typeLabelKey[type]}`) || type : type
+
+  const header = (
+    <h1 className="flex items-center gap-2.5 text-[28px] font-extrabold leading-tight text-uc-text">
+      <Icon name="strong-mind" size={28} className="text-uc-primary" />
+      {t('strongMind.title') || 'Strong Mind'}
+    </h1>
+  )
+
   // Show loading state until client-side hydration is complete
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-uc-black">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-uc-text-light">
-              🧠 {t('strongMind.title') || 'Strong Mind'}
-            </h1>
-            <p className="text-uc-text-muted mt-2">
-              {t('strongMind.description') || 'Set your climbing goals and track your mental journey'}
-            </p>
-          </div>
-          <div className="text-center py-12">
-            <div className="text-uc-text-muted">
-              {t('common.loading') || 'Loading...'}
-            </div>
-          </div>
+      <div className="min-h-screen bg-uc-bg">
+        <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+          {header}
+          <SkeletonRows />
         </div>
       </div>
     )
   }
 
+  const editDeleteButtons = (kind: GoalKind, id: string) => (
+    <div className="flex shrink-0 -mr-2 -mt-2">
+      <button
+        type="button"
+        onClick={() => (kind === 'process' ? handleEditProcessGoal(id) : handleEditProjectGoal(id))}
+        aria-label={t('common.edit') || 'Edit'}
+        className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-elevated hover:text-uc-text"
+      >
+        <Icon name="edit" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setDeletingGoal({ kind, id })}
+        aria-label={t('common.delete') || 'Delete'}
+        className="inline-flex size-11 items-center justify-center rounded-uc-input text-uc-text-muted hover:bg-uc-elevated hover:text-uc-error"
+      >
+        <Icon name="delete" />
+      </button>
+    </div>
+  )
+
+  const renderProcessGoals = (goals: typeof processGoals, title: string, emptyText: string) => (
+    <div>
+      <Overline className="mb-2 mt-4">
+        {title} <span className="uc-num">({goals.length})</span>
+      </Overline>
+      {goals.length === 0 ? (
+        <p className="rounded-uc-card border border-dashed border-uc-border px-4 py-5 text-center text-sm text-uc-text-muted">
+          {emptyText}
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {goals.map(goal => (
+            <Card key={goal.id}>
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="whitespace-pre-wrap text-[17px] font-bold leading-6 text-uc-text">{goal.goalDescription}</p>
+                  <p className="mt-1 text-[13px] font-semibold text-uc-text-muted uc-num">
+                    {timeframeLabel(goal.timeframeValue, goal.timeframeUnit)}
+                    {goal.startDate && <> · {t('strongMind.startingFrom') || 'starting from'} {formatShortDate(goal.startDate)}</>}
+                  </p>
+                </div>
+                {editDeleteButtons('process', goal.id)}
+              </div>
+              <GoalProgressDisplay goalId={goal.id} goalType="process" goalName={goal.goalDescription} />
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  const gratitudeCard = (workout: typeof gratitudeWorkouts[number], kind: 'gratitude' | 'improvements') => (
+    <Card key={`${kind}-${workout.id}`} className="flex flex-col gap-2">
+      <Icon
+        name={kind === 'gratitude' ? 'gratitude' : 'improve'}
+        className={kind === 'gratitude' ? 'text-uc-accent-text' : 'text-uc-primary'}
+      />
+      <p className="flex-1 whitespace-pre-wrap text-[15px] font-semibold leading-snug text-uc-text">
+        {kind === 'gratitude' ? workout.gratitude : workout.improvements}
+      </p>
+      <p className="text-[12px] font-semibold text-uc-text-muted">
+        {formatShortDate(workout.startTime)} · {workoutTypeLabel(workout.type)}
+        {workout.sector && <> · <Icon name="event-trip" size={13} className="inline -mt-0.5" /> {workout.sector}</>}
+      </p>
+    </Card>
+  )
+
+  const renderGratitudeSection = (kind: 'gratitude' | 'improvements') => {
+    const entries = gratitudeWorkouts.filter(w => (kind === 'gratitude' ? w.gratitude : w.improvements))
+    const isGratitude = kind === 'gratitude'
+    return (
+      <section>
+        <Overline className="mb-2 flex items-center gap-1.5">
+          <Icon name={isGratitude ? 'gratitude' : 'improve'} size={16} />
+          {isGratitude
+            ? (t('strongMind.gratefulFor') || '3 things I am grateful for')
+            : (t('strongMind.improvements') || '3 things to do better next time')}
+        </Overline>
+        {entries.length === 0 ? (
+          <Card className="border-dashed">
+            <EmptyState
+              icon={<Icon name={isGratitude ? 'gratitude' : 'improve'} size={28} />}
+              title={isGratitude
+                ? (t('strongMind.noGratitude') || 'No gratitude entries yet')
+                : (t('strongMind.noImprovements') || 'No improvement notes yet')}
+              description={isGratitude
+                ? (t('strongMind.noGratitudeDescription') || 'Start adding gratitude notes to your workouts to reflect on what you\'re thankful for in your training journey.')
+                : (t('strongMind.noImprovementsDescription') || 'Track what you\'re working on improving in your workouts. Add improvement notes to see your progress over time.')}
+              action={
+                <a href="/workouts" className={buttonClasses('accent')}>
+                  {isGratitude
+                    ? (t('strongMind.addGratitude') || 'Add Gratitude to Workout')
+                    : (t('strongMind.addImprovements') || 'Add Improvements to Workout')}
+                </a>
+              }
+            />
+          </Card>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {entries.map(workout => gratitudeCard(workout, kind))}
+          </div>
+        )}
+      </section>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-uc-black">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-uc-text-light">
-            🧠 {t('strongMind.title') || 'Strong Mind'}
-          </h1>
-          <p className="text-uc-text-muted mt-2">
-            {t('strongMind.description') || 'Set your climbing goals and track your mental journey'}
-          </p>
-        </div>
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+        {header}
+        <p className="mt-1 mb-5 text-sm text-uc-text-muted">
+          {t('strongMind.description') || 'Set your climbing goals and track your mental journey'}
+        </p>
 
-        {/* Main Navigation */}
-        <div className="flex space-x-1 mb-8 bg-uc-dark-bg rounded-xl p-1 border border-uc-purple/20">
-          <button 
-            onClick={() => setActiveTab('goals')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-              activeTab === 'goals'
-                ? 'bg-uc-mustard text-uc-black shadow-lg'
-                : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
-            }`}
-          >
-            🎯 {t('strongMind.goals') || 'Goals'}
-          </button>
-          <button 
-            onClick={() => setActiveTab('gratitude')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-              activeTab === 'gratitude'
-                ? 'bg-uc-mustard text-uc-black shadow-lg'
-                : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
-            }`}
-          >
-            🙏 {t('strongMind.gratitude') || 'Gratitude'} & {t('strongMind.improvements') || 'Improvements'}
-          </button>
-          <button 
-            onClick={() => setActiveTab('statistics')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-              activeTab === 'statistics'
-                ? 'bg-uc-mustard text-uc-black shadow-lg'
-                : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
-            }`}
-          >
-            📊 {t('strongMind.statistics') || 'Statistics'}
-          </button>
-        </div>
+        <SegmentedControl
+          className="mb-5 lg:max-w-xl"
+          ariaLabel={t('strongMind.title') || 'Strong Mind'}
+          value={activeTab}
+          onChange={setActiveTab}
+          options={[
+            { value: 'goals', label: t('strongMind.goals') || 'Goals' },
+            { value: 'gratitude', label: t('strongMind.gratitudeAndImprovements') || 'Gratitude & Improvements' },
+            { value: 'statistics', label: t('strongMind.statistics') || 'Statistics' },
+          ]}
+        />
 
-        {/* Goals Content */}
+        {/* Goals */}
         {activeTab === 'goals' && (
-          <div>
-            {/* Goals Sub-navigation */}
-            <div className="flex space-x-1 mb-6 bg-uc-black/50 rounded-xl p-1 border border-uc-purple/20">
-              <button 
-                onClick={() => setGoalsSubTab('process')}
-                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-                  goalsSubTab === 'process'
-                    ? 'bg-uc-purple text-uc-text-light shadow-lg'
-                    : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black'
-                }`}
-              >
-                🎯 {t('strongMind.processGoals') || 'Process Goals'}
-              </button>
-              <button 
-                onClick={() => setGoalsSubTab('project')}
-                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-                  goalsSubTab === 'project'
-                    ? 'bg-uc-purple text-uc-text-light shadow-lg'
-                    : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black'
-                }`}
-              >
-                🏔️ {t('strongMind.projectGoals') || 'Project Goals'}
-              </button>
-            </div>
-
-            {/* Process Goals Content */}
-            {goalsSubTab === 'process' && (
-        <div className="bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
-          <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-            🎯 {t('strongMind.processGoals') || 'Process Goals'}
-          </h2>
-          <p className="text-sm text-uc-text-muted mb-6">
-            {t('strongMind.processGoalsDescription') || 'Goals that support your climbing development'}
-          </p>
-          
-          {/* Goal Creation Form */}
-          <div className="bg-uc-black/50 p-6 rounded-xl border border-uc-purple/20 mb-6">
-            <h3 className="text-lg font-medium text-uc-text-light mb-4">
-              {editingProcessGoalId ? '✏️ ' + (t('strongMind.editGoal') || 'Edit Goal') : '➕ ' + (t('strongMind.addNewGoal') || 'Add New Goal')}
-            </h3>
-            
-            <div className="space-y-4">
-              {/* Timeframe Selection */}
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  📅 {t('strongMind.selectTimeframe') || 'Select Timeframe'}
-                  <span className="ml-2 text-xs text-uc-text-muted">
-                    ({t('strongMind.longTermTooltip') || 'Timeframes ≥3 months, quarters, or years are considered long-term'})
-                  </span>
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Timeframe Value */}
-                  <div>
-                    <label className="block text-xs font-medium text-uc-text-muted mb-1">
-                      {t('strongMind.duration') || 'Duration'}
-                    </label>
-                    <select
-                      value={timeframeValue}
-                      onChange={(e) => setTimeframeValue(e.target.value)}
-                      className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                    >
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
-                        <option key={num} value={num.toString()}>{num}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Timeframe Unit */}
-                  <div>
-                    <label className="block text-xs font-medium text-uc-text-muted mb-1">
-                      {t('strongMind.unit') || 'Unit'}
-                    </label>
-                    <select
-                      value={timeframeUnit}
-                      onChange={(e) => setTimeframeUnit(e.target.value)}
-                      className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                    >
-                      <option value="days">{t('strongMind.days') || 'Days'}</option>
-                      <option value="weeks">{t('strongMind.weeks') || 'Weeks'}</option>
-                      <option value="months">{t('strongMind.months') || 'Months'}</option>
-                      <option value="quarters">{t('strongMind.quarters') || 'Quarters'}</option>
-                      <option value="year">{t('strongMind.year') || 'Year'}</option>
-                      <option value="years">{t('strongMind.years') || 'Years'}</option>
-                    </select>
-                  </div>
-
-                  {/* Start Date */}
-                  <div>
-                    <label className="block text-xs font-medium text-uc-text-muted mb-1">
-                      {t('strongMind.startDate') || 'Start Date'}
-                    </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Timeframe Preview */}
-                {timeframeValue && timeframeUnit && (
-                  <div className="mt-3 p-3 rounded-xl border border-uc-purple/20 bg-uc-black/30">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium text-uc-text-light">
-                          {t('strongMind.timeframePreview') || 'Timeframe'}: {timeframeValue} {timeframeUnit}
-                        </span>
-                        {startDate && (
-                          <span className="text-xs text-uc-text-muted">
-                            ({t('strongMind.startingFrom') || 'starting from'} {new Date(startDate).toLocaleDateString()})
-                          </span>
-                        )}
-                      </div>
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        isLongTerm(timeframeValue, timeframeUnit)
-                          ? 'bg-uc-purple/20 text-uc-purple border border-uc-purple/30'
-                          : 'bg-uc-mustard/20 text-uc-mustard border border-uc-mustard/30'
-                      }`}>
-                        {isLongTerm(timeframeValue, timeframeUnit) 
-                          ? t('strongMind.longTerm') || 'Long-term'
-                          : t('strongMind.shortTerm') || 'Short-term'
-                        }
-                      </div>
-                    </div>
-                  </div>
-                )}
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-6">
+            {/* Process goals */}
+            <section>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-extrabold text-uc-text">{t('strongMind.processGoals') || 'Process Goals'}</h2>
+                <Button variant="tonal" onClick={() => { resetProcessForm(); setProcessSheetOpen(true) }}>
+                  + {t('common.add') || 'Add'}
+                </Button>
               </div>
-
-              {/* Goal Description */}
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  🎯 {t('strongMind.goalDescription') || 'Goal Description'}
-                </label>
-                <textarea
-                  value={goalDescription}
-                  onChange={(e) => setGoalDescription(e.target.value)}
-                  placeholder={t('strongMind.goalPlaceholder') || 'Describe your goal in detail...'}
-                  rows={4}
-                  className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none resize-none"
-                />
-              </div>
-
-              {/* Add/Update Goal Button */}
-              <div className="flex justify-end gap-2">
-                {editingProcessGoalId && (
-                  <button 
-                    onClick={() => {
-                      setEditingProcessGoalId(null)
-                      setTimeframeValue('1')
-                      setTimeframeUnit('weeks')
-                      setStartDate('')
-                      setGoalDescription('')
-                    }}
-                    className="bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-2 rounded-xl font-medium transition-colors border border-uc-purple/20"
-                  >
-                    {t('common.cancel') || 'Cancel'}
-                  </button>
-                )}
-                <button 
-                  onClick={handleAddGoal}
-                  disabled={!goalDescription.trim() || !startDate}
-                  className="bg-uc-mustard hover:bg-uc-mustard/90 disabled:bg-uc-text-muted disabled:cursor-not-allowed text-uc-black px-6 py-2 rounded-xl font-medium transition-colors shadow-lg"
-                >
-                  {editingProcessGoalId ? '💾 ' + (t('common.save') || 'Save') : '➕ ' + (t('strongMind.addGoal') || 'Add Goal')}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Existing Goals Display */}
-          <div>
-            <h3 className="text-lg font-medium text-uc-text-light mb-4">
-              📋 {t('strongMind.existingGoals') || 'Existing Goals'}
-            </h3>
-            
-            {/* Long-term Goals Section */}
-            <div className="mb-6">
-              <h4 className="text-md font-medium text-uc-text-light mb-3 flex items-center">
-                <span className="text-lg mr-2">📅</span>
-                {t('strongMind.longTermGoals') || 'Long-term Goals'}
-                <span className="text-sm text-uc-text-muted ml-2">({longTermGoals.length})</span>
-              </h4>
-              {longTermGoals.length === 0 ? (
-                <div className="bg-uc-black/30 p-4 rounded-xl border border-uc-purple/10">
-                  <p className="text-uc-text-muted text-sm text-center">
-                    {t('strongMind.noLongTermGoals') || 'No long-term goals set yet. Add your first goal above!'}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {longTermGoals.map(goal => (
-                    <div key={goal.id} className="bg-uc-dark-bg p-4 rounded-xl border border-uc-purple/20">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-uc-text-light">
-                            {goal.timeframeValue} {t(`strongMind.${goal.timeframeUnit}`) || goal.timeframeUnit}
-                          </span>
-                          {goal.startDate && (
-                            <span className="text-xs text-uc-text-muted">
-                              {t('strongMind.startingFrom') || 'starting from'} {new Date(goal.startDate).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => handleEditProcessGoal(goal.id)}
-                            className="text-uc-text-muted hover:text-uc-purple text-sm"
-                            title={t('common.edit') || 'Edit'}
-                          >
-                            ✏️
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteProcessGoal(goal.id)}
-                            className="text-uc-text-muted hover:text-uc-alert text-sm"
-                            title={t('common.delete') || 'Delete'}
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-uc-text-light text-sm">{goal.goalDescription}</p>
-                      <GoalProgressDisplay 
-                        goalId={goal.id} 
-                        goalType="process" 
-                        goalName={goal.goalDescription} 
-                      />
-                    </div>
-                  ))}
-                </div>
+              <p className="mt-1 text-[13px] text-uc-text-muted">
+                {t('strongMind.processGoalsDescription') || 'Goals that support your climbing development'}
+              </p>
+              {renderProcessGoals(
+                longTermGoals,
+                t('strongMind.longTermGoals') || 'Long-term Goals',
+                t('strongMind.noLongTermGoals') || 'No long-term goals set yet. Add your first goal above!',
               )}
-            </div>
-
-            {/* Short-term Goals Section */}
-            <div>
-              <h4 className="text-md font-medium text-uc-text-light mb-3 flex items-center">
-                <span className="text-lg mr-2">⚡</span>
-                {t('strongMind.shortTermGoals') || 'Short-term Goals'}
-                <span className="text-sm text-uc-text-muted ml-2">({shortTermGoals.length})</span>
-              </h4>
-              {shortTermGoals.length === 0 ? (
-                <div className="bg-uc-black/30 p-4 rounded-xl border border-uc-purple/10">
-                  <p className="text-uc-text-muted text-sm text-center">
-                    {t('strongMind.noShortTermGoals') || 'No short-term goals set yet. Add your first goal above!'}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {shortTermGoals.map(goal => (
-                    <div key={goal.id} className="bg-uc-dark-bg p-4 rounded-xl border border-uc-purple/20">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-uc-text-light">
-                            {goal.timeframeValue} {t(`strongMind.${goal.timeframeUnit}`) || goal.timeframeUnit}
-                          </span>
-                          {goal.startDate && (
-                            <span className="text-xs text-uc-text-muted">
-                              {t('strongMind.startingFrom') || 'starting from'} {new Date(goal.startDate).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => handleEditProcessGoal(goal.id)}
-                            className="text-uc-text-muted hover:text-uc-purple text-sm"
-                            title={t('common.edit') || 'Edit'}
-                          >
-                            ✏️
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteProcessGoal(goal.id)}
-                            className="text-uc-text-muted hover:text-uc-alert text-sm"
-                            title={t('common.delete') || 'Delete'}
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-uc-text-light text-sm">{goal.goalDescription}</p>
-                      <GoalProgressDisplay 
-                        goalId={goal.id} 
-                        goalType="process" 
-                        goalName={goal.goalDescription} 
-                      />
-                    </div>
-                  ))}
-                </div>
+              {renderProcessGoals(
+                shortTermGoals,
+                t('strongMind.shortTermGoals') || 'Short-term Goals',
+                t('strongMind.noShortTermGoals') || 'No short-term goals set yet. Add your first goal above!',
               )}
-            </div>
-          </div>
-        </div>
-            )}
-          </div>
-        )}
+            </section>
 
-        {/* Gratitude & Improvements Content */}
-        {activeTab === 'gratitude' && (
-          <div className="bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-                  🙏 {t('strongMind.gratitude') || 'Gratitude'} & {t('strongMind.improvements') || 'Improvements'}
+            {/* Project goals */}
+            <section>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-extrabold text-uc-text">
+                  {t('strongMind.projectGoals') || 'Project Goals'} <span className="text-uc-text-muted uc-num">({projectGoals.length})</span>
                 </h2>
-                <p className="text-uc-text-muted">
-                  {t('strongMind.gratitudeDescription') || 'Reflect on your recent workouts and what you\'re grateful for'}
-                </p>
+                <Button variant="tonal" onClick={() => { resetProjectForm(); setProjectSheetOpen(true) }}>
+                  + {t('common.add') || 'Add'}
+                </Button>
               </div>
-            </div>
-
-            {/* Filter Buttons */}
-            <div className="flex space-x-2 mb-6">
-              <button
-                onClick={() => setGratitudeFilter('all')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  gratitudeFilter === 'all'
-                    ? 'bg-uc-mustard text-uc-black shadow-lg'
-                    : 'bg-uc-black/50 text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setGratitudeFilter('gratitude')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  gratitudeFilter === 'gratitude'
-                    ? 'bg-uc-mustard text-uc-black shadow-lg'
-                    : 'bg-uc-black/50 text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black'
-                }`}
-              >
-                ✨ Gratitude
-              </button>
-              <button
-                onClick={() => setGratitudeFilter('improvements')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  gratitudeFilter === 'improvements'
-                    ? 'bg-uc-mustard text-uc-black shadow-lg'
-                    : 'bg-uc-black/50 text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black'
-                }`}
-              >
-                📈 Improvements
-              </button>
-            </div>
-
-            {/* Gratitude Tiles */}
-            {(gratitudeFilter === 'all' || gratitudeFilter === 'gratitude') && (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-uc-text-light mb-4 flex items-center">
-                  <span className="mr-2">✨</span>
-                  {t('strongMind.gratefulFor') || '3 things I am grateful for'}
-                </h3>
-                {gratitudeWorkouts.filter(w => w.gratitude).length === 0 ? (
-                  <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-                    <div className="text-6xl mb-4">🙏</div>
-                    <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-                      {t('strongMind.noGratitude') || 'No gratitude entries yet'}
-                    </h3>
-                    <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-                      {t('strongMind.noGratitudeDescription') || 'Start adding gratitude notes to your workouts to reflect on what you\'re thankful for in your training journey.'}
-                    </p>
-                    <a
-                      href="/workouts"
-                      className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-                    >
-                      ➕ {t('strongMind.addGratitude') || 'Add Gratitude to Workout'}
-                    </a>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {gratitudeWorkouts
-                      .filter(w => w.gratitude)
-                      .map((workout) => (
-                        <div key={`gratitude-${workout.id}`} className="bg-uc-black/50 p-6 rounded-xl border border-yellow-500/20 hover:border-yellow-500/40 transition-all">
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h4 className="text-lg font-semibold text-uc-text-light">
-                                {new Date(workout.startTime).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </h4>
-                              <div className="flex items-center gap-2 flex-wrap mt-1">
-                                <p className="text-sm text-uc-text-muted">
-                                  {workout.type}
-                                </p>
-                                {workout.sector && (
-                                  <>
-                                    <span className="text-uc-text-muted">•</span>
-                                    <p className="text-sm text-uc-text-muted">
-                                      📍 {workout.sector}
-                                    </p>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                            <p className="text-uc-text-light text-sm whitespace-pre-wrap">
-                              {workout.gratitude}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Improvements Tiles */}
-            {(gratitudeFilter === 'all' || gratitudeFilter === 'improvements') && (
-              <div>
-                <h3 className="text-lg font-semibold text-uc-text-light mb-4 flex items-center">
-                  <span className="mr-2">📈</span>
-                  {t('strongMind.improvements') || '3 things to do better next time'}
-                </h3>
-                {gratitudeWorkouts.filter(w => w.improvements).length === 0 ? (
-                  <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-                    <div className="text-6xl mb-4">📈</div>
-                    <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-                      {t('strongMind.noImprovements') || 'No improvement notes yet'}
-                    </h3>
-                    <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-                      {t('strongMind.noImprovementsDescription') || 'Track what you\'re working on improving in your workouts. Add improvement notes to see your progress over time.'}
-                    </p>
-                    <a
-                      href="/workouts"
-                      className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-                    >
-                      ➕ {t('strongMind.addImprovements') || 'Add Improvements to Workout'}
-                    </a>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {gratitudeWorkouts
-                      .filter(w => w.improvements)
-                      .map((workout) => (
-                        <div key={`improvements-${workout.id}`} className="bg-uc-black/50 p-6 rounded-xl border border-orange-500/20 hover:border-orange-500/40 transition-all">
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h4 className="text-lg font-semibold text-uc-text-light">
-                                {new Date(workout.startTime).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </h4>
-                              <div className="flex items-center gap-2 flex-wrap mt-1">
-                                <p className="text-sm text-uc-text-muted">
-                                  {workout.type}
-                                </p>
-                                {workout.sector && (
-                                  <>
-                                    <span className="text-uc-text-muted">•</span>
-                                    <p className="text-sm text-uc-text-muted">
-                                      📍 {workout.sector}
-                                    </p>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
-                            <p className="text-uc-text-light text-sm whitespace-pre-wrap">
-                              {workout.improvements}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-            {/* Project Goals Content */}
-            {activeTab === 'goals' && goalsSubTab === 'project' && (
-        <div className="bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
-          <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-            🏔️ {t('strongMind.projectGoals') || 'Project Goals'}
-          </h2>
-          <p className="text-sm text-uc-text-muted mb-6">
-            {t('strongMind.projectGoalsSubtitle') || 'Specific routes or boulders that support achieving your process goals'}
-          </p>
-          
-          {/* Project Goal Creation Form */}
-          <div className="bg-uc-black/50 p-6 rounded-xl border border-uc-purple/20 mb-6">
-            <h3 className="text-lg font-medium text-uc-text-light mb-4">
-              {editingProjectGoalId ? '✏️ ' + (t('strongMind.editProjectGoal') || 'Edit Project Goal') : '➕ ' + (t('strongMind.addNewProjectGoal') || 'Add New Project Goal')}
-            </h3>
-            
-            <div className="space-y-4">
-              {/* Climbing Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  🧗 {t('strongMind.climbingType') || 'Climbing Type'}
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setClimbingType('route')
-                      setRouteGrade('') // Reset grade when type changes
-                    }}
-                    className={`p-3 rounded-xl border-2 text-center transition-all ${
-                      climbingType === 'route'
-                        ? 'border-uc-purple bg-uc-purple/20'
-                        : 'border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black/50'
-                    }`}
-                  >
-                    <div className="text-lg mb-1">🧗‍♀️</div>
-                    <div className="text-sm font-medium text-uc-text-light">
-                      {t('strongMind.route') || 'Route'}
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setClimbingType('boulder')
-                      setRouteGrade('') // Reset grade when type changes
-                    }}
-                    className={`p-3 rounded-xl border-2 text-center transition-all ${
-                      climbingType === 'boulder'
-                        ? 'border-uc-purple bg-uc-purple/20'
-                        : 'border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black/50'
-                    }`}
-                  >
-                    <div className="text-lg mb-1">🧗</div>
-                    <div className="text-sm font-medium text-uc-text-light">
-                      {t('strongMind.boulder') || 'Boulder'}
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Grade System and Grade */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    🏆 {t('strongMind.gradeSystem') || 'Grade System'}
-                  </label>
-                  <select
-                    value={gradeSystem}
-                    onChange={(e) => {
-                      setGradeSystem(e.target.value)
-                      setRouteGrade('') // Reset grade when system changes
-                    }}
-                    className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                  >
-                    {getAvailableGradeSystems(climbingType).map(system => (
-                      <option key={system.value} value={system.value}>
-                        {system.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-uc-text-light mb-2">
-                    📊 {t('strongMind.grade') || 'Grade'}
-                  </label>
-                  <select
-                    value={routeGrade}
-                    onChange={(e) => setRouteGrade(e.target.value)}
-                    className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                  >
-                    <option value="">{t('strongMind.selectGrade') || 'Select grade...'}</option>
-                    {getGradeOptions(gradeSystem, climbingType).map(grade => (
-                      <option key={grade} value={grade}>{grade}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Route/Boulder Name */}
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  🧗 {climbingType === 'boulder' ? (t('strongMind.boulderName') || 'Boulder Name') : (t('strongMind.routeName') || 'Route Name')}
-                </label>
-                <input
-                  type="text"
-                  value={routeName}
-                  onChange={(e) => setRouteName(e.target.value)}
-                  placeholder={climbingType === 'boulder' 
-                    ? (t('strongMind.boulderNamePlaceholder') || 'Enter boulder name (e.g., "The Mandala", "Dreamtime")...')
-                    : (t('strongMind.routeNamePlaceholder') || 'Enter route name (e.g., "La Dura Dura", "Action Directe")...')
-                  }
-                  className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                />
-              </div>
-
-              {/* Sector Location */}
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  📍 {t('strongMind.sectorLocation') || 'Sector/Location'}
-                </label>
-                <input
-                  type="text"
-                  value={sectorLocation}
-                  onChange={(e) => setSectorLocation(e.target.value)}
-                  placeholder={t('strongMind.sectorLocationPlaceholder') || 'Enter sector and location (e.g., "Ceuse, France", "Stanage, UK")...'}
-                  className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                />
-              </div>
-
-              {/* Related Process Goal */}
-              <div>
-                <label className="block text-sm font-medium text-uc-text-light mb-2">
-                  🔗 {t('strongMind.relatedProcessGoal') || 'Related Process Goal (Optional)'}
-                </label>
-                <select
-                  value={relatedProcessGoal}
-                  onChange={(e) => setRelatedProcessGoal(e.target.value)}
-                  className="w-full border border-uc-purple/20 rounded-xl px-3 py-2 bg-uc-black text-uc-text-light focus:border-uc-purple focus:outline-none"
-                >
-                  <option value="">{t('strongMind.noRelation') || 'No relation to process goal'}</option>
-                  {processGoals.map(goal => (
-                    <option key={goal.id} value={goal.id}>
-                      {goal.timeframeValue} {t(`strongMind.${goal.timeframeUnit}`) || goal.timeframeUnit}: {goal.goalDescription}
-                    </option>
-                  ))}
-                  {processGoals.length === 0 && (
-                    <option disabled>
-                      {t('strongMind.noProcessGoalsToLink') || 'No process goals created yet'}
-                    </option>
-                  )}
-                </select>
-              </div>
-
-              {/* Add/Update Route Goal Button */}
-              <div className="flex justify-end gap-2">
-                {editingProjectGoalId && (
-                  <button 
-                    onClick={() => {
-                      setEditingProjectGoalId(null)
-                      setClimbingType('route')
-                      setRouteGrade('')
-                      setGradeSystem('french')
-                      setRouteName('')
-                      setSectorLocation('')
-                      setRelatedProcessGoal('')
-                    }}
-                    className="bg-uc-black/50 hover:bg-uc-black text-uc-text-light px-6 py-2 rounded-xl font-medium transition-colors border border-uc-purple/20"
-                  >
-                    {t('common.cancel') || 'Cancel'}
-                  </button>
-                )}
-                <button 
-                  onClick={handleAddRouteGoal}
-                  disabled={!routeGrade || !routeName.trim() || !sectorLocation.trim()}
-                  className="bg-uc-mustard hover:bg-uc-mustard/90 disabled:bg-uc-text-muted disabled:cursor-not-allowed text-uc-black px-6 py-2 rounded-xl font-medium transition-colors shadow-lg"
-                >
-                  {editingProjectGoalId ? '💾 ' + (t('common.save') || 'Save') : '➕ ' + (t('strongMind.addProjectGoal') || 'Add Project Goal')}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Existing Project Goals Display */}
-          <div>
-            <h3 className="text-lg font-medium text-uc-text-light mb-4">
-              📋 {t('strongMind.existingProjectGoals') || 'Existing Project Goals'}
-              <span className="text-sm text-uc-text-muted ml-2">({projectGoals.length})</span>
-            </h3>
-            {projectGoals.length === 0 ? (
-              <div className="bg-uc-black/30 p-4 rounded-xl border border-uc-purple/10">
-                <p className="text-uc-text-muted text-sm text-center">
+              <p className="mt-1 mb-4 text-[13px] text-uc-text-muted">
+                {t('strongMind.projectGoalsSubtitle') || 'Specific routes or boulders that support achieving your process goals'}
+              </p>
+              {projectGoals.length === 0 ? (
+                <p className="rounded-uc-card border border-dashed border-uc-border px-4 py-5 text-center text-sm text-uc-text-muted">
                   {t('strongMind.noProjectGoals') || 'No project goals set yet. Add your first project goal above!'}
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {projectGoals.map(goal => (
-                  <div key={goal.id} className="bg-uc-dark-bg p-4 rounded-xl border border-uc-purple/20">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">
-                          {goal.climbingType === 'boulder' ? '🧗' : '🧗‍♀️'}
-                        </span>
-                        <span className="text-sm font-medium text-uc-text-light">
-                          {goal.routeGrade} {goal.gradeSystem.toUpperCase()}
-                        </span>
-                        <span className="text-xs text-uc-text-muted">
-                          {goal.climbingType === 'boulder' ? 'Boulder' : 'Route'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => handleEditProjectGoal(goal.id)}
-                          className="text-uc-text-muted hover:text-uc-purple text-sm"
-                          title={t('common.edit') || 'Edit'}
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteProjectGoal(goal.id)}
-                          className="text-uc-text-muted hover:text-uc-alert text-sm"
-                          title={t('common.delete') || 'Delete'}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                    <div className="mb-2">
-                      <p className="text-uc-text-light text-sm font-medium">{goal.routeName}</p>
-                      <p className="text-uc-text-muted text-xs">{goal.sectorLocation}</p>
-                    </div>
-                    {goal.relatedProcessGoal && (
-                      <div className="text-xs text-uc-text-muted">
-                        🔗 Linked to: {processGoals.find(pg => pg.id === goal.relatedProcessGoal)?.goalDescription || 'Unknown goal'}
-                      </div>
-                    )}
-                    <GoalProgressDisplay 
-                      goalId={goal.id} 
-                      goalType="project" 
-                      goalName={`${goal.routeGrade} ${goal.routeName}`} 
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+              ) : (
+                <div className="space-y-3">
+                  {projectGoals.map(goal => {
+                    const linkedGoal = goal.relatedProcessGoal
+                      ? processGoals.find(pg => pg.id === goal.relatedProcessGoal)
+                      : undefined
+                    return (
+                      <Card key={goal.id}>
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={`inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-xl px-1.5 text-[17px] font-extrabold text-uc-chip-ink uc-num ${
+                              workoutBg[goal.climbingType === 'boulder' ? 'BOULDERING' : 'LEAD_ARTIFICIAL']
+                            }`}
+                          >
+                            {goal.routeGrade}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[17px] font-bold leading-6 text-uc-text">{goal.routeName}</p>
+                            <p className="text-[13px] font-semibold text-uc-text-muted">
+                              {goal.climbingType === 'boulder' ? (t('strongMind.boulder') || 'Boulder') : (t('strongMind.route') || 'Route')}
+                              {' · '}
+                              {goal.sectorLocation}
+                            </p>
+                          </div>
+                          {editDeleteButtons('project', goal.id)}
+                        </div>
+                        {goal.relatedProcessGoal && (
+                          <p className="mt-2 text-[13px] text-uc-text-muted">
+                            {t('strongMind.linkedTo') || 'Linked to'}: {linkedGoal?.goalDescription || t('strongMind.unknownGoal') || 'Unknown goal'}
+                          </p>
+                        )}
+                        <GoalProgressDisplay goalId={goal.id} goalType="project" goalName={`${goal.routeGrade} ${goal.routeName}`} />
+                      </Card>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
           </div>
-        </div>
-            )}
+        )}
 
-        {/* Statistics Content */}
+        {/* Gratitude & Improvements */}
+        {activeTab === 'gratitude' && (
+          <div className="space-y-6">
+            <p className="text-sm text-uc-text-muted">
+              {t('strongMind.gratitudeDescription') || 'Reflect on your recent workouts and what you\'re grateful for'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <ChoiceChip selected={gratitudeFilter === 'all'} onClick={() => setGratitudeFilter('all')}>
+                {t('common.all') || 'All'}
+              </ChoiceChip>
+              <ChoiceChip selected={gratitudeFilter === 'gratitude'} onClick={() => setGratitudeFilter('gratitude')}>
+                <Icon name="gratitude" size={16} /> {t('strongMind.gratitude') || 'Gratitude'}
+              </ChoiceChip>
+              <ChoiceChip selected={gratitudeFilter === 'improvements'} onClick={() => setGratitudeFilter('improvements')}>
+                <Icon name="improve" size={16} /> {t('stats.improvementsShort') || 'Improvements'}
+              </ChoiceChip>
+            </div>
+            {gratitudeFilter !== 'improvements' && renderGratitudeSection('gratitude')}
+            {gratitudeFilter !== 'gratitude' && renderGratitudeSection('improvements')}
+          </div>
+        )}
+
+        {/* Statistics */}
         {activeTab === 'statistics' && (
-          <div className="bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-uc-text-light mb-4">
-                📊 {t('strongMind.statistics') || 'Statistics'}
-              </h2>
-              
-              {/* Timeframe selector */}
-              <select
+          <div className="space-y-4">
+            <div className="lg:max-w-sm">
+              <Overline as="label" htmlFor="strong-mind-timeframe" className="mb-2 block">
+                {t('stats.timeframe') || 'Timeframe'}
+              </Overline>
+              <Select
+                id="strong-mind-timeframe"
                 value={statsTimeframe}
                 onChange={(e) => setStatsTimeframe(e.target.value as TimeFrame)}
-                className="px-4 py-2 bg-uc-black/50 border border-uc-purple/20 rounded-lg text-sm text-uc-text-light focus:outline-none focus:ring-2 focus:ring-uc-purple/50"
               >
                 <option value="1week">{t('stats.1week') || '1 Week'}</option>
                 <option value="1month">{t('stats.1month') || '1 Month'}</option>
@@ -1190,127 +688,271 @@ function StrongMindPageContent() {
                 <option value="6months">{t('stats.6months') || '6 Months'}</option>
                 <option value="1year">{t('stats.1year') || '1 Year'}</option>
                 <option value="all">{t('stats.allTime') || 'All Time'}</option>
-              </select>
+              </Select>
             </div>
 
             {statsLoading ? (
-              <div className="text-center py-12">
-                <div className="text-uc-text-muted">{t('common.loading') || 'Loading...'}</div>
-              </div>
+              <SkeletonRows />
             ) : statsData ? (
-              <div className="space-y-6">
-                {/* Mental Sessions */}
-                <div>
-                  <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                    🧘 {t('stats.mentalSessions')}
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Card>
+                  <h3 className="mb-3 flex items-center gap-2 text-[17px] font-extrabold text-uc-text">
+                    <Icon name="type-mental" className="text-uc-workout-mental" />
+                    {t('stats.mentalSessions')}
                   </h3>
-                  <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-uc-text-light">
-                          {statsData.mentalSessions.totalSessions}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {t('stats.totalSessions')}
-                        </div>
-                      </div>
-                      {statsData.mentalSessions.totalSessions > 0 && (
-                        <>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-uc-text-light">
-                              {statsData.mentalSessions.averageFocusLevel}
-                            </div>
-                            <div className="text-sm text-uc-text-muted">
-                              {t('stats.avgFocusLevel')}
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-uc-text-light">
-                              {statsData.mentalSessions.daysSinceLastSession}
-                            </div>
-                            <div className="text-sm text-uc-text-muted">
-                              {t('stats.daysSinceLast')}
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-uc-text-light">
-                              {statsData.mentalSessions.practiceTypes.meditation}
-                            </div>
-                            <div className="text-sm text-uc-text-muted">
-                              {t('stats.meditation')}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                      {statsData.mentalSessions.totalSessions === 0 && (
-                        <div className="col-span-3 flex items-center justify-center">
-                          <p className="text-uc-text-muted text-sm">
-                            {t('strongMind.noMentalSessions') || 'No mental practice sessions in this period'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <MiniStat value={statsData.mentalSessions.totalSessions} label={t('stats.totalSessions')} />
+                    {statsData.mentalSessions.totalSessions > 0 ? (
+                      <>
+                        <MiniStat value={statsData.mentalSessions.averageFocusLevel} label={t('stats.avgFocusLevel')} />
+                        <MiniStat value={statsData.mentalSessions.daysSinceLastSession} label={t('stats.daysSinceLast')} />
+                        <MiniStat value={statsData.mentalSessions.practiceTypes.meditation} label={t('stats.meditation')} />
+                      </>
+                    ) : (
+                      <EmptyNote>{t('strongMind.noMentalSessions') || 'No mental practice sessions in this period'}</EmptyNote>
+                    )}
                   </div>
-                </div>
+                </Card>
 
-                {/* Falls Tracking */}
-                <div>
-                  <h3 className="text-lg font-semibold text-uc-text-light mb-4">
-                    🧗‍♀️ {t('stats.fallsTracking')}
+                <Card>
+                  <h3 className="mb-3 flex items-center gap-2 text-[17px] font-extrabold text-uc-text">
+                    <Icon name="falls" className="text-uc-primary" />
+                    {t('stats.fallsTracking')}
                   </h3>
-                  <div className="bg-uc-black/50 p-4 rounded-xl border border-uc-purple/20">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-uc-text-light">
-                          {statsData.falls.totalFalls}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {t('stats.totalFalls')}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-uc-text-light">
-                          {statsData.falls.totalClimbingSessions}
-                        </div>
-                        <div className="text-sm text-uc-text-muted">
-                          {t('stats.climbingSessions')}
-                        </div>
-                      </div>
-                      {statsData.falls.totalFalls > 0 && (
-                        <>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-uc-text-light">
-                              {statsData.falls.fallsPerSession}
-                            </div>
-                            <div className="text-sm text-uc-text-muted">
-                              {t('stats.fallsPerSession')}
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-uc-text-light">
-                              {statsData.falls.daysSinceLastFall}
-                            </div>
-                            <div className="text-sm text-uc-text-muted">
-                              {t('stats.daysSinceLastFall')}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                      {statsData.falls.totalFalls === 0 && (
-                        <div className="col-span-2 flex items-center justify-center">
-                          <p className="text-uc-text-muted text-sm">
-                            {t('strongMind.noFalls') || 'No falls in this period'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <MiniStat value={statsData.falls.totalFalls} label={t('stats.totalFalls')} />
+                    <MiniStat value={statsData.falls.totalClimbingSessions} label={t('stats.climbingSessions')} />
+                    {statsData.falls.totalFalls > 0 ? (
+                      <>
+                        <MiniStat value={statsData.falls.fallsPerSession} label={t('stats.fallsPerSession')} />
+                        <MiniStat value={statsData.falls.daysSinceLastFall} label={t('stats.daysSinceLastFall')} />
+                      </>
+                    ) : (
+                      <EmptyNote span>{t('strongMind.noFalls') || 'No falls in this period'}</EmptyNote>
+                    )}
                   </div>
-                </div>
+                </Card>
               </div>
             ) : null}
           </div>
         )}
       </div>
+
+      {/* Process goal form */}
+      <BottomSheet
+        isOpen={processSheetOpen}
+        onClose={closeProcessSheet}
+        dismissible={false}
+        closeLabel={t('common.close') || 'Close'}
+        title={editingProcessGoalId ? (t('strongMind.editGoal') || 'Edit Goal') : (t('strongMind.addNewGoal') || 'Add New Goal')}
+        footer={
+          <div className="flex gap-3">
+            <Button variant="ghost" size="lg" className="flex-1" onClick={closeProcessSheet}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              variant="accent"
+              size="lg"
+              className="flex-[1.4]"
+              onClick={handleAddGoal}
+              disabled={!goalDescription.trim() || !startDate}
+            >
+              {editingProcessGoalId ? (t('common.save') || 'Save') : (t('strongMind.addGoal') || 'Add Goal')}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="process-goal-description">{t('strongMind.goalDescription') || 'Goal Description'}</Label>
+            <Textarea
+              id="process-goal-description"
+              value={goalDescription}
+              onChange={(e) => setGoalDescription(e.target.value)}
+              placeholder={t('strongMind.goalPlaceholder') || 'Describe your goal in detail...'}
+              rows={3}
+            />
+          </div>
+          <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-3">
+            <div>
+              <Label htmlFor="process-goal-duration">{t('strongMind.duration') || 'Duration'}</Label>
+              <Select
+                id="process-goal-duration"
+                value={timeframeValue}
+                onChange={(e) => setTimeframeValue(e.target.value)}
+                className="uc-num"
+              >
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                  <option key={num} value={num.toString()}>{num}</option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="process-goal-unit">{t('strongMind.unit') || 'Unit'}</Label>
+              <Select id="process-goal-unit" value={timeframeUnit} onChange={(e) => setTimeframeUnit(e.target.value)}>
+                <option value="days">{t('strongMind.days') || 'Days'}</option>
+                <option value="weeks">{t('strongMind.weeks') || 'Weeks'}</option>
+                <option value="months">{t('strongMind.months') || 'Months'}</option>
+                <option value="quarters">{t('strongMind.quarters') || 'Quarters'}</option>
+                <option value="year">{t('strongMind.year') || 'Year'}</option>
+                <option value="years">{t('strongMind.years') || 'Years'}</option>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="process-goal-start">{t('strongMind.startDate') || 'Start Date'}</Label>
+            <Input id="process-goal-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </div>
+          <div>
+            <p className="flex flex-wrap items-center gap-2 text-[13px] font-semibold text-uc-text-muted">
+              {t('strongMind.classifiedAs') || 'Classified as'}
+              <Chip
+                className={isLongTerm(timeframeValue, timeframeUnit) ? 'bg-uc-primary text-uc-on-primary' : ''}
+              >
+                {isLongTerm(timeframeValue, timeframeUnit)
+                  ? t('strongMind.longTerm') || 'Long-term'
+                  : t('strongMind.shortTerm') || 'Short-term'}
+              </Chip>
+            </p>
+            <p className="mt-1.5 text-[12px] text-uc-text-muted">
+              {t('strongMind.longTermTooltip') || 'Timeframes ≥3 months, quarters, or years are considered long-term'}
+            </p>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Project goal form */}
+      <BottomSheet
+        isOpen={projectSheetOpen}
+        onClose={closeProjectSheet}
+        dismissible={false}
+        closeLabel={t('common.close') || 'Close'}
+        title={editingProjectGoalId ? (t('strongMind.editProjectGoal') || 'Edit Project Goal') : (t('strongMind.addNewProjectGoal') || 'Add New Project Goal')}
+        footer={
+          <div className="flex gap-3">
+            <Button variant="ghost" size="lg" className="flex-1" onClick={closeProjectSheet}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              variant="accent"
+              size="lg"
+              className="flex-[1.4]"
+              onClick={handleAddRouteGoal}
+              disabled={!routeGrade || !routeName.trim() || !sectorLocation.trim()}
+            >
+              {editingProjectGoalId ? (t('common.save') || 'Save') : (t('strongMind.addProjectGoal') || 'Add Project Goal')}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <Label>{t('strongMind.climbingType') || 'Climbing Type'}</Label>
+            <SegmentedControl
+              ariaLabel={t('strongMind.climbingType') || 'Climbing Type'}
+              value={climbingType}
+              onChange={(value) => {
+                setClimbingType(value)
+                setRouteGrade('') // Reset grade when type changes
+              }}
+              options={[
+                { value: 'route', label: t('strongMind.route') || 'Route' },
+                { value: 'boulder', label: t('strongMind.boulder') || 'Boulder' },
+              ]}
+            />
+          </div>
+          <div className="grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-3">
+            <div>
+              <Label htmlFor="project-goal-system">{t('strongMind.gradeSystem') || 'Grade System'}</Label>
+              <Select
+                id="project-goal-system"
+                value={gradeSystem}
+                onChange={(e) => {
+                  setGradeSystem(e.target.value)
+                  setRouteGrade('') // Reset grade when system changes
+                }}
+              >
+                {getAvailableGradeSystems(climbingType).map(system => (
+                  <option key={system.value} value={system.value}>{system.label}</option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="project-goal-grade">{t('strongMind.grade') || 'Grade'}</Label>
+              <Select id="project-goal-grade" value={routeGrade} onChange={(e) => setRouteGrade(e.target.value)} className="uc-num">
+                <option value="">{t('strongMind.selectGrade') || 'Select grade...'}</option>
+                {getGradeOptions(gradeSystem, climbingType).map(grade => (
+                  <option key={grade} value={grade}>{grade}</option>
+                ))}
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="project-goal-name">
+              {climbingType === 'boulder' ? (t('strongMind.boulderName') || 'Boulder Name') : (t('strongMind.routeName') || 'Route Name')}
+            </Label>
+            <Input
+              id="project-goal-name"
+              value={routeName}
+              onChange={(e) => setRouteName(e.target.value)}
+              placeholder={climbingType === 'boulder'
+                ? (t('strongMind.boulderNamePlaceholder') || 'Enter boulder name (e.g., "The Mandala", "Dreamtime")...')
+                : (t('strongMind.routeNamePlaceholder') || 'Enter route name (e.g., "La Dura Dura", "Action Directe")...')}
+            />
+          </div>
+          <div>
+            <Label htmlFor="project-goal-sector">{t('strongMind.sectorLocation') || 'Sector/Location'}</Label>
+            <Input
+              id="project-goal-sector"
+              value={sectorLocation}
+              onChange={(e) => setSectorLocation(e.target.value)}
+              placeholder={t('strongMind.sectorLocationPlaceholder') || 'Enter sector and location (e.g., "Ceuse, France", "Stanage, UK")...'}
+            />
+          </div>
+          <div>
+            <Label htmlFor="project-goal-related">{t('strongMind.relatedProcessGoal') || 'Related Process Goal (Optional)'}</Label>
+            <Select id="project-goal-related" value={relatedProcessGoal} onChange={(e) => setRelatedProcessGoal(e.target.value)}>
+              <option value="">{t('strongMind.noRelation') || 'No relation to process goal'}</option>
+              {processGoals.map(goal => (
+                <option key={goal.id} value={goal.id}>
+                  {goal.timeframeValue} {t(`strongMind.${goal.timeframeUnit}`) || goal.timeframeUnit}: {goal.goalDescription}
+                </option>
+              ))}
+              {processGoals.length === 0 && (
+                <option disabled>{t('strongMind.noProcessGoalsToLink') || 'No process goals created yet'}</option>
+              )}
+            </Select>
+          </div>
+        </div>
+      </BottomSheet>
+
+      <ConfirmationDialog
+        isOpen={!!deletingGoal}
+        onClose={() => setDeletingGoal(null)}
+        onConfirm={handleConfirmDelete}
+        title={t('strongMind.deleteGoalTitle') || 'Delete goal?'}
+        message={t('strongMind.deleteGoalConfirm') || 'Are you sure you want to delete this goal?'}
+        confirmText={t('common.delete') || 'Delete'}
+        cancelText={t('common.cancel') || 'Cancel'}
+        variant="danger"
+      />
     </div>
   )
 }
+
+const MiniStat = ({ value, label }: { value: number | string; label: string }) => (
+  <div className="rounded-xl bg-uc-elevated p-3">
+    <p className="text-[22px] font-extrabold leading-7 text-uc-text uc-num">{value}</p>
+    <p className="text-[13px] font-semibold text-uc-text-muted">{label}</p>
+  </div>
+)
+
+const EmptyNote = ({ children, span = false }: { children: ReactNode; span?: boolean }) => (
+  <p
+    className={`flex items-center justify-center rounded-xl border border-dashed border-uc-border p-3 text-center text-[13px] text-uc-text-muted ${
+      span ? 'col-span-2' : ''
+    }`}
+  >
+    {children}
+  </p>
+)

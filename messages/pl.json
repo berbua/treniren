@@ -1,5 +1,6 @@
 {
   "common": {
+    "back": "Wstecz",
     "loading": "Ładowanie...",
     "error": "Błąd",
     "errors": {
@@ -23,9 +24,11 @@
     "hide": "Ukryj",
     "showDetails": "Pokaż szczegóły",
     "today": "Dzisiaj",
+    "yesterday": "Wczoraj",
     "week": "Tydzień",
     "month": "Miesiąc",
     "previous": "Poprzedni",
+    "pageRange": "{{from}}–{{to}} z {{total}}",
     "next": "Następny",
     "close": "Zamknij",
     "online": "Online",
@@ -57,7 +60,8 @@
     "dayAfterTiredness": "Zmęczenie następnego dnia:",
     "nextPeriod": "Następna miesiączka:",
     "nextOvulation": "Następna owulacja:",
-    "saving": "Zapisywanie..."
+    "saving": "Zapisywanie...",
+    "undo": "Cofnij"
   },
   "auth": {
     "signIn": "Zaloguj się",
@@ -92,7 +96,34 @@
     "backToSignIn": "Powrót do logowania",
     "sendResetEmail": "Wyślij email resetujący",
     "forgotPasswordDescription": "Wprowadź swój adres email, a wyślemy Ci link do resetowania hasła.",
-    "resetPasswordDescription": "Wprowadź swoje nowe hasło poniżej."
+    "resetPasswordDescription": "Wprowadź swoje nowe hasło poniżej.",
+    "errors": {
+      "invalidCredentials": "Nieprawidłowy e-mail lub hasło",
+      "generic": "Wystąpił błąd. Spróbuj ponownie.",
+      "googleFailed": "Nie udało się zalogować przez Google",
+      "passwordsMismatch": "Hasła nie są takie same",
+      "passwordWeak": "Hasło musi mieć co najmniej 8 znaków i zawierać wielką literę, małą literę i cyfrę",
+      "signInAfterSignupFailed": "Konto zostało utworzone, ale logowanie się nie udało. Zaloguj się ręcznie.",
+      "createAccountFailed": "Nie udało się utworzyć konta",
+      "resetEmailFailed": "Nie udało się wysłać e-maila z linkiem",
+      "resetFailed": "Nie udało się zresetować hasła",
+      "invalidToken": "Nieprawidłowy token resetu"
+    },
+    "passwordRules": {
+      "title": "Wymagania hasła",
+      "minLength": "Co najmniej 8 znaków",
+      "uppercase": "Jedna wielka litera",
+      "lowercase": "Jedna mała litera",
+      "number": "Jedna cyfra"
+    },
+    "resetEmailSent": "Wysłaliśmy e-mail z linkiem do resetu hasła. Sprawdź skrzynkę.",
+    "resetSuccess": "Hasło zostało zmienione. Możesz zalogować się nowym hasłem.",
+    "invalidLinkTitle": "Ten link jest nieprawidłowy",
+    "invalidLinkMessage": "Brak tokenu resetu lub jest nieprawidłowy. Poproś o nowy link.",
+    "requestNewLink": "Poproś o nowy link",
+    "signInAgain": "Zaloguj się ponownie",
+    "expiredLinkTitle": "Ten link wygasł",
+    "expiredLinkMessage": "Linki resetujące działają raz i przez 1 godzinę. Poproś o nowy."
   },
   "messages": {
     "title": "Wiadomości",
@@ -105,7 +136,10 @@
     "markRead": "Oznacz jako przeczytane",
     "message": "wiadomość",
     "messages_plural": "wiadomości",
-    "unread": "nieprzeczytanych"
+    "unread": "nieprzeczytanych",
+    "priorityHigh": "Wysoki",
+    "priorityMedium": "Średni",
+    "priorityLow": "Niski"
   },
   "nav": {
     "home": "Strona główna",
@@ -118,9 +152,29 @@
     "exercises": "Ćwiczenia",
     "routines": "Rutyny",
     "fingerboardProtocols": "Fingerboard",
-    "cycle": "Cykl"
+    "cycle": "Cykl",
+    "events": "Wydarzenia",
+    "fingerboardTesting": "Testy fingerboardu",
+    "mainNavigation": "Nawigacja główna",
+    "today": "Dziś",
+    "stats": "Statystyki",
+    "cycleDayOf": "Dzień {{day}} z {{length}}",
+    "log": "Dodaj"
   },
   "stats": {
+    "deloadWeeksNote": "Tygodnie deloadu — nie wliczają się do średniej",
+    "weeklyVolume": "Objętość tygodniowa",
+    "weeklyVolumeSubtitle": "Punkty TR na tydzień: TR1 = 1 … TR5 = 5",
+    "volumeTotal": "Razem",
+    "trPoints": "pkt TR",
+    "volumeAvgPerWeek": "Średnio na tydzień",
+    "noTrValues": "Brak treningów z wartością TR w tym okresie",
+    "sessionsCount": "treningi: {{count}}",
+    "week": "Tydzień",
+    "fingerboardTests": "Testy fingerboardu",
+    "fingerboardTestsSubtitle": "Wszystkie testy · ostatni {{date}}",
+    "testProtocol": "Protokół testu",
+    "openTestProtocol": "Otwórz protokół testu →",
     "title": "Statystyki",
     "timeframe": "Okres",
     "1week": "1 Tydzień",
@@ -163,14 +217,33 @@
     "mostInjuriesPhaseTitle": "Najwięcej kontuzji w fazie",
     "mostInjuriesPhaseMessage": "Najwięcej kontuzji ({count}) przytrafiło się w dniach cyklu {dayRange}.",
     "injuryPhaseNotificationHint": "Czy chcesz otrzymać powiadomienie push dzień przed rozpoczęciem tej fazy, aby być świadomą zwiększonego ryzyka kontuzji?",
-    "enableInjuryPhaseNotification": "🔔 Włącz powiadomienie",
+    "enableInjuryPhaseNotification": "Włącz powiadomienie",
     "injuryPhaseNotificationEnabled": "Powiadomienie włączone! Otrzymasz przypomnienie dzień przed rozpoczęciem tej fazy.",
     "injuryPhaseNotificationError": "Nie udało się włączyć powiadomienia. Spróbuj ponownie.",
-    "injuryPhaseNotificationAlreadyEnabled": "✓ Powiadomienie już włączone",
+    "injuryPhaseNotificationAlreadyEnabled": "Powiadomienie już włączone",
     "logFirstWorkout": "Zapisz pierwszy trening",
     "noData": "Brak statystyk",
     "noDataDescription": "Zapisuj treningi, aby zobaczyć szczegółowe statystyki postępów, objętości i wyników w czasie.",
-    "daysRange": "Dni {{range}}"
+    "daysRange": "Dni {{range}}",
+    "thisMonth": "Ten miesiąc",
+    "showFrequencyPer": "Pokaż częstotliwość na",
+    "injuriesByPhase": "Kontuzje według fazy cyklu",
+    "totalInjuries": "Łącznie kontuzji",
+    "maxInPhase": "Najwięcej w fazie",
+    "phasesAffected": "Fazy z kontuzjami",
+    "noRecentInjuries": "0 kontuzji ostatnio",
+    "injuriesPerPhase": "Liczba kontuzji w każdej fazie cyklu",
+    "improvementsShort": "Do poprawy",
+    "short": {
+      "1week": "1T",
+      "1month": "1M",
+      "3months": "3M",
+      "6months": "6M",
+      "1year": "1R",
+      "allTime": "Całość",
+      "4weeks": "4T"
+    },
+    "4weeks": "4 Tygodnie"
   },
   "app": {
     "title": "Jednorożec wspin - trenuj z jednorożcowym flow",
@@ -220,6 +293,25 @@
     "notesPlaceholder": "Dodaj notatki o swoim treningu...",
     "sector": "Sektor",
     "sectorPlaceholder": "Wprowadź sektor wspinaczkowy lub obszar...",
+    "routeName": "Nazwa drogi",
+    "routeNamePlaceholder": "np. Pochylec, 6c+",
+    "climbName": "Nazwa wspinaczki",
+    "wallAngle": "Nachylenie ściany",
+    "wallAngles": {
+      "SLAB": "Płyta",
+      "VERTICAL": "Pion",
+      "SLIGHT_OVERHANG": "Lekkie przewieszenie",
+      "STRONG_OVERHANG": "Mocne przewieszenie",
+      "OVERHANG": "Przewieszenie",
+      "ROOF": "Dach",
+      "COMPSTYLE": "Styl zawodniczy"
+    },
+    "climbStyle": "Styl",
+    "climbStyles": {
+      "POWERFUL": "Siłowy",
+      "TECHNICAL": "Techniczny",
+      "COMPSTYLE": "Zawodniczy"
+    },
     "mentalPracticeType": "Rodzaj Praktyki",
     "mentalPracticeTypePlaceholder": "Wybierz rodzaj praktyki mentalnej...",
     "mentalPracticeTypes": {
@@ -345,7 +437,7 @@
       "improvements": "Zanotuj 3 rzeczy, które chcesz poprawić lub zrobić lepiej następnym razem. Pomaga uczyć się i rozwijać z każdej sesji.",
       "sector": "Obszar wspinaczkowy lub lokalizacja, w której trenowałaś (np. 'Fontainebleau - Bas Cuvier'). Przydatne do śledzenia, gdzie się wspinasz.",
       "mentalPracticeType": "Rodzaj praktyki mentalnej: Meditation (mindfulness), Reflecting (auto-refleksja), Other (własna praktyka).",
-      "timeOfDay": "Kiedy wykonywałaś praktykę mentalną: Morning (🌅), Midday (☀️), Evening (🌙). Śledź wzorce w czasie praktyki.",
+      "timeOfDay": "Kiedy wykonywałaś praktykę mentalną: Morning, Midday, Evening. Śledź wzorce w czasie praktyki.",
       "showCountdown": "Włącz to, aby pokazać odliczanie do tego wyjazdu na stronie głównej. Świetne do budowania ekscytacji przed wyjazdem wspinaczkowym!",
       "injuryPhaseWarning": "Ta faza ma największą liczbę kontuzji w Twojej historii. Bądź szczególnie ostrożna i rozważ dostosowanie intensywności treningu podczas tej fazy."
     },
@@ -358,12 +450,29 @@
     "saveWorkout": "Zapisz Trening",
     "updateWorkout": "Aktualizuj Trening",
     "incompleteData": {
-      "title": "Niekompletne Dane",
+      "title": "Niektóre serie są puste",
       "message": "Niektóre ćwiczenia mają niewypełnione wagi lub powtórzenia. Czy chcesz zapisać trening z niekompletnymi danymi?",
       "incompleteItems": "Niekompletne pozycje:",
       "andMore": "...i jeszcze {{count}}",
-      "goBack": "Wróć i Uzupełnij",
-      "saveAnyway": "Zapisz Mimo To"
+      "goBack": "Wróć i uzupełnij",
+      "saveAnyway": "Zapisz mimo to",
+      "setsIn": "{{sets}} ({{exercise}})",
+      "sets": {
+        "one": "{{count}} seria",
+        "few": "{{count}} serie",
+        "many": "{{count}} serii",
+        "other": "{{count}} serii"
+      },
+      "hangs": {
+        "one": "{{count}} zwis",
+        "few": "{{count}} zwisy",
+        "many": "{{count}} zwisów",
+        "other": "{{count}} zwisu"
+      },
+      "and": "i",
+      "summary": {
+        "other": "Bez wartości: {{items}}. Puste wiersze nie będą liczone w statystykach."
+      }
     },
     "errors": {
       "workoutTypeRequired": "Proszę wybrać rodzaj treningu",
@@ -393,7 +502,7 @@
       "importDummyDataConfirm": "To zaimportuje dane testowe bezpośrednio do Twojej bazy danych. Kontynuować?"
     },
     "placeholders": {
-      "searchExercises": "🔍 Szukaj ćwiczeń...",
+      "searchExercises": "Szukaj ćwiczeń...",
       "reps": "Powtórzenia",
       "sets": "Serie",
       "weight": "Ciężar",
@@ -503,7 +612,33 @@
     },
     "addFirstWorkout": "Dodaj pierwszy trening",
     "eventDeleted": "Wydarzenie usunięte",
-    "useQuickLog": "lub użyj Szybkiego zapisu"
+    "useQuickLog": "lub użyj Szybkiego zapisu",
+    "exercisesCount": {
+      "one": "{{count}} ćwiczenie",
+      "few": "{{count}} ćwiczenia",
+      "many": "{{count}} ćwiczeń",
+      "other": "{{count}} ćwiczenia"
+    },
+    "setErrors": {
+      "enterReps": {
+        "other": "Wpisz powtórzenia dla serii {{sets}}"
+      }
+    },
+    "saveSession": "Zapisz sesję",
+    "updateSession": "Zaktualizuj sesję",
+    "hangsCount": {
+      "one": "{{count}} zwis",
+      "few": "{{count}} zwisy",
+      "many": "{{count}} zwisów",
+      "other": "{{count}} zwisu"
+    },
+    "climbsCount": {
+      "one": "{{count}} droga",
+      "few": "{{count}} drogi",
+      "many": "{{count}} dróg",
+      "other": "{{count}} drogi"
+    },
+    "deletedUndo": "Trening usunięty"
   },
   "exercises": {
     "title": "Biblioteka Ćwiczeń",
@@ -521,7 +656,81 @@
     "noExercisesFoundDescription": "Zmień wyszukiwanie lub filtry, aby znaleźć to, czego szukasz.",
     "noWorkoutData": "Brak danych treningowych",
     "noWorkoutDataDescription": "Zapisuj treningi z tym ćwiczeniem, aby zobaczyć swoją progresję. Śledź serie, powtórzenia i ciężary, aby zobaczyć przyrost siły.",
-    "orUseQuickAdd": "lub użyj Szybkiego dodawania powyżej dla popularnych ćwiczeń"
+    "orUseQuickAdd": "lub użyj Szybkiego dodawania powyżej dla popularnych ćwiczeń",
+    "gridView": "Widok siatki",
+    "listView": "Widok listy",
+    "categories": "Kategorie",
+    "quickAdd": "Szybkie dodawanie",
+    "quickAddCount": "Popularne ćwiczenia: {{count}}",
+    "quickAddGroups": {
+      "pull": "Ciąganie",
+      "push": "Pchanie",
+      "lower": "Dolne partie",
+      "core": "Core",
+      "climbing": "Wspinaczkowe"
+    },
+    "matching": "pasujące do „{{query}}”",
+    "inCategory": "w kategorii {{category}}",
+    "usedTimes": "Użyte {{count}}×",
+    "lastShort": "Ostatnio {{date}}",
+    "lastSetShort": "Ostatnia seria {{value}}",
+    "viewProgress": "Zobacz postępy",
+    "form": {
+      "newTitle": "Nowe ćwiczenie",
+      "editTitle": "Edytuj ćwiczenie",
+      "name": "Nazwa",
+      "category": "Kategoria",
+      "unit": "Jednostka",
+      "save": "Zapisz ćwiczenie",
+      "nameRequired": "Nazwa ćwiczenia jest wymagana"
+    },
+    "detail": {
+      "back": "Powrót do biblioteki ćwiczeń",
+      "notFound": "Nie znaleziono ćwiczenia",
+      "timesUsed": "Użycia",
+      "lastUsed": "Ostatnio użyte",
+      "lastSet": "Ostatnia seria",
+      "status": "Status",
+      "statusTracking": "Śledzone",
+      "statusImproving": "Postęp",
+      "statusNew": "Nowe",
+      "personalRecords": "Rekordy osobiste",
+      "maxWeight": "Maks. ciężar",
+      "est1RM": "Szac. 1RM",
+      "maxVolume": "Maks. objętość",
+      "maxReps": "Maks. powtórzeń",
+      "progression": "Progresja",
+      "metric": "Miara",
+      "timeframe": "Okres",
+      "chartType": "Typ wykresu",
+      "totalVolume": "Objętość całkowita",
+      "averageReps": "Średnia powtórzeń",
+      "line": "Liniowy",
+      "area": "Obszar",
+      "bar": "Słupkowy",
+      "timeframes": {
+        "1week": "1 tydzień",
+        "1month": "1 miesiąc",
+        "3months": "3 miesiące",
+        "6months": "6 miesięcy",
+        "1year": "1 rok",
+        "all": "Cały okres"
+      },
+      "totalWorkouts": "Treningi",
+      "totalSets": "Serie",
+      "start": "Start",
+      "now": "Teraz",
+      "repsUnit": "powt.",
+      "improvement": "Poprawa",
+      "weightChange": "Zmiana ciężaru ({{period}})",
+      "recentWorkouts": "Ostatnie treningi",
+      "sets": "Serie: {{count}}",
+      "notUsedYet": "To ćwiczenie nie zostało jeszcze użyte w żadnym treningu",
+      "addToWorkout": "Dodaj do treningu",
+      "workoutsInPeriod": "Treningi w tym okresie: {{count}}",
+      "noData": "Brak danych o progresji",
+      "noDataHint": "Dodaj to ćwiczenie do treningów, aby śledzić postępy"
+    }
   },
   "fingerboard": {
     "title": "Protokoły Fingerboard",
@@ -557,7 +766,9 @@
       "OPEN_HAND": "Chwyt otwarty",
       "CRIMP": "Chwyt zamknięty (crimp)",
       "SLOPER": "Oblak"
-    }
+    },
+    "hangNumber": "Zwis {{number}}",
+    "testYourselfSubtitle": "Zmierz siłę i śledź jej postępy"
   },
   "routines": {
     "title": "Moje Rutyny",
@@ -628,24 +839,59 @@
         "maxReps": "Max Powtórzeń",
         "defaultSets": "Domyślna Liczba Serii (opcjonalnie)",
         "save": "Zapisz"
-      }
+      },
+      "moveUp": "Przesuń w górę",
+      "moveDown": "Przesuń w dół"
     }
   },
   "calendar": {
+    "upcoming": "Nadchodzące wydarzenia",
+    "noUpcoming": "Brak nadchodzących wydarzeń",
+    "today": "Dziś",
+    "tomorrow": "Jutro",
+    "inDays": "Za {{count}} dni",
     "title": "Kalendarz Treningowy",
     "loading": "Ładowanie kalendarza...",
     "legend": "Legenda",
     "cyclePhases": "Fazy Cyklu",
     "noWorkoutsToday": "Brak treningów dzisiaj",
-    "clickDateHint": "💡 Kliknij na dowolną datę, aby dodać trening, wydarzenie lub szybki wpis",
+    "clickDateHint": "Dotknij dnia, aby zobaczyć jego treningi i wydarzenia, edytować je, zduplikować lub dodać nowe.",
     "filterByTrainingType": "Filtruj według rodzaju treningu",
     "filterByEventType": "Filtruj według rodzaju wydarzenia",
     "filterAll": "Wszystkie",
     "filterNone": "Żadne",
     "noTrainingTypesSelected": "Nie wybrano rodzajów treningu. Wyświetlane są wszystkie treningi.",
-    "noEventTypesSelected": "Nie wybrano rodzajów wydarzeń. Wyświetlane są wszystkie wydarzenia."
+    "noEventTypesSelected": "Nie wybrano rodzajów wydarzeń. Wyświetlane są wszystkie wydarzenia.",
+    "cycleDayShort": "dz. {{day}}",
+    "injuryRiskPhase": "Faza ryzyka kontuzji",
+    "showWorkouts": "Pokaż treningi",
+    "showEvents": "Pokaż wydarzenia",
+    "resetFilters": "Resetuj",
+    "showResults": "Pokaż wyniki"
   },
   "cycle": {
+    "consent": {
+      "title": "Trening zgodny z cyklem?",
+      "description": "Włącz śledzenie cyklu, aby widzieć fazę na każdym ekranie. Możesz je wyłączyć w dowolnej chwili w Profilu.",
+      "item1": "Dzień i faza cyklu w panelu i w kalendarzu",
+      "item2": "Rekomendacje treningowe dla każdej fazy",
+      "item3": "Wzorce kontuzji w trakcie cyklu",
+      "item4": "Przewidywana następna miesiączka i owulacja",
+      "remindLate": "Przypomnij, jeśli miesiączka się spóźnia",
+      "skip": "Pomiń",
+      "enable": "Włącz"
+    },
+    "setupForm": {
+      "title": "Ustaw swój cykl",
+      "firstDay": "Pierwszy dzień ostatniej miesiączki",
+      "cycleLength": "Średnia długość cyklu",
+      "days": "{{count}} dni",
+      "timezone": "Strefa czasowa",
+      "timezoneHint": "Pobrana z urządzenia.",
+      "lateReminders": "Przypomnienia o spóźnionej miesiączce",
+      "lateRemindersHint": "Wiadomość, gdy miesiączka się spóźnia",
+      "save": "Zapisz i kontynuuj"
+    },
     "title": "Śledzić Cykl Miesiączkowy?",
     "description": "Włącz śledzenie cyklu, aby otrzymywać spersonalizowane rekomendacje treningowe na podstawie fazy cyklu. Twoje dane będą prywatne.",
     "accept": "Tak, włącz śledzenie cyklu",
@@ -697,7 +943,25 @@
       "add": "Dodaj",
       "saving": "Zapisywanie...",
       "periodUpdated": "Miesiączka zaktualizowana",
-      "periodAdded": "Miesiączka dodana"
+      "periodAdded": "Miesiączka dodana",
+      "cycleSettings": "Ustawienia cyklu",
+      "enableInProfile": "Włącz w profilu",
+      "dayLabel": "Dzień",
+      "ofLengthNextPeriod": "z {{length}} · następna miesiączka ~{{date}}",
+      "recentPeriods": "Ostatnie miesiączki",
+      "flow": "Intensywność krwawienia",
+      "flowLevels": {"1": "Lekkie", "2": "Średnie", "3": "Obfite"},
+      "avgCycle": "Śr. cykl",
+      "avgPeriod": "Śr. miesiączka",
+      "logged": "Zapisane",
+      "noPeriods": "Brak zapisanych miesiączek.",
+      "showAllPeriods": "Pokaż wszystkie ({{count}})",
+      "tapDayHint": "Dotknij dnia, aby dodać miesiączkę od tego dnia.",
+      "now": "Teraz",
+      "most": "najwięcej",
+      "deletePeriodTitle": "Usunąć miesiączkę?",
+      "deletePeriodMessage": "Ta miesiączka zostanie usunięta z historii.",
+      "periodDeleted": "Miesiączka usunięta"
     },
     "phaseDetails": {
       "menstrual": {
@@ -844,7 +1108,7 @@
     "cycleLength": "Długość cyklu (dni)",
     "lastPeriodDate": "Data ostatniej miesiączki",
     "disableCycle": "Wyłącz śledzenie cyklu",
-    "disableCycleConfirm": "Czy na pewno chcesz wyłączyć śledzenie cyklu? To usunie wszystkie dane związane z cyklem.",
+    "disableCycleConfirm": "Fazy i rekomendacje zostaną ukryte. Zapisane miesiączki zostaną zachowane.",
     "enableCycleTracking": "Włącz śledzenie cyklu",
     "cycleTrackingDescription": "Śledź swój cykl menstruacyjny, aby otrzymywać spersonalizowane rekomendacje treningowe i zrozumieć wzorce wydajności.",
     "enableCycle": "Włącz śledzenie cyklu",
@@ -901,7 +1165,17 @@
     "saved": "Profil zapisany",
     "saveFailed": "Nie udało się zapisać profilu",
     "enabled": "Włączone",
-    "disabled": "Wyłączone"
+    "disabled": "Wyłączone",
+    "googleName": "Imię i nazwisko z Google",
+    "googleNameHint": "Twoje pełne imię i nazwisko z konta Google",
+    "displayName": "Nazwa wyświetlana",
+    "displayNameHint": "Widoczna w aplikacji. Zostaw puste, aby używać imienia",
+    "memberSince": "Dołączono:",
+    "saveProfile": "Zapisz profil",
+    "disableCycleTitle": "Wyłączyć śledzenie cyklu?",
+    "keepOn": "Zostaw włączone",
+    "pushBlockedTitle": "Powiadomienia zablokowane.",
+    "notificationsSection": "Powiadomienia"
   },
   "landing": {
     "tagline": "Trenuj z jednorożcowym flow - Śledź swoją wspinaczkową podróż z precyzją i uważnością",
@@ -1014,6 +1288,8 @@
     "sync": "Automatyczna Synchronizacja"
   },
   "dashboard": {
+    "deloadDay": "dzień {{day}}/{{total}}",
+    "deloadHint": "Odpoczynek i regeneracja. Passa jest wstrzymana, nie przerwana.",
     "welcome": "Witaj w swoim panelu",
     "hi": "Cześć",
     "there": "tam",
@@ -1057,7 +1333,22 @@
     "loadingTrips": "Ładowanie wyjazdów...",
     "noUpcomingTrips": "Brak nadchodzących wyjazdów z odliczaniem",
     "noUpcomingTripsDescription": "Utwórz wydarzenie wyjazdu i włącz opcję \"Pokaż odliczanie na stronie głównej\"",
-    "addTrip": "Dodaj Wyjazd"
+    "addTrip": "Dodaj Wyjazd",
+    "recommendations": "Rekomendacje",
+    "streakLabel": "Seria",
+    "weeksUnit": {
+      "one": "tydzień",
+      "few": "tygodnie",
+      "many": "tygodni",
+      "other": "tygodnia"
+    },
+    "streakRule": "{{min}}+ treningi w tygodniu · deload ją wstrzymuje",
+    "streakWeeksInRow": {
+      "one": "{{count}} tydzień z {{min}}+ treningami. Tak trzymaj!",
+      "few": "{{count}} tygodnie z rzędu z {{min}}+ treningami. Tak trzymaj!",
+      "many": "{{count}} tygodni z rzędu z {{min}}+ treningami. Tak trzymaj!",
+      "other": "{{count}} tygodnia z rzędu z {{min}}+ treningami. Tak trzymaj!"
+    }
   },
   "goals": {
     "title": "Cele Treningowe",
@@ -1067,6 +1358,8 @@
     "monthlyGoal": "Cel miesięczny",
     "weeklyGoalDesc": "Cel: {{count}} treningi tygodniowo",
     "monthlyGoalDesc": "Cel: {{count}} treningi miesięcznie",
+    "auto": "Auto (× 4)",
+    "manual": "Ręcznie 1–40",
     "autoCalculateMonthly": "Automatycznie przelicz cel miesięczny",
     "autoCalculateMonthlyDesc": "Cel miesięczny = cel tygodniowy × 4 ({{count}} treningów)",
     "detailedGoals": "Cele szczegółowe (opcjonalne)",
@@ -1081,6 +1374,14 @@
     "saveFailed": "Nie udało się zapisać celów"
   },
   "events": {
+    "daysCount": {"one": "{{count}} dzień", "few": "{{count}} dni", "many": "{{count}} dni", "other": "{{count}} dnia"},
+    "startDate": "Data rozpoczęcia",
+    "endDate": "Data zakończenia",
+    "startDateRequired": "Wybierz datę rozpoczęcia",
+    "endDateRequired": "Wybierz datę zakończenia",
+    "deloadHint": "Okres odpoczynku: lżejszy trening lub przerwa w te dni.",
+    "deloadDescription": "Plan i notatki",
+    "deloadDescriptionPlaceholder": "np. 50% objętości, bez maksymalnych zwisów, tylko mobilność...",
     "title": "Wydarzenia",
     "addNew": "Dodaj Wydarzenie",
     "addFirst": "Dodaj Pierwsze Wydarzenie",
@@ -1142,16 +1443,24 @@
     },
     "trainingTypesTitle": "Rodzaje Treningów do Śledzenia",
     "eventTypesTitle": "Rodzaje Wydarzeń do Śledzenia",
-    "tip": "💡 Wskazówka: Śledź zarówno swoje sesje treningowe, jak i ważne wydarzenia, aby zrozumieć wzorce w swojej wydajności i regeneracji.",
+    "tip": "Wskazówka: Śledź zarówno swoje sesje treningowe, jak i ważne wydarzenia, aby zrozumieć wzorce w swojej wydajności i regeneracji.",
     "types": {
       "injury": "Kontuzja",
       "physio": "Fizjoterapia",
       "competition": "Zawody",
       "trip": "Wyjazd",
+      "deload": "Deload",
       "other": "Inne"
     },
     "addFirstEvent": "Dodaj pierwsze wydarzenie",
-    "trackInjuries": "Zapisuj kontuzje, aby zobaczyć ich związek z cyklem"
+    "trackInjuries": "Zapisuj kontuzje, aby zobaczyć ich związek z cyklem",
+    "subtitle": "Śledź kontuzje, wizyty u fizjoterapeuty, zawody i inne wydarzenia",
+    "severity": "Nasilenie",
+    "dates": "Daty",
+    "countdown": "Odliczanie",
+    "notes": "Notatki",
+    "deleteEvent": "Usuń wydarzenie",
+    "deletedUndo": "Wydarzenie usunięte"
   },
   "strongMind": {
     "title": "Silny Umysł",
@@ -1269,13 +1578,19 @@
       "3": "Świetny postęp"
     },
     "achievedHint": "Stuknij puchar, jeśli w tej sesji zrobiłaś ten projekt.",
-    "markAchieved": "Zrobione w tej sesji"
+    "markAchieved": "Zrobione w tej sesji",
+    "linkedTo": "Powiązany z",
+    "unknownGoal": "Nieznany cel",
+    "deleteGoalTitle": "Usunąć cel?",
+    "noProgressYet": "Brak zapisanych postępów",
+    "notAchievedYet": "Jeszcze nie zdobyty",
+    "classifiedAs": "Klasyfikacja"
   },
   "quickLog": {
-    "title": "⚡ Szybki wpis",
+    "title": "Szybki wpis",
     "description": "Szybko zapisz trening. Szczegóły możesz dodać później.",
     "button": "Szybki wpis",
-    "markAsDone": "⚡ Zaznacz jako wykonane",
+    "markAsDone": "Zaznacz jako wykonane",
     "saving": "Zapisywanie...",
     "quickLogBadge": "Szybki",
     "noProtocols": "Brak dostępnych protokołów. Utwórz jeden w Protokołach Fingerboard.",
@@ -1322,7 +1637,53 @@
       "time": "Czas (s)",
       "success": "Sukces",
       "notes": "Notatki"
-    }
+    },
+    "view": "Zobacz",
+    "back": "Wstecz",
+    "stepOf": "Krok {{step}} z {{total}}",
+    "chooseProtocol": "Wybierz protokół testowy",
+    "results": "Wyniki",
+    "resultsCount": "Wyniki: {{count}}",
+    "clone": "Klonuj",
+    "cloneTitle": "Zduplikuj ten protokół",
+    "performAnother": "Wykonaj kolejny test",
+    "createError": "Nie udało się utworzyć protokołu testowego",
+    "cloneError": "Nie udało się sklonować protokołu",
+    "editProtocol": "Edytuj protokół testowy",
+    "testHangs": "Zwisy testowe",
+    "addTestHang": "Dodaj zwis testowy",
+    "editTestHang": "Edytuj zwis testowy",
+    "noTestHangs": "Nie dodano jeszcze zwisów testowych",
+    "loadFromProtocol": "Wczytaj z protokołu",
+    "target": "cel",
+    "targetLoad": "Docelowe obciążenie",
+    "targetTime": "Docelowy czas",
+    "protocolName": "Nazwa protokołu",
+    "editName": "Edytuj nazwę protokołu",
+    "renameError": "Nie udało się zmienić nazwy protokołu",
+    "saveTestError": "Nie udało się zapisać testu",
+    "testDate": "Data testu",
+    "successQuestion": "Udało się?",
+    "yes": "Tak",
+    "no": "Nie",
+    "remindRetest": "Przypomnij o ponownym teście co",
+    "reminderInterval": "Odstęp",
+    "reminderUnit": "Jednostka",
+    "units": {
+      "days": "dni",
+      "weeks": "tyg.",
+      "months": "mies."
+    },
+    "saveResults": "Zapisz wyniki",
+    "metric": "Miara",
+    "metricLoad": "Obciążenie",
+    "metricTime": "Czas",
+    "chartTitleLoad": "Dodatkowe obciążenie w testach",
+    "chartTitleTime": "Czas zwisu w testach",
+    "copyName": "{{name}} (kopia)",
+    "cloneSheetTitle": "Klonuj protokół",
+    "cloneSheetDescription": "Kopia protokołu {{name}} z tymi samymi zwisami i celami.",
+    "cloneNameLabel": "Nazwa kopii"
   },
   "offlineForm": {
     "title": "Dodaj trening",
@@ -1345,10 +1706,17 @@
     "load": "Obciążenie (kg)",
     "loadHint": "wartość ujemna oznacza odciążenie",
     "time": "Czas (sekundy)",
-    "notes": "Notatki (opcjonalnie)"
+    "notes": "Notatki (opcjonalnie)",
+    "hangs": "Zwisy"
   },
   "offlineSync": {
     "uploaded": "Przesłano treningi zapisane offline: {{count}}",
     "failed": "Nie udało się przesłać treningów zapisanych offline: {{count}}. Spróbujemy ponownie później."
+  },
+  "offlineBanner": {
+    "offline": "Jesteś offline",
+    "backOnline": "Znów online",
+    "pending": "Oczekuje: {{count}}",
+    "savedLocally": "Treningi zapiszą się na urządzeniu i zsynchronizują po powrocie do sieci."
   }
 }

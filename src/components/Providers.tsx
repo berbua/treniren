@@ -1,6 +1,6 @@
 'use client'
 
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import { CycleProvider } from "@/contexts/CycleContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
@@ -19,11 +19,15 @@ interface ProvidersProps {
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { isMessagesPanelOpen, setIsMessagesPanelOpen } = useNotifications();
+  const { data: session } = useSession();
 
   return (
     <>
       <NavigationHeader />
-      {children}
+      {/* Logged in: room for the desktop sidebar and the mobile floating tab bar */}
+      <div className={session?.user ? "lg:pl-64 pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-0" : undefined}>
+        {children}
+      </div>
       <MessagesPanel 
         isOpen={isMessagesPanelOpen} 
         onClose={() => setIsMessagesPanelOpen(false)} 

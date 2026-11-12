@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // Event type enum
-export const EventTypeSchema = z.enum(['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'OTHER'])
+export const EventTypeSchema = z.enum(['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'DELOAD', 'OTHER'])
 
 // Trip climbing type enum
 export const TripClimbingTypeSchema = z.enum(['BOULDERING', 'SPORT_CLIMBING']).nullable().optional()
@@ -36,14 +36,14 @@ export const CreateEventSchema = z.object({
   cycleDayManuallySet: z.boolean().optional(),
 }).refine(
   (data) => {
-    // If type is TRIP, tripStartDate and tripEndDate should be provided
-    if (data.type === 'TRIP') {
+    // Trips and deloads span several days: both range dates are required
+    if (data.type === 'TRIP' || data.type === 'DELOAD') {
       return !!(data.tripStartDate && data.tripEndDate)
     }
     return true
   },
   {
-    message: 'Trip start date and end date are required for TRIP events',
+    message: 'Start date and end date are required for TRIP and DELOAD events',
     path: ['tripStartDate'],
   }
 ).refine(
@@ -87,14 +87,14 @@ const BaseEventSchema = z.object({
 
 export const UpdateEventSchema = BaseEventSchema.partial().refine(
   (data) => {
-    // If type is TRIP, tripStartDate and tripEndDate should be provided
-    if (data.type === 'TRIP') {
+    // Trips and deloads span several days: both range dates are required
+    if (data.type === 'TRIP' || data.type === 'DELOAD') {
       return !!(data.tripStartDate && data.tripEndDate)
     }
     return true
   },
   {
-    message: 'Trip start date and end date are required for TRIP events',
+    message: 'Start date and end date are required for TRIP and DELOAD events',
     path: ['tripStartDate'],
   }
 ).refine(

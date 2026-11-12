@@ -6,6 +6,8 @@ import { notificationService, NotificationMessage } from '@/lib/notification-ser
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toLocalDateString } from '@/lib/date-utils';
 import { useCycle } from '@/contexts/CycleContext';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
+import { Button, Card, EmptyState, Icon, IconName } from '@/components/ui';
 
 interface MessagesPanelProps {
   isOpen: boolean;
@@ -14,11 +16,12 @@ interface MessagesPanelProps {
 }
 
 export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const { cycleSettings, setCycleSettings } = useCycle();
   const [messages, setMessages] = useState<NotificationMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
   useEffect(() => {
     // Load initial messages
@@ -118,155 +121,196 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
   };
 
   const handleClearAll = () => {
-    if (confirm(t('messages.clearAllConfirm') || 'Are you sure you want to clear all messages?')) {
-      notificationService.clearAllMessages();
-    }
+    notificationService.clearAllMessages();
+    setIsClearConfirmOpen(false);
   };
 
-  const getMessageIcon = (type: string) => {
-    switch (type) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !isClearConfirmOpen && onClose();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [isOpen, onClose, isClearConfirmOpen]);
+
+  const getMessageIcon = (message: NotificationMessage): IconName => {
+    switch (message.type) {
       case 'cycle_reminder':
-        return '🔄';
+        return 'cycle';
       case 'cycle_overdue':
-        return '⚠️';
+        return 'period';
       case 'workout_reminder':
-        return '🏋️';
       case 'workout_inactivity':
-        return '🏋️';
+        return 'quick-log';
       default:
-        return '📢';
+        // General messages: pick by their action (test / mental / climbing reminders)
+        switch (message.actionButton?.action) {
+          case 'perform_test':
+            return 'test';
+          case 'create_mental_workout':
+            return 'type-mental';
+          case 'create_climbing_workout':
+            return 'falls';
+          default:
+            return 'bell';
+        }
     }
   };
 
-  const getMessageColor = (type: string, priority: string) => {
-    if (priority === 'high') {
-      return 'border-l-red-500 bg-red-50 dark:bg-red-900/20';
-    }
-    if (priority === 'medium') {
-      return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/20';
-    }
-    return 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/20';
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB';
+  const formatTimestamp = (timestamp: Date) => {
+    const time = timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+    const day = toLocalDateString(timestamp);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (day === toLocalDateString()) return `${t('common.today') || 'Today'}, ${time}`;
+    if (day === toLocalDateString(yesterday)) return `${t('common.yesterday') || 'Yesterday'}, ${time}`;
+    return `${timestamp.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })}, ${time}`;
   };
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-              📬 {t('messages.title') || 'Messages'}
-            </h2>
-            {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                {unreadCount}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center space-x-2">
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                {t('messages.markAllRead') || 'Mark all read'}
-              </button>
-            )}
-            {messages.length > 0 && (
-              <button
-                onClick={handleClearAll}
-                className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-              >
-                {t('messages.clearAll') || 'Clear all'}
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
+  const title = t('messages.title') || 'Messages';
 
-        {/* Messages List */}
-        <div className="overflow-y-auto max-h-[60vh]">
-          {messages.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="text-6xl mb-4">📭</div>
-              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-50 mb-2">
-                {t('messages.empty') || 'No messages yet'}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                {t('messages.emptyDesc') || 'You\'ll receive cycle reminders and other notifications here.'}
-              </p>
+  return (
+    <>
+      <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="absolute inset-0 hidden sm:block bg-uc-scrim" onClick={onClose} aria-hidden />
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          className="relative flex h-full w-full sm:max-w-md flex-col bg-uc-bg sm:bg-uc-elevated text-uc-text sm:border-l sm:border-uc-border sm:shadow-uc pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+        >
+          {/* Header */}
+          <div className="px-4 pt-3 pb-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label={t('common.close') || 'Close'}
+                className="inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text hover:bg-uc-surface transition-colors -ml-2"
+              >
+                <svg aria-hidden className="size-6" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M15 6l-6 6 6 6" />
+                </svg>
+              </button>
+              <h2 className="text-[28px] leading-9 font-extrabold">{title}</h2>
+              {unreadCount > 0 && (
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-uc-pill bg-uc-accent px-2 text-xs font-extrabold text-uc-on-accent uc-num">
+                  {unreadCount}
+                </span>
+              )}
             </div>
-          ) : (
-            <div className="divide-y divide-slate-200 dark:divide-slate-700">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`p-4 border-l-4 ${getMessageColor(message.type, message.priority)} ${
-                    !message.read ? 'font-medium' : ''
-                  }`}
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="text-2xl">{getMessageIcon(message.type)}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                          {message.title}
-                        </h4>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
-                            {message.timestamp.toLocaleDateString()} {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+            {messages.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {unreadCount > 0 && (
+                  <Button variant="ghost" onClick={handleMarkAllAsRead}>
+                    {t('messages.markAllRead') || 'Mark all read'}
+                  </Button>
+                )}
+                <Button variant="ghost" onClick={() => setIsClearConfirmOpen(true)} className="text-uc-error">
+                  {t('messages.clearAll') || 'Clear all'}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Messages List */}
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            {messages.length === 0 ? (
+              <EmptyState
+                icon={<Icon name="bell" size={28} />}
+                title={t('messages.empty') || 'No messages yet'}
+                description={t('messages.emptyDesc') || 'You\'ll receive cycle reminders and other notifications here.'}
+              />
+            ) : (
+              <ul className="space-y-3">
+                {messages.map((message) => (
+                  <li key={message.id}>
+                    <Card className={!message.read ? priorityBorder[message.priority ?? ''] ?? '' : ''}>
+                      <div className="flex items-start gap-3">
+                        <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-elevated ${
+                          message.type.startsWith('cycle') ? 'text-uc-phase-menstruation' : message.type.startsWith('workout') ? 'text-uc-accent-text' : 'text-uc-primary'
+                        }`}>
+                          <Icon name={getMessageIcon(message)} size={22} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            {!message.read && <span aria-hidden className="size-2 shrink-0 rounded-full bg-uc-accent" />}
+                            <h3 className="text-[15px] font-extrabold leading-5">{message.title}</h3>
+                            {message.priority && priorityChip[message.priority] && (
+                              <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-extrabold uppercase tracking-[0.06em] ${priorityChip[message.priority].className}`}>
+                                {t(priorityChip[message.priority].key) || priorityChip[message.priority].fallback}
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 text-sm text-uc-text-muted">{message.message}</p>
+                          <p className="mt-1 text-xs font-semibold text-uc-text-muted uc-num">{formatTimestamp(message.timestamp)}</p>
+                        </div>
+                      </div>
+                      {(!message.read || message.actionButton) && (
+                        <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                           {!message.read && (
                             <button
+                              type="button"
                               onClick={() => handleMarkAsRead(message.id)}
-                              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                              className="min-h-11 px-3 rounded-uc-input text-sm font-bold text-uc-text-muted hover:text-uc-text hover:bg-uc-elevated transition-colors"
                             >
                               {t('messages.markRead') || 'Mark read'}
                             </button>
                           )}
+                          {message.actionButton && (
+                            <Button variant="tonal" onClick={() => handleActionClick(message)}>
+                              {message.actionButton.text}
+                            </Button>
+                          )}
                         </div>
-                      </div>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                        {message.message}
-                      </p>
-                      {message.actionButton && (
-                        <button
-                          onClick={() => handleActionClick(message)}
-                          className="mt-3 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          {message.actionButton.text}
-                        </button>
                       )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700">
-          <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
-            <span>
+          {/* Footer */}
+          <div className="px-4 py-3 border-t border-uc-border flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs font-semibold text-uc-text-muted">
+            <span className="uc-num">
               {messages.length} {messages.length === 1 ? t('messages.message') || 'message' : t('messages.messages_plural') || 'messages'}
-              {unreadCount > 0 && ` • ${unreadCount} ${t('messages.unread') || 'unread'}`}
+              {unreadCount > 0 && ` · ${unreadCount} ${t('messages.unread') || 'unread'}`}
             </span>
-            <span>
-              {t('messages.lastUpdated') || 'Last updated'}: {new Date().toLocaleTimeString()}
+            <span className="uc-num">
+              {t('messages.lastUpdated') || 'Last updated'}: {new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
         </div>
       </div>
-    </div>
+
+      <ConfirmationDialog
+        isOpen={isClearConfirmOpen}
+        onClose={() => setIsClearConfirmOpen(false)}
+        onConfirm={handleClearAll}
+        title={t('messages.clearAll') || 'Clear all'}
+        message={t('messages.clearAllConfirm') || 'Are you sure you want to clear all messages?'}
+        confirmText={t('messages.clearAll') || 'Clear all'}
+      />
+    </>
   );
 };
+
+// Every priority gets its own chip (decision 4); unread high / medium messages also get a tinted border
+const priorityChip: Record<string, { key: string; fallback: string; className: string }> = {
+  high: { key: 'messages.priorityHigh', fallback: 'High', className: 'bg-uc-error-bg text-uc-error' },
+  medium: { key: 'messages.priorityMedium', fallback: 'Medium', className: 'bg-uc-warning-bg text-uc-warning' },
+  low: { key: 'messages.priorityLow', fallback: 'Low', className: 'bg-uc-elevated text-uc-text-muted' },
+}
+
+const priorityBorder: Record<string, string> = {
+  high: 'border-uc-error/50',
+  medium: 'border-uc-warning/50',
+}
