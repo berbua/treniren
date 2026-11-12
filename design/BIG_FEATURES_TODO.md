@@ -38,7 +38,7 @@ MISSING_DESIGNS.md, commit. Ask the user before starting each remaining item —
 | 53 | Progression footer "Start · Now · +%" | First vs last session in the range, for the selected metric | `89cc588` |
 | 59 | "Member since" on Profile | `/api/user` returns `createdAt` | `a6cc14d` |
 | 60 | Editable display name | Saved as `User.nickname`; Today greeting and user menu use it | `a6cc14d` |
-| — | **Deload** event (user request) | New `EventType.DELOAD` + migration; a date range like trips (stored in `tripStartDate` / `tripEndDate`) | see log |
+| — | **Deload** event (user request) | New `EventType.DELOAD` + migration; a date range like trips (stored in `tripStartDate` / `tripEndDate`) | `a3cd250` |
 
 Not checked in a browser yet (no local server / test account in the session) — test them in the app.
 
