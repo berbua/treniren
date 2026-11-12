@@ -31,8 +31,8 @@ MISSING_DESIGNS.md, commit. Tick an item here when it's built.
 - [ ] **45 Fingerboard test chart on Stats**.
 
 ## Exercises / routines / fingerboard
-- [ ] **52 Exercise detail "Improving" status**.
-- [ ] **53 Progression footer** "Start 6 kg · Now 10 kg · +67%".
+- [x] **52 Exercise detail "Improving" status**.
+- [x] **53 Progression footer** "Start 6 kg · Now 10 kg · +67%".
 - [ ] **55 Load routine in two steps**: pick a variation, then "Load into workout".
 - [ ] **56 Fingerboard as one screen** (training protocols + testing protocols) — changes navigation.
 

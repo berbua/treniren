@@ -232,11 +232,14 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Header keeps the "Exercise Library" title, subtitle and the 👯 Add Routine link (ghost button, label from `sm`).
   - Exercise count line ("12 exercises matching …") kept above the list; grid/list toggle keeps its emoji icons.
   - Exercise empty state keeps the app's texts (not "Your library is empty · Start with Quick add or create your own").
-  - **Detail · Status** shows Tracking / New (app logic); the mock's "Improving" isn't computed anywhere.
+  - **Detail · Status** (decision 52, built 2026-11-12): Improving / Tracking / New. "Improving" (`quick-stats` returns
+    `improving`): best set of the last 3 sessions beats the best of the 3 before (est. 1RM; max reps when there's no
+    weight), needs 4+ sessions and use in the last 42 days. Independent of the chart timeframe. PL "Postęp".
   - Personal-record tiles keep their date line and emoji.
-  - **Progression footer** shows the app's summary (Workouts · Sets · Improvement % with "Weight change (period)"), not the
-    mock's "Start 6 kg · Now 10 kg · +67%". Timeframe default stays 1 month (mock: Last 3 months); "N workouts in this
-    period" line kept.
+  - **Progression footer** (decision 53, built 2026-11-12): "Start 6 kg · Now 10 kg · +67%" from the first and last
+    session in the period for the **selected metric** (reps metric uses "reps" / "powt."); shown from 2 sessions. A
+    smaller "Workouts N · Sets N" line stays under it; the old half-vs-half "Improvement % / Weight change" is gone
+    (keys kept, unused). Timeframe default stays 1 month (mock: Last 3 months); "N workouts in this period" line kept.
   - Recent workouts list every set ("5×10kg, 5×10kg, …") plus "N sets", not the compact "3 × 5 @ 10 kg"; rows still link
     to /workouts.
 

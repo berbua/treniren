@@ -14,6 +14,7 @@ interface ExerciseQuickStats {
   lastWeight: number | null
   lastReps: number | null
   timesUsed: number
+  improving?: boolean
 }
 
 interface WorkoutWithExercise {
@@ -187,6 +188,17 @@ function ExerciseDetailPageContent() {
 
   const sectionTitle = 'text-[17px] font-extrabold text-uc-text mb-3'
 
+  // Footer: first and last session of the period for the chart's metric
+  const metricValue = (point: { maxWeight: number; estimated1RM: number; totalVolume: number; averageReps: number }) =>
+    ({ weight: point.maxWeight, '1rm': point.estimated1RM, volume: point.totalVolume, reps: point.averageReps })[selectedMetric]
+  const points = progressionData?.dataPoints ?? []
+  const startValue = points.length >= 2 ? metricValue(points[0]) : null
+  const nowValue = points.length >= 2 ? metricValue(points[points.length - 1]) : null
+  const change = startValue && nowValue !== null ? Math.round(((nowValue - startValue) / startValue) * 100) : null
+  const metricUnit = selectedMetric === 'reps' ? t('exercises.detail.repsUnit') || 'reps' : exercise.defaultUnit
+  const formatMetric = (value: number) =>
+    `${Number.isInteger(value) ? value : value.toFixed(selectedMetric === 'volume' ? 0 : 1)} ${metricUnit}`
+
   return (
     <div className="min-h-screen bg-uc-bg">
       <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
@@ -215,9 +227,11 @@ function ExerciseDetailPageContent() {
                 {lastSet && <MiniTile label={t('exercises.detail.lastSet') || 'Last set'} value={lastSet} />}
                 <MiniTile
                   label={t('exercises.detail.status') || 'Status'}
-                  value={hasWorkouts
-                    ? (t('exercises.detail.statusTracking') || 'Tracking')
-                    : (t('exercises.detail.statusNew') || 'New')}
+                  value={quickStats.improving
+                    ? (t('exercises.detail.statusImproving') || 'Improving')
+                    : hasWorkouts
+                      ? (t('exercises.detail.statusTracking') || 'Tracking')
+                      : (t('exercises.detail.statusNew') || 'New')}
                   valueClassName={hasWorkouts ? 'text-uc-success' : ''}
                 />
               </div>
@@ -296,27 +310,36 @@ function ExerciseDetailPageContent() {
                 chartType={selectedChartType}
               />
 
-              {/* Summary Stats */}
+              {/* Summary: Start · Now · change for the selected metric, then workouts and sets */}
               {summary && (
-                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-uc-border pt-3 text-[13px] text-uc-text-muted">
-                  <span>
-                    {t('exercises.detail.totalWorkouts') || 'Workouts'}{' '}
-                    <strong className="text-uc-text uc-num">{summary.totalWorkouts}</strong>
-                  </span>
-                  <span>
-                    {t('exercises.detail.totalSets') || 'Sets'}{' '}
-                    <strong className="text-uc-text uc-num">{summary.totalSets}</strong>
-                  </span>
-                  <span title={t('exercises.detail.weightChange', { period: summary.improvement.period })}>
-                    {t('exercises.detail.improvement') || 'Improvement'}{' '}
-                    <strong className={`uc-num ${summary.improvement.weight > 0 ? 'text-uc-success' : 'text-uc-text'}`}>
-                      {summary.improvement.weight > 0 ? '+' : ''}
-                      {summary.improvement.weight.toFixed(1)}%
-                    </strong>
-                    <span className="block text-xs">
-                      {t('exercises.detail.weightChange', { period: summary.improvement.period })}
+                <div className="mt-4 border-t border-uc-border pt-3 text-[13px] text-uc-text-muted">
+                  {startValue !== null && nowValue !== null && (
+                    <p className="flex flex-wrap gap-x-6 gap-y-1">
+                      <span>
+                        {t('exercises.detail.start') || 'Start'}{' '}
+                        <strong className="text-uc-text uc-num">{formatMetric(startValue)}</strong>
+                      </span>
+                      <span>
+                        {t('exercises.detail.now') || 'Now'}{' '}
+                        <strong className="text-uc-text uc-num">{formatMetric(nowValue)}</strong>
+                      </span>
+                      {change !== null && (
+                        <strong className={`uc-num ${change > 0 ? 'text-uc-success' : 'text-uc-text'}`}>
+                          {change > 0 ? '+' : ''}{change}%
+                        </strong>
+                      )}
+                    </p>
+                  )}
+                  <p className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-xs">
+                    <span>
+                      {t('exercises.detail.totalWorkouts') || 'Workouts'}{' '}
+                      <strong className="text-uc-text uc-num">{summary.totalWorkouts}</strong>
                     </span>
-                  </span>
+                    <span>
+                      {t('exercises.detail.totalSets') || 'Sets'}{' '}
+                      <strong className="text-uc-text uc-num">{summary.totalSets}</strong>
+                    </span>
+                  </p>
                 </div>
               )}
             </Card>

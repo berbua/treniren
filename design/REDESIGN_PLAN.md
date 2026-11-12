@@ -421,3 +421,6 @@ note the answer.
   apply) + `UpcomingEventRow` under the legend. New keys `calendar.upcoming / noUpcoming / today / tomorrow / inDays`.
 - 2026-11-12: Cycle 39 `PeriodStats` card (Avg cycle / Avg period / Logged), keys `cycle.tracking.avgCycle / avgPeriod /
   logged`. Gaps 15–60 days count as cycles.
+- 2026-11-12: Exercise detail 52 + 53. `quick-stats` returns `improving` (last 3 sessions' best set vs the 3 before,
+  est. 1RM or max reps, used within 42 days) → Status "Improving" (`exercises.detail.statusImproving`). Progression
+  footer: Start / Now / ±% for the selected metric from `dataPoints` (`start`, `now`, `repsUnit`), then Workouts · Sets.
