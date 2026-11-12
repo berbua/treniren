@@ -157,6 +157,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **Selected-day detail** — user decision 2026-11-12: month cells show dots like the mock; tapping a day opens the
   existing Add sheet, which now lists that day's events (tap = edit) and workouts (edit, duplicate) above the
   Quick log / Add workout / Add event tiles. The mock shows the detail as an inline panel; ours is a sheet.
+- **Goal-achieved trophy** (user request 2026-11-12, no design): a day with a workout that marked a process goal
+  achieved or a project goal completed shows a small green trophy (`achieved` icon, `--uc-success`) before the workout
+  dots in the month cell; week view / day sheet workout rows get a green "Goal achieved" chip after the type name; the
+  legend lists it with the event types.
 - Built 2026-11-12. Remaining differences:
   - **Filters** (decision 34, built 2026-11-12): "Show workouts" / "Show events" checkboxes (unticked hides them from the
     calendar and the day sheet; that type list hides too), both type lists stacked, footer ghost "Reset" (clears

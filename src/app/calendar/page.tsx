@@ -101,6 +101,11 @@ function IconButton({ label, onClick, children }: { label: string; onClick: (e: 
   )
 }
 
+// A process goal marked achieved or a project goal marked completed in this workout
+const hasAchievedGoal = (workout: Workout) =>
+  !!workout.mentalState?.processGoals?.some(pg => pg.achieved) ||
+  !!workout.mentalState?.projectGoals?.some(pg => pg.completed)
+
 interface WorkoutRowProps {
   workout: Workout
   t: (key: string) => string
@@ -133,6 +138,12 @@ function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
           <span className="text-[15px] font-extrabold text-uc-text">
             {meta ? t(`training.types.${meta.key}`) : workout.type}
           </span>
+          {hasAchievedGoal(workout) && (
+            <span className="inline-flex min-h-6 items-center gap-1 rounded-lg bg-uc-success-bg px-2 text-xs font-bold text-uc-success">
+              <Icon name="achieved" size={14} />
+              {t('strongMind.goalAchieved')}
+            </span>
+          )}
         </div>
         {info.length > 0 && (
           <p className="mt-0.5 line-clamp-2 text-[13px] text-uc-text-muted">{info.join(' · ')}</p>
@@ -925,6 +936,7 @@ function CalendarPageContent() {
                           const dayWorkouts = getWorkoutsForDate(date)
                           const dayEvents = getEventsForDate(date)
                           const badgeEvent = dayEvents.find(e => !isRangeEventType(e.type))
+                          const goalAchieved = dayWorkouts.some(hasAchievedGoal)
                           const hasTrip = dayEvents.some(e => e.type === 'TRIP')
                           const hasDeload = dayEvents.some(e => e.type === 'DELOAD')
                           const isToday = isTodayDate(date)
@@ -935,7 +947,10 @@ function CalendarPageContent() {
                               key={i}
                               type="button"
                               onClick={() => handleDateClick(date)}
-                              aria-label={date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}
+                              aria-label={
+                                date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }) +
+                                (goalAchieved ? `, ${t('strongMind.goalAchieved')}` : '')
+                              }
                               aria-current={isToday ? 'date' : undefined}
                               className="relative flex min-h-[62px] flex-col items-center focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-uc-primary"
                             >
@@ -965,6 +980,7 @@ function CalendarPageContent() {
                                 {date.getDate()}
                               </span>
                               <span aria-hidden className="relative mb-2.5 mt-auto flex h-[7px] items-center gap-[3px]">
+                                {goalAchieved && <Icon name="achieved" size={11} className="text-uc-success" />}
                                 {dayWorkouts.slice(0, 3).map((workout) => (
                                   <span key={workout.id} className={`size-[7px] rounded-full ${workoutBg[workout.type]}`} />
                                 ))}
@@ -1069,6 +1085,10 @@ function CalendarPageContent() {
                   {t(`events.types.${key}`)}
                 </li>
               ))}
+              <li className="flex items-center gap-2 text-sm text-uc-text-muted">
+                <span aria-hidden className="inline-flex size-5 items-center justify-center rounded-md bg-uc-success-bg text-uc-success"><Icon name="achieved" size={12} /></span>
+                {t('strongMind.goalAchieved')}
+              </li>
               {injuryStats?.phaseWithMostInjuries && (
                 <li className="flex items-center gap-2 text-sm text-uc-text-muted">
                   <span aria-hidden className="inline-flex size-5 items-center justify-center rounded-md bg-uc-warning-bg text-uc-warning"><Icon name="injury-risk" size={12} /></span>
