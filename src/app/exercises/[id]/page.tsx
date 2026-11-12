@@ -5,9 +5,9 @@ import { useParams, useRouter } from 'next/navigation'
 import AuthGuard from '@/components/AuthGuard'
 import { Exercise } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ExerciseProgressionChart, TimeFrame, Metric, ChartType } from '@/components/ExerciseProgressionChart'
 import Link from 'next/link'
+import { Card, EmptyState, Overline, SegmentedControl, Select, Skeleton, SkeletonRows, buttonClasses } from '@/components/ui'
 
 interface ExerciseQuickStats {
   lastUsed: string | null
@@ -41,7 +41,7 @@ export default function ExerciseDetailPage() {
 function ExerciseDetailPageContent() {
   const params = useParams()
   const router = useRouter()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const exerciseId = params.id as string
 
   const [exercise, setExercise] = useState<Exercise | null>(null)
@@ -117,314 +117,293 @@ function ExerciseDetailPageContent() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    })
-  }
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  const formatShortDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+
+  const backLink = (
+    <Link
+      href="/exercises"
+      aria-label={t('exercises.detail.back') || 'Back to Exercise Library'}
+      title={t('exercises.detail.back') || 'Back to Exercise Library'}
+      className="-ml-2 inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text transition-colors hover:bg-uc-elevated"
+    >
+      <svg aria-hidden className="size-6" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+        <path d="m15 6-6 6 6 6" />
+      </svg>
+    </Link>
+  )
 
   if (loading) {
-    return <LoadingSpinner message="Loading exercise..." fullScreen />
-  }
-
-  if (!exercise) {
     return (
-      <div className="min-h-screen bg-uc-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">💪</div>
-          <h2 className="text-2xl font-semibold text-uc-text-light mb-2">Exercise not found</h2>
-          <Link
-            href="/exercises"
-            className="text-uc-mustard hover:text-uc-mustard/80 transition-colors"
-          >
-            ← Back to Exercise Library
-          </Link>
+      <div className="min-h-screen bg-uc-bg">
+        <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8 space-y-5">
+          <Skeleton className="h-9 w-2/3" />
+          <SkeletonRows rows={4} />
         </div>
       </div>
     )
   }
 
+  if (!exercise) {
+    return (
+      <div className="min-h-screen bg-uc-bg flex items-center justify-center px-5">
+        <EmptyState
+          icon="💪"
+          title={t('exercises.detail.notFound') || 'Exercise not found'}
+          action={
+            <Link href="/exercises" className={buttonClasses('ghost', 'md')}>
+              ← {t('exercises.detail.back') || 'Back to Exercise Library'}
+            </Link>
+          }
+        />
+      </div>
+    )
+  }
+
+  const lastSet = quickStats && quickStats.lastWeight !== null && quickStats.lastReps !== null
+    ? (exercise.defaultUnit === 'reps'
+        ? `${quickStats.lastReps} reps`
+        : `${quickStats.lastWeight} ${exercise.defaultUnit} × ${quickStats.lastReps}`)
+    : null
+  const records = progressionData?.personalRecords
+  const summary = progressionData?.summary
+  const hasWorkouts = !!quickStats && quickStats.timesUsed > 0
+
+  const timeframeOptions: TimeFrame[] = ['1week', '1month', '3months', '6months', '1year', 'all']
+  const metricOptions: { value: Metric; label: string }[] = [
+    { value: 'weight', label: t('exercises.detail.maxWeight') || 'Max weight' },
+    { value: '1rm', label: t('exercises.detail.est1RM') || 'Est. 1RM' },
+    { value: 'volume', label: t('exercises.detail.totalVolume') || 'Total volume' },
+    { value: 'reps', label: t('exercises.detail.averageReps') || 'Average reps' },
+  ]
+  const chartTypeOptions: { value: ChartType; label: string }[] = [
+    { value: 'line', label: t('exercises.detail.line') || 'Line' },
+    { value: 'area', label: t('exercises.detail.area') || 'Area' },
+    { value: 'bar', label: t('exercises.detail.bar') || 'Bar' },
+  ]
+
+  const sectionTitle = 'text-[17px] font-extrabold text-uc-text mb-3'
+
   return (
-    <div className="min-h-screen bg-uc-black">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <Link
-                href="/exercises"
-                className="text-uc-text-muted hover:text-uc-text-light transition-colors mb-2 inline-block"
-              >
-                ← Back to Exercise Library
-              </Link>
-              <h1 className="text-3xl font-bold text-uc-text-light">
-                💪 {exercise.name}
-              </h1>
-              {exercise.category && (
-                <p className="text-uc-text-muted mt-2">
-                  Category: {exercise.category} • Unit: {exercise.defaultUnit}
-                </p>
-              )}
-            </div>
+        <div className="mb-5 flex items-start gap-2">
+          {backLink}
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-extrabold leading-tight text-uc-text break-words">
+              {exercise.name}
+            </h1>
+            <p className="mt-0.5 text-sm font-semibold text-uc-text-muted">
+              {[exercise.category, exercise.defaultUnit].filter(Boolean).join(' · ')}
+            </p>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        {quickStats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-              <div className="text-sm text-uc-text-muted mb-1">Times Used</div>
-              <div className="text-2xl font-bold text-uc-mustard">
-                {quickStats.timesUsed}
-              </div>
-            </div>
-            {quickStats.lastUsed && (
-              <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-                <div className="text-sm text-uc-text-muted mb-1">Last Used</div>
-                <div className="text-lg font-semibold text-uc-text-light">
-                  {formatDate(quickStats.lastUsed)}
-                </div>
-              </div>
-            )}
-            {quickStats.lastWeight !== null && quickStats.lastReps !== null && (
-              <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-                <div className="text-sm text-uc-text-muted mb-1">Last Performance</div>
-                <div className="text-lg font-semibold text-uc-text-light">
-                  {quickStats.lastReps} × {quickStats.lastWeight} {exercise.defaultUnit}
-                </div>
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            {quickStats && (
+              <div className="grid grid-cols-2 gap-3">
+                <MiniTile label={t('exercises.detail.timesUsed') || 'Times used'} value={quickStats.timesUsed} />
+                {quickStats.lastUsed && (
+                  <MiniTile label={t('exercises.detail.lastUsed') || 'Last used'} value={formatShortDate(quickStats.lastUsed)} />
+                )}
+                {lastSet && <MiniTile label={t('exercises.detail.lastSet') || 'Last set'} value={lastSet} />}
+                <MiniTile
+                  label={t('exercises.detail.status') || 'Status'}
+                  value={hasWorkouts
+                    ? `📊 ${t('exercises.detail.statusTracking') || 'Tracking'}`
+                    : `🆕 ${t('exercises.detail.statusNew') || 'New'}`}
+                  valueClassName={hasWorkouts ? 'text-uc-success' : ''}
+                />
               </div>
             )}
-            <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-              <div className="text-sm text-uc-text-muted mb-1">Status</div>
-              <div className="text-lg font-semibold text-uc-text-light">
-                {quickStats.timesUsed > 0 ? '📊 Tracking' : '🆕 New'}
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Personal Records */}
-        {progressionData && progressionData.personalRecords && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gradient-to-br from-uc-purple/20 to-uc-purple/10 rounded-xl p-4 border border-uc-purple/30">
-              <div className="text-sm text-uc-text-muted mb-1">🏆 Max Weight</div>
-              <div className="text-2xl font-bold text-uc-mustard">
-                {progressionData.personalRecords.maxWeight.value.toFixed(1)} {exercise.defaultUnit}
-              </div>
-              {progressionData.personalRecords.maxWeight.date && (
-                <div className="text-xs text-uc-text-muted mt-1">
-                  {formatDate(progressionData.personalRecords.maxWeight.date)}
+            {/* Personal Records */}
+            {records && (
+              <section>
+                <h2 className={sectionTitle}>{t('exercises.detail.personalRecords') || 'Personal records'}</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <RecordTile
+                    label={`🏆 ${t('exercises.detail.maxWeight') || 'Max weight'}`}
+                    value={`${records.maxWeight.value.toFixed(1)} ${exercise.defaultUnit}`}
+                    date={records.maxWeight.date && formatShortDate(records.maxWeight.date)}
+                  />
+                  <RecordTile
+                    label={`💪 ${t('exercises.detail.est1RM') || 'Est. 1RM'}`}
+                    value={`${records.max1RM.value.toFixed(1)} ${exercise.defaultUnit}`}
+                    date={records.max1RM.date && formatShortDate(records.max1RM.date)}
+                  />
+                  <RecordTile
+                    label={`📊 ${t('exercises.detail.maxVolume') || 'Max volume'}`}
+                    value={`${records.maxVolume.value.toFixed(0)} ${exercise.defaultUnit}`}
+                    date={records.maxVolume.date && formatShortDate(records.maxVolume.date)}
+                  />
+                  <RecordTile
+                    label={`🔥 ${t('exercises.detail.maxReps') || 'Max reps'}`}
+                    value={records.maxReps.value}
+                    date={records.maxReps.date && formatShortDate(records.maxReps.date)}
+                  />
                 </div>
-              )}
-            </div>
-            <div className="bg-gradient-to-br from-uc-purple/20 to-uc-purple/10 rounded-xl p-4 border border-uc-purple/30">
-              <div className="text-sm text-uc-text-muted mb-1">💪 Estimated 1RM</div>
-              <div className="text-2xl font-bold text-uc-mustard">
-                {progressionData.personalRecords.max1RM.value.toFixed(1)} {exercise.defaultUnit}
-              </div>
-              {progressionData.personalRecords.max1RM.date && (
-                <div className="text-xs text-uc-text-muted mt-1">
-                  {formatDate(progressionData.personalRecords.max1RM.date)}
-                </div>
-              )}
-            </div>
-            <div className="bg-gradient-to-br from-uc-purple/20 to-uc-purple/10 rounded-xl p-4 border border-uc-purple/30">
-              <div className="text-sm text-uc-text-muted mb-1">📊 Max Volume</div>
-              <div className="text-2xl font-bold text-uc-mustard">
-                {progressionData.personalRecords.maxVolume.value.toFixed(0)} {exercise.defaultUnit}
-              </div>
-              {progressionData.personalRecords.maxVolume.date && (
-                <div className="text-xs text-uc-text-muted mt-1">
-                  {formatDate(progressionData.personalRecords.maxVolume.date)}
-                </div>
-              )}
-            </div>
-            <div className="bg-gradient-to-br from-uc-purple/20 to-uc-purple/10 rounded-xl p-4 border border-uc-purple/30">
-              <div className="text-sm text-uc-text-muted mb-1">🔥 Max Reps</div>
-              <div className="text-2xl font-bold text-uc-mustard">
-                {progressionData.personalRecords.maxReps.value}
-              </div>
-              {progressionData.personalRecords.maxReps.date && (
-                <div className="text-xs text-uc-text-muted mt-1">
-                  {formatDate(progressionData.personalRecords.maxReps.date)}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Progression Charts */}
-        {quickStats && quickStats.timesUsed > 0 ? (
-          <div className="mb-8">
-            {/* Controls */}
-            <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20 mb-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-uc-text-muted">Timeframe:</label>
-                  <select
-                    value={selectedTimeframe}
-                    onChange={(e) => setSelectedTimeframe(e.target.value as TimeFrame)}
-                    className="bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                  >
-                    <option value="1week">1 Week</option>
-                    <option value="1month">1 Month</option>
-                    <option value="3months">3 Months</option>
-                    <option value="6months">6 Months</option>
-                    <option value="1year">1 Year</option>
-                    <option value="all">All Time</option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-uc-text-muted">Metric:</label>
-                  <select
-                    value={selectedMetric}
-                    onChange={(e) => setSelectedMetric(e.target.value as Metric)}
-                    className="bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                  >
-                    <option value="weight">Max Weight</option>
-                    <option value="1rm">Estimated 1RM</option>
-                    <option value="volume">Total Volume</option>
-                    <option value="reps">Average Reps</option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-uc-text-muted">Chart Type:</label>
-                  <select
-                    value={selectedChartType}
-                    onChange={(e) => setSelectedChartType(e.target.value as ChartType)}
-                    className="bg-uc-black border border-uc-purple/30 rounded-lg px-3 py-2 text-uc-text-light text-sm focus:outline-none focus:border-uc-purple"
-                  >
-                    <option value="line">Line</option>
-                    <option value="area">Area</option>
-                    <option value="bar">Bar</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Chart */}
-            <ExerciseProgressionChart
-              exerciseId={exerciseId}
-              metric={selectedMetric}
-              timeframe={selectedTimeframe}
-              chartType={selectedChartType}
-            />
-
-            {/* Summary Stats */}
-            {progressionData && progressionData.summary && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-                  <div className="text-sm text-uc-text-muted mb-1">Total Workouts</div>
-                  <div className="text-xl font-bold text-uc-text-light">
-                    {progressionData.summary.totalWorkouts}
-                  </div>
-                </div>
-                <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-                  <div className="text-sm text-uc-text-muted mb-1">Total Sets</div>
-                  <div className="text-xl font-bold text-uc-text-light">
-                    {progressionData.summary.totalSets}
-                  </div>
-                </div>
-                <div className="bg-uc-dark-bg rounded-xl p-4 border border-uc-purple/20">
-                  <div className="text-sm text-uc-text-muted mb-1">Improvement</div>
-                  <div className="text-xl font-bold text-uc-text-light">
-                    {progressionData.summary.improvement.weight > 0 ? '+' : ''}
-                    {progressionData.summary.improvement.weight.toFixed(1)}%
-                  </div>
-                  <div className="text-xs text-uc-text-muted mt-1">
-                    Weight change ({progressionData.summary.improvement.period})
-                  </div>
-                </div>
-              </div>
+              </section>
             )}
           </div>
-        ) : (
-          <div className="bg-uc-dark-bg rounded-xl p-12 border border-uc-purple/20 mb-8 text-center">
-            <div className="text-6xl mb-4">💪</div>
-            <h3 className="text-lg font-semibold text-uc-text-light mb-2">
-              {t('exercises.noWorkoutData') || 'No workout data yet'}
-            </h3>
-            <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-              {t('exercises.noWorkoutDataDescription') || 'Start logging workouts with this exercise to see your progression over time. Track your sets, reps, and weights to visualize your strength gains.'}
-            </p>
-            <Link
-              href="/workouts"
-              className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-            >
-              ➕ {t('exercises.logWorkout') || 'Log Your First Workout'}
-            </Link>
-          </div>
-        )}
 
-        {/* Recent Workouts */}
-        {recentWorkouts.length > 0 && (
-          <div className="bg-uc-dark-bg rounded-xl p-6 border border-uc-purple/20">
-            <h2 className="text-xl font-semibold text-uc-text-light mb-4">
-              📅 Recent Workouts
-            </h2>
-            <div className="space-y-3">
-              {recentWorkouts.map((workout) => {
-                const exerciseData = workout.workoutExercises.find(
-                  (we: any) => we.exerciseId === exerciseId
-                )
-                const sets = exerciseData?.sets || []
+          {/* Progression Charts */}
+          {hasWorkouts ? (
+            <Card className="lg:row-span-2">
+              <h2 className={sectionTitle}>{t('exercises.detail.progression') || 'Progression'}</h2>
+              <div className="grid grid-cols-2 gap-2">
+                <Select
+                  aria-label={t('exercises.detail.metric') || 'Metric'}
+                  value={selectedMetric}
+                  onChange={(e) => setSelectedMetric(e.target.value as Metric)}
+                >
+                  {metricOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </Select>
+                <Select
+                  aria-label={t('exercises.detail.timeframe') || 'Timeframe'}
+                  value={selectedTimeframe}
+                  onChange={(e) => setSelectedTimeframe(e.target.value as TimeFrame)}
+                >
+                  {timeframeOptions.map(value => (
+                    <option key={value} value={value}>{t(`exercises.detail.timeframes.${value}`)}</option>
+                  ))}
+                </Select>
+              </div>
+              <SegmentedControl
+                className="mt-3 mb-4"
+                ariaLabel={t('exercises.detail.chartType') || 'Chart type'}
+                options={chartTypeOptions}
+                value={selectedChartType}
+                onChange={setSelectedChartType}
+              />
 
-                return (
-                  <Link
-                    key={workout.id}
-                    href={`/workouts`}
-                    className="block bg-uc-black/50 hover:bg-uc-black rounded-lg p-4 border border-uc-purple/20 hover:border-uc-purple/40 transition-all"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-uc-text-light">
-                          {formatDate(workout.startTime)}
-                        </div>
-                        <div className="text-sm text-uc-text-muted mt-1">
-                          {sets.length} {sets.length === 1 ? 'set' : 'sets'}
-                          {sets.length > 0 && (
-                            <span className="ml-2">
-                              • {sets.map((set, i) => (
-                                <span key={i}>
-                                  {set.reps}×{set.weight}{exercise.defaultUnit}
-                                  {i < sets.length - 1 && ', '}
-                                </span>
-                              ))}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-uc-text-muted">→</div>
-                    </div>
+              <ExerciseProgressionChart
+                exerciseId={exerciseId}
+                metric={selectedMetric}
+                timeframe={selectedTimeframe}
+                chartType={selectedChartType}
+              />
+
+              {/* Summary Stats */}
+              {summary && (
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-uc-border pt-3 text-[13px] text-uc-text-muted">
+                  <span>
+                    {t('exercises.detail.totalWorkouts') || 'Workouts'}{' '}
+                    <strong className="text-uc-text uc-num">{summary.totalWorkouts}</strong>
+                  </span>
+                  <span>
+                    {t('exercises.detail.totalSets') || 'Sets'}{' '}
+                    <strong className="text-uc-text uc-num">{summary.totalSets}</strong>
+                  </span>
+                  <span title={t('exercises.detail.weightChange', { period: summary.improvement.period })}>
+                    {t('exercises.detail.improvement') || 'Improvement'}{' '}
+                    <strong className={`uc-num ${summary.improvement.weight > 0 ? 'text-uc-success' : 'text-uc-text'}`}>
+                      {summary.improvement.weight > 0 ? '+' : ''}
+                      {summary.improvement.weight.toFixed(1)}%
+                    </strong>
+                    <span className="block text-xs">
+                      {t('exercises.detail.weightChange', { period: summary.improvement.period })}
+                    </span>
+                  </span>
+                </div>
+              )}
+            </Card>
+          ) : (
+            <Card className="border-dashed lg:row-span-2">
+              <EmptyState
+                icon="💪"
+                title={t('exercises.noWorkoutData') || 'No workout data yet'}
+                description={t('exercises.noWorkoutDataDescription') || 'Start logging workouts with this exercise to see your progression over time. Track your sets, reps, and weights to visualize your strength gains.'}
+                action={
+                  <Link href="/workouts" className={buttonClasses('accent', 'md')}>
+                    + {t('exercises.logWorkout') || 'Log Your First Workout'}
                   </Link>
-                )
-              })}
-            </div>
-          </div>
-        )}
+                }
+              />
+            </Card>
+          )}
 
-        {/* Empty State for Recent Workouts */}
-        {recentWorkouts.length === 0 && quickStats && quickStats.timesUsed === 0 && (
-          <div className="bg-uc-dark-bg rounded-xl p-6 border border-uc-purple/20">
-            <div className="text-center py-8">
-              <div className="text-6xl mb-4">🏋️</div>
-              <p className="text-uc-text-muted mb-4">
-                This exercise hasn&apos;t been used in any workouts yet
-              </p>
-              <Link
-                href="/workouts"
-                className="inline-block bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-              >
-                Add to Workout
-              </Link>
-            </div>
-          </div>
-        )}
+          {/* Recent Workouts */}
+          {recentWorkouts.length > 0 && (
+            <section>
+              <h2 className={sectionTitle}>{t('exercises.detail.recentWorkouts') || 'Recent workouts'}</h2>
+              <div className="space-y-2">
+                {recentWorkouts.map((workout) => {
+                  const exerciseData = workout.workoutExercises.find(
+                    (we: any) => we.exerciseId === exerciseId
+                  )
+                  const sets = exerciseData?.sets || []
+
+                  return (
+                    <Link
+                      key={workout.id}
+                      href={`/workouts`}
+                      className="flex min-h-14 items-center gap-3 rounded-uc-input border border-uc-border bg-uc-surface px-4 py-3 transition-colors hover:border-uc-primary"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                          <span className="font-bold text-uc-text">{formatDate(workout.startTime)}</span>
+                          <span className="text-[13px] font-semibold text-uc-text-muted uc-num">
+                            {t('exercises.detail.sets', { count: sets.length })}
+                          </span>
+                        </div>
+                        {sets.length > 0 && (
+                          <p className="mt-0.5 text-[13px] text-uc-text-muted uc-num">
+                            {sets.map(set => `${set.reps}×${set.weight}${exercise.defaultUnit}`).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      <span aria-hidden className="text-uc-text-muted">›</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Empty State for Recent Workouts */}
+          {recentWorkouts.length === 0 && quickStats && quickStats.timesUsed === 0 && (
+            <Card className="border-dashed">
+              <EmptyState
+                icon="🏋️"
+                title={t('exercises.detail.notUsedYet') || 'This exercise hasn’t been used in any workouts yet'}
+                action={
+                  <Link href="/workouts" className={buttonClasses('accent', 'md')}>
+                    {t('exercises.detail.addToWorkout') || 'Add to Workout'}
+                  </Link>
+                }
+              />
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
+function MiniTile({ label, value, valueClassName = '' }: { label: string; value: React.ReactNode; valueClassName?: string }) {
+  return (
+    <Card className="p-3">
+      <Overline>{label}</Overline>
+      <p className={`mt-1 text-[17px] font-extrabold text-uc-text uc-num ${valueClassName}`}>{value}</p>
+    </Card>
+  )
+}
+
+function RecordTile({ label, value, date }: { label: string; value: React.ReactNode; date?: string | null }) {
+  return (
+    <div className="rounded-uc-card bg-uc-primary-container p-3 text-uc-on-primary-container">
+      <p className="text-[11px] leading-[14px] font-bold uppercase tracking-[0.08em] opacity-80">{label}</p>
+      <p className="mt-1 text-[22px] font-extrabold leading-tight uc-num">{value}</p>
+      {date && <p className="mt-0.5 text-xs font-semibold opacity-80">{date}</p>}
+    </div>
+  )
+}

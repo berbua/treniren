@@ -199,6 +199,26 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Description is the last field for every type (it sat above the trip fields).
   - Page subtitle and the empty state's longer description are kept.
 
+### Exercises
+- Built 2026-11-12 against `Exercises.png`. Kept where the mock differs:
+  - **Category presets** stay the app's 13 (Upper Body, Lower Body, Core, Pull, Push, Legs, Back, Chest, Shoulders, Arms,
+    Climbing Specific, Cardio, Other), not the mock's set (Antagonist, Mobility, Grip, Plyo, Full body…). Custom category
+    stays an always-visible text field under the chips instead of a "+ Custom" chip.
+  - Library filter chips are built from the categories of the user's exercises (as before), not a fixed list.
+  - **Quick add** is a collapsible card (closed by default, closes after adding, as before). Groups follow the app's list
+    (Pull, Push, Lower body, Core, Climbing specific; mock: Pull, Push & Antagonist); the count is exercises not yet added
+    (26 in the list, mock says 30). Exercise names stay English.
+  - Header keeps the "Exercise Library" title, subtitle and the 👯 Add Routine link (ghost button, label from `sm`).
+  - Exercise count line ("12 exercises matching …") kept above the list; grid/list toggle keeps its emoji icons.
+  - Exercise empty state keeps the app's texts (not "Your library is empty · Start with Quick add or create your own").
+  - **Detail · Status** shows Tracking / New (app logic); the mock's "Improving" isn't computed anywhere.
+  - Personal-record tiles keep their date line and emoji.
+  - **Progression footer** shows the app's summary (Workouts · Sets · Improvement % with "Weight change (period)"), not the
+    mock's "Start 6 kg · Now 10 kg · +67%". Timeframe default stays 1 month (mock: Last 3 months); "N workouts in this
+    period" line kept.
+  - Recent workouts list every set ("5×10kg, 5×10kg, …") plus "N sets", not the compact "3 × 5 @ 10 kg"; rows still link
+    to /workouts.
+
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event

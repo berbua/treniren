@@ -64,7 +64,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Statistics — `Statistics.png`
 - [x] Strong Mind — `Strong Mind.png`
 - [x] Events — `Events.png`
-- [ ] Exercises — `Exercises.png`
+- [x] Exercises — `Exercises.png`
 - [ ] Routines — `Routines.png`
 - [ ] Fingerboard protocols & testing — `Fingerboard protocols & testing.png`
 - [ ] Profile & settings — `Profile & settings.png`
@@ -232,3 +232,19 @@ note the answer.
   (`dismissible={false}`): 3-column type tiles tinted in the event colour, `Input`/`Textarea`, cycle day input with the
   hint beside it, trip dates side by side, climbing type `SegmentedControl`, countdown checkbox row, `FieldError`s,
   Cancel + accent Save (spinner). Same fields, validation and payload. Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Exercises done. `/exercises`: 28px title + subtitle, ghost 👯 Add Routine (label from `sm`) + accent
+  "+ Add Exercise", `SkeletonRows` while loading. `ExerciseLibrary`: search `Input` + grid/list toggle (44px, primary when
+  on), category filter as a scrolling `ChoiceChip` row (same `selectedCategory`), Quick add as a collapsible
+  primary-container card with grouped "+ Name" buttons (Pull / Push / Lower body / Core / Climbing specific; the list got a
+  `group` field that isn't sent to the API), count line, dashed `EmptyState` + accent CTA. One `ExerciseItem` for grid
+  (`Card`s, 1/2/3 columns) and list (rows in one card): name, tonal category `Chip` (per-category colours dropped), unit,
+  "Used N× · Last 2 Nov · Last set 10 kg × 5" (date was relative "3 days ago"; set was "5×10kg"), "View progress ›"
+  (only when used; the duplicate 📊 link went), 44px ✏️ 🗑️ with spinner while deleting. `ExerciseForm` is a
+  `BottomSheet` (`dismissible={false}`, as before): name `Input` + `FieldError`, category `ChoiceChip`s + custom
+  `Input`, unit `SegmentedControl`, Cancel + accent Save. `/exercises/[id]`: back chevron, name + "Category · unit",
+  2×2 mini tiles, Personal records on primary-container, Progression card (metric + timeframe `Select`s, Line/Area/Bar
+  segments, chart, summary footer), recent-workout rows, dashed empty states; two columns on `lg`. Chart: tokens via
+  `var(--uc-*)` (was hex), hollow dots, no legend, localized dates, skeleton while loading. Hard-coded English replaced
+  (new keys `exercises.gridView`, `listView`, `categories`, `quickAdd`, `quickAddCount`, `quickAddGroups.*`, `matching`,
+  `inCategory`, `usedTimes`, `lastShort`, `lastSetShort`, `viewProgress`, `form.*`, `detail.*`). Same data, handlers and
+  API calls. Not checked logged-in in a browser.

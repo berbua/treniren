@@ -6,11 +6,11 @@ import AuthGuard from '@/components/AuthGuard'
 import { Exercise } from '@/types/workout'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useConfirmation } from '@/hooks/useConfirmation'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import ExerciseForm from '@/components/ExerciseForm'
 import { ExerciseLibrary } from '@/components/ExerciseLibrary'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
+import { Button, SkeletonRows, buttonClasses } from '@/components/ui'
 
 export default function ExercisesPage() {
   return (
@@ -139,55 +139,51 @@ function ExercisesPageContent() {
     return matchesSearch && matchesCategory
   })
 
-  if (loading) {
-    return <LoadingSpinner message="Loading exercises..." fullScreen />
-  }
-
   return (
-    <div className="min-h-screen bg-uc-black">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="mb-4">
-            <h1 className="text-3xl font-bold text-uc-text-light">
-              💪 {t('exercises.title') || 'Exercise Library'}
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-extrabold leading-tight text-uc-text">
+              {t('exercises.title') || 'Exercise Library'}
             </h1>
-            <p className="text-uc-text-muted mt-2">
+            <p className="mt-1 text-sm text-uc-text-muted">
               {t('exercises.subtitle') || 'Manage your exercise library and track your progress'}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex shrink-0 gap-2">
             <Link
               href="/routines"
-              className="bg-uc-purple/20 hover:bg-uc-purple/30 text-uc-text-light px-4 sm:px-6 py-3 rounded-xl font-medium transition-colors border border-uc-purple/20 flex items-center space-x-2 whitespace-nowrap"
+              aria-label={t('exercises.addRoutine') || 'Add Routine'}
+              className={buttonClasses('ghost', 'md')}
             >
-              <span>👯</span>
-              <span>{t('exercises.addRoutine') || 'Add Routine'}</span>
+              <span aria-hidden>👯</span>
+              <span className="hidden sm:inline">{t('exercises.addRoutine') || 'Add Routine'}</span>
             </Link>
-            <button
-              onClick={handleCreateExercise}
-              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-4 sm:px-6 py-3 rounded-xl font-medium transition-colors shadow-lg flex items-center space-x-2 whitespace-nowrap"
-            >
-              <span>➕</span>
-              <span>{t('exercises.addExercise') || 'Add Exercise'}</span>
-            </button>
+            <Button variant="accent" onClick={handleCreateExercise} aria-label={t('exercises.addExercise') || 'Add Exercise'}>
+              +<span className="hidden sm:inline">{t('exercises.addExercise') || 'Add Exercise'}</span>
+            </Button>
           </div>
         </div>
 
-        {/* Exercise Library Component */}
-        <ExerciseLibrary
-          exercises={filteredExercises}
-          onEdit={handleEditExercise}
-          onDelete={handleDeleteExercise}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          categories={categories}
-          onQuickAdd={handleFormSubmit}
-          deletingExerciseId={deletingExerciseId}
-          onCreateExercise={handleCreateExercise}
-        />
+        {loading ? (
+          <SkeletonRows />
+        ) : (
+          <ExerciseLibrary
+            exercises={filteredExercises}
+            onEdit={handleEditExercise}
+            onDelete={handleDeleteExercise}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            categories={categories}
+            onQuickAdd={handleFormSubmit}
+            deletingExerciseId={deletingExerciseId}
+            onCreateExercise={handleCreateExercise}
+          />
+        )}
 
         {/* Exercise Form Modal */}
         {showForm && (

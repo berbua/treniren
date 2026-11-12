@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { LoadingSpinner } from './LoadingSpinner'
+import { Skeleton } from '@/components/ui'
 
 // Dynamic import for Recharts to avoid SSR issues
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,7 +72,8 @@ export function ExerciseProgressionChart({
   timeframe = '1month',
   chartType = 'line',
 }: ExerciseProgressionChartProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
   const [data, setData] = useState<ProgressionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -104,21 +105,19 @@ export function ExerciseProgressionChart({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner message="Loading progression data..." />
-      </div>
+      <Skeleton className="h-[220px] w-full rounded-uc-input" />
     )
   }
 
   if (error || !data || data.dataPoints.length === 0) {
     return (
-      <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
-        <div className="text-4xl mb-4">📊</div>
-        <p className="text-uc-text-muted">
-          {error || 'No progression data available yet'}
+      <div className="rounded-uc-input border border-dashed border-uc-border px-4 py-8 text-center">
+        <div aria-hidden className="text-3xl mb-3">📊</div>
+        <p className="text-sm font-semibold text-uc-text">
+          {error || t('exercises.detail.noData') || 'No progression data available yet'}
         </p>
-        <p className="text-sm text-uc-text-muted mt-2">
-          Add this exercise to workouts to start tracking progress
+        <p className="text-[13px] text-uc-text-muted mt-1.5">
+          {t('exercises.detail.noDataHint') || 'Add this exercise to workouts to start tracking progress'}
         </p>
       </div>
     )
@@ -145,7 +144,7 @@ export function ExerciseProgressionChart({
     }
 
     return {
-      date: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      date: new Date(point.date).toLocaleDateString(locale, { day: 'numeric', month: 'short' }),
       fullDate: point.date,
       value: Math.round(value * 10) / 10,
       workoutId: point.workoutId,
@@ -157,8 +156,8 @@ export function ExerciseProgressionChart({
   // Check if Recharts is available
   if (!RechartsComponents) {
     return (
-      <div className="bg-uc-dark-bg rounded-xl p-8 text-center border border-uc-purple/20">
-        <div className="text-4xl mb-4">📊</div>
+      <div className="rounded-uc-input border border-uc-border p-6 text-center">
+        <div aria-hidden className="text-3xl mb-3">📊</div>
         <p className="text-uc-text-muted mb-2">
           Chart library not installed
         </p>
@@ -169,7 +168,7 @@ export function ExerciseProgressionChart({
         <div className="mt-6 overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="border-b border-uc-purple/20">
+              <tr className="border-b border-uc-border">
                 <th className="p-2 text-uc-text-muted">Date</th>
                 <th className="p-2 text-uc-text-muted">
                   {metric === 'weight' ? 'Max Weight' : 
@@ -180,9 +179,9 @@ export function ExerciseProgressionChart({
             </thead>
             <tbody>
               {chartData.map((point, index) => (
-                <tr key={index} className="border-b border-uc-purple/10">
-                  <td className="p-2 text-uc-text-light">{point.date}</td>
-                  <td className="p-2 text-uc-mustard font-medium">
+                <tr key={index} className="border-b border-uc-border">
+                  <td className="p-2 text-uc-text">{point.date}</td>
+                  <td className="p-2 text-uc-primary font-bold uc-num">
                     {point.value} {data.exercise.defaultUnit}
                   </td>
                 </tr>
@@ -205,28 +204,12 @@ export function ExerciseProgressionChart({
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
   } = RechartsComponents
 
   // Select chart component based on type
   const ChartComponent = chartType === 'line' ? LineChart : chartType === 'area' ? AreaChart : BarChart
   const DataComponent = chartType === 'line' ? Line : chartType === 'area' ? Area : Bar
-
-  const getMetricLabel = () => {
-    switch (metric) {
-      case 'weight':
-        return 'Max Weight'
-      case 'volume':
-        return 'Total Volume'
-      case '1rm':
-        return 'Estimated 1RM'
-      case 'reps':
-        return 'Average Reps'
-      default:
-        return 'Weight'
-    }
-  }
 
   const getUnit = () => {
     if (metric === 'volume') {
@@ -238,36 +221,38 @@ export function ExerciseProgressionChart({
     return data.exercise.defaultUnit
   }
 
+  const muted = 'var(--uc-text-muted)'
+  const primary = 'var(--uc-primary)'
+
   return (
-    <div className="bg-uc-dark-bg rounded-xl p-6 border border-uc-purple/20">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-uc-text-light">
-          {getMetricLabel()} Over Time
-        </h3>
-        <p className="text-sm text-uc-text-muted">
-          {data.dataPoints.length} {data.dataPoints.length === 1 ? 'workout' : 'workouts'} in this period
-        </p>
-      </div>
-      
-      <ResponsiveContainer width="100%" height={300}>
-        <ChartComponent data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-          <XAxis 
-            dataKey="date" 
-            stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF', fontSize: 12 }}
+    <div>
+      <p className="mb-3 text-[13px] font-semibold text-uc-text-muted">
+        {t('exercises.detail.workoutsInPeriod', { count: data.dataPoints.length })}
+      </p>
+      <ResponsiveContainer width="100%" height={220}>
+        <ChartComponent data={chartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke="var(--uc-border)" />
+          <XAxis
+            dataKey="date"
+            stroke={muted}
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: muted, fontSize: 12 }}
           />
-          <YAxis 
-            stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF', fontSize: 12 }}
-            label={{ 
-              value: getUnit(), 
-              angle: -90, 
+          <YAxis
+            stroke={muted}
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: muted, fontSize: 12 }}
+            label={{
+              value: getUnit(),
+              angle: -90,
               position: 'insideLeft',
-              style: { fill: '#9CA3AF' }
+              style: { fill: muted, fontSize: 12 }
             }}
           />
-          <Tooltip 
+          <Tooltip
+            cursor={chartType === 'bar' ? { fill: 'var(--uc-elevated)' } : { stroke: 'var(--uc-border)' }}
             content={({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload: { reps: number; sets: number } }>; label?: string }) => {
               if (active && payload && payload.length) {
                 const data = payload[0].payload
@@ -277,7 +262,7 @@ export function ExerciseProgressionChart({
                 // Format the date label
                 const point = chartData.find(d => d.date === label)
                 const formattedDate = point 
-                  ? new Date(point.fullDate).toLocaleDateString('en-US', { 
+                  ? new Date(point.fullDate).toLocaleDateString(locale, { 
                       year: 'numeric',
                       month: 'long', 
                       day: 'numeric' 
@@ -285,45 +270,16 @@ export function ExerciseProgressionChart({
                   : label
                 
                 return (
-                  <div style={{
-                    backgroundColor: '#1F2937',
-                    border: '1px solid #4B5563',
-                    borderRadius: '8px',
-                    padding: '12px',
-                  }}>
-                    <p style={{ 
-                      color: '#F3F4F6', 
-                      marginBottom: '8px', 
-                      fontWeight: 'bold',
-                      fontSize: '14px'
-                    }}>
-                      {formattedDate}
-                    </p>
-                    <p style={{ 
-                      color: '#FCD34D', 
-                      marginBottom: '4px',
-                      fontWeight: '600',
-                      fontSize: '14px'
-                    }}>
+                  <div className="rounded-uc-input border border-uc-border bg-uc-elevated p-3 shadow-uc">
+                    <p className="mb-2 text-sm font-bold text-uc-text">{formattedDate}</p>
+                    <p className="mb-1 text-sm font-bold text-uc-primary uc-num">
                       {payload[0].value} {getUnit()}
                     </p>
                     {data.reps > 0 && (
-                      <p style={{ 
-                        color: '#D1D5DB', 
-                        marginBottom: '2px',
-                        fontSize: '12px'
-                      }}>
-                        {repsLabel}: {data.reps}
-                      </p>
+                      <p className="text-xs text-uc-text-muted">{repsLabel}: {data.reps}</p>
                     )}
                     {data.sets > 0 && (
-                      <p style={{ 
-                        color: '#D1D5DB', 
-                        marginBottom: '0',
-                        fontSize: '12px'
-                      }}>
-                        {setsLabel}: {data.sets}
-                      </p>
+                      <p className="text-xs text-uc-text-muted">{setsLabel}: {data.sets}</p>
                     )}
                   </div>
                 )
@@ -331,16 +287,16 @@ export function ExerciseProgressionChart({
               return null
             }}
           />
-          <Legend />
           <DataComponent 
             type="monotone" 
             dataKey="value" 
-            stroke="#FCD34D" 
-            fill="#FCD34D"
-            fillOpacity={chartType === 'area' ? 0.3 : 1}
-            strokeWidth={2}
-            dot={{ fill: '#FCD34D', r: 4 }}
-            activeDot={{ r: 6 }}
+            stroke={primary}
+            fill={primary}
+            fillOpacity={chartType === 'area' ? 0.25 : 1}
+            strokeWidth={2.5}
+            radius={chartType === 'bar' ? [6, 6, 0, 0] : undefined}
+            dot={{ fill: 'var(--uc-surface)', stroke: primary, strokeWidth: 2, r: 4 }}
+            activeDot={{ r: 6, fill: primary }}
           />
         </ChartComponent>
       </ResponsiveContainer>
