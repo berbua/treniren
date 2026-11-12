@@ -37,8 +37,12 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - Built 2026-11-12: hero card is shown (user decision) with the horizontal phase strip on phone **and** desktop —
   the desktop mock's cycle ring waits for the Cycle screen step. "Ovulation in ~N days" is shown as the existing
   "Next ovulation: <date>".
-- **Cycle consent / setup**: mock texts ("Train with your cycle?", slider for cycle length) differ from the app's;
-  the app keeps its (hard-coded English) texts and a 21–35 select. Mock consent also omits the "Note: enable later" line.
+- **Cycle consent / setup** (decision 14, built 2026-11-12): mock texts, now translated (EN/PL, `cycle.consent.*`,
+  `cycle.setupForm.*`): "Train with your cycle?" + description, 4 ✓ items, "Remind me if my period is late", Skip /
+  Enable (the "Note: enable later" line is gone). Setup: back arrow (= cancel) + "Set up your cycle", "First day of your
+  last period", 21–35 slider with "28 days", read-only timezone "Taken from your device.", Late-period reminders card,
+  full-width "Save and continue" (Cancel button and "What happens next?" box dropped). Still a centred dialog / sheet
+  over the Today screen, not a full page.
 - **Offline workout form**: mock shows only date, type and notes; the app's form also has TR, sector, mental-practice
   fields, three 1–5 ratings, Strong Mind, gratitude/improvements — kept.
 - Dashboard quick-log ⚡ floating button (phones) was dropped: it collided with the floating tab bar.

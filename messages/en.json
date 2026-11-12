@@ -1,5 +1,6 @@
 {
   "common": {
+    "back": "Back",
     "loading": "Loading...",
     "error": "Error",
     "errors": {
@@ -860,6 +861,28 @@
     "showResults": "Show results"
   },
   "cycle": {
+    "consent": {
+      "title": "Train with your cycle?",
+      "description": "Turn on cycle tracking to see your phase on every screen. You can switch it off any time in Profile.",
+      "item1": "Your cycle day and phase on the dashboard and calendar",
+      "item2": "Training recommendations for each phase",
+      "item3": "Injury patterns across your cycle",
+      "item4": "Predicted next period and ovulation",
+      "remindLate": "Remind me if my period is late",
+      "skip": "Skip",
+      "enable": "Enable"
+    },
+    "setupForm": {
+      "title": "Set up your cycle",
+      "firstDay": "First day of your last period",
+      "cycleLength": "Average cycle length",
+      "days": "{{count}} days",
+      "timezone": "Timezone",
+      "timezoneHint": "Taken from your device.",
+      "lateReminders": "Late-period reminders",
+      "lateRemindersHint": "A message if your period is overdue",
+      "save": "Save and continue"
+    },
     "title": "Track Your Menstrual Cycle?",
     "description": "Enable cycle tracking to get personalized training recommendations based on your cycle phase. Your data will be kept private.",
     "accept": "Yes, enable cycle tracking",

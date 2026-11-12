@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { toLocalDateString } from '@/lib/date-utils'
-import { Button, Icon, Input, Label, Select } from './ui'
-// import { getDefaultCycleSettings } from '@/lib/cycle-utils'
+import { Button, Icon, Input, Label } from './ui'
+
+const MIN_CYCLE = 21
+const MAX_CYCLE = 35
 
 interface CycleSetupFormProps {
   onComplete: (settings: { cycleLength: number; lastPeriodDate: Date; timezone: string; latePeriodNotifications?: boolean }) => void
@@ -11,6 +14,7 @@ interface CycleSetupFormProps {
 }
 
 export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormProps) {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({
     cycleLength: 28,
     lastPeriodDate: '2024-01-15', // Default value, will be updated on client side
@@ -48,13 +52,6 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const nextSteps = [
-    'We\'ll calculate your current cycle phase',
-    'Training recommendations will appear in your workout form',
-    'You can update your cycle info anytime in settings',
-    'All data is private and secure',
-  ]
-
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-uc-scrim" aria-hidden />
@@ -62,21 +59,23 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
         <div aria-hidden className="sm:hidden mx-auto mt-2.5 h-[5px] w-10 rounded-uc-pill bg-uc-border" />
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="flex-1 overflow-y-auto px-5 pt-4 pb-5 space-y-5">
-            <div className="flex items-center gap-3">
-              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-uc-on-primary-container"><Icon name="calendar" size={22} /></span>
-              <div>
-                <h2 id="cycle-setup-title" className="text-[22px] leading-7 font-extrabold">
-                  Set Up Cycle Tracking
-                </h2>
-                <p className="text-sm text-uc-text-muted">
-                  Help us personalize your training recommendations
-                </p>
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onCancel}
+                aria-label={t('common.back')}
+                className="-ml-2 inline-flex size-11 shrink-0 items-center justify-center rounded-uc-input text-uc-text transition-colors hover:bg-uc-surface"
+              >
+                <Icon name="chevron-left" size={24} />
+              </button>
+              <h2 id="cycle-setup-title" className="text-[22px] leading-7 font-extrabold">
+                {t('cycle.setupForm.title')}
+              </h2>
             </div>
 
             {/* Last Period Date */}
             <div>
-              <Label htmlFor="cycle-last-period">When did your last period start?</Label>
+              <Label htmlFor="cycle-last-period">{t('cycle.setupForm.firstDay')}</Label>
               <Input
                 id="cycle-last-period"
                 type="date"
@@ -85,81 +84,64 @@ export default function CycleSetupForm({ onComplete, onCancel }: CycleSetupFormP
                 required
                 max={typeof window !== 'undefined' ? toLocalDateString() : '2024-01-15'}
               />
-              <p className="mt-1.5 text-[13px] text-uc-text-muted">
-                This helps us calculate your current cycle phase
-              </p>
             </div>
 
             {/* Cycle Length */}
             <div>
-              <Label htmlFor="cycle-length">Average cycle length (days)</Label>
-              <Select
+              <div className="flex items-baseline justify-between gap-3">
+                <Label htmlFor="cycle-length" className="mb-0">{t('cycle.setupForm.cycleLength')}</Label>
+                <span className="text-[15px] font-extrabold text-uc-text uc-num">
+                  {t('cycle.setupForm.days', { count: formData.cycleLength })}
+                </span>
+              </div>
+              <input
                 id="cycle-length"
+                type="range"
+                min={MIN_CYCLE}
+                max={MAX_CYCLE}
                 value={formData.cycleLength}
                 onChange={(e) => handleChange('cycleLength', parseInt(e.target.value))}
-              >
-                {Array.from({ length: 15 }, (_, i) => 21 + i).map((days) => (
-                  <option key={days} value={days}>
-                    {days === 28 ? '28 days (most common)' : `${days} days`}
-                  </option>
-                ))}
-              </Select>
-              <p className="mt-1.5 text-[13px] text-uc-text-muted">
-                Most cycles are 21-35 days long
-              </p>
+                className="h-11 w-full cursor-pointer accent-uc-primary"
+              />
+              <div className="flex justify-between text-xs text-uc-text-muted uc-num">
+                <span>{MIN_CYCLE}</span>
+                <span>{MAX_CYCLE}</span>
+              </div>
             </div>
 
             {/* Timezone */}
             <div>
-              <Label htmlFor="cycle-timezone">Timezone</Label>
+              <Label htmlFor="cycle-timezone">{t('cycle.setupForm.timezone')}</Label>
               <Input
                 id="cycle-timezone"
                 type="text"
                 value={formData.timezone}
-                onChange={(e) => handleChange('timezone', e.target.value)}
                 className="border-dashed text-uc-text-muted"
                 readOnly
               />
-              <p className="mt-1.5 text-[13px] text-uc-text-muted">
-                Automatically detected from your device
-              </p>
+              <p className="mt-1.5 text-[13px] text-uc-text-muted">{t('cycle.setupForm.timezoneHint')}</p>
             </div>
 
             {/* Notification Preferences */}
-            <label htmlFor="latePeriodNotifications" className="flex cursor-pointer items-start justify-between gap-3 rounded-uc-input border border-uc-border bg-uc-surface p-3">
+            <label htmlFor="latePeriodNotifications" className="flex cursor-pointer items-center justify-between gap-3 rounded-uc-input border border-uc-border bg-uc-surface p-3">
               <span>
-                <span className="flex items-center gap-1.5 text-sm font-bold"><Icon name="bell" size={16} /> Late period reminders</span>
-                <span className="mt-0.5 block text-[13px] text-uc-text-muted">
-                  Get notified if your period is overdue (more than 32 days since last period)
-                </span>
+                <span className="block text-sm font-bold">{t('cycle.setupForm.lateReminders')}</span>
+                <span className="mt-0.5 block text-[13px] text-uc-text-muted">{t('cycle.setupForm.lateRemindersHint')}</span>
               </span>
               <input
                 type="checkbox"
                 id="latePeriodNotifications"
                 checked={formData.latePeriodNotifications}
                 onChange={(e) => handleChange('latePeriodNotifications', e.target.checked)}
-                className="mt-0.5 size-5 shrink-0 accent-uc-primary"
+                className="size-5 shrink-0 accent-uc-primary"
               />
             </label>
-
-            {/* Info Box */}
-            <div className="rounded-uc-input bg-uc-primary-container/40 p-3">
-              <h3 className="mb-1.5 text-sm font-extrabold">
-                What happens next?
-              </h3>
-              <ul className="space-y-1 text-[13px] text-uc-text-muted list-disc pl-4">
-                {nextSteps.map((step) => <li key={step}>{step}</li>)}
-              </ul>
-            </div>
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 px-5 py-3 border-t border-uc-border">
-            <Button variant="ghost" size="lg" onClick={onCancel} className="flex-1">
-              Cancel
-            </Button>
-            <Button type="submit" variant="accent" size="lg" className="flex-[1.5]">
-              Complete Setup
+          <div className="px-5 py-3 border-t border-uc-border">
+            <Button type="submit" variant="accent" size="lg" className="w-full">
+              {t('cycle.setupForm.save')}
             </Button>
           </div>
         </form>

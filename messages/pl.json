@@ -1,5 +1,6 @@
 {
   "common": {
+    "back": "Wstecz",
     "loading": "Ładowanie...",
     "error": "Błąd",
     "errors": {
@@ -169,7 +170,7 @@
     "noTrValues": "Brak treningów z wartością TR w tym okresie",
     "sessionsCount": "treningi: {{count}}",
     "week": "Tydzień",
-    "fingerboardTests": "Testy na chwytotablicy",
+    "fingerboardTests": "Testy fingerboardu",
     "fingerboardTestsSubtitle": "Wszystkie testy · ostatni {{date}}",
     "testProtocol": "Protokół testu",
     "openTestProtocol": "Otwórz protokół testu →",
@@ -868,6 +869,28 @@
     "showResults": "Pokaż wyniki"
   },
   "cycle": {
+    "consent": {
+      "title": "Trening zgodny z cyklem?",
+      "description": "Włącz śledzenie cyklu, aby widzieć fazę na każdym ekranie. Możesz je wyłączyć w dowolnej chwili w Profilu.",
+      "item1": "Dzień i faza cyklu w panelu i w kalendarzu",
+      "item2": "Rekomendacje treningowe dla każdej fazy",
+      "item3": "Wzorce kontuzji w trakcie cyklu",
+      "item4": "Przewidywana następna miesiączka i owulacja",
+      "remindLate": "Przypomnij, jeśli miesiączka się spóźnia",
+      "skip": "Pomiń",
+      "enable": "Włącz"
+    },
+    "setupForm": {
+      "title": "Ustaw swój cykl",
+      "firstDay": "Pierwszy dzień ostatniej miesiączki",
+      "cycleLength": "Średnia długość cyklu",
+      "days": "{{count}} dni",
+      "timezone": "Strefa czasowa",
+      "timezoneHint": "Pobrana z urządzenia.",
+      "lateReminders": "Przypomnienia o spóźnionej miesiączce",
+      "lateRemindersHint": "Wiadomość, gdy miesiączka się spóźnia",
+      "save": "Zapisz i kontynuuj"
+    },
     "title": "Śledzić Cykl Miesiączkowy?",
     "description": "Włącz śledzenie cyklu, aby otrzymywać spersonalizowane rekomendacje treningowe na podstawie fazy cyklu. Twoje dane będą prywatne.",
     "accept": "Tak, włącz śledzenie cyklu",

@@ -12,7 +12,7 @@ MISSING_DESIGNS.md, commit. Tick an item here when it's built.
 - [ ] **11 "Log again" chips**: under Quick log, recent workout types; one tap logs/duplicates. Behaviour to agree first.
 
 ## Cycle
-- [ ] **14 Consent / setup**: design texts ("Train with your cycle?") + cycle-length slider in the setup sheet.
+- [x] **14 Consent / setup**: design texts ("Train with your cycle?") + cycle-length slider in the setup sheet.
 - [ ] **37 Log symptoms** — new feature (new data).
 - [ ] **38 Flow intensity** on periods — new field (DB + period form + recent periods bars).
 - [x] **39 Avg cycle / Avg period / Logged tiles** — computed from logged periods.

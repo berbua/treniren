@@ -431,3 +431,6 @@ note the answer.
 - 2026-11-12: Stats 43 `WeeklyVolumeChart` (Recharts bars, TR points per Mon–Sun week) and 45 `StatsFingerboardTests`
   (`FingerboardTestChart` with `plain`, all tests of the most recently tested protocol). New `stats.*` keys
   (weeklyVolume, trPoints, fingerboardTests, …). Not checked in a browser yet (no local server / test account).
+- 2026-11-12: Cycle 14 consent + setup with the mock texts (were hard-coded English): `cycle.consent.*`,
+  `cycle.setupForm.*`, `common.back`. Setup cycle length is a 21–35 range slider. Stats card PL title now
+  "Testy fingerboardu" (matches nav).
