@@ -419,3 +419,5 @@ note the answer.
   null = Google first name); hint text changed; user menu updates via a `display-name-changed` window event.
 - 2026-11-12: Calendar 33 Upcoming events: `upcomingEvents` (memo, next 5, trips until their end date, event filters
   apply) + `UpcomingEventRow` under the legend. New keys `calendar.upcoming / noUpcoming / today / tomorrow / inDays`.
+- 2026-11-12: Cycle 39 `PeriodStats` card (Avg cycle / Avg period / Logged), keys `cycle.tracking.avgCycle / avgPeriod /
+  logged`. Gaps 15–60 days count as cycles.

@@ -25,6 +25,7 @@ import {
   EmptyState,
   Input,
   Label,
+  Overline,
   PhaseBadge,
   Icon,
   phaseBandBg,
@@ -35,6 +36,9 @@ import {
 
 const PHASES: CyclePhase[] = ['menstrual', 'follicular', 'ovulation', 'early-luteal', 'late-luteal']
 const PERIODS_PREVIEW = 5
+// Gaps outside this range are treated as missed logging, not a cycle
+const MIN_CYCLE_GAP = 15
+const MAX_CYCLE_GAP = 60
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 // "Physiology:" → "Physiology" (labels sit in their own column now)
@@ -323,6 +327,8 @@ function CyclePageContent() {
               </div>
             )}
 
+            {periods.length > 0 && <PeriodStats periods={periods} />}
+
             <div className="hidden lg:block">
               <RecentPeriods periods={periods} locale={locale} onEdit={openEditPeriod} />
             </div>
@@ -482,6 +488,40 @@ function CycleRing({
         <span className="mt-2 text-[13px] font-semibold text-uc-text-muted uc-num">{caption}</span>
       </div>
     </div>
+  )
+}
+
+// Avg cycle (start to next start), avg period (start to end, inclusive) and number of logged periods
+function PeriodStats({ periods }: { periods: Period[] }) {
+  const { t } = useLanguage()
+  const starts = periods.map(p => storedDayNumber(p.startDate)).sort((a, b) => a - b)
+  const gaps = starts
+    .slice(1)
+    .map((start, i) => start - starts[i])
+    .filter(gap => gap >= MIN_CYCLE_GAP && gap <= MAX_CYCLE_GAP)
+  const lengths = periods
+    .filter(p => p.endDate)
+    .map(p => storedDayNumber(p.endDate as string) - storedDayNumber(p.startDate) + 1)
+  const average = (values: number[]) =>
+    values.length > 0 ? Math.round(values.reduce((sum, v) => sum + v, 0) / values.length) : null
+  const days = t('profile.days') || 'days'
+
+  const tiles = [
+    { label: t('cycle.tracking.avgCycle') || 'Avg cycle', value: average(gaps), unit: days },
+    { label: t('cycle.tracking.avgPeriod') || 'Avg period', value: average(lengths), unit: days },
+    { label: t('cycle.tracking.logged') || 'Logged', value: periods.length, unit: null },
+  ]
+
+  return (
+    <Card className="grid grid-cols-3 divide-x divide-uc-border px-0">
+      {tiles.map(tile => (
+        <div key={tile.label} className="min-w-0 px-3 text-center">
+          <Overline className="truncate">{tile.label}</Overline>
+          <p className="mt-1 text-[22px] font-extrabold leading-7 text-uc-text uc-num">{tile.value ?? '–'}</p>
+          {tile.unit && tile.value !== null && <p className="text-[12px] font-semibold text-uc-text-muted">{tile.unit}</p>}
+        </div>
+      ))}
+    </Card>
   )
 }
 

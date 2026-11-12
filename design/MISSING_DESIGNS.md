@@ -147,7 +147,11 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 ### Cycle
 - **Log symptoms** — doesn't exist.
 - **Flow bars on recent periods** — no flow intensity is recorded (period = start date, end date, notes).
-- **Avg cycle / Avg period / Logged tiles** — not computed. Only cycle length (from settings) is known.
+- **Avg cycle / Avg period / Logged tiles** (decision 39, built 2026-11-12; not in the mock images we have): one card
+  with 3 columns under Add period / the injury warning, shown once a period is logged. Avg cycle = mean days between
+  consecutive period starts (gaps under 15 or over 60 days are skipped as missed logging); Avg period = mean start–end
+  length, inclusive (periods without an end date skipped); "–" when there's nothing to average. The cycle-length
+  setting isn't changed by these numbers.
 - **Train / Recover rows in guidance cards** — phase cards have **Physiology, Impact, Goal, Tips** and an
   injury count instead.
 - Built 2026-11-12 against `Cycle.png` and `Cycle — disabled, period form.png`. Kept where the mock differs:
