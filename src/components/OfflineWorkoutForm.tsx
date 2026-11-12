@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 import { useOffline } from '@/hooks/useOffline';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -43,6 +44,7 @@ const trainingVolumes: { value: TrainingVolume; label: string; description: stri
 
 export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
   const { isOnline } = useOffline();
+  const { data: session } = useSession();
   const { cycleSettings, isCycleTrackingEnabled } = useCycle();
   const { t } = useLanguage();
   const { showInfo } = useToast();
@@ -129,6 +131,7 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
       improvements: isMentalPractice ? undefined : formData.improvements || undefined,
       notes: formData.notes || undefined,
       createdAt: typeof window !== 'undefined' ? new Date().toISOString() : '2024-01-15T10:00:00.000Z',
+      userId: session?.user?.id,
       synced: false,
       exercises: [],
     };

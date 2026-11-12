@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { AuthShell, LogoTile } from '@/components/AuthLayout'
 import { buttonClasses } from '@/components/ui'
+import { clearAccountData } from '@/lib/account-data'
 
 export default function LogoutPage() {
   const { t } = useLanguage()
@@ -17,7 +18,8 @@ export default function LogoutPage() {
 
     // Still logged in: sign out here and stay on this page ("Sign in again")
     if (session) {
-      signOut({ redirect: false })
+      // Don't leave this account's cached data behind for the next person on the device
+      clearAccountData().finally(() => signOut({ redirect: false }))
     }
   }, [session, status])
 

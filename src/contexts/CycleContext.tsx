@@ -29,7 +29,16 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
     const loadCycleSettings = async () => {
       // Don't load cycle settings if user is not authenticated
       if (status === 'loading') return
+
+      // Drop the previous account's settings: the provider stays mounted across sign-out / sign-in
+      const resetCycleState = () => {
+        setCycleSettingsState(null)
+        setCycleInfo(null)
+        setIsCycleTrackingEnabled(false)
+      }
+
       if (!session?.user) {
+        resetCycleState()
         setIsLoading(false)
         return
       }
@@ -38,7 +47,9 @@ export function CycleProvider({ children }: { children: React.ReactNode }) {
         const response = await fetch('/api/user-profile', { credentials: 'include' })
         if (response.ok) {
           const profile = await response.json()
-          if (profile && profile.lastPeriodDate) {
+          if (!profile?.lastPeriodDate) {
+            resetCycleState()
+          } else {
             const settings = {
               cycleLength: profile.cycleAvgLengthDays || 28,
               lastPeriodDate: new Date(profile.lastPeriodDate),
