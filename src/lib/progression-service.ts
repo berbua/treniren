@@ -175,7 +175,8 @@ export async function getExerciseProgression(
     const allWeights: number[] = []
     const allVolumes: number[] = []
     const all1RMs: number[] = []
-    const allReps: number[] = []
+    // Highest reps in any single set; the first workout to reach it keeps the record
+    let maxRepsRecord = { value: 0, date: '', workoutId: '' }
 
     workoutExercises.forEach((we) => {
       // Filter sets that have both weight and reps
@@ -241,7 +242,10 @@ export async function getExerciseProgression(
       allWeights.push(maxWeight)
       allVolumes.push(workoutVolume)
       all1RMs.push(estimated1RM)
-      allReps.push(...reps)
+      const workoutMaxReps = Math.max(...reps)
+      if (workoutMaxReps > maxRepsRecord.value) {
+        maxRepsRecord = { value: workoutMaxReps, date: we.workout.startTime.toISOString(), workoutId: we.workout.id }
+      }
     })
 
     // Calculate summary
@@ -252,7 +256,6 @@ export async function getExerciseProgression(
     const peakWeight = allWeights.length > 0 ? Math.max(...allWeights) : 0
     const peakVolume = allVolumes.length > 0 ? Math.max(...allVolumes) : 0
     const peak1RM = all1RMs.length > 0 ? Math.max(...all1RMs) : 0
-    const maxReps = allReps.length > 0 ? Math.max(...allReps) : 0
 
     // Calculate improvement (compare first half vs second half of data)
     let weightImprovement = 0
@@ -292,11 +295,6 @@ export async function getExerciseProgression(
       dataPoints[0] || { estimated1RM: 0, workoutId: '', date: '' }
     )
 
-    const maxRepsPoint = dataPoints.reduce(
-      (max, p) => (p.bestSet.reps > max.bestSet.reps ? p : max),
-      dataPoints[0] || { bestSet: { reps: 0, weight: 0 }, workoutId: '', date: '' }
-    )
-
     const personalRecords: PersonalRecords = {
       maxWeight: {
         value: maxWeightPoint.maxWeight || 0,
@@ -313,11 +311,7 @@ export async function getExerciseProgression(
         date: max1RMPoint.date,
         workoutId: max1RMPoint.workoutId,
       },
-      maxReps: {
-        value: maxRepsPoint.bestSet.reps || 0,
-        date: maxRepsPoint.date,
-        workoutId: maxRepsPoint.workoutId,
-      },
+      maxReps: maxRepsRecord,
     }
 
     return {
