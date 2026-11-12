@@ -269,6 +269,27 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Export rows keep the 📊 / 📈 emoji until the custom download icon arrives; dev-only tools stay below them.
   - The page has no Close button any more (it's a page, not a modal); Save profile still returns to the dashboard.
 
+### Global UI
+- Built 2026-11-12 against `Global UI — More, messages, menus, banners, install, loading.png`. Kept where the mock differs:
+  - **Message icons** stay the existing emoji per type (🔄 cycle reminder, ⚠️ period overdue, 🏋️ workout / inactivity,
+    📢 general); the mock's droplet / retest / bolt / mental icons wait for the custom SVGs. There's no separate "retest"
+    or "mental practice" message type — those messages come in as `general` with their action button.
+  - **Priority**: only high shows a chip ("High"); medium and low look the same (the old panel tinted medium yellow and
+    low blue). Unread is the accent dot before the title.
+  - The panel keeps its footer ("N messages · N unread", "Last updated") and the unread count next to the title; the
+    mock has neither. Clear all asks for confirmation (dialog not in the mock).
+  - **Offline banner** keeps the "saved locally and synced…" line under "You're offline"; "Back online" has no
+    "· synced" (sync is reported separately by the offline sync toasts). The mock's wifi-off / check icons are a dot for now.
+  - **Install prompt** keeps the app's description ("Install this app on your device…", not "Log at the crag, even
+    without signal.") and title. iOS variant keeps the three steps and "Maybe later"; its title is the shared
+    "Install Unicorn Climb" + "To install this app on your iPhone:" (no "Add to Home Screen (iPhone)" key).
+  - **User menu**: flag emoji for Language and no sign-out icon until the custom SVGs land; name + chevron still show
+    next to the avatar from `sm`.
+  - **Loading**: message is the screen's own text ("Loading..." / "Loading workouts..."), not "Loading your training…";
+    the bar is indeterminate (there's no real progress to show).
+  - ℹ️ tooltip triggers are still the 14px emoji; tooltips on calendar / cycle day cells stay hover-only so tapping the
+    day keeps opening it.
+
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event

@@ -68,7 +68,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Routines — `Routines.png`
 - [x] Fingerboard protocols & testing — `Fingerboard protocols & testing.png`
 - [x] Profile & settings — `Profile & settings.png`
-- [ ] Global UI (More, messages, menus, banners, install, loading) —
+- [x] Global UI (More, messages, menus, banners, install, loading) —
       `Global UI — More, messages, menus, banners, install, loading.png`
 - [ ] Auth & landing — `Sign in, sign up, password, sign out.png`, `Landing page.png`
 
@@ -294,3 +294,19 @@ note the answer.
   error banner below. New keys `profile.googleName`, `googleNameHint`, `displayName`, `displayNameHint`, `saveProfile`,
   `disableCycleTitle`, `keepOn`, `pushBlockedTitle`, `notificationsSection`. Same data, handlers and API calls. Not
   checked logged-in in a browser.
+- 2026-11-12: Step 3 · Global UI done. `MessagesPanel`: full-screen on phones (back chevron, 28px title, accent unread
+  count), right-hand drawer from `sm` (scrim/Esc close); ghost Mark all read / red Clear all (now a `ConfirmationDialog`,
+  was `confirm()`); message `Card`s with an emoji icon tile, accent unread dot, red "High" chip for high priority,
+  "Today, 08:00" / "Yesterday, …" / "Mon 9 Nov, …" timestamps (localized), text Mark read + tonal action button; same
+  actions and handlers; `EmptyState`; count / last-updated footer kept. `OfflineIndicator`: warning / success banner on
+  `--uc-warning-bg` / `--uc-success-bg`, "N pending" on the right, texts translated (were hard-coded English; new
+  `offlineBanner.*` keys). `PWAInstallPrompt`: elevated card with the 🦄 tile, ghost Not now + accent Install; iOS
+  variant with numbered step circles (the "1." prefix is stripped from the existing strings), Maybe later + primary
+  Got it; the redundant ✕ was dropped (every variant has a dismiss button). `Tooltip`: inverted bubble (`--uc-text` on
+  `--uc-bg`), kept inside a 16px gutter; opens on tap as well as hover and closes on outside tap / Esc (as the mock
+  notes); new `tapToOpen={false}` keeps the calendar / cycle-day ⚠️ hover-only so a tap still opens the day.
+  `LoadingSpinner fullScreen`: 🦄 tile + indeterminate bar + message; `AuthGuard` uses it (was an old gradient with
+  "Loading..." hard-coded). `UserMenu`: 40px avatar trigger (name + chevron from `sm`, ring while open), header with
+  avatar + online dot, 24px icon slots, 288px menu. `NotificationBell` lost its border. More sheet, tab bar, logged-out
+  header and the Add choice sheet were already built (step 2 / Workouts / Calendar). New keys `common.yesterday`,
+  `messages.priorityHigh`. Not checked in a browser.

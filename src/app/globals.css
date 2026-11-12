@@ -145,3 +145,23 @@ body {
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+/* Full-screen loading bar */
+@keyframes uc-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.animate-uc-indeterminate {
+  animation: uc-indeterminate 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-uc-indeterminate {
+    animation: none;
+  }
+}

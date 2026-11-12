@@ -23,6 +23,7 @@
     "hide": "Hide",
     "showDetails": "Show Details",
     "today": "Today",
+    "yesterday": "Yesterday",
     "week": "Week",
     "month": "Month",
     "previous": "Previous",
@@ -106,7 +107,8 @@
     "markRead": "Mark read",
     "message": "message",
     "messages_plural": "messages",
-    "unread": "unread"
+    "unread": "unread",
+    "priorityHigh": "High"
   },
   "nav": {
     "home": "Home",
@@ -1527,5 +1529,11 @@
   "offlineSync": {
     "uploaded": "Uploaded {{count}} workout(s) saved offline",
     "failed": "{{count}} workout(s) saved offline couldn't be uploaded. We'll try again later."
+  },
+  "offlineBanner": {
+    "offline": "You're offline",
+    "backOnline": "Back online",
+    "pending": "{{count}} pending",
+    "savedLocally": "Your workouts will be saved locally and synced when you're back online."
   }
 }

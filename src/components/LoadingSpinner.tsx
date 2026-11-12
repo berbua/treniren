@@ -24,10 +24,17 @@ export const LoadingSpinner = ({ message, size = 'md', fullScreen = false }: Loa
     </div>
   );
 
+  // Brand tile + indeterminate bar, as in the app's launch screen
   if (fullScreen) {
     return (
-      <div className="min-h-screen bg-uc-bg flex items-center justify-center">
-        {spinner}
+      <div role="status" className="min-h-screen bg-uc-bg flex flex-col items-center justify-center gap-5 px-4">
+        <span aria-hidden className="flex size-16 items-center justify-center rounded-uc-card bg-uc-primary-container text-3xl">
+          🦄
+        </span>
+        <span aria-hidden className="block h-1 w-24 overflow-hidden rounded-uc-pill bg-uc-skeleton">
+          <span className="block h-full w-2/5 rounded-uc-pill bg-uc-primary animate-uc-indeterminate" />
+        </span>
+        {message && <p className="text-uc-text-muted text-sm font-semibold text-center">{message}</p>}
       </div>
     );
   }

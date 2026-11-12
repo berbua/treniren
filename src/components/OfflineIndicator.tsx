@@ -1,10 +1,12 @@
 'use client';
 
 import { useOffline } from '@/hooks/useOffline';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 
 export const OfflineIndicator = () => {
   const { isOnline, unsyncedWorkouts } = useOffline();
+  const { t } = useLanguage();
   const [showIndicator, setShowIndicator] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -34,30 +36,34 @@ export const OfflineIndicator = () => {
   }
 
   return (
-    <div className={`fixed top-4 left-4 right-4 z-40 transition-all duration-300 ${
-      showIndicator ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
-    }`}>
-      <div className={`rounded-lg px-4 py-2 shadow-lg ${
-        isOnline 
-          ? 'bg-green-100 border border-green-200 text-green-800' 
-          : 'bg-yellow-100 border border-yellow-200 text-yellow-800'
-      }`}>
-        <div className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full ${
-            isOnline ? 'bg-green-500' : 'bg-yellow-500'
-          }`} />
-          <span className="text-sm font-medium">
-            {isOnline ? 'Back online' : 'You&apos;re offline'}
+    <div
+      role="status"
+      className={`fixed top-[calc(12px+env(safe-area-inset-top))] inset-x-4 lg:left-[calc(16rem+16px)] z-40 mx-auto max-w-lg transition-all duration-300 ${
+        showIndicator ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+      }`}
+    >
+      <div
+        className={`rounded-uc-card px-4 py-3 shadow-uc border ${
+          isOnline ? 'bg-uc-success-bg border-uc-success/30' : 'bg-uc-warning-bg border-uc-warning/30'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            aria-hidden
+            className={`size-2.5 shrink-0 rounded-full ${isOnline ? 'bg-uc-success' : 'bg-uc-warning'}`}
+          />
+          <span className="flex-1 min-w-0 text-[15px] font-bold text-uc-text">
+            {isOnline ? (t('offlineBanner.backOnline') || 'Back online') : (t('offlineBanner.offline') || "You're offline")}
           </span>
           {!isOnline && pendingCount > 0 && (
-            <span className="text-xs bg-yellow-200 px-2 py-0.5 rounded-full">
-              {pendingCount} pending
+            <span className="shrink-0 text-sm font-bold text-uc-text-muted uc-num">
+              {t('offlineBanner.pending', { count: pendingCount }) || `${pendingCount} pending`}
             </span>
           )}
         </div>
         {!isOnline && (
-          <p className="text-xs mt-1 text-yellow-700">
-            Your workouts will be saved locally and synced when you&apos;re back online.
+          <p className="mt-1 pl-[22px] text-[13px] text-uc-text-muted">
+            {t('offlineBanner.savedLocally') || "Your workouts will be saved locally and synced when you're back online."}
           </p>
         )}
       </div>

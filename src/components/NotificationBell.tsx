@@ -33,8 +33,9 @@ export const NotificationBell = ({ size = 'md', showLabel = false }: Notificatio
   return (
     <button
       onClick={() => setIsMessagesPanelOpen(true)}
-      className={`relative ${sizeClasses[size]} rounded-full bg-transparent hover:bg-uc-elevated flex items-center justify-center transition-colors group border border-uc-border`}
+      className={`relative ${sizeClasses[size]} rounded-full bg-transparent hover:bg-uc-elevated flex items-center justify-center transition-colors group`}
       title={t('nav.messages') || 'Messages'}
+      aria-label={t('nav.messages') || 'Messages'}
     >
       {/* Bell Icon */}
       <svg 

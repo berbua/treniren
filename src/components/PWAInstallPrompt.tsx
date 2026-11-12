@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Button } from '@/components/ui';
 
 const DISMISS_KEY = 'pwa-install-dismissed';
 const DISMISS_DURATION_MS = 14 * 24 * 60 * 60 * 1000; // Don't ask again for 14 days
@@ -121,97 +122,81 @@ export const PWAInstallPrompt = () => {
     return null;
   }
 
+  // Step strings carry their number ("1. Tap…"); the number goes in its own circle
+  const iosSteps = [t('pwaPrompt.iosStep1'), t('pwaPrompt.iosStep2'), t('pwaPrompt.iosStep3')].map((step) =>
+    step.replace(/^\d+\.\s*/, '')
+  );
+
   return (
-    <div className="fixed bottom-28 lg:bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-        <div className="flex items-start space-x-3">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
+    <div
+      role="dialog"
+      aria-label={t('pwaPrompt.title')}
+      className="fixed bottom-[calc(108px+env(safe-area-inset-bottom))] lg:bottom-4 inset-x-4 z-50 sm:left-auto sm:w-[380px]"
+    >
+      <div className="bg-uc-elevated border border-uc-border rounded-uc-card shadow-uc p-4">
+        <div className="flex items-start gap-3">
+          <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-uc-primary-container text-2xl">
+            🦄
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[17px] font-extrabold leading-6 text-uc-text">{t('pwaPrompt.title')}</h3>
+            <p className="mt-0.5 text-sm text-uc-text-muted">
+              {deferredPrompt || !isIOS ? t('pwaPrompt.description') : t('pwaPrompt.iosIntro')}
+            </p>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium text-gray-900">
-              {t('pwaPrompt.title')}
-            </h3>
-            {deferredPrompt ? (
-              <>
-                <p className="text-sm text-gray-500 mt-1">
-                  {t('pwaPrompt.description')}
-                </p>
-                <div className="mt-3 flex space-x-2">
-                  <button
-                    onClick={handleInstallClick}
-                    className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    {t('pwaPrompt.install')}
-                  </button>
-                  <button
-                    onClick={handleDismiss}
-                    className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
-                  >
-                    {t('pwaPrompt.notNow')}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-gray-500 mt-1">
-                  {isIOS ? t('pwaPrompt.iosIntro') : t('pwaPrompt.description')}
-                </p>
-                {isIOS ? (
-                  <div className="mt-3 space-y-2">
-                    <div className="text-xs text-gray-600">
-                      <p>{t('pwaPrompt.iosStep1')}</p>
-                      <p>{t('pwaPrompt.iosStep2')}</p>
-                      <p>{t('pwaPrompt.iosStep3')}</p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={handleDismiss}
-                        className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
-                      >
-                        {t('pwaPrompt.gotIt')}
-                      </button>
-                      <button
-                        onClick={handleDismiss}
-                        className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
-                      >
-                        {t('pwaPrompt.maybeLater')}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-3 flex space-x-2">
-                    <button
-                      onClick={handleDismiss}
-                      className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      {t('pwaPrompt.ok')}
-                    </button>
-                    <button
-                      onClick={handleDismiss}
-                      className="text-gray-500 text-sm px-3 py-1.5 rounded-md hover:text-gray-700 transition-colors"
-                    >
-                      {t('pwaPrompt.notNow')}
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-          <button
-            onClick={handleDismiss}
-            aria-label={t('pwaPrompt.close')}
-            className="flex-shrink-0 text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
+
+        {deferredPrompt ? (
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button variant="ghost" onClick={handleDismiss}>
+              {t('pwaPrompt.notNow')}
+            </Button>
+            <Button variant="accent" onClick={handleInstallClick}>
+              {t('pwaPrompt.install')}
+            </Button>
+          </div>
+        ) : isIOS ? (
+          <>
+            <ol className="mt-4 space-y-2.5">
+              {iosSteps.map((step, index) => (
+                <li key={index} className="flex items-start gap-3 text-sm text-uc-text">
+                  <span
+                    aria-hidden
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-uc-primary-container text-[13px] font-extrabold text-uc-on-primary-container uc-num"
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="pt-1">{step}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-3 flex flex-wrap justify-end gap-1">
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="min-h-11 px-3 rounded-uc-input text-sm font-bold text-uc-text-muted hover:text-uc-text hover:bg-uc-surface transition-colors"
+              >
+                {t('pwaPrompt.maybeLater')}
+              </button>
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="min-h-11 px-3 rounded-uc-input text-sm font-extrabold text-uc-primary hover:bg-uc-surface transition-colors"
+              >
+                {t('pwaPrompt.gotIt')}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button variant="ghost" onClick={handleDismiss}>
+              {t('pwaPrompt.notNow')}
+            </Button>
+            <Button variant="primary" onClick={handleDismiss}>
+              {t('pwaPrompt.ok')}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

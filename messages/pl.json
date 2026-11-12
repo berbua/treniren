@@ -23,6 +23,7 @@
     "hide": "Ukryj",
     "showDetails": "Pokaż szczegóły",
     "today": "Dzisiaj",
+    "yesterday": "Wczoraj",
     "week": "Tydzień",
     "month": "Miesiąc",
     "previous": "Poprzedni",
@@ -106,7 +107,8 @@
     "markRead": "Oznacz jako przeczytane",
     "message": "wiadomość",
     "messages_plural": "wiadomości",
-    "unread": "nieprzeczytanych"
+    "unread": "nieprzeczytanych",
+    "priorityHigh": "Wysoki"
   },
   "nav": {
     "home": "Strona główna",
@@ -1527,5 +1529,11 @@
   "offlineSync": {
     "uploaded": "Przesłano treningi zapisane offline: {{count}}",
     "failed": "Nie udało się przesłać treningów zapisanych offline: {{count}}. Spróbujemy ponownie później."
+  },
+  "offlineBanner": {
+    "offline": "Jesteś offline",
+    "backOnline": "Znów online",
+    "pending": "Oczekuje: {{count}}",
+    "savedLocally": "Treningi zapiszą się na urządzeniu i zsynchronizują po powrocie do sieci."
   }
 }

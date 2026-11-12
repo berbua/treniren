@@ -676,7 +676,7 @@ function CycleCalendar({
             >
               {/* Warning triangle for most injuries phase */}
               {isMostInjuriesPhase && (
-                <Tooltip content={injuryRiskText} position="top">
+                <Tooltip content={injuryRiskText} position="top" tapToOpen={false}>
                   <span className="absolute right-0.5 top-0.5 z-20 cursor-help text-[10px] leading-none opacity-80">⚠️</span>
                 </Tooltip>
               )}

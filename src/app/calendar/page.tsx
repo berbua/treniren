@@ -877,7 +877,7 @@ function CalendarPageContent() {
                           </span>
                         )}
                         {isInjuryRiskDay(cycleInfo) && (
-                          <Tooltip content={injuryRiskText} position="top" className="ml-auto">
+                          <Tooltip content={injuryRiskText} position="top" className="ml-auto" tapToOpen={false}>
                             <span className="inline-flex min-h-6 cursor-help items-center gap-1 rounded-lg bg-uc-warning-bg px-2 text-xs font-bold text-uc-warning">
                               <span aria-hidden>⚠️</span>
                               {t('calendar.injuryRiskPhase')}
