@@ -30,7 +30,7 @@ Line numbers are from the review and may have shifted.
 16. ✅ Trip/deload "day N/M" one too low ("0/3" on first day; UTC-midnight start vs local-midnight cell; now compares day numbers) — `src/app/calendar/page.tsx:67-76`
 17. ✅ Period end date can be before start date (no check client or server); period then vanishes from calendar and bypasses the overlap check; no DB constraint against double-tap duplicates (now refused in form + API; overlap check and save run under a per-user advisory lock, form ignores a second tap) — `src/app/cycle/page.tsx` (PeriodFormModal), `src/app/api/periods/route.ts:8-13`, `src/app/api/periods/[id]/route.ts:8-13`
 18. ✅ "Max reps" record uses reps of the best (weight×reps) set, not highest reps (now highest reps of any set) — `src/lib/progression-service.ts:295-298, 316-319`
-19. ⬜ Exercise quick stats: "last set" ordered by `createdAt` instead of `setNumber`; shows "never used" if latest workout has no sets — `src/app/api/exercises/[id]/quick-stats/route.ts:64-69, 78-86` (same pattern in `src/app/api/exercises/[id]/route.ts:35-40`)
+19. ✅ Exercise quick stats: "last set" ordered by `createdAt` instead of `setNumber`; shows "never used" if latest workout has no sets — `src/app/api/exercises/[id]/quick-stats/route.ts:64-69, 78-86` (same pattern in `src/app/api/exercises/[id]/route.ts:35-40`)
 20. ⬜ Strong Mind project goals get duplicate ids after reload (counter seeded only from process goals) — `src/app/strong-mind/page.tsx:118-124, 325`
 21. ⬜ Injury-by-phase stats ignore the user-entered `cycleDay` / `cycleDayManuallySet` — `src/lib/statistics-service.ts:442-445`
 22. ✅ Dashboard Events tile capped at 50 (uses page length, not `pagination.total`) — `src/app/dashboard/page.tsx:148`

@@ -34,7 +34,7 @@ export async function GET(
             },
             sets: {
               orderBy: {
-                createdAt: 'desc'
+                setNumber: 'desc'
               },
               take: 1
             }

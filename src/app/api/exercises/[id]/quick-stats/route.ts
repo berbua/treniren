@@ -60,12 +60,6 @@ export async function GET(
           select: {
             startTime: true
           }
-        },
-        sets: {
-          orderBy: {
-            createdAt: 'desc'
-          },
-          take: 1
         }
       },
       orderBy: {
@@ -75,7 +69,7 @@ export async function GET(
       }
     })
 
-    if (!mostRecentWorkoutExercise || mostRecentWorkoutExercise.sets.length === 0) {
+    if (!mostRecentWorkoutExercise) {
       return NextResponse.json({
         lastUsed: null,
         lastWeight: null,
@@ -85,8 +79,23 @@ export async function GET(
       })
     }
 
-    const lastSet = mostRecentWorkoutExercise.sets[0]
     const lastWorkout = mostRecentWorkoutExercise.workout
+
+    // Last logged set: highest set number of the most recent session that has any sets
+    const lastSet = await prisma.set.findFirst({
+      where: {
+        workoutExercise: {
+          exerciseId: id,
+          workout: {
+            userId: user.id
+          }
+        }
+      },
+      orderBy: [
+        { workoutExercise: { workout: { startTime: 'desc' } } },
+        { setNumber: 'desc' }
+      ]
+    })
 
     // Count total times used
     const timesUsed = await prisma.workoutExercise.count({
@@ -114,8 +123,8 @@ export async function GET(
 
     return NextResponse.json({
       lastUsed: lastWorkout.startTime.toISOString(),
-      lastWeight: lastSet.weight || null,
-      lastReps: lastSet.reps || null,
+      lastWeight: lastSet?.weight || null,
+      lastReps: lastSet?.reps || null,
       timesUsed,
       improving,
     })
