@@ -19,11 +19,11 @@ Line numbers are from the review and may have shifted.
    - ⬜ Password change doesn't sign out existing sessions (30-day JWT) — `src/lib/auth.ts`
 8. ✅ Registration blocked (429) after a few normal saves — rate limiters shared one counter — `src/lib/rate-limit.ts`
 9. ✅ Clearing exercises / hangs / gratitude / improvements / routine variation in the workout edit form doesn't save (sent as `undefined`, PUT skips them) — `src/components/EnhancedWorkoutForm.tsx:388-392, 432-435`
-10. ⬜ Tapping a push notification doesn't open the app (only opens on `explore` action) — `public/sw.js:352-362`
-11. ⬜ Failed Google sign-in shows a 404 (`pages.error: '/auth/error'` but no such page) — `src/lib/auth.ts`
-12. ⬜ Exercise detail page doesn't load progression chart / records on first open (`quickStats` missing from effect deps) — `src/app/exercises/[id]/page.tsx:63-67`
-13. ⬜ Saving fails with 400 when a loaded routine repeats an exercise already in the workout (`handleLoadRoutine` doesn't dedupe; API counts unique ids) — `src/components/WorkoutExerciseTracker.tsx:117-139`
-14. ⬜ Data export leaves out logged periods (`Period` model never exported) — `src/app/api/export/data/route.ts`
+10. ✅ Tapping a push notification doesn't open the app (only opened on `explore` action; now focuses an open window or opens one, follows same-origin `data.url`) — `public/sw.js:352-362`
+11. ✅ Failed Google sign-in shows a 404 (`pages.error: '/auth/error'` but no such page; now goes to sign-in page, which shows the error) — `src/lib/auth.ts`
+12. ✅ Exercise detail page doesn't load progression chart / records on first open (`quickStats` missing from effect deps; effect now re-runs once stats show the exercise was used) — `src/app/exercises/[id]/page.tsx:63-67`
+13. ✅ Saving fails with 400 when a loaded routine repeats an exercise already in the workout (`handleLoadRoutine` doesn't dedupe; API counts unique ids); now skips exercises already in the workout, API returns a clear duplicate error — `src/components/WorkoutExerciseTracker.tsx:117-139`
+14. ✅ Data export leaves out logged periods (`Period` model never exported); now exported as `periods` — `src/app/api/export/data/route.ts`
 
 ## Wrong numbers / dates
 15. ⬜ Calendar month view skips a month when navigating on the 29th–31st (`setMonth` overflow) — `src/app/calendar/page.tsx:454-472`
