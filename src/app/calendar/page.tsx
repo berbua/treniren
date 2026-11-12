@@ -14,7 +14,7 @@ import { Tooltip } from '@/components/Tooltip'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import { statisticsService } from '@/lib/statistics-service'
 import { WorkoutType, Workout, WorkoutFormData, Tag, Exercise } from '@/types/workout'
-import { EventType, Event, EventFormData } from '@/types/event'
+import { EventType, Event, EventFormData, isRangeEventType } from '@/types/event'
 import TrainingTypeFilter from '@/components/TrainingTypeFilter'
 import AuthGuard from '@/components/AuthGuard'
 import EnhancedWorkoutForm from '@/components/EnhancedWorkoutForm'
@@ -63,9 +63,10 @@ const PHASES: CyclePhase[] = ['menstrual', 'follicular', 'ovulation', 'early-lut
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-// Day N of M for a trip spanning several days (null for other events)
+// Day N of M for a trip or deload spanning several days (null for other events)
 const getTripDay = (event: Event, date: Date) => {
-  if (event.type !== 'TRIP' || !event.destination || !event.tripStartDate || !event.tripEndDate) return null
+  if (!isRangeEventType(event.type) || !event.tripStartDate || !event.tripEndDate) return null
+  if (event.type === 'TRIP' && !event.destination) return null
   const tripStart = new Date(event.tripStartDate)
   const tripEnd = new Date(event.tripEndDate)
   // Calculate total trip days (inclusive of both start and end dates)
@@ -168,7 +169,10 @@ function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
 
 function EventRow({ event, date, t, onClick }: { event: Event; date: Date; t: (key: string) => string; onClick: (event: Event, e: React.MouseEvent) => void }) {
   const tripDay = getTripDay(event, date)
-  const title = tripDay ? `${event.destination} ${tripDay.currentDay}/${tripDay.totalDays}` : event.title
+  const dayOfRange = tripDay ? `${tripDay.currentDay}/${tripDay.totalDays}` : null
+  const title = event.type === 'DELOAD'
+    ? dayOfRange ?? event.title
+    : tripDay ? `${event.destination} ${dayOfRange}` : event.title
   const subtitle = event.type === 'TRIP' ? (tripDay ? event.title : event.destination) : event.description
 
   return (
@@ -212,7 +216,8 @@ function UpcomingEventRow({ event, start, end, t, locale, onClick }: UpcomingEve
   const formatDay = (value: string) =>
     new Date(`${value}T00:00:00`).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
   const dates = start === end ? formatDay(start) : `${formatDay(start)} – ${formatDay(end)}`
-  const title = event.type === 'TRIP' && event.destination ? event.destination : event.title
+  // Deload's title is just "Deload", so the type label alone is enough
+  const title = event.type === 'TRIP' && event.destination ? event.destination : event.type === 'DELOAD' ? null : event.title
 
   return (
     <button
@@ -223,7 +228,7 @@ function UpcomingEventRow({ event, start, end, t, locale, onClick }: UpcomingEve
       <EventBadge type={event.type} size="md" />
       <span className="min-w-0 flex-1 py-1">
         <span className="block truncate text-[15px] font-extrabold text-uc-text">
-          {t(`events.types.${eventMeta(event.type).key}`)} · {title}
+          {t(`events.types.${eventMeta(event.type).key}`)}{title && ` · ${title}`}
         </span>
         <span className="mt-0.5 block text-[13px] text-uc-text-muted uc-num">{dates}</span>
       </span>
@@ -382,8 +387,8 @@ function CalendarPageContent() {
         ? event.date.slice(0, 10) 
         : event.date
       
-      // For trip events, check if the date falls within the trip date range
-      if (event.type === 'TRIP' && event.tripStartDate && event.tripEndDate) {
+      // For trips and deloads, check if the date falls within the date range
+      if (isRangeEventType(event.type) && event.tripStartDate && event.tripEndDate) {
         const tripStartStr = event.tripStartDate.includes('T') 
           ? event.tripStartDate.slice(0, 10) 
           : event.tripStartDate
@@ -414,7 +419,7 @@ function CalendarPageContent() {
     const day = (value?: string) => (value ? value.slice(0, 10) : '')
     return events
       .map(event => {
-        const isTrip = event.type === 'TRIP' && event.tripStartDate && event.tripEndDate
+        const isTrip = isRangeEventType(event.type) && event.tripStartDate && event.tripEndDate
         return {
           event,
           start: isTrip ? day(event.tripStartDate) : day(event.date),
@@ -895,8 +900,9 @@ function CalendarPageContent() {
                           const predicted = !!phase && date > todayStart
                           const dayWorkouts = getWorkoutsForDate(date)
                           const dayEvents = getEventsForDate(date)
-                          const badgeEvent = dayEvents.find(e => e.type !== 'TRIP')
+                          const badgeEvent = dayEvents.find(e => !isRangeEventType(e.type))
                           const hasTrip = dayEvents.some(e => e.type === 'TRIP')
+                          const hasDeload = dayEvents.some(e => e.type === 'DELOAD')
                           const isToday = isTodayDate(date)
                           const isCurrentMonth = date.getMonth() === currentDate.getMonth()
 
@@ -915,6 +921,10 @@ function CalendarPageContent() {
                               />
                               {isToday && <span aria-hidden className="absolute inset-1 rounded-xl border-2 border-uc-text" />}
                               {hasTrip && <span aria-hidden className="absolute inset-x-0 bottom-0 h-[3px] bg-uc-success" />}
+                              {/* Deload: dashed line (above the trip line when both) */}
+                              {hasDeload && (
+                                <span aria-hidden className={`absolute inset-x-0 border-t-[3px] border-dashed border-uc-tag-5 ${hasTrip ? 'bottom-[4px]' : 'bottom-0'}`} />
+                              )}
                               {isInjuryRiskDay(cycleInfo) && (
                                 <Icon name="injury-risk" size={12} className="absolute left-1 top-1 text-uc-warning" />
                               )}
@@ -1111,7 +1121,7 @@ function CalendarPageContent() {
                   <div className="flex shrink-0">
                     <button
                       type="button"
-                      onClick={() => setSelectedEventTypes(['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'OTHER'])}
+                      onClick={() => setSelectedEventTypes(['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'DELOAD', 'OTHER'])}
                       className="min-h-11 px-2 text-sm font-bold text-uc-primary hover:underline"
                     >
                       {t('calendar.filterAll')}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { EventType, EventFormData, Event, Tag, TripClimbingType } from '@/types/event';
+import { EventType, EventFormData, Event, Tag, TripClimbingType, isRangeEventType } from '@/types/event';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCycle } from '@/contexts/CycleContext';
 import { toLocalDateString } from '@/lib/date-utils';
@@ -21,7 +21,7 @@ interface EventFormProps {
   onDelete?: () => void;
 }
 
-const eventTypes: EventType[] = ['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'OTHER'];
+const eventTypes: EventType[] = ['INJURY', 'PHYSIO', 'COMPETITION', 'TRIP', 'DELOAD', 'OTHER'];
 
 export default function EventForm({ onSubmit, onCancel, initialData, availableTags = [], onCreateTag, isSubmitting = false, defaultDate, onDelete }: EventFormProps) {
   const { t } = useLanguage();
@@ -94,25 +94,29 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
       newErrors.type = t('events.eventTypeRequired') || 'Please select an event type';
     }
 
-    // For non-trip events, require a date
-    if (formData.type !== 'TRIP' && !formData.date) {
+    // Single-day events need a date; trips and deloads a start and end date
+    const isRange = isRangeEventType(formData.type);
+    if (!isRange && !formData.date) {
       newErrors.date = t('events.dateRequired') || 'Please select a date';
     }
 
-    // Trip-specific validation
-    if (formData.type === 'TRIP') {
+    if (isRange) {
       if (!formData.tripStartDate) {
-        newErrors.tripStartDate = t('events.tripStartDateRequired') || 'Please select a start date for the trip';
+        newErrors.tripStartDate = formData.type === 'TRIP'
+          ? t('events.tripStartDateRequired') || 'Please select a start date for the trip'
+          : t('events.startDateRequired');
       }
       if (!formData.tripEndDate) {
-        newErrors.tripEndDate = t('events.tripEndDateRequired') || 'Please select an end date for the trip';
-      }
-      if (!formData.destination.trim()) {
-        newErrors.destination = t('events.destinationRequired') || 'Please enter a destination';
+        newErrors.tripEndDate = formData.type === 'TRIP'
+          ? t('events.tripEndDateRequired') || 'Please select an end date for the trip'
+          : t('events.endDateRequired');
       }
       if (formData.tripStartDate && formData.tripEndDate && formData.tripStartDate > formData.tripEndDate) {
         newErrors.tripEndDate = t('events.tripEndDateAfterStart') || 'End date must be after start date';
       }
+    }
+    if (formData.type === 'TRIP' && !formData.destination.trim()) {
+      newErrors.destination = t('events.destinationRequired') || 'Please enter a destination';
     }
 
     setErrors(newErrors);
@@ -126,23 +130,26 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
       return;
     }
 
+    const isRange = isRangeEventType(formData.type);
     const eventData: EventFormData = {
       type: formData.type,
       title: formData.type === 'TRIP' ? `${formData.destination} Trip` : 
+             formData.type === 'DELOAD' ? 'Deload' :
              formData.type === 'INJURY' ? formData.bodyPart || 'Injury' : 
              formData.location || 'Event',
-      date: formData.type === 'TRIP' ? formData.tripStartDate : formData.date,
+      date: isRange ? formData.tripStartDate : formData.date,
       description: formData.description,
       location: formData.type === 'TRIP' ? formData.destination : 
-                formData.type === 'INJURY' ? formData.bodyPart : formData.location,
+                formData.type === 'INJURY' ? formData.bodyPart :
+                formData.type === 'DELOAD' ? '' : formData.location,
       notes: '', // We're consolidating into description field
       tagIds: formData.tagIds,
       // Cycle tracking for injuries
       cycleDay: formData.type === 'INJURY' ? formData.cycleDay ?? null : undefined,
       cycleDayManuallySet: formData.type === 'INJURY' ? formData.cycleDayManuallySet : false,
       // Trip-specific fields
-      tripStartDate: formData.type === 'TRIP' ? formData.tripStartDate : undefined,
-      tripEndDate: formData.type === 'TRIP' ? formData.tripEndDate : undefined,
+      tripStartDate: isRange ? formData.tripStartDate : undefined,
+      tripEndDate: isRange ? formData.tripEndDate : undefined,
       destination: formData.type === 'TRIP' ? formData.destination : undefined,
       climbingType: formData.type === 'TRIP' ? formData.climbingType : undefined,
       showCountdown: formData.type === 'TRIP' ? formData.showCountdown : undefined,
@@ -168,11 +175,13 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
     formData.type === 'INJURY' ? (t('events.injuryDescription') || 'Injury Description') :
     formData.type === 'PHYSIO' ? (t('events.physioDescription') || 'Visit Description') :
     formData.type === 'COMPETITION' ? (t('events.competitionDescription') || 'Competition Description') :
+    formData.type === 'DELOAD' ? t('events.deloadDescription') :
     (t('events.description') || 'Description');
   const descriptionPlaceholder =
     formData.type === 'INJURY' ? (t('events.injuryDescriptionPlaceholder') || 'Describe the injury, symptoms, causes...') :
     formData.type === 'PHYSIO' ? (t('events.physioDescriptionPlaceholder') || 'Describe the visit, recommendations, progress...') :
     formData.type === 'COMPETITION' ? (t('events.competitionDescriptionPlaceholder') || 'Describe the competition, results, impressions...') :
+    formData.type === 'DELOAD' ? t('events.deloadDescriptionPlaceholder') :
     (t('events.eventDescriptionPlaceholder') || 'Enter event description...');
 
   return (
@@ -208,7 +217,11 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
                   key={type}
                   type="button"
                   aria-pressed={selected}
-                  onClick={() => updateFormData('type', type)}
+                  onClick={() => {
+                    updateFormData('type', type);
+                    // Start a new date range on the chosen day (e.g. the day tapped in the calendar)
+                    if (isRangeEventType(type) && !formData.tripStartDate) updateFormData('tripStartDate', formData.date);
+                  }}
                   className={`flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-uc-input border-2 px-1 py-2 text-center transition-colors ${
                     selected ? `${meta.border} ${meta.tint}` : 'border-uc-border bg-uc-surface hover:border-uc-text-muted'
                   }`}
@@ -238,7 +251,7 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
         )}
 
         {/* Location — physio, competition, other */}
-        {formData.type !== 'TRIP' && formData.type !== 'INJURY' && (
+        {!isRangeEventType(formData.type) && formData.type !== 'INJURY' && (
           <div>
             <Label htmlFor="event-location">{t('events.location') || 'Location'}</Label>
             <Input
@@ -250,8 +263,8 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
           </div>
         )}
 
-        {/* Date — all but trips */}
-        {formData.type !== 'TRIP' && (
+        {/* Date — single-day events */}
+        {!isRangeEventType(formData.type) && (
           <div>
             <Label htmlFor="event-date">{t('events.date') || 'Date'} *</Label>
             <Input
@@ -325,34 +338,44 @@ export default function EventForm({ onSubmit, onCancel, initialData, availableTa
           </div>
         )}
 
+        {/* Date range — trips and deloads */}
+        {isRangeEventType(formData.type) && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="event-trip-start">
+                {formData.type === 'TRIP' ? t('events.tripStartDate') || 'Trip Start Date' : t('events.startDate')} *
+              </Label>
+              <Input
+                id="event-trip-start"
+                type="date"
+                value={formData.tripStartDate}
+                onChange={(e) => updateFormData('tripStartDate', e.target.value)}
+                aria-invalid={!!errors.tripStartDate}
+              />
+              <FieldError>{errors.tripStartDate}</FieldError>
+            </div>
+            <div>
+              <Label htmlFor="event-trip-end">
+                {formData.type === 'TRIP' ? t('events.tripEndDate') || 'Trip End Date' : t('events.endDate')} *
+              </Label>
+              <Input
+                id="event-trip-end"
+                type="date"
+                value={formData.tripEndDate}
+                onChange={(e) => updateFormData('tripEndDate', e.target.value)}
+                aria-invalid={!!errors.tripEndDate}
+              />
+              <FieldError>{errors.tripEndDate}</FieldError>
+            </div>
+          </div>
+        )}
+        {formData.type === 'DELOAD' && (
+          <p className="-mt-2 text-[13px] text-uc-text-muted">{t('events.deloadHint')}</p>
+        )}
+
         {/* Trip */}
         {formData.type === 'TRIP' && (
           <>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="event-trip-start">{t('events.tripStartDate') || 'Trip Start Date'} *</Label>
-                <Input
-                  id="event-trip-start"
-                  type="date"
-                  value={formData.tripStartDate}
-                  onChange={(e) => updateFormData('tripStartDate', e.target.value)}
-                  aria-invalid={!!errors.tripStartDate}
-                />
-                <FieldError>{errors.tripStartDate}</FieldError>
-              </div>
-              <div>
-                <Label htmlFor="event-trip-end">{t('events.tripEndDate') || 'Trip End Date'} *</Label>
-                <Input
-                  id="event-trip-end"
-                  type="date"
-                  value={formData.tripEndDate}
-                  onChange={(e) => updateFormData('tripEndDate', e.target.value)}
-                  aria-invalid={!!errors.tripEndDate}
-                />
-                <FieldError>{errors.tripEndDate}</FieldError>
-              </div>
-            </div>
-
             <div>
               <Label htmlFor="event-destination">{t('events.destination') || 'Destination'} *</Label>
               <Input

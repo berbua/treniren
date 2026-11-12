@@ -30,6 +30,7 @@ const ICONS = {
   'event-physio': '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 8v8 M8 12h8"/>',
   'event-competition': '<path d="M8 4h8v5a4 4 0 0 1-8 0z M8 6H5a3 3 0 0 0 3 4 M16 6h3a3 3 0 0 1-3 4 M12 13v4 M8 20h8"/>',
   'event-trip': '<path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>',
+  'event-deload': '<path d="M4 8h13a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z M21 11v2 M6.5 11v2"/>',
   'event-other': '<path d="M5 12h.01 M12 12h.01 M19 12h.01"/>',
   'injury-risk': '<path d="M12 8v5 M12 16.5h.01 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/>',
   'period': '<path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3z"/>',

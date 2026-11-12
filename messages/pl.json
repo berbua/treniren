@@ -1371,6 +1371,14 @@
     "saveFailed": "Nie udało się zapisać celów"
   },
   "events": {
+    "daysCount": {"one": "{{count}} dzień", "few": "{{count}} dni", "many": "{{count}} dni", "other": "{{count}} dnia"},
+    "startDate": "Data rozpoczęcia",
+    "endDate": "Data zakończenia",
+    "startDateRequired": "Wybierz datę rozpoczęcia",
+    "endDateRequired": "Wybierz datę zakończenia",
+    "deloadHint": "Okres odpoczynku: lżejszy trening lub przerwa w te dni.",
+    "deloadDescription": "Plan i notatki",
+    "deloadDescriptionPlaceholder": "np. 50% objętości, bez maksymalnych zwisów, tylko mobilność...",
     "title": "Wydarzenia",
     "addNew": "Dodaj Wydarzenie",
     "addFirst": "Dodaj Pierwsze Wydarzenie",
@@ -1438,6 +1446,7 @@
       "physio": "Fizjoterapia",
       "competition": "Zawody",
       "trip": "Wyjazd",
+      "deload": "Deload",
       "other": "Inne"
     },
     "addFirstEvent": "Dodaj pierwsze wydarzenie",

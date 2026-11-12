@@ -4,8 +4,10 @@ Item numbers and decisions: `design/DESIGN_DECISIONS.md`; details per gap: `desi
 build log: `design/REDESIGN_PLAN.md`. Per change: `npx tsc --noEmit` + `npx next lint`, update the plan log and
 MISSING_DESIGNS.md, commit. Ask the user before starting each remaining item — each one needs a decision first.
 
-> **Before deploying:** apply `prisma/migrations/20261112_add_period_flow` to the production database (item 38).
-> Prisma selects the new `periods.flow` column, so the Cycle page can't load or save periods without it.
+> **Before deploying:** apply both new migrations to the production database (`npx prisma migrate deploy`):
+> - `20261112_add_period_flow` (item 38) — Prisma selects the new `periods.flow` column, so the Cycle page can't load
+>   or save periods without it.
+> - `20261112_add_deload_event_type` (Deload) — without it, saving a Deload event fails.
 
 ## Still to build — waiting for a decision
 
@@ -36,6 +38,7 @@ MISSING_DESIGNS.md, commit. Ask the user before starting each remaining item —
 | 53 | Progression footer "Start · Now · +%" | First vs last session in the range, for the selected metric | `89cc588` |
 | 59 | "Member since" on Profile | `/api/user` returns `createdAt` | `a6cc14d` |
 | 60 | Editable display name | Saved as `User.nickname`; Today greeting and user menu use it | `a6cc14d` |
+| — | **Deload** event (user request) | New `EventType.DELOAD` + migration; a date range like trips (stored in `tripStartDate` / `tripEndDate`) | see log |
 
 Not checked in a browser yet (no local server / test account in the session) — test them in the app.
 
@@ -47,5 +50,7 @@ Not checked in a browser yet (no local server / test account in the session) —
 - Done earlier on 2026-11-12: 1, 2, 3, 4, 5, 7, 12, 19, 25, 29, 30, 32, 34, 42, 49, 57, 58, 62, 64, 65.
 - 9 changed to "Keep the app"; 51 future idea only (more exercise categories).
 - Discuss later: 15, 17, 24, 28, 31, 40, 66. Pending: 63 (auth titles, user adds Polish strings).
+- Deload follow-ups to decide: should a deload week keep the streak (weeks with 3+ sessions) alive? Show "Deload ·
+  day 2/5" on Today? Leave deload weeks out of Stats averages?
 - Follow-ups from this round: route name for Lead Wall / Bouldering too? Fingerboard tests on Stats follow the range
   instead of all tests? Wall angle / style in Stats? Offline form fields (waits for 15).

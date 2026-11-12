@@ -17,6 +17,7 @@ export const EVENT_TYPE_META: Record<EventType, EventTypeMeta> = {
   PHYSIO: { key: 'physio', icon: 'event-physio', border: 'border-uc-primary', text: 'text-uc-primary', tint: 'bg-uc-primary-container' },
   COMPETITION: { key: 'competition', icon: 'event-competition', border: 'border-uc-accent-text', text: 'text-uc-accent-text', tint: 'bg-uc-warning-bg' },
   TRIP: { key: 'trip', icon: 'event-trip', border: 'border-uc-success', text: 'text-uc-success', tint: 'bg-uc-success-bg' },
+  DELOAD: { key: 'deload', icon: 'event-deload', border: 'border-uc-tag-5', text: 'text-uc-tag-5', tint: 'bg-uc-tag-5/15' },
   OTHER: { key: 'other', icon: 'event-other', border: 'border-uc-text-muted', text: 'text-uc-text-muted', tint: 'bg-uc-elevated' },
 }
 

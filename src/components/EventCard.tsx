@@ -5,6 +5,7 @@ import { EventType, Tag, TripClimbingType } from '@/types/event'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useCycle } from '@/contexts/CycleContext'
 import { calculateCycleInfo } from '@/lib/cycle-utils'
+import { storedDayNumber } from '@/lib/date-utils'
 import { Card, Chip, EventIconTile, eventTypeMeta, Icon } from '@/components/ui'
 
 interface EventCardProps {
@@ -39,7 +40,7 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, isDeleting = false }: EventCardProps) {
-  const { t, language } = useLanguage()
+  const { t, tPlural, language } = useLanguage()
   const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
   const meta = eventTypeMeta(event.type)
   // List endpoints return tags as eventTags join rows
@@ -118,6 +119,11 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
     : null
   const isInjury = event.type === 'INJURY'
   const isTrip = event.type === 'TRIP'
+  const isDeload = event.type === 'DELOAD'
+  // Deload: inclusive number of days (dates are stored as UTC midnight)
+  const deloadDays = isDeload && event.tripStartDate && event.tripEndDate
+    ? storedDayNumber(event.tripEndDate) - storedDayNumber(event.tripStartDate) + 1
+    : null
   const showCycleDay = isInjury && (displayCycleDay !== undefined || isCycleTrackingEnabled)
 
   return (
@@ -129,7 +135,12 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
           <p className={`text-[11px] font-bold uppercase leading-[14px] tracking-[0.08em] ${meta.text}`}>
             {t(`events.types.${meta.key}`) || event.type}
           </p>
-          <h3 className="mt-0.5 text-[17px] font-extrabold leading-6 text-uc-text break-words">{event.title}</h3>
+          <h3 className="mt-0.5 text-[17px] font-extrabold leading-6 text-uc-text break-words uc-num">
+            {isDeload ? tripRange() : event.title}
+          </h3>
+          {deloadDays !== null && (
+            <p className="text-[13px] font-semibold text-uc-text-muted uc-num">{tPlural('events.daysCount', deloadDays)}</p>
+          )}
         </div>
         <div className="-mr-2 -mt-2 flex shrink-0">
           {onEdit && (
@@ -269,7 +280,7 @@ export default function EventCard({ event, onEdit, onDelete, onCycleDayUpdate, i
       )}
 
       {/* Other types: date · time · location */}
-      {!isInjury && !isTrip && (
+      {!isInjury && !isTrip && !isDeload && (
         <p className="flex flex-wrap gap-x-3 gap-y-1 text-[13px] font-semibold text-uc-text-muted">
           <span className="uc-num">
             {formatDate(event.date, { weekday: 'short', day: 'numeric', month: 'short' })}

@@ -438,3 +438,6 @@ note the answer.
   (**apply to production before deploying** — Prisma selects the column, so /api/periods fails without it).
   API accepts `flow` 1–3 or null; period sheet chips; `FlowBars` in Recent periods. Keys `cycle.tracking.flow`,
   `flowLevels.1–3`.
+- 2026-11-12: Deload event (user request): `EventType.DELOAD` + migration `20261112_add_deload_event_type`;
+  `RANGE_EVENT_TYPES` / `isRangeEventType` in `types/event.ts` (trip + deload share the date-range code); icon
+  `event-deload`; keys `events.types.deload`, `startDate`, `endDate`, `deloadHint`, `deloadDescription*`, `daysCount`.

@@ -132,6 +132,15 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     Preview keeps its weekly / monthly / breakdown rows rather than the mock's one-line summary.
   - Events tab cards (`EventCard`) are untouched here — they're the Events step.
 
+### Deload event (user request 2026-11-12, no design)
+- New event type **Deload** (rest / lighter training over several days). Icon: battery with one bar; colour: the blue
+  `--uc-tag-5` (outline tile, tinted when selected). Form: Start date + End date (required, start prefilled with the chosen
+  day), hint "A rest period: lighter or no training on these days.", "Plan & notes" text. Title is stored as "Deload".
+- Calendar: dashed blue line along the bottom of every deload day (above the trip line when both); day sheet / week view
+  row "Deload · 2/5"; Upcoming events shows it until its last day. Event card: date range as title + "N days".
+- Stored like trips: `tripStartDate` / `tripEndDate` (columns keep their names); new enum value via migration
+  `20261112_add_deload_event_type`.
+
 ### Calendar
 - **Upcoming events list** (decision 33, built 2026-11-12, no mock): "Upcoming events" section under the legend card
   (right column on `lg`): the next 5 events from today, trips while they last; follows the event filters. Row = event

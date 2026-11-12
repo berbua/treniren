@@ -1359,6 +1359,14 @@
     "saveFailed": "Failed to save goals"
   },
   "events": {
+    "daysCount": {"one": "{{count}} day", "other": "{{count}} days"},
+    "startDate": "Start date",
+    "endDate": "End date",
+    "startDateRequired": "Please select a start date",
+    "endDateRequired": "Please select an end date",
+    "deloadHint": "A rest period: lighter or no training on these days.",
+    "deloadDescription": "Plan & notes",
+    "deloadDescriptionPlaceholder": "e.g. 50% volume, no max hangs, mobility only...",
     "title": "Events",
     "addNew": "Add Event",
     "addFirst": "Add First Event",
@@ -1426,6 +1434,7 @@
       "physio": "Physio",
       "competition": "Competition",
       "trip": "Trip",
+      "deload": "Deload",
       "other": "Other"
     },
     "addFirstEvent": "Add Your First Event",

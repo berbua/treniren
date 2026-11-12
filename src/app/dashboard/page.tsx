@@ -415,7 +415,7 @@ function DashboardContent() {
                     </span>
                     <div className="min-w-0">
                       <div className="text-[15px] font-extrabold truncate">
-                        {event.type === 'TRIP' ? event.destination : event.title}
+                        {event.type === 'TRIP' ? event.destination : event.type === 'DELOAD' ? t('events.types.deload') : event.title}
                       </div>
                       <div className="text-[13px] font-medium text-uc-text-muted uc-num">
                         {new Date(event.date).toLocaleDateString()}
@@ -592,6 +592,7 @@ const eventTone: Record<string, string> = {
   PHYSIO: 'border-uc-primary text-uc-primary',
   COMPETITION: 'border-uc-accent-text text-uc-accent-text',
   TRIP: 'border-uc-success text-uc-success',
+  DELOAD: 'border-uc-tag-5 text-uc-tag-5',
   OTHER: 'border-uc-border text-uc-text-muted',
 }
 
