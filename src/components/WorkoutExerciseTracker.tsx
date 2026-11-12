@@ -5,7 +5,7 @@ import { Exercise, WorkoutExerciseData, WorkoutSet, Routine } from '@/types/work
 import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
 import { Tooltip } from './Tooltip'
-import { BottomSheet, Button, Card, EmptyState, Icon, Input, Overline, WorkoutIcon } from './ui'
+import { BottomSheet, Button, Card, EmptyState, FieldError, Icon, Input, Overline, WorkoutIcon } from './ui'
 
 interface WorkoutExerciseTrackerProps {
   exercises: WorkoutExerciseData[]
@@ -13,6 +13,8 @@ interface WorkoutExerciseTrackerProps {
   availableExercises: Exercise[]
   onCreateExercise?: (name: string, category?: string, defaultUnit?: string) => Promise<Exercise>
   onVariationChange?: (variationInfo: { routineName: string; variationName: string } | null) => void
+  /** Mark sets without reps in red with "Enter reps for set N" (after a save attempt). */
+  showSetErrors?: boolean
 }
 
 interface ExerciseQuickStats {
@@ -27,8 +29,9 @@ export default function WorkoutExerciseTracker({
   availableExercises,
   onCreateExercise,
   onVariationChange,
+  showSetErrors = false,
 }: WorkoutExerciseTrackerProps) {
-  const { t } = useLanguage()
+  const { t, tPlural } = useLanguage()
   const [showExerciseSelector, setShowExerciseSelector] = useState(false)
   const [showRoutineSelector, setShowRoutineSelector] = useState(false)
   const [routines, setRoutines] = useState<Routine[]>([])
@@ -357,6 +360,7 @@ export default function WorkoutExerciseTracker({
                         }
                         placeholder={t('workouts.placeholders.reps') || 'Reps'}
                         aria-label={`${t('workouts.placeholders.reps') || 'Reps'} · ${setIndex + 1}`}
+                        aria-invalid={showSetErrors && !setHasReps(set)}
                         min="1"
                         className={setInputClass}
                       />
@@ -400,6 +404,14 @@ export default function WorkoutExerciseTracker({
                       </button>
                     </div>
                   ))}
+                  {showSetErrors && (() => {
+                    const missing = exercise.sets.flatMap((set, setIndex) => (setHasReps(set) ? [] : [setIndex + 1]))
+                    return missing.length > 0 ? (
+                      <FieldError>
+                        {tPlural('workouts.setErrors.enterReps', missing.length, { sets: missing.join(', ') })}
+                      </FieldError>
+                    ) : null
+                  })()}
                   <button
                     type="button"
                     onClick={() => handleAddSet(exerciseIndex)}
@@ -486,6 +498,8 @@ const iconButtonClass =
 const setGridClass = 'grid grid-cols-[1.5rem_1fr_1fr_1fr_2.75rem] items-center gap-2'
 
 const setInputClass = 'text-center px-1 uc-num'
+
+export const setHasReps = (set: WorkoutSet) => set.reps !== null && set.reps !== undefined && set.reps > 0
 
 const dashedButtonClass =
   'w-full min-h-11 rounded-uc-input border border-dashed border-uc-border text-sm font-bold text-uc-primary hover:border-uc-primary transition-colors'

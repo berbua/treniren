@@ -73,8 +73,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - **Edit / Duplicate subtitles** ("Gym · Mon 9 Nov", "Copy of Fingerboard · Mon 9 Nov — pick a new date") aren't
     shown: the sheet keeps its titles (with emoji). Adding them means showing the original workout's type/date in the
     header — user's call.
-  - **Per-set validation** ("Enter reps for set 3", red empty cell) doesn't exist; empty sets are caught only by the
-    incomplete-data dialog on save.
+  - **Per-set validation** built 2026-11-12 (decision 19): after a save attempt that hits empty sets, the reps cell of
+    every set without reps is red and "Enter reps for set 3" / "…for sets 2, 3" shows under the exercise (clears as you
+    type). A set now counts as empty when it has no reps, even with a weight (was: no reps and no weight), so the dialog
+    and the inline errors agree. Hangs keep only the dialog.
   - Exercise "Last:" line stays "Last: 10×5" (the mock adds "kg" and the date).
   - Set table columns are reps · kg · RIR as in the mock; the RIR ℹ️ help moved from the input to the column header.
   - **Hang title** stays "#1 🤲 Both hands · Crimp 20mm" (no "Hang 1" string exists). **Collapsed hang rows**

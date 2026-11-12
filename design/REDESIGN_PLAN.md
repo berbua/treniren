@@ -94,7 +94,7 @@ note the answer.
 
 - [ ] **Edit / Duplicate subtitles** in the workout sheet ("Gym · Mon 9 Nov", "Copy of Fingerboard · Mon 9 Nov —
       pick a new date"): show the original workout's type and date in the header?
-- [ ] **Per-set validation** (decided: build, #19 in `DESIGN_DECISIONS.md`) ("Enter reps for set 3", red empty cell): add inline errors for empty sets/hangs, or keep
+- [x] **Per-set validation** (decided: build, #19 in `DESIGN_DECISIONS.md`) → built. ("Enter reps for set 3", red empty cell): add inline errors for empty sets/hangs, or keep
       only the incomplete-data dialog on save?
 - [ ] **Collapsible hangs** (one-line "Hang 2 · Both · open · 20 mm · +4 kg · 6 × 10 s" row): add collapse/expand?
 - [ ] **Crimp size**: keep the fixed 6–30 mm list, or allow any number (mock shows a free "mm" field)?
@@ -365,3 +365,6 @@ note the answer.
   URL. Workouts is reached via More / sidebar. Not checked logged-in in a browser.
 - 2026-11-12: Decision 4 built. `MessagesPanel`: priority chips for high / medium / low (new keys `messages.priorityMedium`,
   `priorityLow`), tinted border on unread high (error) and medium (warning) cards.
+- 2026-11-12: Decision 19 built. `WorkoutExerciseTracker` got `showSetErrors` (set by the form once the incomplete-data
+  dialog opened): reps `Input`s of sets without reps get `aria-invalid` (red), and a `FieldError` per exercise lists them
+  (`workouts.setErrors.enterReps`, plural). Shared `setHasReps`; the dialog now also counts a set without reps as empty.

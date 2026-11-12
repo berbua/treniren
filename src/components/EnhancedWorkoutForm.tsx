@@ -10,7 +10,7 @@ import CycleInfoComponent from './CycleInfo';
 import { StrongMindSection } from './StrongMindSection';
 import { ProcessGoalsSection } from './ProcessGoalsSection';
 import TagSelector from './TagSelector';
-import WorkoutExerciseTracker from './WorkoutExerciseTracker';
+import WorkoutExerciseTracker, { setHasReps } from './WorkoutExerciseTracker';
 import FingerboardHangTracker from './FingerboardHangTracker';
 import { Tooltip } from './Tooltip';
 import { ConfirmationDialog } from './ConfirmationDialog';
@@ -265,6 +265,8 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
   };
   const [showIncompleteDataModal, setShowIncompleteDataModal] = useState(false);
   const [incompleteData, setIncompleteData] = useState<IncompleteData>({ exercises: [], hangs: 0 });
+  // After the first save attempt with empty sets, the tracker marks them inline
+  const [showSetErrors, setShowSetErrors] = useState(false);
 
   // Calculate cycle info for the selected date
   const cycleInfoForSelectedDate = useMemo(() => {
@@ -274,15 +276,12 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     return calculateCycleInfo(cycleSettings, formData.date);
   }, [formData.date, cycleSettings, isCycleTrackingEnabled]);
 
-  // Check for incomplete data (sets without weight and reps, hangs without time and reps)
+  // Check for incomplete data (sets without reps, hangs without time and reps)
   const checkIncompleteData = (): IncompleteData => {
     const exercises: IncompleteData['exercises'] = [];
     formData.exercises?.forEach((exercise, exIdx) => {
-      const emptySets = (exercise.sets || []).filter((set) => {
-        const hasWeight = set.weight !== null && set.weight !== undefined && set.weight > 0;
-        const hasReps = set.reps !== null && set.reps !== undefined && set.reps > 0;
-        return !hasWeight && !hasReps;
-      }).length;
+      // A set without reps is empty (also when it has a weight), as in "Enter reps for set 3"
+      const emptySets = (exercise.sets || []).filter((set) => !setHasReps(set)).length;
       if (emptySets > 0) {
         exercises.push({ name: exercise.exerciseName || `${t('exercises.exercise') || 'Exercise'} ${exIdx + 1}`, sets: emptySets });
       }
@@ -347,6 +346,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     if ((incomplete.exercises.length > 0 || incomplete.hangs > 0) && !showIncompleteDataModal) {
       // Show modal to confirm
       setIncompleteData(incomplete);
+      setShowSetErrors(true);
       setShowIncompleteDataModal(true);
       return; // Stop here and wait for user decision
     }
@@ -836,6 +836,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               availableExercises={availableExercises}
               onCreateExercise={onCreateExercise}
               onVariationChange={(variationInfo) => updateFormData('routineVariation', variationInfo)}
+              showSetErrors={showSetErrors}
             />
           )}
 

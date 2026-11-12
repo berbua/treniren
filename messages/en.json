@@ -575,6 +575,12 @@
     "exercisesCount": {
       "one": "{{count}} exercise",
       "other": "{{count}} exercises"
+    },
+    "setErrors": {
+      "enterReps": {
+        "one": "Enter reps for set {{sets}}",
+        "other": "Enter reps for sets {{sets}}"
+      }
     }
   },
   "exercises": {

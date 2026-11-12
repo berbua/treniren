@@ -580,6 +580,11 @@
       "few": "{{count}} ćwiczenia",
       "many": "{{count}} ćwiczeń",
       "other": "{{count}} ćwiczenia"
+    },
+    "setErrors": {
+      "enterReps": {
+        "other": "Wpisz powtórzenia dla serii {{sets}}"
+      }
     }
   },
   "exercises": {
