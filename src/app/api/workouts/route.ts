@@ -23,8 +23,9 @@ export async function GET(request: NextRequest) {
     
     // Parse pagination parameters from query string
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1', 10)
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    // Missing or non-numeric values fall back to the defaults instead of reaching Prisma as NaN
+    const page = Math.max(1, parseInt(searchParams.get('page') || '', 10) || 1)
+    const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get('limit') || '', 10) || 50))
     const skip = (page - 1) * limit
     
     // Get total count for pagination metadata
@@ -38,8 +39,11 @@ export async function GET(request: NextRequest) {
         workoutExercises: {
           include: {
             exercise: true,
-            sets: true,
+            sets: {
+              orderBy: { setNumber: 'asc' },
+            },
           },
+          orderBy: { order: 'asc' },
         },
         workoutTags: {
           include: {
@@ -149,6 +153,26 @@ export async function POST(request: NextRequest) {
       ? Prisma.JsonNull 
       : (mentalState as Prisma.InputJsonValue)
 
+    // An offline workout whose upload response was lost is sent again: return the copy already saved
+    const offlineId = details && typeof details === 'object' && !Array.isArray(details)
+      ? (details as Record<string, unknown>).offlineId
+      : undefined
+    if (typeof offlineId === 'string' && offlineId) {
+      const alreadyUploaded = await prisma.workout.findFirst({
+        where: { userId: user.id, details: { path: ['offlineId'], equals: offlineId } },
+      })
+      if (alreadyUploaded) {
+        return NextResponse.json(alreadyUploaded, { status: 200 })
+      }
+    }
+
+    if (planId) {
+      const plan = await prisma.plan.findFirst({ where: { id: planId, userId: user.id }, select: { id: true } })
+      if (!plan) {
+        return NextResponse.json({ error: 'Plan not found' }, { status: 400 })
+      }
+    }
+
     // Validate tagIds exist and belong to user
     if (tagIds && tagIds.length > 0) {
       const existingTags = await prisma.tag.findMany({
@@ -219,9 +243,9 @@ export async function POST(request: NextRequest) {
             sets: exerciseData.sets && exerciseData.sets.length > 0 ? {
               create: exerciseData.sets.map((set: any, setIndex: number) => ({
                 setNumber: setIndex + 1,
-                reps: set.reps || null,
-                weight: set.weight || null,
-                rir: set.rir || null,
+                reps: set.reps ?? null,
+                weight: set.weight ?? null,
+                rir: set.rir ?? null,
                 notes: set.notes || null,
               })),
             } : undefined,
@@ -234,10 +258,10 @@ export async function POST(request: NextRequest) {
             gripType: hang.gripType,
             crimpSize: hang.crimpSize || null,
             customDescription: hang.customDescription || null,
-            load: hang.load || null,
-            unload: hang.unload || null,
-            reps: hang.reps || null,
-            timeSeconds: hang.timeSeconds || null,
+            load: hang.load ?? null,
+            unload: hang.unload ?? null,
+            reps: hang.reps ?? null,
+            timeSeconds: hang.timeSeconds ?? null,
             notes: hang.notes || null,
           })),
         } : undefined,

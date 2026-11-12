@@ -23,8 +23,9 @@ export async function GET(request: NextRequest) {
     
     // Parse pagination parameters from query string
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1', 10)
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    // Missing or non-numeric values fall back to the defaults instead of reaching Prisma as NaN
+    const page = Math.max(1, parseInt(searchParams.get('page') || '', 10) || 1)
+    const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get('limit') || '', 10) || 50))
     const skip = (page - 1) * limit
     
     // Get total count for pagination metadata
