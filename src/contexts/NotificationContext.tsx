@@ -213,26 +213,30 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Schedule daily activity checks
   useEffect(() => {
+    // Fetch all workouts for scheduling (use large limit)
+    const fetchWorkouts = async () => {
+      const response = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' });
+      if (!response.ok) throw new Error(`Failed to load workouts: ${response.status}`);
+      const data = await response.json();
+      // Handle both new paginated format and old format
+      return Array.isArray(data) ? data : (data.workouts || []);
+    };
+
     const loadWorkoutsForScheduling = async () => {
       try {
-        // Fetch all workouts for scheduling (use large limit)
-        const response = await fetch('/api/workouts?page=1&limit=1000', { credentials: 'include' });
-        if (response.ok) {
-          const data = await response.json();
-          // Handle both new paginated format and old format
-          const workouts = Array.isArray(data) ? data : (data.workouts || []);
-          if (workouts.length > 0) {
-            const activityCleanup = scheduleDailyActivityCheck(workouts);
-            const inactivityCleanup = scheduleDailyWorkoutInactivityCheck(workouts, {
-              workoutInactivityEnabled: settings.workoutInactivityEnabled,
-              workoutInactivityDays: settings.workoutInactivityDays
-            });
-            
-            return () => {
-              activityCleanup();
-              inactivityCleanup();
-            };
-          }
+        const workouts = await fetchWorkouts();
+        if (workouts.length > 0) {
+          // The daily checks reload workouts, so ones logged after page load are taken into account
+          const activityCleanup = scheduleDailyActivityCheck(workouts, fetchWorkouts);
+          const inactivityCleanup = scheduleDailyWorkoutInactivityCheck(workouts, {
+            workoutInactivityEnabled: settings.workoutInactivityEnabled,
+            workoutInactivityDays: settings.workoutInactivityDays
+          }, fetchWorkouts);
+          
+          return () => {
+            activityCleanup();
+            inactivityCleanup();
+          };
         }
       } catch (error) {
         console.error('Error loading workouts for activity scheduling:', error);

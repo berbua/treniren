@@ -1,7 +1,8 @@
 // Statistics service for workout analysis and insights
+import { dayNumberToLocalDate, localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from './date-utils';
 import { Workout, WorkoutType, TrainingVolume, Tag } from '@/types/workout';
 import { Event } from '@/types/event';
-import { calculateCycleInfo, CycleSettings } from '@/lib/cycle-utils';
+import { calculateCycleInfo, CycleSettings, getPhaseRanges } from '@/lib/cycle-utils';
 
 export type TimeFrame = '1week' | '1month' | '3months' | '6months' | '1year' | 'all' | 'custom';
 
@@ -138,7 +139,8 @@ class StatisticsService {
           allDates.push(...events.map(e => new Date(e.date)));
         }
         if (allDates.length > 0) {
-          start = new Date(Math.min(...allDates.map(d => d.getTime())));
+          // Earliest stored date (UTC midnight) as a local calendar day
+          start = dayNumberToLocalDate(storedDayNumber(new Date(Math.min(...allDates.map(d => d.getTime())))));
         } else {
           // Fallback to 1 year ago if no data
           start = new Date(now);
@@ -152,6 +154,11 @@ class StatisticsService {
         start.setDate(start.getDate() - 30);
     }
 
+    // Relative ranges include today, so start the day after "one week/month/... ago":
+    // 1 week = the last 7 calendar days, not 8
+    if (timeframe !== 'all') {
+      start.setDate(start.getDate() + 1);
+    }
     start.setHours(0, 0, 0, 0);
     return { start, end };
   }
@@ -160,16 +167,25 @@ class StatisticsService {
    * Filter workouts by time range
    */
   filterWorkoutsByTimeRange(workouts: Workout[], timeRange: TimeRange): Workout[] {
-    return workouts.filter(workout => {
-      const workoutDate = new Date(workout.startTime);
-      return workoutDate >= timeRange.start && workoutDate <= timeRange.end;
-    });
+    return workouts.filter(workout => this.isInTimeRange(workout.startTime, timeRange));
+  }
+
+  // Stored dates (UTC midnight) compared with the range's local calendar days
+  private isInTimeRange(storedDate: string | Date, timeRange: TimeRange): boolean {
+    const day = storedDayNumber(storedDate);
+    return day >= localDayNumber(timeRange.start) && day <= localDayNumber(timeRange.end);
+  }
+
+  // Number of weeks in a range, from its calendar days (not rounded up to whole weeks)
+  private weeksInRange(timeRange: TimeRange): number {
+    const days = localDayNumber(timeRange.end) - localDayNumber(timeRange.start) + 1;
+    return Math.max(1, days / 7);
   }
 
   /**
    * Calculate overall statistics
    */
-  calculateOverallStats(workouts: Workout[], timeRange: TimeRange): OverallStats {
+  calculateOverallStats(workouts: Workout[], timeRange: TimeRange, allWorkouts: Workout[] = workouts): OverallStats {
     const totalWorkouts = workouts.length;
     
     if (totalWorkouts === 0) {
@@ -185,17 +201,12 @@ class StatisticsService {
     }
 
     // Calculate average workouts per week
-    const weeksInRange = Math.max(1, Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+    const weeksInRange = this.weeksInRange(timeRange);
     const averageWorkoutsPerWeek = totalWorkouts / weeksInRange;
 
-    // Calculate average workouts this month
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const monthWorkouts = workouts.filter(workout => {
-      const workoutDate = new Date(workout.startTime);
-      return workoutDate >= startOfMonth && workoutDate <= endOfMonth;
-    });
+    // Workouts in the current calendar month - from all workouts, independent of the selected timeframe
+    const thisMonthKey = toLocalDateString().slice(0, 7);
+    const monthWorkouts = allWorkouts.filter(workout => toStoredDateString(workout.startTime).slice(0, 7) === thisMonthKey);
     const averageWorkoutsThisMonth = monthWorkouts.length;
 
     // Find most active day and time
@@ -252,7 +263,7 @@ class StatisticsService {
     });
 
     const totalWorkouts = workouts.length;
-    const weeksInRange = Math.max(1, Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+    const weeksInRange = this.weeksInRange(timeRange);
 
     return Array.from(typeCounts.entries()).map(([type, data]) => ({
       type,
@@ -285,7 +296,7 @@ class StatisticsService {
     });
 
     const totalTaggedWorkouts = workouts.filter(w => w.tags && w.tags.length > 0).length;
-    const weeksInRange = Math.max(1, Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+    const weeksInRange = this.weeksInRange(timeRange);
 
     return Array.from(tagCounts.entries())
       .map(([tagId, data]) => {
@@ -346,7 +357,7 @@ class StatisticsService {
       return workoutDate > latest ? workoutDate : latest;
     }, new Date(0));
 
-    const daysSinceLastSession = Math.floor((Date.now() - lastSession.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceLastSession = localDayNumber() - storedDayNumber(lastSession);
 
     const totalFocusLevel = mentalWorkouts.reduce((sum, workout) => sum + (workout.focusLevel || 0), 0);
     const averageFocusLevel = mentalWorkouts.length > 0 ? totalFocusLevel / mentalWorkouts.length : 0;
@@ -412,7 +423,8 @@ class StatisticsService {
 
     injuryEvents.forEach(event => {
       const injuryDate = new Date(event.date);
-      const cycleInfo = calculateCycleInfo(cycleSettings, injuryDate);
+      // Pass the stored date string so it's read as that calendar day
+      const cycleInfo = calculateCycleInfo(cycleSettings, toStoredDateString(event.date));
       
       // Count by phase
       switch (cycleInfo.phase) {
@@ -446,15 +458,15 @@ class StatisticsService {
     // Convert cycle day counts to array
     for (let day = 1; day <= cycleSettings.cycleLength; day++) {
       const count = cycleDayCounts.get(day) || 0;
-      const cycleInfo = calculateCycleInfo(cycleSettings);
       injuriesByCycleDay.push({
         cycleDay: day,
         count,
-        phase: cycleInfo.phase,
+        // Phase of that cycle day (not today's phase)
+        phase: getPhaseRanges(cycleSettings.cycleLength).find(r => day >= r.start && day <= r.end)?.phase ?? 'late-luteal',
       });
     }
 
-    const daysSinceLastInjury = lastInjury ? Math.floor((Date.now() - lastInjury.getTime()) / (1000 * 60 * 60 * 24)) : Infinity;
+    const daysSinceLastInjury = lastInjury ? localDayNumber() - storedDayNumber(lastInjury) : Infinity;
 
     // Find phase with most injuries
     const phaseEntries = Object.entries(injuriesByPhase) as Array<[keyof typeof injuriesByPhase, number]>;
@@ -516,7 +528,7 @@ class StatisticsService {
       }
     });
 
-    const daysSinceLastFall = lastFall ? Math.floor((Date.now() - lastFall.getTime()) / (1000 * 60 * 60 * 24)) : Infinity;
+    const daysSinceLastFall = lastFall ? localDayNumber() - storedDayNumber(lastFall) : Infinity;
     const fallsPerSession = climbingWorkouts.length > 0 ? Math.round((totalFalls / climbingWorkouts.length) * 10) / 10 : 0;
 
     return {
@@ -542,14 +554,11 @@ class StatisticsService {
   ): StatisticsData {
     const timeRange = this.getTimeRange(timeframe, customRange, workouts, events);
     const filteredWorkouts = this.filterWorkoutsByTimeRange(workouts, timeRange);
-    const filteredEvents = Array.isArray(events) ? events.filter(event => {
-      const eventDate = new Date(event.date);
-      return eventDate >= timeRange.start && eventDate <= timeRange.end;
-    }) : [];
+    const filteredEvents = Array.isArray(events) ? events.filter(event => this.isInTimeRange(event.date, timeRange)) : [];
 
     return {
       timeRange,
-      overall: this.calculateOverallStats(filteredWorkouts, timeRange),
+      overall: this.calculateOverallStats(filteredWorkouts, timeRange, workouts),
       workoutTypes: this.calculateWorkoutTypeStats(filteredWorkouts, timeRange),
       tags: this.calculateTagStats(filteredWorkouts, tags, timeRange),
       trainingVolumes: this.calculateTrainingVolumeStats(filteredWorkouts),
@@ -567,43 +576,24 @@ class StatisticsService {
       return { currentStreak: 0, longestStreak: 0 };
     }
 
-    const workoutDates = new Set(
-      sortedWorkouts.map(w => new Date(w.startTime).toDateString())
-    );
+    // Calendar day numbers: sort numerically and step by whole days (no DST or string-sort issues)
+    const workoutDays = new Set(sortedWorkouts.map(w => storedDayNumber(w.startTime)));
+    const today = localDayNumber();
 
-    const today = new Date();
+    // Current streak: consecutive days from today backwards
     let currentStreak = 0;
+    while (workoutDays.has(today - currentStreak)) {
+      currentStreak++;
+    }
+
+    // Longest streak: longest run of consecutive days
+    const sortedDays = Array.from(workoutDays).sort((a, b) => a - b);
     let longestStreak = 0;
     let tempStreak = 0;
-
-    // Calculate current streak (consecutive days from today backwards)
-    for (let i = 0; i < 365; i++) { // Check up to 1 year back
-      const checkDate = new Date(today);
-      checkDate.setDate(checkDate.getDate() - i);
-      const dateString = checkDate.toDateString();
-
-      if (workoutDates.has(dateString)) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
-
-    // Calculate longest streak
-    const sortedDates = Array.from(workoutDates).sort();
-    
-    for (let i = 0; i < sortedDates.length; i++) {
-      const currentDate = new Date(sortedDates[i]);
-      const nextDate = i < sortedDates.length - 1 ? new Date(sortedDates[i + 1]) : null;
-      
-      tempStreak++;
-      
-      if (!nextDate || (nextDate.getTime() - currentDate.getTime()) > 24 * 60 * 60 * 1000) {
-        // Gap of more than 1 day, streak ends
-        longestStreak = Math.max(longestStreak, tempStreak);
-        tempStreak = 0;
-      }
-    }
+    sortedDays.forEach((day, i) => {
+      tempStreak = i > 0 && day - sortedDays[i - 1] === 1 ? tempStreak + 1 : 1;
+      longestStreak = Math.max(longestStreak, tempStreak);
+    });
 
     return { currentStreak, longestStreak };
   }

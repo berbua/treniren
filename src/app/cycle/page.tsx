@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useApiError } from '@/hooks/useApiError'
 import { useCsrfToken } from '@/hooks/useCsrfToken'
 import { extractApiError } from '@/lib/errors'
+import { DAY_MS, localDayNumber, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils'
 import { calculateCycleInfo, getPhaseColor, CyclePhase, getPhaseDayRange, getPhaseDisplayName, getPhaseStartDay, getPhaseEndDay } from '@/lib/cycle-utils'
 import { Period, PeriodFormData } from '@/types/period'
 import { Workout } from '@/types/workout'
@@ -121,8 +122,8 @@ function CyclePageContent() {
     }
 
     workouts.forEach(workout => {
-      const workoutDate = new Date(workout.startTime)
-      const cycleInfo = calculateCycleInfo(cycleSettings, workoutDate)
+      // Pass the stored date string so it's read as that calendar day
+      const cycleInfo = calculateCycleInfo(cycleSettings, workout.startTime)
       
       if (stats[cycleInfo.phase]) {
         stats[cycleInfo.phase].workouts++
@@ -337,28 +338,20 @@ function CycleCalendar({
     monthDays.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day))
   }
 
-  // Find the most recent confirmed period date (lastPeriodDate)
-  const lastConfirmedDate = new Date(cycleSettings.lastPeriodDate)
-  lastConfirmedDate.setHours(0, 0, 0, 0)
+  // Compare calendar days: cells are local dates, periods and lastPeriodDate are stored dates
+  const lastConfirmedDay = Math.round(new Date(cycleSettings.lastPeriodDate).getTime() / DAY_MS)
 
   const isPeriodDay = (date: Date) => {
+    const day = localDayNumber(date)
     return periods.some(period => {
-      const start = new Date(period.startDate)
-      start.setHours(0, 0, 0, 0)
-      const end = period.endDate ? new Date(period.endDate) : new Date(period.startDate)
-      end.setHours(23, 59, 59, 999)
-      const checkDate = new Date(date)
-      checkDate.setHours(12, 0, 0, 0)
-      return checkDate >= start && checkDate <= end
+      const start = storedDayNumber(period.startDate)
+      const end = storedDayNumber(period.endDate || period.startDate)
+      return day >= start && day <= end
     })
   }
 
   // Check if date is before last confirmed period date (should show forecast)
-  const isForecast = (date: Date) => {
-    const checkDate = new Date(date)
-    checkDate.setHours(0, 0, 0, 0)
-    return checkDate < lastConfirmedDate
-  }
+  const isForecast = (date: Date) => localDayNumber(date) < lastConfirmedDay
 
   return (
     <div className="bg-uc-dark-bg rounded-2xl p-6 lg:p-4 border border-uc-purple/20">
@@ -603,8 +596,9 @@ function PeriodFormModal({
 }) {
   const { t } = useLanguage()
   const [formData, setFormData] = useState<PeriodFormData>({
-    startDate: period?.startDate || defaultDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-    endDate: period?.endDate ? new Date(period.endDate).toISOString().split('T')[0] : undefined,
+    // Calendar cells are local dates - toISOString() would give the previous day ahead of UTC
+    startDate: period?.startDate ? toStoredDateString(period.startDate) : toLocalDateString(defaultDate ?? new Date()),
+    endDate: period?.endDate ? toStoredDateString(period.endDate) : undefined,
     notes: period?.notes || '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)

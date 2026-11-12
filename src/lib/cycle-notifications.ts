@@ -1,5 +1,6 @@
 // Cycle notification logic for menstrual cycle reminders
-import { CycleSettings, calculateCycleInfo } from './cycle-utils';
+import { CycleSettings } from './cycle-utils';
+import { DAY_MS, dayNumberToDateString, dayNumberToLocalDate, localDayNumber, toLocalDateString } from './date-utils';
 import { notificationService, NotificationMessage, NotificationSettings } from './notification-service';
 
 export interface CycleNotificationCheck {
@@ -14,17 +15,14 @@ export interface CycleNotificationCheck {
  * Check if cycle notifications should be sent based on current cycle state
  */
 export function checkCycleNotifications(cycleSettings: CycleSettings): CycleNotificationCheck {
-  const cycleInfo = calculateCycleInfo(cycleSettings);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Reset time to start of day
+  // Expected start of the period after the last logged one. Calendar day numbers, so DST can't skew the
+  // count; lastPeriodDate is rounded to the nearest midnight like in calculateCycleInfo.
+  const lastPeriodDay = Math.round(new Date(cycleSettings.lastPeriodDate).getTime() / DAY_MS);
+  const expectedPeriodDay = lastPeriodDay + cycleSettings.cycleLength;
+  const nextPeriodDate = dayNumberToLocalDate(expectedPeriodDay);
   
-  const nextPeriodDate = new Date(cycleInfo.nextPeriodDate);
-  nextPeriodDate.setHours(0, 0, 0, 0);
-  
-  // Calculate days until next period
-  const daysUntilPeriod = Math.ceil(
-    (nextPeriodDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  // Calculate days until the expected period (negative once it's late and no new period was logged)
+  const daysUntilPeriod = expectedPeriodDay - localDayNumber();
   
   // Calculate days overdue (if current cycle is longer than expected)
   const daysOverdue = Math.max(0, daysUntilPeriod * -1);
@@ -60,7 +58,8 @@ export function createCycleReminderNotification(
       actionButton: {
         text: 'Mark Period Started',
         action: 'mark_period_started',
-        data: { date: check.nextPeriodDate.toISOString() }
+        // Calendar day (YYYY-MM-DD) of the expected period
+        data: { date: dayNumberToDateString(localDayNumber(check.nextPeriodDate)) }
       }
     };
   }
@@ -75,7 +74,7 @@ export function createCycleReminderNotification(
         text: 'Update Period Date',
         action: 'update_period_date',
         data: { 
-          suggestedDate: new Date().toISOString(),
+          suggestedDate: toLocalDateString(),
           originalCycleLength: cycleSettings.cycleLength,
           currentCycleLength: cycleSettings.cycleLength + check.daysOverdue
         }

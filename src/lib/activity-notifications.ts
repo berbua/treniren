@@ -19,17 +19,20 @@ export function checkActivityNotifications(workouts: Workout[]): ActivityNotific
   const recentTimeRange = statisticsService.getTimeRange('3months');
   const recentWorkouts = statisticsService.filterWorkoutsByTimeRange(workouts, recentTimeRange);
   
-  // Calculate mental session stats
-  const mentalStats = statisticsService.calculateMentalSessionStats(recentWorkouts);
-  
-  // Calculate falls stats
-  const fallsStats = statisticsService.calculateFallsStats(recentWorkouts);
+  // "Days since last" comes from all workouts, so it's correct even when the last session or fall
+  // was more than 3 months ago (it used to read Infinity, or the reminder stopped for good)
+  const mentalStats = statisticsService.calculateMentalSessionStats(workouts);
+  const fallsStats = statisticsService.calculateFallsStats(workouts);
+  // Falls reminders only make sense while actively climbing
+  const recentFallsStats = statisticsService.calculateFallsStats(recentWorkouts);
   
   // Check if we should remind about mental sessions (more than 7 days)
-  const shouldRemindMentalSession = mentalStats.daysSinceLastSession > 7 && mentalStats.totalSessions > 0;
+  const shouldRemindMentalSession = mentalStats.totalSessions > 0 && mentalStats.daysSinceLastSession > 7;
   
-  // Check if we should remind about falls (more than 30 days for climbing sessions)
-  const shouldRemindFalls = fallsStats.daysSinceLastFall > 30 && fallsStats.totalClimbingSessions > 0;
+  // Check if we should remind about falls (more than 30 days, while climbing in the last 3 months).
+  // No reminder if no fall was ever logged - there's no day count to show.
+  const shouldRemindFalls = Number.isFinite(fallsStats.daysSinceLastFall) && fallsStats.daysSinceLastFall > 30 &&
+    recentFallsStats.totalClimbingSessions > 0;
   
   return {
     shouldRemindMentalSession,
@@ -128,7 +131,7 @@ export function shouldProcessActivityNotifications(workouts: Workout[]): boolean
 /**
  * Schedule daily activity notification check
  */
-export function scheduleDailyActivityCheck(workouts: Workout[]): () => void {
+export function scheduleDailyActivityCheck(workouts: Workout[], reloadWorkouts?: () => Promise<Workout[]>): () => void {
   if (workouts.length === 0) {
     return () => {}; // Return empty cleanup function
   }
@@ -140,7 +143,10 @@ export function scheduleDailyActivityCheck(workouts: Workout[]): () => void {
   const checkInterval = setInterval(() => {
     const now = new Date();
     if (now.getHours() === 10 && now.getMinutes() < 5) {
-      processActivityNotifications(workouts);
+      // Reload so workouts logged since the page opened count (PWA left open for days)
+      (reloadWorkouts ? reloadWorkouts() : Promise.resolve(workouts))
+        .then(latest => processActivityNotifications(latest))
+        .catch(error => console.error('Failed to run activity check:', error));
     }
   }, 5 * 60 * 1000); // Check every 5 minutes
   

@@ -99,6 +99,10 @@ function getTimeRange(timeframe: TimeFrame): { start: Date; end: Date } {
       start.setMonth(start.getMonth() - 1)
   }
 
+  // Relative ranges include today: 1 week = the last 7 calendar days, not 8
+  if (timeframe !== 'all') {
+    start.setDate(start.getDate() + 1)
+  }
   start.setHours(0, 0, 0, 0)
   return { start, end }
 }

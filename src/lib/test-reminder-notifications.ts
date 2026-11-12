@@ -1,5 +1,6 @@
 // Test reminder notification logic
 import { FingerboardTestResult } from '@/types/workout';
+import { localDayNumber, storedDayNumber } from './date-utils';
 import { notificationService, NotificationMessage } from './notification-service';
 
 export interface TestReminderCheck {
@@ -47,13 +48,8 @@ export function checkTestReminder(
   const lastTest = sortedResults[0];
   const lastTestDate = new Date(lastTest.date);
   
-  // Calculate days since last test
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  lastTestDate.setHours(0, 0, 0, 0);
-  
-  const diffTime = today.getTime() - lastTestDate.getTime();
-  const daysSinceLastTest = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // Calendar days since last test (stored as UTC midnight; DST-safe)
+  const daysSinceLastTest = localDayNumber() - storedDayNumber(lastTest.date);
   
   // Convert reminder interval to days
   const reminderDays = intervalToDays(reminderInterval, reminderUnit);

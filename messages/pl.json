@@ -56,7 +56,8 @@
     "focusLevel": "Poziom skupienia:",
     "dayAfterTiredness": "Zmęczenie następnego dnia:",
     "nextPeriod": "Następna miesiączka:",
-    "nextOvulation": "Następna owulacja:"
+    "nextOvulation": "Następna owulacja:",
+    "saving": "Zapisywanie..."
   },
   "auth": {
     "signIn": "Zaloguj się",
@@ -165,7 +166,11 @@
     "enableInjuryPhaseNotification": "🔔 Włącz powiadomienie",
     "injuryPhaseNotificationEnabled": "Powiadomienie włączone! Otrzymasz przypomnienie dzień przed rozpoczęciem tej fazy.",
     "injuryPhaseNotificationError": "Nie udało się włączyć powiadomienia. Spróbuj ponownie.",
-    "injuryPhaseNotificationAlreadyEnabled": "✓ Powiadomienie już włączone"
+    "injuryPhaseNotificationAlreadyEnabled": "✓ Powiadomienie już włączone",
+    "logFirstWorkout": "Zapisz pierwszy trening",
+    "noData": "Brak statystyk",
+    "noDataDescription": "Zapisuj treningi, aby zobaczyć szczegółowe statystyki postępów, objętości i wyników w czasie.",
+    "daysRange": "Dni {{range}}"
   },
   "app": {
     "title": "Jednorożec wspin - trenuj z jednorożcowym flow",
@@ -175,15 +180,16 @@
   "training": {
     "types": {
       "gym": "Siłownia",
-      "bouldering": "Boulder", 
+      "bouldering": "Boulder",
       "circuits": "Obwody",
       "leadRock": "Prowadzenie - Skała",
       "leadArtificial": "Prowadzenie - Ścianka",
-      "mentalPractice": "Praktyka Mentalna"
+      "mentalPractice": "Praktyka Mentalna",
+      "fingerboard": "Chwytotablica"
     },
     "volumes": {
       "TR1": "TR1 - Bardzo lekko",
-      "TR2": "TR2 - Lekko", 
+      "TR2": "TR2 - Lekko",
       "TR3": "TR3 - Umiarkowanie",
       "TR4": "TR4 - Ciężko",
       "TR5": "TR5 - Bardzo ciężko"
@@ -191,36 +197,36 @@
     "descriptions": {
       "gym": "Trening siłowy",
       "bouldering": "Moc i technika",
-      "circuits": "Trening wytrzymałościowy", 
+      "circuits": "Trening wytrzymałościowy",
       "leadRock": "Wspinaczka na skałach",
       "leadArtificial": "Wspinaczka na ściance",
       "mentalPractice": "Mindfulness i trening mentalny"
     }
   },
-    "workouts": {
-      "title": "Zarządzaj Treningami",
-      "description": "Śledź swoje sesje treningowe i postępy",
-      "addNew": "Dodaj Nowy Trening",
-      "addChoiceDescription": "Co chciałabyś dodać?",
-      "addFirst": "Dodaj Swój Pierwszy Trening",
-      "editWorkout": "Edytuj Trening",
-      "workoutType": "Rodzaj Treningu",
-      "date": "Data",
-      "trainingVolume": "Intensywność Treningu",
-      "preSessionFeel": "Samopoczucie Przed (1-5)",
-      "dayAfterTiredness": "Zmęczenie Następnego Dnia (1-5)",
-      "focusLevel": "Poziom Skupienia (1-5)",
-      "notes": "Notatki",
-      "notesPlaceholder": "Dodaj notatki o swoim treningu...",
-      "sector": "Sektor",
-      "sectorPlaceholder": "Wprowadź sektor wspinaczkowy lub obszar...",
-      "mentalPracticeType": "Rodzaj Praktyki",
-      "mentalPracticeTypePlaceholder": "Wybierz rodzaj praktyki mentalnej...",
-      "mentalPracticeTypes": {
-        "meditation": "Medytacja",
-        "reflecting": "Refleksja",
-        "other": "Inne"
-      },
+  "workouts": {
+    "title": "Zarządzaj Treningami",
+    "description": "Śledź swoje sesje treningowe i postępy",
+    "addNew": "Dodaj Nowy Trening",
+    "addChoiceDescription": "Co chciałabyś dodać?",
+    "addFirst": "Dodaj Swój Pierwszy Trening",
+    "editWorkout": "Edytuj Trening",
+    "workoutType": "Rodzaj Treningu",
+    "date": "Data",
+    "trainingVolume": "Intensywność Treningu",
+    "preSessionFeel": "Samopoczucie Przed (1-5)",
+    "dayAfterTiredness": "Zmęczenie Następnego Dnia (1-5)",
+    "focusLevel": "Poziom Skupienia (1-5)",
+    "notes": "Notatki",
+    "notesPlaceholder": "Dodaj notatki o swoim treningu...",
+    "sector": "Sektor",
+    "sectorPlaceholder": "Wprowadź sektor wspinaczkowy lub obszar...",
+    "mentalPracticeType": "Rodzaj Praktyki",
+    "mentalPracticeTypePlaceholder": "Wybierz rodzaj praktyki mentalnej...",
+    "mentalPracticeTypes": {
+      "meditation": "Medytacja",
+      "reflecting": "Refleksja",
+      "other": "Inne"
+    },
     "noWorkouts": "Brak treningów",
     "noWorkoutsDescription": "Zacznij śledzić swoje treningi, dodając pierwszy trening",
     "loading": "Ładowanie treningów...",
@@ -455,7 +461,10 @@
       "reflecting": "Refleksja",
       "other": "Inne",
       "reps": "Powtórzenia",
-      "sets": "Serie"
+      "sets": "Serie",
+      "addHang": "Dodaj zwis",
+      "noExercisesDescription": "Dodaj ćwiczenia, aby śledzić serie, powtórzenia i ciężary. Kliknij „Dodaj ćwiczenie” powyżej, aby zacząć.",
+      "noHangsDescription": "Dodaj pojedyncze zwisy lub wczytaj zapisany protokół, aby szybko przygotować trening na chwytotablicy."
     },
     "ratingLabels": {
       "preSessionFeel": {
@@ -479,13 +488,40 @@
         "4": "Skupiona",
         "5": "Bardzo skupiona"
       }
-    }
+    },
+    "deleteWorkout": "Usuń trening",
+    "deleting": "Usuwanie...",
+    "climbNumber": "Droga {{number}}",
+    "fell": "Odpadnięcie",
+    "noFall": "Bez odpadnięcia",
+    "beforeClimbingLabels": {
+      "1": "Bardzo zdenerwowana",
+      "2": "Zdenerwowana",
+      "3": "Neutralnie",
+      "4": "Pewna siebie",
+      "5": "Bardzo pewna siebie"
+    },
+    "addFirstWorkout": "Dodaj pierwszy trening",
+    "eventDeleted": "Wydarzenie usunięte",
+    "useQuickLog": "lub użyj Szybkiego zapisu"
   },
   "exercises": {
     "title": "Biblioteka Ćwiczeń",
     "subtitle": "Zarządzaj swoją biblioteką ćwiczeń i śledź postępy",
     "addExercise": "Dodaj Ćwiczenie",
-    "addRoutine": "Dodaj Rutynę"
+    "addRoutine": "Dodaj Rutynę",
+    "addFirstExercise": "Dodaj pierwsze ćwiczenie",
+    "deleteConfirmTitle": "Usuń ćwiczenie",
+    "exercise": "ćwiczenie",
+    "exercises": "ćwiczenia",
+    "logWorkout": "Zapisz pierwszy trening",
+    "noExercises": "Brak ćwiczeń",
+    "noExercisesDescription": "Stwórz bibliotekę ćwiczeń, aby śledzić postępy. Dodaj ćwiczenia, których używasz na treningach, a pomożemy Ci monitorować przyrost siły.",
+    "noExercisesFound": "Nie znaleziono ćwiczeń",
+    "noExercisesFoundDescription": "Zmień wyszukiwanie lub filtry, aby znaleźć to, czego szukasz.",
+    "noWorkoutData": "Brak danych treningowych",
+    "noWorkoutDataDescription": "Zapisuj treningi z tym ćwiczeniem, aby zobaczyć swoją progresję. Śledź serie, powtórzenia i ciężary, aby zobaczyć przyrost siły.",
+    "orUseQuickAdd": "lub użyj Szybkiego dodawania powyżej dla popularnych ćwiczeń"
   },
   "fingerboard": {
     "title": "Protokoły Fingerboard",
@@ -508,7 +544,20 @@
     "updateError": "Nie udało się zaktualizować protokołu",
     "saveError": "Nie udało się zapisać protokołu",
     "hang": "wiszenie",
-    "hangs": "wiszeń"
+    "hangs": "wiszeń",
+    "noTestResults": "Brak wyników testów",
+    "noTestResultsDescription": "Wykonaj pierwszy test, aby zacząć śledzić postępy na chwytotablicy. Regularne testy pokazują poprawę i pomagają dostosować trening.",
+    "performTest": "Wykonaj pierwszy test",
+    "tip": "Wskazówka: twórz protokoły dla różnych faz treningowych",
+    "handTypes": {
+      "ONE_HAND": "Jedna ręka",
+      "BOTH_HANDS": "Obie ręce"
+    },
+    "gripTypes": {
+      "OPEN_HAND": "Chwyt otwarty",
+      "CRIMP": "Chwyt zamknięty (crimp)",
+      "SLOPER": "Oblak"
+    }
   },
   "routines": {
     "title": "Moje Rutyny",
@@ -588,7 +637,13 @@
     "legend": "Legenda",
     "cyclePhases": "Fazy Cyklu",
     "noWorkoutsToday": "Brak treningów dzisiaj",
-    "clickDateHint": "💡 Kliknij na dowolną datę, aby dodać trening, wydarzenie lub szybki wpis"
+    "clickDateHint": "💡 Kliknij na dowolną datę, aby dodać trening, wydarzenie lub szybki wpis",
+    "filterByTrainingType": "Filtruj według rodzaju treningu",
+    "filterByEventType": "Filtruj według rodzaju wydarzenia",
+    "filterAll": "Wszystkie",
+    "filterNone": "Żadne",
+    "noTrainingTypesSelected": "Nie wybrano rodzajów treningu. Wyświetlane są wszystkie treningi.",
+    "noEventTypesSelected": "Nie wybrano rodzajów wydarzeń. Wyświetlane są wszystkie wydarzenia."
   },
   "cycle": {
     "title": "Śledzić Cykl Miesiączkowy?",
@@ -601,7 +656,7 @@
     "saveSettings": "Zapisz Ustawienia Cyklu",
     "phases": {
       "menstrual": "Miesiączka",
-      "follicular": "Folikularna", 
+      "follicular": "Folikularna",
       "ovulation": "Owulacja",
       "earlyLuteal": "Wczesna Lutealna",
       "lateLuteal": "Późna Lutealna"
@@ -753,7 +808,7 @@
   "features": {
     "calendarSync": "Synchronizacja Kalendarza",
     "calendarSyncDesc": "Automatycznie synchronizuj treningi z Google Calendar",
-    "pwaReady": "Gotowe na PWA", 
+    "pwaReady": "Gotowe na PWA",
     "pwaReadyDesc": "Zainstaluj na iPhone i używaj offline",
     "trackProgress": "Śledź Postęp",
     "trackProgressDesc": "Monitoruj intensywność, nastrój i wzorce wydajności"
@@ -842,7 +897,11 @@
     "quickStats": "Szybkie statystyki",
     "viewYourProgress": "Zobacz swoje postępy treningowe i statystyki",
     "manageCycleSettings": "Zarządzaj ustawieniami cyklu menstruacyjnego",
-    "controlYourData": "Kontroluj swoje dane i ustawienia prywatności"
+    "controlYourData": "Kontroluj swoje dane i ustawienia prywatności",
+    "saved": "Profil zapisany",
+    "saveFailed": "Nie udało się zapisać profilu",
+    "enabled": "Włączone",
+    "disabled": "Wyłączone"
   },
   "landing": {
     "tagline": "Trenuj z jednorożcowym flow - Śledź swoją wspinaczkową podróż z precyzją i uważnością",
@@ -1083,7 +1142,16 @@
     },
     "trainingTypesTitle": "Rodzaje Treningów do Śledzenia",
     "eventTypesTitle": "Rodzaje Wydarzeń do Śledzenia",
-    "tip": "💡 Wskazówka: Śledź zarówno swoje sesje treningowe, jak i ważne wydarzenia, aby zrozumieć wzorce w swojej wydajności i regeneracji."
+    "tip": "💡 Wskazówka: Śledź zarówno swoje sesje treningowe, jak i ważne wydarzenia, aby zrozumieć wzorce w swojej wydajności i regeneracji.",
+    "types": {
+      "injury": "Kontuzja",
+      "physio": "Fizjoterapia",
+      "competition": "Zawody",
+      "trip": "Wyjazd",
+      "other": "Inne"
+    },
+    "addFirstEvent": "Dodaj pierwsze wydarzenie",
+    "trackInjuries": "Zapisuj kontuzje, aby zobaczyć ich związek z cyklem"
   },
   "strongMind": {
     "title": "Silny Umysł",
@@ -1186,7 +1254,22 @@
     "improvements": "3 rzeczy do poprawy następnym razem",
     "noGratitudeEntries": "Brak wpisów wdzięczności w tym okresie.",
     "noImprovementsEntries": "Brak wpisów o poprawach w tym okresie.",
-    "noGratitudeWorkouts": "Brak treningów z wpisami wdzięczności. Dodaj wdzięczność do swoich treningów, aby zobaczyć je tutaj!"
+    "noGratitudeWorkouts": "Brak treningów z wpisami wdzięczności. Dodaj wdzięczność do swoich treningów, aby zobaczyć je tutaj!",
+    "addGratitude": "Dodaj wdzięczność do treningu",
+    "addImprovements": "Dodaj usprawnienia do treningu",
+    "noGratitude": "Brak wpisów wdzięczności",
+    "noGratitudeDescription": "Dodawaj notatki wdzięczności do treningów, aby zastanowić się, za co jesteś wdzięczna na swojej drodze treningowej.",
+    "noImprovements": "Brak notatek o usprawnieniach",
+    "noImprovementsDescription": "Zapisuj, co chcesz poprawić na treningach. Dodawaj notatki o usprawnieniach, aby widzieć postępy.",
+    "goalsProgress": "Postęp celów",
+    "progressHint": "Na ile ta sesja przybliżyła Cię do każdego celu? (1 = trochę, 3 = bardzo)",
+    "progressLevels": {
+      "1": "Mały postęp",
+      "2": "Dobry postęp",
+      "3": "Świetny postęp"
+    },
+    "achievedHint": "Stuknij puchar, jeśli w tej sesji zrobiłaś ten projekt.",
+    "markAchieved": "Zrobione w tej sesji"
   },
   "quickLog": {
     "title": "⚡ Szybki wpis",
@@ -1200,5 +1283,72 @@
       "saveFailed": "Nie udało się zapisać szybkiego wpisu",
       "saveError": "Błąd podczas zapisywania szybkiego wpisu"
     }
+  },
+  "pwaPrompt": {
+    "title": "Zainstaluj Unicorn Climb",
+    "description": "Zainstaluj aplikację na urządzeniu, aby mieć szybki dostęp i korzystać z niej offline.",
+    "install": "Zainstaluj",
+    "notNow": "Nie teraz",
+    "close": "Zamknij",
+    "iosIntro": "Aby zainstalować aplikację na iPhonie:",
+    "iosStep1": "1. Stuknij przycisk Udostępnij na pasku przeglądarki",
+    "iosStep2": "2. Przewiń w dół i stuknij „Do ekranu początkowego”",
+    "iosStep3": "3. Stuknij „Dodaj”, aby potwierdzić",
+    "gotIt": "Rozumiem!",
+    "maybeLater": "Może później",
+    "ok": "OK"
+  },
+  "fingerboardTesting": {
+    "title": "Protokoły testowe na chwytotablicy",
+    "subtitle": "Twórz protokoły testowe, aby śledzić postępy na chwytotablicy",
+    "loadingProtocols": "Ładowanie protokołów testowych...",
+    "loadingResults": "Ładowanie wyników testów...",
+    "createProtocol": "Utwórz protokół testowy",
+    "emptyTitle": "Brak protokołów testowych",
+    "emptyDescription": "Utwórz pierwszy protokół testowy, aby śledzić postępy",
+    "createFirstProtocol": "Utwórz pierwszy protokół testowy",
+    "testHangsCount": "Zwisy testowe: {{count}}",
+    "testResultsCount": "Wyniki testów: {{count}}",
+    "viewResults": "Zobacz wyniki",
+    "protocolNotFound": "Nie znaleziono protokołu",
+    "performTest": "Wykonaj test",
+    "filterByHang": "Filtruj według rodzaju zwisu",
+    "allHangs": "Wszystkie zwisy",
+    "testResults": "Wyniki testów",
+    "columns": {
+      "date": "Data",
+      "hangType": "Rodzaj zwisu",
+      "load": "Obciążenie (kg)",
+      "time": "Czas (s)",
+      "success": "Sukces",
+      "notes": "Notatki"
+    }
+  },
+  "offlineForm": {
+    "title": "Dodaj trening",
+    "titleOffline": "Dodaj trening (offline)",
+    "saveOffline": "Zapisz offline",
+    "savedOffline": "Trening zapisany na tym urządzeniu. Zostanie przesłany, gdy wrócisz online."
+  },
+  "protocolForm": {
+    "nameRequired": "Nazwa protokołu jest wymagana",
+    "editTitle": "Edytuj protokół",
+    "update": "Zaktualizuj protokół",
+    "saving": "Zapisywanie...",
+    "name": "Nazwa protokołu",
+    "description": "Opis (opcjonalnie)",
+    "addHang": "Dodaj zwis",
+    "editHang": "Edytuj zwis",
+    "remove": "Usuń",
+    "crimpSize": "Wielkość listwy (mm)",
+    "crimpSizeHint": "Opcjonalnie: podaj wielkość listwy dla chwytu otwartego",
+    "load": "Obciążenie (kg)",
+    "loadHint": "wartość ujemna oznacza odciążenie",
+    "time": "Czas (sekundy)",
+    "notes": "Notatki (opcjonalnie)"
+  },
+  "offlineSync": {
+    "uploaded": "Przesłano treningi zapisane offline: {{count}}",
+    "failed": "Nie udało się przesłać treningów zapisanych offline: {{count}}. Spróbujemy ponownie później."
   }
 }

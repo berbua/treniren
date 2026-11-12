@@ -1,6 +1,8 @@
 // Menstruation cycle calculation utilities
 // Based on the cycle information from menstruation-cycle-info.md
 
+import { DAY_MS, localDayNumber, storedDayNumber } from './date-utils'
+
 export type CyclePhase = 'menstrual' | 'follicular' | 'ovulation' | 'early-luteal' | 'late-luteal'
 
 export interface CycleInfo {
@@ -22,170 +24,128 @@ export interface CycleSettings {
 // Default cycle length from the app planning document
 const DEFAULT_CYCLE_LENGTH = 28
 
+// The luteal phase is fairly constant (~14 days), so ovulation sits about 14 days before the next period.
+// For the default 28-day cycle this gives the original ranges: 1-7, 8-12, 13-16, 17-20, 21-28.
+const LUTEAL_LENGTH = 14
+
+interface PhaseRange {
+  phase: CyclePhase
+  start: number
+  end: number
+}
+
 /**
- * Calculate cycle information for a specific date based on last period date and cycle length
+ * Phase day ranges for a cycle length. Phases can be empty in very short cycles
+ * (e.g. no separate follicular days in a 21-day cycle).
  */
-export function calculateCycleInfo(settings: CycleSettings, targetDate?: Date): CycleInfo {
-  const { cycleLength, lastPeriodDate } = settings
-  const date = targetDate || new Date()
-  
-  // Calculate days since last period
-  const daysSinceLastPeriod = Math.floor(
-    (date.getTime() - lastPeriodDate.getTime()) / (1000 * 60 * 60 * 24)
-  )
-  
-  // Calculate current cycle day (1-based)
-  // Handle negative days (date before last period) by using proper modulo
-  // This ensures the result is always in range 1-cycleLength
+export function getPhaseRanges(cycleLength: number = DEFAULT_CYCLE_LENGTH): PhaseRange[] {
+  const ovulationDay = Math.max(cycleLength - LUTEAL_LENGTH, 2)
+  const ovulationStart = ovulationDay - 1
+  const ovulationEnd = Math.min(ovulationDay + 2, cycleLength)
+  const menstrualEnd = Math.min(7, ovulationStart - 1)
+  const earlyLutealEnd = Math.min(ovulationEnd + 4, cycleLength)
+
+  return [
+    { phase: 'menstrual', start: 1, end: menstrualEnd },
+    { phase: 'follicular', start: menstrualEnd + 1, end: ovulationStart - 1 },
+    { phase: 'ovulation', start: ovulationStart, end: ovulationEnd },
+    { phase: 'early-luteal', start: ovulationEnd + 1, end: earlyLutealEnd },
+    { phase: 'late-luteal', start: earlyLutealEnd + 1, end: cycleLength },
+  ]
+}
+
+/**
+ * Calculate cycle information for a day.
+ *
+ * `targetDate`: a local Date (default: now) is taken as that local calendar day; a string
+ * ('YYYY-MM-DD' or a stored ISO date) is taken as the stored calendar day.
+ */
+export function calculateCycleInfo(settings: CycleSettings, targetDate?: Date | string): CycleInfo {
+  const cycleLength = settings.cycleLength > 0 ? settings.cycleLength : DEFAULT_CYCLE_LENGTH
+
+  // lastPeriodDate is stored as UTC midnight. Rounding to the nearest midnight also handles older values
+  // that were saved as local midnight (22:00/23:00 UTC the previous day).
+  const lastPeriodDay = Math.round(new Date(settings.lastPeriodDate).getTime() / DAY_MS)
+  const targetDay = typeof targetDate === 'string' ? storedDayNumber(targetDate) : localDayNumber(targetDate ?? new Date())
+
+  const daysSinceLastPeriod = targetDay - lastPeriodDay
+
+  // Current cycle day (1-based), also correct for dates before the last period
   const currentDay = ((daysSinceLastPeriod % cycleLength) + cycleLength) % cycleLength + 1
-  
-  // Calculate next period date
-  const nextPeriodDate = new Date(lastPeriodDate)
-  nextPeriodDate.setDate(nextPeriodDate.getDate() + cycleLength)
-  
-  // Calculate next ovulation date (approximately day 14)
-  const nextOvulationDate = new Date(lastPeriodDate)
-  nextOvulationDate.setDate(nextOvulationDate.getDate() + 14)
-  
-  // Determine current phase and get recommendations
-  const phaseInfo = getPhaseInfo(currentDay)
-  
+
+  // Start of the cycle the target day is in, so predictions always point to the upcoming period/ovulation
+  const cycleStartDay = targetDay - (currentDay - 1)
+  const ovulationDay = Math.max(cycleLength - LUTEAL_LENGTH, 2)
+  const nextPeriodDate = toLocalMidnight(cycleStartDay + cycleLength)
+  const nextOvulationDay = currentDay <= ovulationDay
+    ? cycleStartDay + ovulationDay - 1
+    : cycleStartDay + cycleLength + ovulationDay - 1
+  const nextOvulationDate = toLocalMidnight(nextOvulationDay)
+
+  const phaseInfo = getPhaseInfo(currentDay, cycleLength)
+
   return {
     currentDay,
     phase: phaseInfo.phase,
     phaseDescription: phaseInfo.description,
     nextPeriodDate,
     nextOvulationDate,
-    isInFertileWindow: currentDay >= 10 && currentDay <= 16,
+    // Fertile window: ~4 days before ovulation through 2 days after
+    isInFertileWindow: currentDay >= ovulationDay - 4 && currentDay <= ovulationDay + 2,
     trainingRecommendations: phaseInfo.recommendations,
   }
+}
+
+// Local midnight of a day number, so toLocaleDateString() shows that calendar day
+function toLocalMidnight(dayNumber: number): Date {
+  const utc = new Date(dayNumber * DAY_MS)
+  return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate())
+}
+
+const PHASE_DESCRIPTIONS: Record<CyclePhase, string> = {
+  'menstrual': 'menstrual',
+  'follicular': 'follicular',
+  'ovulation': 'ovulation',
+  'early-luteal': 'earlyLuteal',
+  'late-luteal': 'lateLuteal',
 }
 
 /**
  * Get phase information based on cycle day
  */
-function getPhaseInfo(cycleDay: number) {
-  // Menstrual Phase (Days 1-7)
-  if (cycleDay >= 1 && cycleDay <= 7) {
-    return {
-      phase: 'menstrual' as CyclePhase,
-      description: 'menstrual',
-      recommendations: [
-        'cycle.recommendations.menstrual.1',
-        'cycle.recommendations.menstrual.2',
-        'cycle.recommendations.menstrual.3',
-        'cycle.recommendations.menstrual.4',
-        'cycle.recommendations.menstrual.5'
-      ]
-    }
-  }
-  
-  // Follicular Phase (Days 8-12)
-  if (cycleDay >= 8 && cycleDay <= 12) {
-    return {
-      phase: 'follicular' as CyclePhase,
-      description: 'follicular',
-      recommendations: [
-        'cycle.recommendations.follicular.1',
-        'cycle.recommendations.follicular.2',
-        'cycle.recommendations.follicular.3',
-        'cycle.recommendations.follicular.4',
-        'cycle.recommendations.follicular.5'
-      ]
-    }
-  }
-  
-  // Ovulation (Days 13-16)
-  if (cycleDay >= 13 && cycleDay <= 16) {
-    return {
-      phase: 'ovulation' as CyclePhase,
-      description: 'ovulation',
-      recommendations: [
-        'cycle.recommendations.ovulation.1',
-        'cycle.recommendations.ovulation.2',
-        'cycle.recommendations.ovulation.3',
-        'cycle.recommendations.ovulation.4',
-        'cycle.recommendations.ovulation.5'
-      ]
-    }
-  }
-  
-  // Early Luteal Phase (Days 17-20)
-  if (cycleDay >= 17 && cycleDay <= 20) {
-    return {
-      phase: 'early-luteal' as CyclePhase,
-      description: 'earlyLuteal',
-      recommendations: [
-        'cycle.recommendations.earlyLuteal.1',
-        'cycle.recommendations.earlyLuteal.2',
-        'cycle.recommendations.earlyLuteal.3',
-        'cycle.recommendations.earlyLuteal.4',
-        'cycle.recommendations.earlyLuteal.5'
-      ]
-    }
-  }
-  
-  // Late Luteal Phase/PMS (Days 21-28)
+function getPhaseInfo(cycleDay: number, cycleLength: number = DEFAULT_CYCLE_LENGTH) {
+  const range = getPhaseRanges(cycleLength).find(r => cycleDay >= r.start && cycleDay <= r.end)
+  const phase = range?.phase ?? 'late-luteal'
+  const description = PHASE_DESCRIPTIONS[phase]
   return {
-    phase: 'late-luteal' as CyclePhase,
-    description: 'lateLuteal',
-    recommendations: [
-      'cycle.recommendations.lateLuteal.1',
-      'cycle.recommendations.lateLuteal.2',
-      'cycle.recommendations.lateLuteal.3',
-      'cycle.recommendations.lateLuteal.4',
-      'cycle.recommendations.lateLuteal.5'
-    ]
+    phase,
+    description,
+    recommendations: [1, 2, 3, 4, 5].map(n => `cycle.recommendations.${description}.${n}`),
   }
 }
 
 /**
  * Get the first day of a cycle phase
  */
-export function getPhaseStartDay(phase: CyclePhase): number {
-  switch (phase) {
-    case 'menstrual':
-      return 1
-    case 'follicular':
-      return 8
-    case 'ovulation':
-      return 13
-    case 'early-luteal':
-      return 17
-    case 'late-luteal':
-      return 21
-    default:
-      return 1
-  }
+export function getPhaseStartDay(phase: CyclePhase, cycleLength: number = DEFAULT_CYCLE_LENGTH): number {
+  return getPhaseRanges(cycleLength).find(r => r.phase === phase)?.start ?? 1
 }
 
 /**
  * Get the last day of a cycle phase
  */
-export function getPhaseEndDay(phase: CyclePhase, cycleLength: number = 28): number {
-  switch (phase) {
-    case 'menstrual':
-      return 7
-    case 'follicular':
-      return 12
-    case 'ovulation':
-      return 16
-    case 'early-luteal':
-      return 20
-    case 'late-luteal':
-      return cycleLength // Late luteal goes to the end of the cycle
-    default:
-      return 7
-  }
+export function getPhaseEndDay(phase: CyclePhase, cycleLength: number = DEFAULT_CYCLE_LENGTH): number {
+  return getPhaseRanges(cycleLength).find(r => r.phase === phase)?.end ?? cycleLength
 }
 
 /**
  * Get phase day range as string (e.g., "1-7", "17-20")
  */
 export function getPhaseDayRange(phase: CyclePhase, cycleLength: number = 28): string {
-  const start = getPhaseStartDay(phase)
+  const start = getPhaseStartDay(phase, cycleLength)
   const end = getPhaseEndDay(phase, cycleLength)
-  return `${start}-${end}`
+  // A phase can be empty in very short cycles
+  return start > end ? '–' : start === end ? `${start}` : `${start}-${end}`
 }
 
 /**

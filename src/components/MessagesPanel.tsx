@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { notificationService, NotificationMessage } from '@/lib/notification-service';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { toLocalDateString } from '@/lib/date-utils';
 import { useCycle } from '@/contexts/CycleContext';
 
 interface MessagesPanelProps {
@@ -15,7 +16,7 @@ interface MessagesPanelProps {
 export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelProps) => {
   const { t } = useLanguage();
   const router = useRouter();
-  const { setCycleSettings } = useCycle();
+  const { cycleSettings, setCycleSettings } = useCycle();
   const [messages, setMessages] = useState<NotificationMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -43,7 +44,8 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
         case 'mark_period_started':
           if (data && typeof data === 'object' && 'date' in data) {
             const newSettings = {
-              cycleLength: 28, // Default cycle length
+              // Keep the user's cycle length
+              cycleLength: cycleSettings?.cycleLength || 28,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               lastPeriodDate: new Date((data as any).date),
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -58,8 +60,8 @@ export const MessagesPanel = ({ isOpen, onClose, onActionClick }: MessagesPanelP
             const newSettings = {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               cycleLength: (data as any).currentCycleLength || 28,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              lastPeriodDate: new Date((data as any).suggestedDate),
+              // The period started by now: use the day the button is clicked, not when the reminder was created
+              lastPeriodDate: new Date(toLocalDateString()),
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
             };
             await setCycleSettings(newSettings);

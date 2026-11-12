@@ -471,7 +471,7 @@ export const StatisticsContent = () => {
                             {statsData.injuryCycle.daysSinceLastInjury}
                           </div>
                           <div className="text-sm text-uc-text-muted">
-                            Dni Od Ostatniej
+                            {t('stats.daysSinceLast')}
                           </div>
                         </div>
                         <div className="text-center">
@@ -513,10 +513,10 @@ export const StatisticsContent = () => {
                             {statsData.injuryCycle.injuriesByPhase.menstrual}
                           </div>
                           <div className="text-sm font-medium text-uc-text-light mb-1">
-                            Miesiączka
+                            {t('cycle.phases.menstrual')}
                           </div>
                           <div className="text-xs text-uc-text-muted">
-                            Dni 1-7
+                            {t('stats.daysRange', { range: getPhaseDayRange('menstrual', cycleSettings?.cycleLength || 28) })}
                           </div>
                         </div>
                         <div className="text-center p-4 bg-green-500/20 rounded-xl border-2 border-green-500/30 hover:bg-green-500/30 transition-colors">
@@ -524,10 +524,10 @@ export const StatisticsContent = () => {
                             {statsData.injuryCycle.injuriesByPhase.follicular}
                           </div>
                           <div className="text-sm font-medium text-uc-text-light mb-1">
-                            Folikularna
+                            {t('cycle.phases.follicular')}
                           </div>
                           <div className="text-xs text-uc-text-muted">
-                            Dni 8-12
+                            {t('stats.daysRange', { range: getPhaseDayRange('follicular', cycleSettings?.cycleLength || 28) })}
                           </div>
                         </div>
                         <div className="text-center p-4 bg-yellow-500/20 rounded-xl border-2 border-yellow-500/30 hover:bg-yellow-500/30 transition-colors">
@@ -535,10 +535,10 @@ export const StatisticsContent = () => {
                             {statsData.injuryCycle.injuriesByPhase.ovulation}
                           </div>
                           <div className="text-sm font-medium text-uc-text-light mb-1">
-                            Owulacja
+                            {t('cycle.phases.ovulation')}
                           </div>
                           <div className="text-xs text-uc-text-muted">
-                            Dni 13-16
+                            {t('stats.daysRange', { range: getPhaseDayRange('ovulation', cycleSettings?.cycleLength || 28) })}
                           </div>
                         </div>
                         <div className="text-center p-4 bg-blue-500/20 rounded-xl border-2 border-blue-500/30 hover:bg-blue-500/30 transition-colors">
@@ -546,10 +546,10 @@ export const StatisticsContent = () => {
                             {statsData.injuryCycle.injuriesByPhase.earlyLuteal}
                           </div>
                           <div className="text-sm font-medium text-uc-text-light mb-1">
-                            Wczesna Lutealna
+                            {t('cycle.phases.earlyLuteal')}
                           </div>
                           <div className="text-xs text-uc-text-muted">
-                            Dni 17-20
+                            {t('stats.daysRange', { range: getPhaseDayRange('early-luteal', cycleSettings?.cycleLength || 28) })}
                           </div>
                         </div>
                         <div className="text-center p-4 bg-purple-500/20 rounded-xl border-2 border-purple-500/30 hover:bg-purple-500/30 transition-colors">
@@ -557,10 +557,10 @@ export const StatisticsContent = () => {
                             {statsData.injuryCycle.injuriesByPhase.lateLuteal}
                           </div>
                           <div className="text-sm font-medium text-uc-text-light mb-1">
-                            Późna Lutealna
+                            {t('cycle.phases.lateLuteal')}
                           </div>
                           <div className="text-xs text-uc-text-muted">
-                            Dni 21-28
+                            {t('stats.daysRange', { range: getPhaseDayRange('late-luteal', cycleSettings?.cycleLength || 28) })}
                           </div>
                         </div>
                       </div>
@@ -603,7 +603,7 @@ export const StatisticsContent = () => {
                                       throw new Error('No phase with most injuries found');
                                     }
                                     const phase = getPhaseDisplayName(statsData.injuryCycle.phaseWithMostInjuries);
-                                    const phaseStartDay = getPhaseStartDay(phase);
+                                    const phaseStartDay = getPhaseStartDay(phase, cycleSettings?.cycleLength || 28);
                                     
                                     // Save notification preference
                                     const currentSettings = notificationSettings || {};
