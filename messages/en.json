@@ -1191,7 +1191,12 @@
       "other": "Other"
     },
     "addFirstEvent": "Add Your First Event",
-    "trackInjuries": "Track injuries to see patterns with your cycle"
+    "trackInjuries": "Track injuries to see patterns with your cycle",
+    "subtitle": "Track injuries, physio visits, competitions, and other events",
+    "severity": "Severity",
+    "dates": "Dates",
+    "countdown": "Countdown",
+    "notes": "Notes"
   },
   "strongMind": {
     "title": "Strong Mind",

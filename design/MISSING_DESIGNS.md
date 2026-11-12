@@ -181,6 +181,24 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
     instead of the mock's separate empty-state card. Delete uses the app's confirmation dialog (was `confirm()`).
   - Page subtitle and the per-section descriptions are kept; icons are the existing emoji.
 
+### Events
+- Built 2026-11-12 against `Events.png`. Kept where the mock differs:
+  - **Trip countdown "23 days"** — the card shows "Countdown · Enabled" (as before); the days-to-go number lives on the
+    dashboard. Showing it on the card too is the user's call.
+  - **"Delete event" inside the edit form** and the trip-specific delete text ("Delete “Frankenjura”? … Keep") don't
+    exist; delete stays on the card with the existing "Delete Event" confirmation.
+  - Trip card title stays the saved title ("Frankenjura Trip"); the destination is printed separately only when the
+    title doesn't contain it. Trip type tile reads "Sport Climbing" / "Bouldering" (mock: "Sport").
+  - Severity shows 5 dots (the app's 1–5 scale; mock shows 3). Severity and status are only shown when set — the form
+    has no fields for them (it never had).
+  - Event type tiles use the existing emoji (🤕 🏥 🏆 ✈️ 📅) and the translated `events.types.*` names ("Physio", not
+    "Physio Visit"); 3 per row as in the mock.
+  - Cycle-day hint keeps the app's text ("Based on cycle calculation (28 days), this is cycle day 22. If you use…"),
+    not "Calculated from your cycle: day 22 (late luteal)…"; ℹ️ tooltips and the "Manually set" note are kept.
+  - Countdown checkbox row keeps its description line; the old quoted preview ("days to go destination: XX days") was dropped.
+  - Description is the last field for every type (it sat above the trip fields).
+  - Page subtitle and the empty state's longer description are kept.
+
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event

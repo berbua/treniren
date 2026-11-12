@@ -63,7 +63,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Cycle — `Cycle.png`, `Cycle — disabled, period form.png`
 - [x] Statistics — `Statistics.png`
 - [x] Strong Mind — `Strong Mind.png`
-- [ ] Events — `Events.png`
+- [x] Events — `Events.png`
 - [ ] Exercises — `Exercises.png`
 - [ ] Routines — `Routines.png`
 - [ ] Fingerboard protocols & testing — `Fingerboard protocols & testing.png`
@@ -221,3 +221,14 @@ note the answer.
   Statistics: timeframe `Select`, Mental practice and Falls cards with 2×2 tiles. Same localStorage data and handlers.
   New keys `strongMind.linkedTo`, `unknownGoal`, `deleteGoalTitle`, `noProgressYet`, `notAchievedYet`, `classifiedAs`.
   Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Events done. New `ui/EventType` (`EVENT_TYPE_META`, `eventTypeMeta`, `EventIconTile`: emoji,
+  border/text/tint classes per event type; the calendar now uses it instead of its own list). `/events`: 28px title +
+  subtitle (new key `events.subtitle`, was hard-coded), accent "+ Add", `SkeletonRows` while loading, dashed `EmptyState`
+  with accent CTA, card grid 1/2/3 columns. `EventCard` (also on /workouts): outlined icon tile, type overline in the
+  event colour, title, 44px ✏️ 🗑️; injury = date chip, status chip (warning), cycle-day chip with the same inline edit
+  (44px input/✓/✕), severity dots; trip = Dates (localized range) / Climbing type / Countdown (success) tiles; others =
+  "Thu 5 Nov · 17:30  📍 location"; tag chips, description, notes. Hard-coded English labels/dates replaced (new keys
+  `events.severity`, `dates`, `countdown`, `notes`). `EventForm` (also on /workouts and /calendar) is a `BottomSheet`
+  (`dismissible={false}`): 3-column type tiles tinted in the event colour, `Input`/`Textarea`, cycle day input with the
+  hint beside it, trip dates side by side, climbing type `SegmentedControl`, countdown checkbox row, `FieldError`s,
+  Cancel + accent Save (spinner). Same fields, validation and payload. Not checked logged-in in a browser.

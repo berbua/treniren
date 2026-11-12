@@ -26,6 +26,8 @@ import {
   Card,
   Chip,
   ChoiceChip,
+  EVENT_TYPE_META,
+  eventTypeMeta,
   Overline,
   PhaseBadge,
   phaseBandBg,
@@ -50,16 +52,9 @@ const WORKOUT_TYPES: { type: WorkoutType; key: string; emoji: string }[] = [
 
 const workoutMeta = (type: WorkoutType) => WORKOUT_TYPES.find(w => w.type === type)
 
-// Full class strings so Tailwind can see them. Outlined badge in the event colour (DESIGN.md "Event markers").
-const EVENT_TYPES: { type: EventType; key: string; emoji: string; border: string }[] = [
-  { type: 'INJURY', key: 'injury', emoji: '🤕', border: 'border-uc-error' },
-  { type: 'PHYSIO', key: 'physio', emoji: '🏥', border: 'border-uc-primary' },
-  { type: 'COMPETITION', key: 'competition', emoji: '🏆', border: 'border-uc-accent-text' },
-  { type: 'TRIP', key: 'trip', emoji: '✈️', border: 'border-uc-success' },
-  { type: 'OTHER', key: 'other', emoji: '📅', border: 'border-uc-text-muted' },
-]
-
-const eventMeta = (type: EventType) => EVENT_TYPES.find(e => e.type === type) ?? EVENT_TYPES[4]
+// Outlined badge in the event colour (DESIGN.md "Event markers")
+const EVENT_TYPES = (Object.keys(EVENT_TYPE_META) as EventType[]).map(type => ({ type, ...EVENT_TYPE_META[type] }))
+const eventMeta = eventTypeMeta
 
 const PHASES: CyclePhase[] = ['menstrual', 'follicular', 'ovulation', 'early-luteal', 'late-luteal']
 

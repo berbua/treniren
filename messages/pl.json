@@ -1191,7 +1191,12 @@
       "other": "Inne"
     },
     "addFirstEvent": "Dodaj pierwsze wydarzenie",
-    "trackInjuries": "Zapisuj kontuzje, aby zobaczyć ich związek z cyklem"
+    "trackInjuries": "Zapisuj kontuzje, aby zobaczyć ich związek z cyklem",
+    "subtitle": "Śledź kontuzje, wizyty u fizjoterapeuty, zawody i inne wydarzenia",
+    "severity": "Nasilenie",
+    "dates": "Daty",
+    "countdown": "Odliczanie",
+    "notes": "Notatki"
   },
   "strongMind": {
     "title": "Silny Umysł",
