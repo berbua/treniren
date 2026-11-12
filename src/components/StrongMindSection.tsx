@@ -102,9 +102,20 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
             {(mentalState.climbSections || []).map((section, index) => (
               <div key={section.id} className="bg-uc-elevated rounded-uc-card p-4 border border-uc-border space-y-4">
                 <div className="flex items-center justify-between gap-3">
-                  <h4 className="text-base font-bold">
-                    {t('workouts.climbNumber', { number: index + 1 })}
-                  </h4>
+                  {/* Climb name: empty shows (and is saved as) "Climb N" */}
+                  <label className="group flex min-h-11 min-w-0 flex-1 items-center gap-1.5 rounded-uc-input focus-within:ring-2 focus-within:ring-uc-primary">
+                    <input
+                      type="text"
+                      value={section.name || ''}
+                      onChange={(e) => updateClimbSection(section.id, { name: e.target.value })}
+                      onBlur={(e) => updateClimbSection(section.id, { name: e.target.value.trim() || undefined })}
+                      placeholder={t('workouts.climbNumber', { number: index + 1 })}
+                      aria-label={t('workouts.climbName') || 'Climb name'}
+                      maxLength={100}
+                      className="min-w-0 flex-1 bg-transparent text-base font-bold text-uc-text placeholder:text-uc-text focus:outline-none"
+                    />
+                    <Icon name="edit" size={16} className="shrink-0 text-uc-text-muted group-hover:text-uc-text" />
+                  </label>
                   <button
                     type="button"
                     onClick={() => removeClimbSection(section.id)}
@@ -227,7 +238,7 @@ export const StrongMindSection = ({ mentalState, onChange, workoutType }: Strong
                   <span className="text-uc-text-muted">{t('workouts.climbs') || 'Climbs'}:</span>
                   {mentalState.climbSections.map((section, index) => (
                     <div key={section.id} className="ml-4 flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="text-uc-text-muted">{t('workouts.climbNumber', { number: index + 1 })}:</span>
+                      <span className="text-uc-text-muted">{section.name || t('workouts.climbNumber', { number: index + 1 })}:</span>
                       {section.focusState && (
                         <SummaryItem color={focusStateLabels[section.focusState].color}>
                           {t(`workouts.focusStates.${section.focusState}`) || focusStateLabels[section.focusState].label}

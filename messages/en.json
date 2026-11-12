@@ -279,6 +279,25 @@
     "notesPlaceholder": "Add any notes about your workout...",
     "sector": "Sector",
     "sectorPlaceholder": "Enter the climbing sector or area...",
+    "routeName": "Route name",
+    "routeNamePlaceholder": "e.g. Pochylec, 6c+",
+    "climbName": "Climb name",
+    "wallAngle": "Wall angle",
+    "wallAngles": {
+      "SLAB": "Slab",
+      "VERTICAL": "Vertical",
+      "SLIGHT_OVERHANG": "Slight overhang",
+      "STRONG_OVERHANG": "Steep overhang",
+      "OVERHANG": "Overhang",
+      "ROOF": "Roof",
+      "COMPSTYLE": "Comp style"
+    },
+    "climbStyle": "Style",
+    "climbStyles": {
+      "POWERFUL": "Powerful",
+      "TECHNICAL": "Technical",
+      "COMPSTYLE": "Comp style"
+    },
     "mentalPracticeType": "Practice Type",
     "mentalPracticeTypePlaceholder": "Select the type of mental practice...",
     "mentalPracticeTypes": {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag, TimeOfDay, Exercise, WorkoutExerciseData, FingerboardWorkoutHang, ProcessGoalProgress, ProjectGoalCompletion } from '@/types/workout';
+import { WorkoutType, TrainingVolume, WorkoutFormData, Workout, Tag, TimeOfDay, Exercise, WorkoutExerciseData, FingerboardWorkoutHang, ProcessGoalProgress, ProjectGoalCompletion, WallAngle, ClimbStyle, BOULDER_STYLES, wallAnglesFor } from '@/types/workout';
 import { useCycle } from '@/contexts/CycleContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { dayNumberToDateString, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils';
@@ -191,6 +191,7 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     }
   }, [initialData])
   
+  const climbDetails = (initialData?.details ?? {}) as { routeName?: string; wallAngle?: WallAngle; climbStyle?: ClimbStyle };
   const [formData, setFormData] = useState({
     type: initialData?.type || 'GYM',
     // When duplicating (defaultDate provided), use defaultDate instead of initialData date
@@ -211,6 +212,9 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     gratitude: initialData?.gratitude || '',
     improvements: initialData?.improvements || '',
     routineVariation: null as { routineName: string; variationName: string } | null,
+    routeName: climbDetails.routeName || '',
+    wallAngle: climbDetails.wallAngle || null,
+    climbStyle: climbDetails.climbStyle || null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -385,6 +389,17 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
     if (formData.type === 'GYM' && formData.routineVariation) {
       details = details || {}
       details.routineVariation = formData.routineVariation
+    }
+
+    // Route name (lead rock), wall angle (lead, bouldering) and style (bouldering); dropped when the type has none
+    const routeName = formData.type === 'LEAD_ROCK' ? formData.routeName.trim() : ''
+    const wallAngle = formData.wallAngle && wallAnglesFor(formData.type).includes(formData.wallAngle) ? formData.wallAngle : null
+    const climbStyle = formData.type === 'BOULDERING' ? formData.climbStyle : null
+    if (details || routeName || wallAngle || climbStyle) {
+      details = { ...(details || {}) }
+      if (routeName) details.routeName = routeName; else delete details.routeName
+      if (wallAngle) details.wallAngle = wallAngle; else delete details.wallAngle
+      if (climbStyle) details.climbStyle = climbStyle; else delete details.climbStyle
     }
 
     // Build mentalState with selected goals
@@ -775,6 +790,21 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             </div>
           )}
 
+          {/* Route name - Lead Rock (Sector stays below) */}
+          {formData.type === 'LEAD_ROCK' && (
+            <div>
+              <FieldHeading htmlFor="workout-route-name">{t('workouts.routeName') || 'Route name'}</FieldHeading>
+              <Input
+                id="workout-route-name"
+                type="text"
+                value={formData.routeName}
+                onChange={(e) => updateFormData('routeName', e.target.value)}
+                placeholder={t('workouts.routeNamePlaceholder') || 'e.g. Pochylec, 6c+'}
+                maxLength={200}
+              />
+            </div>
+          )}
+
           {/* Sector Field - For Lead Rock, Lead Wall, Bouldering, and Circuits */}
           {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING' || formData.type === 'CIRCUITS') && (
             <div>
@@ -791,6 +821,40 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
                 onChange={(e) => updateFormData('sector', e.target.value)}
                 placeholder={t('workouts.sectorPlaceholder') || 'Enter the climbing sector or area...'}
               />
+            </div>
+          )}
+
+          {/* Wall angle - Lead and Bouldering; style - Bouldering. Tap again to clear */}
+          {wallAnglesFor(formData.type).length > 0 && (
+            <div role="group" aria-labelledby="workout-wall-angle">
+              <FieldHeading id="workout-wall-angle">{t('workouts.wallAngle') || 'Wall angle'}</FieldHeading>
+              <div className="flex flex-wrap gap-2">
+                {wallAnglesFor(formData.type).map(angle => (
+                  <ChoiceChip
+                    key={angle}
+                    selected={formData.wallAngle === angle}
+                    onClick={() => updateFormData('wallAngle', formData.wallAngle === angle ? null : angle)}
+                  >
+                    {t(`workouts.wallAngles.${angle}`)}
+                  </ChoiceChip>
+                ))}
+              </div>
+            </div>
+          )}
+          {formData.type === 'BOULDERING' && (
+            <div role="group" aria-labelledby="workout-climb-style">
+              <FieldHeading id="workout-climb-style">{t('workouts.climbStyle') || 'Style'}</FieldHeading>
+              <div className="flex flex-wrap gap-2">
+                {BOULDER_STYLES.map(style => (
+                  <ChoiceChip
+                    key={style}
+                    selected={formData.climbStyle === style}
+                    onClick={() => updateFormData('climbStyle', formData.climbStyle === style ? null : style)}
+                  >
+                    {t(`workouts.climbStyles.${style}`)}
+                  </ChoiceChip>
+                ))}
+              </div>
             </div>
           )}
 

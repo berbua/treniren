@@ -115,6 +115,7 @@ function WorkoutRow({ workout, t, onEdit, onDuplicate }: WorkoutRowProps) {
     workout.type === 'GYM' && details?.routineVariation
       ? `${details.routineVariation.routineName} — ${details.routineVariation.variationName}`
       : null,
+    details?.routeName || null,
     workout.sector ? `${t('workouts.sector') || 'Sector'}: ${workout.sector}` : null,
     workout.notes || null,
   ].filter(Boolean)

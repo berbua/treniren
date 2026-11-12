@@ -279,6 +279,25 @@
     "notesPlaceholder": "Dodaj notatki o swoim treningu...",
     "sector": "Sektor",
     "sectorPlaceholder": "Wprowadź sektor wspinaczkowy lub obszar...",
+    "routeName": "Nazwa drogi",
+    "routeNamePlaceholder": "np. Pochylec, 6c+",
+    "climbName": "Nazwa wspinaczki",
+    "wallAngle": "Nachylenie ściany",
+    "wallAngles": {
+      "SLAB": "Płyta",
+      "VERTICAL": "Pion",
+      "SLIGHT_OVERHANG": "Lekkie przewieszenie",
+      "STRONG_OVERHANG": "Mocne przewieszenie",
+      "OVERHANG": "Przewieszenie",
+      "ROOF": "Dach",
+      "COMPSTYLE": "Styl zawodniczy"
+    },
+    "climbStyle": "Styl",
+    "climbStyles": {
+      "POWERFUL": "Siłowy",
+      "TECHNICAL": "Techniczny",
+      "COMPSTYLE": "Zawodniczy"
+    },
     "mentalPracticeType": "Rodzaj Praktyki",
     "mentalPracticeTypePlaceholder": "Wybierz rodzaj praktyki mentalnej...",
     "mentalPracticeTypes": {

@@ -142,7 +142,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
         </div>
       </div>
 
-      {(workout.trainingVolume || exercisesCount > 0 || details?.routineVariation || workout.sector || (isMental && (workout.mentalPracticeType || (workout.timeOfDay?.length ?? 0) > 0)) || tags.length > 0) && (
+      {(workout.trainingVolume || exercisesCount > 0 || details?.routineVariation || details?.routeName || details?.wallAngle || details?.climbStyle || workout.sector || (isMental && (workout.mentalPracticeType || (workout.timeOfDay?.length ?? 0) > 0)) || tags.length > 0) && (
         <div className="flex flex-wrap gap-1.5">
           {workout.trainingVolume && (
             <Chip title={t('workouts.trainingVolume')} className="uc-num">{workout.trainingVolume}</Chip>
@@ -156,8 +156,17 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
               {details.routineVariation.routineName} – {details.routineVariation.variationName}
             </Chip>
           )}
+          {details?.routeName && (
+            <Chip title={t('workouts.routeName')}>{details.routeName}</Chip>
+          )}
           {workout.sector && (
             <Chip>{t('workouts.sector')}: {workout.sector}</Chip>
+          )}
+          {details?.wallAngle && (
+            <Chip title={t('workouts.wallAngle')}>{t(`workouts.wallAngles.${details.wallAngle}`)}</Chip>
+          )}
+          {details?.climbStyle && (
+            <Chip title={t('workouts.climbStyle')}>{t(`workouts.climbStyles.${details.climbStyle}`)}</Chip>
           )}
           {isMental && workout.mentalPracticeType && (
             <Chip title={t('common.practiceType') || 'Practice type:'}>
@@ -212,7 +221,7 @@ export default function WorkoutCard({ workout, onEdit, onDelete, isDeleting = fa
                   <p className="sr-only">{t('workouts.climbs')}</p>
                   {mentalState.climbSections.map((section, index) => (
                     <p key={section.id} className="font-semibold text-uc-text">
-                      {t('workouts.climbNumber', { number: index + 1 })}:{' '}
+                      {section.name || t('workouts.climbNumber', { number: index + 1 })}:{' '}
                       {[
                         section.focusState && (
                           <span key="focus" className={`font-bold ${focusText[section.focusState] ?? ''}`}>

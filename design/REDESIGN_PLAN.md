@@ -424,3 +424,7 @@ note the answer.
 - 2026-11-12: Exercise detail 52 + 53. `quick-stats` returns `improving` (last 3 sessions' best set vs the 3 before,
   est. 1RM or max reps, used within 42 days) → Status "Improving" (`exercises.detail.statusImproving`). Progression
   footer: Start / Now / ±% for the selected metric from `dataPoints` (`start`, `now`, `repsUnit`), then Workouts · Sets.
+- 2026-11-12: Log workout 22 / 23 / 26 without a migration: `details.routeName` (Lead Rock), `details.wallAngle` +
+  `details.climbStyle` (option lists `wallAnglesFor` / `BOULDER_STYLES` in `types/workout.ts`), `ClimbSection.name`.
+  New keys `workouts.routeName / routeNamePlaceholder / climbName / wallAngle / wallAngles.* / climbStyle /
+  climbStyles.*`. Offline form unchanged (decision 15 pending).

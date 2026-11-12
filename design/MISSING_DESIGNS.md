@@ -52,8 +52,10 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 
 ### Log workout
 - **Bottom sheet** — fine as a visual, but the form is much longer than shown (see B).
-- **Route name field** — doesn't exist. Lead climbing has a **Sector** text field instead.
-- **Named route sections ("Crux — roof traverse") with edit pencil** — sections are unnamed: "Climb 1, Climb 2…".
+- **Route name field** (decision 22, built 2026-11-12): Lead Rock only, above Sector (both kept). Stored as
+  `details.routeName` (no DB column / migration). Shown as a chip on workout cards and first in the calendar row meta.
+- **Named climbs** (decision 23, built 2026-11-12): the climb heading is an inline text field with a pencil; empty shows
+  and keeps "Climb N" (`climbSections[].name`, empty → not stored). Used in the mental-state summary and workout cards.
 - **Time of day for lead climbing** — time of day exists **only for Mental practice**, and it's **multi-select**
   (Morning + Evening possible), not a single segment.
 - **Phase pill next to the date** — the app shows a collapsible **Cycle information** panel instead
@@ -61,7 +63,11 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
 - **"Save session" + one-line summary sticky footer** — built 2026-11-12 (decision 25): footer is a muted one-line
   summary ("Lead Wall · Wed 11 Nov · TR4 · 2 climbs"; N exercises / N hangs for gym / fingerboard) + accent "Save session"
   ("Update session" when editing). Cancel was dropped; the header ✕ cancels.
-- Wall angle (slab/overhang/roof…) and style (powerful/technical) — enums exist in the DB but **no UI** uses them; don't show.
+- **Wall angle / style** (decision 26, built 2026-11-12): choice chips after Sector, single select, tap again to clear.
+  Lead Wall / Lead Rock: Slab, Vertical, Slight overhang, Steep overhang (Prisma `Formation`); Bouldering: Slab,
+  Vertical, Overhang, Roof, Comp style (`BoulderType`) + Style: Powerful, Technical, Comp style (`BoulderFormation`).
+  The enums had no column, so values go in `details.wallAngle` / `details.climbStyle`; dropped on save when the type
+  doesn't use them. Card chips show them. Not in the mock; no stats use them yet.
 - Built 2026-11-12 against `Log workout — lead climbing (full form).png`. Kept where the mock differs:
   - No footer in the mock; the app keeps a sticky **Cancel + Save/Update** footer. Esc and scrim tap don't close
     this sheet (they never did; a stray tap would lose a long form).

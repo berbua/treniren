@@ -18,9 +18,9 @@ MISSING_DESIGNS.md, commit. Tick an item here when it's built.
 - [x] **39 Avg cycle / Avg period / Logged tiles** — computed from logged periods.
 
 ## Log workout
-- [ ] **22 Route name** field, keeping Sector (both, for rock climbing) — new DB field.
-- [ ] **23 Named climbs**: default "Climb 1, Climb 2…", editable name (stored in `mentalState.climbSections`).
-- [ ] **26 Wall angle / style**: UI for the enums that already exist in the DB.
+- [x] **22 Route name** field, keeping Sector (both, for rock climbing) — new DB field.
+- [x] **23 Named climbs**: default "Climb 1, Climb 2…", editable name (stored in `mentalState.climbSections`).
+- [x] **26 Wall angle / style**: UI for the enums that already exist in the DB.
 
 ## Calendar
 - [x] **33 Upcoming events list**.
