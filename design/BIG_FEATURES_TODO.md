@@ -4,10 +4,10 @@ Item numbers and decisions: `design/DESIGN_DECISIONS.md`; details per gap: `desi
 build log: `design/REDESIGN_PLAN.md`. Per change: `npx tsc --noEmit` + `npx next lint`, update the plan log and
 MISSING_DESIGNS.md, commit. Ask the user before starting each remaining item — each one needs a decision first.
 
-> **Before deploying:** apply both new migrations to the production database (`npx prisma migrate deploy`):
-> - `20261112_add_period_flow` (item 38) — Prisma selects the new `periods.flow` column, so the Cycle page can't load
->   or save periods without it.
-> - `20261112_add_deload_event_type` (Deload) — without it, saving a Deload event fails.
+> **Migrations applied to the production database on 2026-11-12:** `20261112_add_period_flow` (item 38) and
+> `20261112_add_deload_event_type` (Deload). The two older `20260109_*` migrations were already in the database
+> (created without migrate) and were marked as applied with `prisma migrate resolve`, so `migrate deploy` now works
+> normally. Note: Prisma CLI reads only `.env` (localhost placeholder) — pass the `DATABASE_URL` from `.env.production`.
 
 ## Still to build — waiting for a decision
 
