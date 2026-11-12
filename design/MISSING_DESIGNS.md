@@ -162,6 +162,25 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   hint text, gratitude section description.
 - Gratitude feed: the mock's heart / trend icons are the existing ✨ / 📈 until the custom SVGs land.
 
+### Strong Mind
+- Built 2026-11-12 against `Strong Mind.png`. Kept where the mock differs:
+  - **Goal progress dots on the card's meta line** — the app has no per-goal progress summary; each card keeps its
+    "Linked workouts (N)" list (date · type · 1–3 dots per workout). Project cards keep the full "🏆 Achieved! date"
+    history (one chip per workout) and still have edit/delete (the mock shows none on project cards).
+  - Process / Project goals were sub-tabs with inline forms; now both lists sit on the Goals tab (side by side on `lg`)
+    and the forms open in bottom sheets from "+ Add" / ✏️ (Esc/scrim don't close them). Form titles and button
+    labels keep the existing strings ("Add New Goal", "Add Goal") instead of "New process goal" / "Save goal".
+  - The form's "Timeframe: 6 weeks (starting from …)" preview line was dropped (same values are in the fields); the
+    long-term rule hint stays under the "Classified as" pill. Long-term pill is solid primary, short-term tonal.
+  - Grade system ("FRENCH") is no longer printed on project cards; the grade tile uses the Lead wall (route) /
+    Bouldering (boulder) workout colour as in the mock.
+  - Gratitude tab keeps two sections (gratitude, then improvements) with their headings and empty states with a CTA;
+    the mock pairs both notes of a workout in one 2-column grid and has a single "No entries yet" empty state.
+    Card meta is "date · workout type · 📍 sector" (mock: "date · sector").
+  - Statistics tab: the extra tiles show only when there are sessions / falls (as before), with a dashed note
+    instead of the mock's separate empty-state card. Delete uses the app's confirmation dialog (was `confirm()`).
+  - Page subtitle and the per-section descriptions are kept; icons are the existing emoji.
+
 ### Navigation
 - **Centre "+ Log" tab** — the app has no global log action. For now the accent "+" tab opens **Workouts**
   (where Add / Quick log live). A design for what "+" should open (e.g. the Quick log / Add workout / Add event

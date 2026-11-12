@@ -1309,7 +1309,13 @@
       "3": "Świetny postęp"
     },
     "achievedHint": "Stuknij puchar, jeśli w tej sesji zrobiłaś ten projekt.",
-    "markAchieved": "Zrobione w tej sesji"
+    "markAchieved": "Zrobione w tej sesji",
+    "linkedTo": "Powiązany z",
+    "unknownGoal": "Nieznany cel",
+    "deleteGoalTitle": "Usunąć cel?",
+    "noProgressYet": "Brak zapisanych postępów",
+    "notAchievedYet": "Jeszcze nie zdobyty",
+    "classifiedAs": "Klasyfikacja"
   },
   "quickLog": {
     "title": "⚡ Szybki wpis",

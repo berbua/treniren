@@ -1309,7 +1309,13 @@
       "3": "Great progress"
     },
     "achievedHint": "Tap the trophy if you sent this project in this session.",
-    "markAchieved": "Achieved in this session"
+    "markAchieved": "Achieved in this session",
+    "linkedTo": "Linked to",
+    "unknownGoal": "Unknown goal",
+    "deleteGoalTitle": "Delete goal?",
+    "noProgressYet": "No progress recorded yet",
+    "notAchievedYet": "Not achieved yet",
+    "classifiedAs": "Classified as"
   },
   "quickLog": {
     "title": "⚡ Quick Log",

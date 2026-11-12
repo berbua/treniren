@@ -62,7 +62,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Calendar — `Calendar — month.png`, `Calendar month — light.png`, `Calendar — week view & filters.png`
 - [x] Cycle — `Cycle.png`, `Cycle — disabled, period form.png`
 - [x] Statistics — `Statistics.png`
-- [ ] Strong Mind — `Strong Mind.png`
+- [x] Strong Mind — `Strong Mind.png`
 - [ ] Events — `Events.png`
 - [ ] Exercises — `Exercises.png`
 - [ ] Routines — `Routines.png`
@@ -210,3 +210,14 @@ note the answer.
   `stats.showFrequencyPer`, `stats.injuriesByPhase`, `stats.totalInjuries`, `stats.maxInPhase`, `stats.phasesAffected`,
   `stats.noRecentInjuries`, `stats.injuriesPerPhase`, `stats.improvementsShort`, `stats.short.*` (replace the hard-coded
   Polish strings). Not checked logged-in in a browser.
+- 2026-11-12: Step 3 · Strong Mind done. `/strong-mind`: 28px title, tabs as a 3-segment `SegmentedControl`. Goals: Process
+  and Project goals on one tab (sub-tabs removed; two columns on `lg`), tonal "+ Add", Long-term / Short-term overlines with
+  counts and dashed empty notes, goal `Card`s with 44px ✏️ 🗑️, project cards with a grade tile in the lead-wall / bouldering
+  colour. Forms moved to `BottomSheet`s (`dismissible={false}`; edit opens the same sheet): description `Textarea`,
+  duration + unit `Select`s, date `Input`, "Classified as" pill; project form with Route/Boulder segments, grade system +
+  grade, name, sector, linked goal. Delete via `ConfirmationDialog`. `GoalProgressDisplay` restyled: process = "Linked
+  workouts (N)" rows with 1–3 dots, project = success "🏆 Achieved! date" chips; type names translated, dates localized.
+  Gratitude: `ChoiceChip` filters, two sections of 2-column note cards (4 on `lg`), `EmptyState` + accent CTA.
+  Statistics: timeframe `Select`, Mental practice and Falls cards with 2×2 tiles. Same localStorage data and handlers.
+  New keys `strongMind.linkedTo`, `unknownGoal`, `deleteGoalTitle`, `noProgressYet`, `notAchievedYet`, `classifiedAs`.
+  Not checked logged-in in a browser.

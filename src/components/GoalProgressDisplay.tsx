@@ -19,8 +19,19 @@ interface GoalProgressDisplayProps {
   goalName: string;
 }
 
-export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgressDisplayProps) => {
-  const { t } = useLanguage();
+const typeLabelKey: Record<string, string> = {
+  GYM: 'gym',
+  BOULDERING: 'bouldering',
+  CIRCUITS: 'circuits',
+  LEAD_ROCK: 'leadRock',
+  LEAD_ARTIFICIAL: 'leadArtificial',
+  MENTAL_PRACTICE: 'mentalPractice',
+  FINGERBOARD: 'fingerboard',
+};
+
+export const GoalProgressDisplay = ({ goalId, goalType }: GoalProgressDisplayProps) => {
+  const { t, language } = useLanguage();
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB';
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -49,9 +60,7 @@ export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgress
 
   if (isLoading) {
     return (
-      <div className="mt-2 p-2 bg-uc-black/20 rounded-lg">
-        <div className="text-xs text-uc-text-muted">{t('common.loadingProgress') || 'Loading progress...'}</div>
-      </div>
+      <p className="mt-3 text-[13px] text-uc-text-muted">{t('common.loadingProgress') || 'Loading progress...'}</p>
     );
   }
 
@@ -66,16 +75,16 @@ export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgress
 
   if (relevantWorkouts.length === 0) {
     return (
-      <div className="mt-2 p-2 bg-uc-black/20 rounded-lg">
-        <div className="text-xs text-uc-text-muted">
-          {goalType === 'process' ? 'No progress recorded yet' : 'Not achieved yet'}
-        </div>
-      </div>
+      <p className="mt-3 text-[13px] text-uc-text-muted">
+        {goalType === 'process'
+          ? (t('strongMind.noProgressYet') || 'No progress recorded yet')
+          : (t('strongMind.notAchievedYet') || 'Not achieved yet')}
+      </p>
     );
   }
 
   // Sort workouts by date (newest first)
-  const sortedWorkouts = [...relevantWorkouts].sort((a, b) => 
+  const sortedWorkouts = [...relevantWorkouts].sort((a, b) =>
     new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
   );
 
@@ -92,70 +101,59 @@ export const GoalProgressDisplay = ({ goalId, goalType, goalName }: GoalProgress
     return emojiMap[type] || '💪';
   };
 
+  const typeLabel = (type: string) =>
+    typeLabelKey[type] ? t(`training.types.${typeLabelKey[type]}`) || type : type;
+  const formatDate = (value: string) =>
+    new Date(value).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+
+  if (goalType === 'project') {
+    return (
+      <div className="mt-3 flex flex-wrap gap-2">
+        {sortedWorkouts.map(workout => (
+          <span
+            key={workout.id}
+            className="inline-flex min-h-7 items-center gap-1.5 rounded-uc-chip bg-uc-success-bg px-2.5 text-[13px] font-bold text-uc-success"
+          >
+            <span aria-hidden>🏆</span>
+            {t('strongMind.achieved') || 'Achieved!'} <span className="uc-num">{formatDate(workout.startTime)}</span>
+            <span className="sr-only"> · {typeLabel(workout.type)}</span>
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-3 p-3 bg-uc-black/20 rounded-lg border border-uc-purple/20">
-      <div className="text-xs font-medium text-uc-text-light mb-3">
-        {goalType === 'process' 
-          ? (t('strongMind.linkedWorkouts') || 'Linked Workouts') 
-          : (t('strongMind.achievementHistory') || 'Achievement History')}
-        <span className="ml-2 text-uc-text-muted">({sortedWorkouts.length})</span>
-      </div>
-      <div className="space-y-2">
+    <div className="mt-3 border-t border-uc-border pt-3">
+      <p className="mb-1 text-[11px] font-bold uppercase leading-[14px] tracking-[0.08em] text-uc-text-muted">
+        {t('strongMind.linkedWorkouts') || 'Linked Workouts'} <span className="uc-num">({sortedWorkouts.length})</span>
+      </p>
+      <ul>
         {sortedWorkouts.map(workout => {
-          const date = new Date(workout.startTime);
-          const formattedDate = date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-          });
-          
-          if (goalType === 'process') {
-            const progress = workout.mentalState?.processGoals?.find(pg => pg.goalId === goalId)?.progress;
-            return (
-              <div key={workout.id} className="flex items-center justify-between p-2 bg-uc-black/30 rounded border border-uc-purple/10">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm">{getWorkoutTypeEmoji(workout.type)}</span>
-                  <div>
-                    <div className="text-xs font-medium text-uc-text-light">{formattedDate}</div>
-                    <div className="text-xs text-uc-text-muted">{workout.type}</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs text-uc-text-muted mr-2">{t('strongMind.progress') || 'Progress'}:</span>
-                  {[1, 2, 3].map(level => (
-                    <div
-                      key={level}
-                      className={`w-5 h-5 rounded-full border text-xs flex items-center justify-center font-medium ${
-                        progress && progress >= level
-                          ? 'border-purple-500 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-200'
-                          : 'border-slate-300 dark:border-slate-600 text-slate-400'
-                      }`}
-                    >
-                      {level}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          } else {
-            return (
-              <div key={workout.id} className="flex items-center justify-between p-2 bg-uc-black/30 rounded border border-yellow-500/20">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm">{getWorkoutTypeEmoji(workout.type)}</span>
-                  <div>
-                    <div className="text-xs font-medium text-uc-text-light">{formattedDate}</div>
-                    <div className="text-xs text-uc-text-muted">{workout.type}</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg">🏆</span>
-                  <span className="text-xs text-yellow-500 font-medium">{t('strongMind.achieved') || 'Achieved!'}</span>
-                </div>
-              </div>
-            );
-          }
+          const progress = workout.mentalState?.processGoals?.find(pg => pg.goalId === goalId)?.progress ?? 0;
+          return (
+            <li key={workout.id} className="flex items-center gap-2 py-1.5">
+              <span aria-hidden className="text-sm">{getWorkoutTypeEmoji(workout.type)}</span>
+              <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-uc-text">
+                <span className="uc-num">{formatDate(workout.startTime)}</span>
+                <span className="text-uc-text-muted"> · {typeLabel(workout.type)}</span>
+              </span>
+              <span
+                className="flex shrink-0 items-center gap-1"
+                role="img"
+                aria-label={`${t('strongMind.progress') || 'Progress'}: ${progress}/3`}
+              >
+                {[1, 2, 3].map(level => (
+                  <span
+                    key={level}
+                    className={`size-2.5 rounded-full border-[1.5px] border-uc-primary ${progress >= level ? 'bg-uc-primary' : ''}`}
+                  />
+                ))}
+              </span>
+            </li>
+          );
         })}
-      </div>
+      </ul>
     </div>
   );
 };
