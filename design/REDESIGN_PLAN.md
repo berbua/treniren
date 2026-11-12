@@ -58,7 +58,7 @@ Reference: `mockups/Component sheet I.png`, `mockups/Component sheet II — form
 - [x] Log workout (lead) — `Log workout — lead climbing (full form).png`
 - [x] Log workout (other types, tags, recurring, dialogs) —
       `Log workout — gym, fingerboard, mental, tags, recurring, dialogs.png`
-- [ ] Workouts list & goals — `Workouts list & goals.png`
+- [x] Workouts list & goals — `Workouts list & goals.png`
 - [ ] Calendar — `Calendar — month.png`, `Calendar month — light.png`, `Calendar — week view & filters.png`
 - [ ] Cycle — `Cycle.png`, `Cycle — disabled, period form.png`
 - [ ] Statistics — `Statistics.png`
@@ -98,6 +98,8 @@ note the answer.
 - [ ] **Crimp size**: keep the fixed 6–30 mm list, or allow any number (mock shows a free "mm" field)?
 - [ ] **Centre "+" tab**: today it opens Workouts. Should it open a Quick log / Add workout / Add event choice sheet?
 - [ ] **Tab labels**: keep Dashboard / Statistics or switch to the mock's Today / Stats?
+- [ ] **Workouts tab counts**: show the total from the API ("Workouts (214)") instead of the items on this page?
+- [ ] **Numbered pagination** ("1 2 … 11", "1–20 of 214"): add jump-to-page, or keep Previous / Next?
 - [ ] **Cycle — recent periods list with edit**: the API supports it but there's no UI. Build it in the Cycle step?
 
 ## Log
@@ -158,4 +160,13 @@ note the answer.
   tiles, Cancel + Create. Recurring: dates always side by side, frequency as segments. `ConfirmationDialog`: icon tile on
   top, equal-width buttons, new `emphasis="cancel"` prop (used by the incomplete-data dialog). `SegmentedControl` labels
   centre when they wrap. Mental practice, goals, gratitude, cycle were already done last step. Not checked logged-in
+  in a browser.
+- 2026-11-12: Step 3 · Workouts list & goals done. `/workouts`: header with ghost 🎯 Goals / ℹ️ Info (labels from `sm`)
+  + accent Add, info panel on `--uc-primary-container` (dot in workout/event colour, name, description, tip, ✕),
+  underline tabs, `EmptyState`s with accent CTA, ghost Previous/Next pagination (shared local `Pagination`), Add choice
+  as a `BottomSheet` with 3 tiles (Cancel dropped). `WorkoutCard` on `Card`: workout icon tile, Quick badge, 44px
+  edit/delete, chips, primary rating dots, one Strong Mind/gratitude block. `GoalsConfigurator` is a `BottomSheet`
+  (`dismissible={false}`, as before): overline labels, range + number inputs, monthly auto/manual `SegmentedControl`
+  (new keys `goals.auto`, `goals.manual`), per-type goals in a `CollapsibleCard`, preview on primary-container, Cancel +
+  accent Save footer. Same data, handlers and API calls. `EventCard` left for the Events step. Not checked logged-in
   in a browser.

@@ -1072,6 +1072,8 @@
     "monthlyGoal": "Cel miesięczny",
     "weeklyGoalDesc": "Cel: {{count}} treningi tygodniowo",
     "monthlyGoalDesc": "Cel: {{count}} treningi miesięcznie",
+    "auto": "Auto (× 4)",
+    "manual": "Ręcznie 1–40",
     "autoCalculateMonthly": "Automatycznie przelicz cel miesięczny",
     "autoCalculateMonthlyDesc": "Cel miesięczny = cel tygodniowy × 4 ({{count}} treningów)",
     "detailedGoals": "Cele szczegółowe (opcjonalne)",

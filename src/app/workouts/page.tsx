@@ -13,6 +13,7 @@ import { extractApiError, ValidationError } from '@/lib/errors'
 import AuthGuard from '@/components/AuthGuard'
 import { ConfirmationDialog } from '@/components/ConfirmationDialog'
 import { QuickLogData } from '@/components/QuickLogModal'
+import { BottomSheet, Button, EmptyState, SheetCloseButton, workoutBg, WorkoutTypeKey } from '@/components/ui'
 
 // Dynamically import components to avoid SSR issues
 const WorkoutCard = dynamic(() => import('@/components/WorkoutCard'), { ssr: false })
@@ -580,208 +581,147 @@ function WorkoutsPageContent() {
     return <LoadingSpinner message={t('workouts.loading')} fullScreen />
   }
 
+  const openAddChoice = () => {
+    setEditingWorkout(null)
+    setEditingEvent(null)
+    setShowAddChoice(true)
+  }
+
   return (
-    <div className="min-h-screen bg-uc-black">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-uc-text-light">
+    <div className="min-h-screen bg-uc-bg">
+      <div className="mx-auto max-w-[1120px] px-5 py-6 lg:px-8 lg:py-8">
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-extrabold leading-tight text-uc-text">
               {t('workouts.title')}
             </h1>
-            <p className="text-uc-text-muted mt-2">
+            <p className="mt-1 text-sm text-uc-text-muted">
               {t('workouts.description')}
             </p>
           </div>
-          <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-            <button
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              variant="ghost"
               onClick={() => setShowGoalsConfigurator(true)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-uc-dark-bg/50 hover:bg-uc-dark-bg transition-colors border border-uc-mustard/30"
               title={t('goals.title') || 'Training Goals'}
+              aria-label={t('goals.title') || 'Training Goals'}
+              className="min-w-11 px-3"
             >
-              <span className="text-lg">🎯</span>
-              <span className="text-sm font-medium text-uc-text-light hidden sm:inline">
-                {t('goals.button') || 'Cele'}
-              </span>
-            </button>
-            <button
+              <span aria-hidden className="text-lg leading-none">🎯</span>
+              <span className="hidden sm:inline">{t('goals.button') || 'Cele'}</span>
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setShowInfo(!showInfo)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-uc-dark-bg/50 hover:bg-uc-dark-bg transition-colors border border-uc-purple/20"
+              aria-expanded={showInfo}
+              title={showInfo ? t('common.close') : t('workouts.showInfo') || 'Show Info'}
+              className={`min-w-11 px-3 ${showInfo ? 'bg-uc-primary-container text-uc-on-primary-container border-transparent' : ''}`}
             >
-              <span className="text-lg">ℹ️</span>
-              <span className="text-sm font-medium text-uc-text-light">
-                {showInfo ? t('common.close') : t('workouts.showInfo') || 'Show Info'}
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                setEditingWorkout(null)
-                setEditingEvent(null)
-                setShowAddChoice(true)
-              }}
-              className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
+              <span aria-hidden className="text-lg leading-none">ℹ️</span>
+              <span className="hidden sm:inline">{showInfo ? t('common.close') : t('workouts.showInfo') || 'Show Info'}</span>
+            </Button>
+            <Button
+              variant="accent"
+              onClick={openAddChoice}
+              aria-label={t('common.add') || 'Add'}
+              className="min-w-11 px-3 sm:px-4"
             >
-              ➕ {t('common.add') || 'Add'}
-            </button>
+              <span aria-hidden className="text-lg leading-none">➕</span>
+              <span className="hidden sm:inline">{t('common.add') || 'Add'}</span>
+            </Button>
           </div>
         </div>
 
         {/* Collapsible Information Section */}
         {showInfo && (
-          <div className="mb-8 bg-uc-dark-bg rounded-2xl shadow-lg p-6 border border-uc-purple/20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Training Types */}
-              <div>
-                <h3 className="text-lg font-semibold text-uc-text-light mb-4 flex items-center space-x-2">
-                  <span>🏋️</span>
-                  <span>{t('events.trainingTypesTitle') || 'Training Types to Track'}</span>
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <span className="text-xl">🏋️</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('training.types.gym')}</div>
-                      <div className="text-sm text-uc-text-muted">{t('training.descriptions.gym')}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <span className="text-xl">🧗</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('training.types.bouldering')}</div>
-                      <div className="text-sm text-uc-text-muted">{t('training.descriptions.bouldering')}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <span className="text-xl">🔄</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('training.types.circuits')}</div>
-                      <div className="text-sm text-uc-text-muted">{t('training.descriptions.circuits')}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <span className="text-xl">🏔️</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('training.types.leadRock')}</div>
-                      <div className="text-sm text-uc-text-muted">{t('training.descriptions.leadRock')}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <span className="text-xl">🧗‍♀️</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('training.types.leadArtificial')}</div>
-                      <div className="text-sm text-uc-text-muted">{t('training.descriptions.leadArtificial')}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-uc-black/50 rounded-xl border border-uc-purple/20">
-                    <span className="text-xl">🧘</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('training.types.mentalPractice')}</div>
-                      <div className="text-sm text-uc-text-muted">{t('training.descriptions.mentalPractice')}</div>
-                    </div>
-                  </div>
+          <div className="mb-6 rounded-uc-card bg-uc-primary-container p-4 text-uc-on-primary-container lg:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-2">
+                {/* Training Types */}
+                <div>
+                  <h3 className="mb-3 text-[17px] font-extrabold">
+                    {t('events.trainingTypesTitle') || 'Training Types to Track'}
+                  </h3>
+                  <dl className="space-y-2">
+                    {INFO_TRAINING_TYPES.map(({ type, key }) => (
+                      <div key={type} className="grid grid-cols-[auto_minmax(0,9rem)_1fr] items-baseline gap-x-3 text-sm">
+                        <span aria-hidden className={`size-2.5 translate-y-[-1px] rounded-full ${workoutBg[type]}`} />
+                        <dt className="font-bold">{t(`training.types.${key}`)}</dt>
+                        <dd className="opacity-85">{t(`training.descriptions.${key}`)}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
-              </div>
 
-              {/* Event Types */}
-              <div>
-                <h3 className="text-lg font-semibold text-uc-text-light mb-4 flex items-center space-x-2">
-                  <span>📅</span>
-                  <span>{t('events.eventTypesTitle') || 'Event Types to Track'}</span>
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-3 bg-uc-alert/20 rounded-xl border border-uc-alert/30">
-                    <span className="text-xl">🤕</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('events.eventTypes.injury') || 'Injury'}</div>
-                      <div className="text-sm text-uc-text-muted">{t('events.eventTypes.injuryDescription') || 'Track injuries and recovery'}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-blue-500/20 rounded-xl border border-blue-500/30">
-                    <span className="text-xl">🏥</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('events.eventTypes.physio') || 'Physio Visit'}</div>
-                      <div className="text-sm text-uc-text-muted">{t('events.eventTypes.physioDescription') || 'Rehabilitation visits'}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-yellow-500/20 rounded-xl border border-yellow-500/30">
-                    <span className="text-xl">🏆</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('events.eventTypes.competition') || 'Competition'}</div>
-                      <div className="text-sm text-uc-text-muted">{t('events.eventTypes.competitionDescription') || 'Climbing competitions'}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-uc-purple/20 rounded-xl border border-uc-purple/30">
-                    <span className="text-xl">📅</span>
-                    <div>
-                      <div className="font-medium text-uc-text-light">{t('events.eventTypes.other') || 'Other'}</div>
-                      <div className="text-sm text-uc-text-muted">{t('events.eventTypes.otherDescription') || 'Other important events'}</div>
-                    </div>
-                  </div>
+                {/* Event Types */}
+                <div>
+                  <h3 className="mb-3 text-[17px] font-extrabold">
+                    {t('events.eventTypesTitle') || 'Event Types to Track'}
+                  </h3>
+                  <dl className="space-y-2">
+                    {INFO_EVENT_TYPES.map(({ key, dot, label, description }) => (
+                      <div key={key} className="grid grid-cols-[auto_minmax(0,9rem)_1fr] items-baseline gap-x-3 text-sm">
+                        <span aria-hidden className={`size-2.5 translate-y-[-1px] rounded-full ${dot}`} />
+                        <dt className="font-bold">{t(`events.eventTypes.${key}`) || label}</dt>
+                        <dd className="opacity-85">{t(`events.eventTypes.${key}Description`) || description}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
               </div>
+              <SheetCloseButton onClick={() => setShowInfo(false)} label={t('common.close')} />
             </div>
-            
-            <div className="mt-6 p-4 bg-uc-purple/20 rounded-xl border border-uc-purple/30">
-              <p className="text-sm text-uc-text-light">
-                {t('events.tip') || '💡 Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.'}
-              </p>
-            </div>
+
+            <p className="mt-4 rounded-xl bg-uc-bg/30 px-3 py-2.5 text-sm">
+              {t('events.tip') || '💡 Tip: Track both your training sessions and important events to understand patterns in your performance and recovery.'}
+            </p>
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-8 bg-uc-dark-bg rounded-xl p-1 border border-uc-purple/20">
-          <button
-            onClick={() => setActiveTab('workouts')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-              activeTab === 'workouts'
-                ? 'bg-uc-mustard text-uc-black shadow-lg'
-                : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
-            }`}
-          >
-            🏋️ {t('nav.workouts')} ({Array.isArray(workouts) ? workouts.length : 0})
-          </button>
-          <button
-            onClick={() => setActiveTab('events')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-              activeTab === 'events'
-                ? 'bg-uc-mustard text-uc-black shadow-lg'
-                : 'text-uc-text-muted hover:text-uc-text-light hover:bg-uc-black/50'
-            }`}
-          >
-            📅 {t('events.title')} ({Array.isArray(events) ? events.length : 0})
-          </button>
+        <div role="tablist" className="mb-5 flex border-b border-uc-border">
+          {([
+            { key: 'workouts', label: `🏋️ ${t('nav.workouts')}`, count: Array.isArray(workouts) ? workouts.length : 0 },
+            { key: 'events', label: `📅 ${t('events.title')}`, count: Array.isArray(events) ? events.length : 0 },
+          ] as const).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`-mb-px min-h-12 flex-1 border-b-[3px] px-3 text-[15px] font-bold transition-colors sm:flex-none sm:px-6 ${
+                activeTab === tab.key
+                  ? 'border-uc-primary text-uc-text'
+                  : 'border-transparent text-uc-text-muted hover:text-uc-text'
+              }`}
+            >
+              {tab.label} <span className="uc-num">({tab.count})</span>
+            </button>
+          ))}
         </div>
 
         {/* Content based on active tab */}
         {activeTab === 'workouts' ? (
           !Array.isArray(workouts) || workouts.length === 0 ? (
-            <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-              <div className="text-6xl mb-4">🏋️‍♀️</div>
-              <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-                {t('workouts.noWorkouts') || 'No workouts yet'}
-              </h2>
-              <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-                {t('workouts.noWorkoutsDescription') || 'Start tracking your training sessions! Log your workouts to monitor progress, track exercises, and analyze your performance over time.'}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                <button
-                  onClick={() => {
-                    setEditingWorkout(null)
-                    setEditingEvent(null)
-                    setShowAddChoice(true)
-                  }}
-                  className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-                >
-                  ➕ {t('workouts.addFirstWorkout') || 'Add Your First Workout'}
-                </button>
-                <p className="text-sm text-uc-text-muted">
-                  {t('workouts.useQuickLog') || 'or use Quick Log for fast entry'}
-                </p>
-              </div>
-            </div>
+            <EmptyState
+              icon="🏋️‍♀️"
+              title={t('workouts.noWorkouts') || 'No workouts yet'}
+              description={t('workouts.noWorkoutsDescription') || 'Start tracking your training sessions! Log your workouts to monitor progress, track exercises, and analyze your performance over time.'}
+              action={
+                <div className="flex flex-col items-center gap-3">
+                  <Button variant="accent" onClick={openAddChoice}>
+                    ➕ {t('workouts.addFirstWorkout') || 'Add Your First Workout'}
+                  </Button>
+                  <p className="text-sm text-uc-text-muted">
+                    {t('workouts.useQuickLog') || 'or use Quick Log for fast entry'}
+                  </p>
+                </div>
+              }
+            />
           ) : (
             <>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
                 {Array.isArray(workouts) && workouts.map((workout) => (
                   <WorkoutCard
                     key={workout.id}
@@ -792,67 +732,40 @@ function WorkoutsPageContent() {
                   />
                 ))}
               </div>
-              {/* Pagination controls */}
               {workoutsPagination.totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center space-x-4">
-                  <button
-                    onClick={() => {
-                      const newPage = workoutsPage - 1
-                      setWorkoutsPage(newPage)
-                      fetchWorkouts(newPage, false)
-                    }}
-                    disabled={workoutsPage === 1}
-                    className="px-4 py-2 rounded-xl bg-uc-dark-bg text-uc-text-light border border-uc-purple/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-uc-purple/20 transition-colors"
-                  >
-                    ← Previous
-                  </button>
-                  <span className="text-uc-text-muted">
-                    Page {workoutsPage} of {workoutsPagination.totalPages} ({workoutsPagination.total} total)
-                  </span>
-                  <button
-                    onClick={() => {
-                      const newPage = workoutsPage + 1
-                      setWorkoutsPage(newPage)
-                      fetchWorkouts(newPage, false)
-                    }}
-                    disabled={!workoutsPagination.hasMore}
-                    className="px-4 py-2 rounded-xl bg-uc-dark-bg text-uc-text-light border border-uc-purple/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-uc-purple/20 transition-colors"
-                  >
-                    Next →
-                  </button>
-                </div>
+                <Pagination
+                  page={workoutsPage}
+                  totalPages={workoutsPagination.totalPages}
+                  total={workoutsPagination.total}
+                  hasMore={workoutsPagination.hasMore}
+                  onPage={(newPage) => {
+                    setWorkoutsPage(newPage)
+                    fetchWorkouts(newPage, false)
+                  }}
+                />
               )}
             </>
           )
         ) : (
           !Array.isArray(events) || events.length === 0 ? (
-            <div className="bg-uc-dark-bg rounded-xl p-12 text-center border border-uc-purple/20">
-              <div className="text-6xl mb-4">📅</div>
-              <h2 className="text-xl font-semibold text-uc-text-light mb-2">
-                {t('events.noEvents') || 'No events yet'}
-              </h2>
-              <p className="text-uc-text-muted mb-6 max-w-md mx-auto">
-                {t('events.noEventsDescription') || 'Start tracking your injuries, physio visits, competitions, and climbing trips. This helps you understand patterns and plan better.'}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                <button
-                  onClick={() => {
-                    setEditingWorkout(null)
-                    setEditingEvent(null)
-                    setShowAddChoice(true)
-                  }}
-                  className="bg-uc-mustard hover:bg-uc-mustard/90 text-uc-black px-6 py-3 rounded-xl font-medium transition-colors shadow-lg"
-                >
-                  ➕ {t('events.addFirstEvent') || 'Add Your First Event'}
-                </button>
-                <p className="text-sm text-uc-text-muted">
-                  {t('events.trackInjuries') || 'Track injuries to see patterns with your cycle'}
-                </p>
-              </div>
-            </div>
+            <EmptyState
+              icon="📅"
+              title={t('events.noEvents') || 'No events yet'}
+              description={t('events.noEventsDescription') || 'Start tracking your injuries, physio visits, competitions, and climbing trips. This helps you understand patterns and plan better.'}
+              action={
+                <div className="flex flex-col items-center gap-3">
+                  <Button variant="accent" onClick={openAddChoice}>
+                    ➕ {t('events.addFirstEvent') || 'Add Your First Event'}
+                  </Button>
+                  <p className="text-sm text-uc-text-muted">
+                    {t('events.trackInjuries') || 'Track injuries to see patterns with your cycle'}
+                  </p>
+                </div>
+              }
+            />
           ) : (
             <>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4">
                 {Array.isArray(events) && events.map((event) => (
                   <EventCard
                     key={event.id}
@@ -864,35 +777,17 @@ function WorkoutsPageContent() {
                   />
                 ))}
               </div>
-              {/* Pagination controls */}
               {eventsPagination.totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center space-x-4">
-                  <button
-                    onClick={() => {
-                      const newPage = eventsPage - 1
-                      setEventsPage(newPage)
-                      fetchEvents(newPage, false)
-                    }}
-                    disabled={eventsPage === 1}
-                    className="px-4 py-2 rounded-xl bg-uc-dark-bg text-uc-text-light border border-uc-purple/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-uc-purple/20 transition-colors"
-                  >
-                    ← Previous
-                  </button>
-                  <span className="text-uc-text-muted">
-                    Page {eventsPage} of {eventsPagination.totalPages} ({eventsPagination.total} total)
-                  </span>
-                  <button
-                    onClick={() => {
-                      const newPage = eventsPage + 1
-                      setEventsPage(newPage)
-                      fetchEvents(newPage, false)
-                    }}
-                    disabled={!eventsPagination.hasMore}
-                    className="px-4 py-2 rounded-xl bg-uc-dark-bg text-uc-text-light border border-uc-purple/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-uc-purple/20 transition-colors"
-                  >
-                    Next →
-                  </button>
-                </div>
+                <Pagination
+                  page={eventsPage}
+                  totalPages={eventsPagination.totalPages}
+                  total={eventsPagination.total}
+                  hasMore={eventsPagination.hasMore}
+                  onPage={(newPage) => {
+                    setEventsPage(newPage)
+                    fetchEvents(newPage, false)
+                  }}
+                />
               )}
             </>
           )
@@ -923,56 +818,34 @@ function WorkoutsPageContent() {
           />
         )}
 
-        {/* Add Choice Modal */}
-        {showAddChoice && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-uc-dark-bg rounded-2xl shadow-xl w-full max-w-md border border-uc-purple/20">
-              <div className="p-6 border-b border-uc-purple/20">
-                <h2 className="text-2xl font-bold text-uc-text-light mb-2">
-                  {t('common.add') || 'Add'}
-                </h2>
-                <p className="text-sm text-uc-text-muted">
-                  {t('workouts.addChoiceDescription') || 'What would you like to add?'}
-                </p>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={handleQuickLog}
-                    className="flex flex-col items-center p-6 bg-gradient-to-br from-uc-purple/30 to-uc-mustard/30 rounded-xl border-2 border-uc-purple/40 hover:border-uc-purple/60 hover:from-uc-purple/40 hover:to-uc-mustard/40 transition-all"
-                  >
-                    <span className="text-4xl mb-3">⚡</span>
-                    <span className="font-medium text-uc-text-light">{t('quickLog.button') || 'Quick Log'}</span>
-                  </button>
-                  <button
-                    onClick={handleAddWorkout}
-                    className="flex flex-col items-center p-6 bg-uc-black/50 rounded-xl border-2 border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black transition-all"
-                  >
-                    <span className="text-4xl mb-3">🏋️</span>
-                    <span className="font-medium text-uc-text-light">{t('workouts.addNew') || 'Add Workout'}</span>
-                  </button>
-                  <button
-                    onClick={handleAddEvent}
-                    className="flex flex-col items-center p-6 bg-uc-black/50 rounded-xl border-2 border-uc-purple/20 hover:border-uc-purple/40 hover:bg-uc-black transition-all"
-                  >
-                    <span className="text-4xl mb-3">📅</span>
-                    <span className="font-medium text-uc-text-light">{t('events.addNew') || 'Add Event'}</span>
-                  </button>
-                </div>
-              </div>
-              <div className="p-6 border-t border-uc-purple/20 flex justify-end">
-                <button
-                  onClick={() => {
-                    setShowAddChoice(false)
-                  }}
-                  className="px-4 py-2 text-uc-text-muted hover:text-uc-text-light transition-colors bg-uc-dark-bg/50 hover:bg-uc-dark-bg rounded-xl border border-uc-purple/20"
-                >
-                  {t('common.cancel') || 'Cancel'}
-                </button>
-              </div>
-            </div>
+        {/* Add Choice Sheet */}
+        <BottomSheet
+          isOpen={showAddChoice}
+          onClose={() => setShowAddChoice(false)}
+          title={t('common.add') || 'Add'}
+          closeLabel={t('common.close')}
+        >
+          <p className="mb-4 text-sm text-uc-text-muted">
+            {t('workouts.addChoiceDescription') || 'What would you like to add?'}
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {([
+              { onClick: handleQuickLog, emoji: '⚡', label: t('quickLog.button') || 'Quick Log', tone: 'bg-uc-primary-container text-uc-on-primary-container border-transparent' },
+              { onClick: handleAddWorkout, emoji: '🏋️', label: t('workouts.addNew') || 'Add Workout', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
+              { onClick: handleAddEvent, emoji: '📅', label: t('events.addNew') || 'Add Event', tone: 'bg-uc-surface text-uc-text border-uc-border hover:border-uc-primary' },
+            ]).map((choice) => (
+              <button
+                key={choice.emoji}
+                type="button"
+                onClick={choice.onClick}
+                className={`flex min-h-28 flex-col items-center justify-center gap-2 rounded-uc-card border p-4 text-center text-sm font-bold transition-colors ${choice.tone}`}
+              >
+                <span aria-hidden className="text-3xl leading-none">{choice.emoji}</span>
+                {choice.label}
+              </button>
+            ))}
           </div>
-        )}
+        </BottomSheet>
 
         {/* Quick Log Modal */}
         {showQuickLog && (
@@ -1047,6 +920,45 @@ function WorkoutsPageContent() {
           />
         )}
       </div>
+    </div>
+  )
+}
+
+// Info panel rows (same types and order as before)
+const INFO_TRAINING_TYPES: { type: WorkoutTypeKey; key: string }[] = [
+  { type: 'GYM', key: 'gym' },
+  { type: 'BOULDERING', key: 'bouldering' },
+  { type: 'CIRCUITS', key: 'circuits' },
+  { type: 'LEAD_ROCK', key: 'leadRock' },
+  { type: 'LEAD_ARTIFICIAL', key: 'leadArtificial' },
+  { type: 'MENTAL_PRACTICE', key: 'mentalPractice' },
+]
+
+const INFO_EVENT_TYPES = [
+  { key: 'injury', dot: 'bg-uc-error', label: 'Injury', description: 'Track injuries and recovery' },
+  { key: 'physio', dot: 'bg-uc-primary', label: 'Physio Visit', description: 'Rehabilitation visits' },
+  { key: 'competition', dot: 'bg-uc-accent-text', label: 'Competition', description: 'Climbing competitions' },
+  { key: 'other', dot: 'bg-uc-text-muted', label: 'Other', description: 'Other important events' },
+]
+
+function Pagination({ page, totalPages, total, hasMore, onPage }: {
+  page: number
+  totalPages: number
+  total: number
+  hasMore: boolean
+  onPage: (page: number) => void
+}) {
+  return (
+    <div className="mt-6 flex items-center justify-center gap-3">
+      <Button variant="ghost" onClick={() => onPage(page - 1)} disabled={page === 1}>
+        ← Previous
+      </Button>
+      <span className="text-center text-[13px] font-semibold text-uc-text-muted uc-num">
+        Page {page} of {totalPages} ({total} total)
+      </span>
+      <Button variant="ghost" onClick={() => onPage(page + 1)} disabled={!hasMore}>
+        Next →
+      </Button>
     </div>
   )
 }

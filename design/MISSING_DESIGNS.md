@@ -92,6 +92,29 @@ Log workout — lead climbing, Calendar (dark + light), Cycle, Statistics.
   - Load routine / Load protocol pickers are bottom sheets now (no design; "Start from routine" in the component
     sheet used as reference).
 
+### Workouts list & goals
+- Built 2026-11-12 against `Workouts list & goals.png`. Kept where the mock differs:
+  - **Tab counts** show the number of items on the current page (max 20), as before — the mock's "Workouts (214)"
+    would be the API's total. Switching to the total is a one-line change; user's call.
+  - **Pagination** stays "← Previous · Page X of Y (N total) · Next →" (hard-coded English, as before); the mock's
+    numbered pages ("1 2 … 11") and "1–20 of 214" would add jump-to-page.
+  - Header keeps the description line; Goals / Info show their labels next to the icon from `sm` up, icon only on phones.
+  - **Info panel**: same 6 training types as before (no Fingerboard row — there's no description key for it) and the 4
+    event types with their own descriptions (no Trip) + the tip; not the mock's one-line event summary.
+  - **Workout card**: TR, routine–variation, sector, practice type, time of day and tags as chips; ratings as 5 dots in
+    `--uc-primary`; Strong Mind recap + gratitude/improvements in one inner block (focus/zone words in their scale
+    colours). Field labels "Training volume" / "Variation" / "Practice type" moved to tooltips. "Pre-session feel",
+    "Gratitude", "Improvements" stay hard-coded English. Before-climbing rating and reflections are still shown.
+    Edit/delete keep their emoji until the custom icons land.
+  - Mock's gym chip "5 exercises" isn't shown on list cards (it never was).
+  - **Add choice** is a bottom sheet with 3 tiles; its Cancel button was dropped (✕, Esc and scrim close it, as in Quick log).
+  - **Goals configurator**: sheet keeps the 🎯 title, description and a Cancel + Save footer. Weekly goal keeps range +
+    number input (mock: − slider +). Monthly auto/manual is now a segmented control (was a checkbox; new keys
+    `goals.auto` / `goals.manual`); manual shows the 1–40 slider + input. Per-type goals stay in a collapsible card with
+    a type select + count input + "× tydz." (hard-coded PL, as before) and 🗑️; a dot in the type colour leads each row.
+    Preview keeps its weekly / monthly / breakdown rows rather than the mock's one-line summary.
+  - Events tab cards (`EventCard`) are untouched here — they're the Events step.
+
 ### Calendar
 - **Selected-day detail panel** and **Upcoming events list** — not implemented.
 - **Workout dots** — the app shows **full chips per workout** (type + label, sector, ⚡ quick-log badge,

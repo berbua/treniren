@@ -1072,6 +1072,8 @@
     "monthlyGoal": "Monthly Goal",
     "weeklyGoalDesc": "Goal: {{count}} workouts per week",
     "monthlyGoalDesc": "Goal: {{count}} workouts per month",
+    "auto": "Auto (× 4)",
+    "manual": "Manual 1–40",
     "autoCalculateMonthly": "Auto-calculate monthly goal",
     "autoCalculateMonthlyDesc": "Monthly goal = weekly goal × 4 ({{count}} workouts)",
     "detailedGoals": "Detailed Goals (optional)",
