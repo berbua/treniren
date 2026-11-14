@@ -59,7 +59,9 @@ export async function POST(request: NextRequest) {
       weeklyWorkoutGoal,
       monthlyWorkoutGoal,
       useAutoMonthlyGoal,
-      workoutTypeGoals
+      workoutTypeGoals,
+      strongMindTrackingEnabled,
+      strongMindPromptAnswered
     } = body
     const user = await requireAuth(request)
     
@@ -99,6 +101,9 @@ export async function POST(request: NextRequest) {
     // Prisma rejects a plain null for Json columns
     const workoutTypeGoalsValue = workoutTypeGoals ? (workoutTypeGoals as Prisma.InputJsonValue) : Prisma.JsonNull
     if (workoutTypeGoals !== undefined) updateData.workoutTypeGoals = workoutTypeGoalsValue
+    // Strong Mind setting
+    if (typeof strongMindTrackingEnabled === 'boolean') updateData.strongMindTrackingEnabled = strongMindTrackingEnabled
+    if (typeof strongMindPromptAnswered === 'boolean') updateData.strongMindPromptAnswered = strongMindPromptAnswered
     
     const profile = await prisma.userProfile.upsert({
       where: { userId: user.id },
@@ -114,6 +119,8 @@ export async function POST(request: NextRequest) {
         monthlyWorkoutGoal,
         useAutoMonthlyGoal: useAutoMonthlyGoal !== undefined ? useAutoMonthlyGoal : true,
         workoutTypeGoals: workoutTypeGoalsValue,
+        strongMindTrackingEnabled: strongMindTrackingEnabled === true,
+        strongMindPromptAnswered: strongMindPromptAnswered === true,
       },
     })
     

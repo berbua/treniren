@@ -10,6 +10,7 @@ import { notificationService } from '@/lib/notification-service';
 import { exportAllData } from '@/lib/export-utils';
 import { generateDummyData } from '@/lib/generate-dummy-data';
 import { useCsrfToken } from '@/hooks/useCsrfToken';
+import { useStrongMindSetting } from '@/hooks/useStrongMindSetting';
 import { toLocalDateString, toPeriodDateString } from '@/lib/date-utils';
 import { useToast } from '@/contexts/ToastContext';
 import { Button, Card, EmptyState, Icon, IconName, Input, Label, Overline, SegmentedControl, Select, Spinner, inputClasses } from '@/components/ui';
@@ -29,6 +30,7 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
   const { isOnline, storageSize } = useOffline();
   const { settings: notificationSettings, updateSettings } = useNotifications();
   const { getToken } = useCsrfToken();
+  const strongMindSetting = useStrongMindSetting();
   const { showSuccess, showError } = useToast();
   const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab);
   const [profileData, setProfileData] = useState({
@@ -644,6 +646,17 @@ export const UserProfile = ({ onClose, onPhotoUpdate, initialTab = 'profile' }: 
                     {t('profile.setupCycle')}
                   </Button>
                 )}
+              </SettingsRow>
+              <SettingsRow
+                label={t('profile.strongMindTracking')}
+                description={t('profile.strongMindTrackingDesc')}
+                htmlFor="profile-strong-mind"
+              >
+                <Checkbox
+                  id="profile-strong-mind"
+                  checked={strongMindSetting.enabled}
+                  onChange={(e) => strongMindSetting.setEnabled(e.target.checked)}
+                />
               </SettingsRow>
             </SettingsGroup>
           </section>

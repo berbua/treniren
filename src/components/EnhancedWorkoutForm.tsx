@@ -7,7 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { dayNumberToDateString, storedDayNumber, toLocalDateString, toStoredDateString } from '@/lib/date-utils';
 import { calculateCycleInfo } from '@/lib/cycle-utils';
 import CycleInfoComponent from './CycleInfo';
-import { StrongMindSection } from './StrongMindSection';
+import { ClimbsSection } from './ClimbsSection';
 import { ProcessGoalsSection } from './ProcessGoalsSection';
 import { ProcessGoal, ProjectGoal, isGoalAchieved, markGoalsAchieved } from '@/lib/strong-mind-goals';
 import { plannedSessionNotes } from '@/lib/plan-import';
@@ -956,6 +956,15 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
             />
           )}
 
+          {/* Climbs - lead climbing and bouldering; Strong Mind fields on lead when the Profile setting is on */}
+          {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING') && (
+            <ClimbsSection
+              mentalState={formData.mentalState}
+              onChange={(mentalState) => updateFormData('mentalState', mentalState)}
+              workoutType={formData.type}
+            />
+          )}
+
           {/* Notes */}
           <div>
             <FieldHeading htmlFor="workout-notes">{t('workouts.notes') || 'Notes'}</FieldHeading>
@@ -1007,15 +1016,6 @@ export default function EnhancedWorkoutForm({ onSubmit, onCancel, initialData, a
               </div>
             </div>
           </CollapsibleCard>
-
-          {/* Strong Mind Section - lead climbing and bouldering (climb list with grades) */}
-          {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING') && (
-            <StrongMindSection
-              mentalState={formData.mentalState}
-              onChange={(mentalState) => updateFormData('mentalState', mentalState)}
-              workoutType={formData.type}
-            />
-          )}
 
           {/* Recurring Workouts Section - Only when creating (not editing) */}
           {!initialData && (

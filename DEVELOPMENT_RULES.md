@@ -69,8 +69,8 @@
 - **GYM**: Traditional gym workouts
 - **BOULDERING**: Indoor/outdoor bouldering
 - **CIRCUITS**: Circuit training
-- **LEAD_ROCK**: Outdoor lead climbing (includes Strong Mind section)
-- **LEAD_ARTIFICIAL**: Indoor lead climbing (includes Strong Mind section)
+- **LEAD_ROCK**: Outdoor lead climbing (Strong Mind fields when tracking is on)
+- **LEAD_ARTIFICIAL**: Indoor lead climbing (Strong Mind fields when tracking is on)
 - **MENTAL_PRACTICE**: Meditation, visualization
 
 ### **Event Types**
@@ -90,6 +90,9 @@
 - **Special Fields**: No gratitude/improvements fields
 
 ### **Strong Mind Section (Lead Climbing Only)**
+- **Climbs section** (`ClimbsSection`): lead and bouldering always list climbs (grade, style, tries, notes)
+- **Profile setting** `strongMindTrackingEnabled` turns the Strong Mind fields on for lead only (never bouldering);
+  lead workouts ask once ("Track your headspace on lead?"), recorded in `strongMindPromptAnswered`
 - **Mental State Tracking**: Before/during climbing feelings (1-5 scale)
 - **Focus States**: Choke, Distraction, Present, Focused, Clutch, Flow
 - **Comfort Zones**: Comfort, Stretch 1, Stretch 2, Panic

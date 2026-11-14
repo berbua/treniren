@@ -669,6 +669,27 @@
       "one": "{{count}} climb",
       "other": "{{count}} climbs"
     },
+    "climbsSection": {
+      "climbs": "Climbs ({{count}})",
+      "boulders": "Boulders ({{count}})",
+      "addClimb": "Add climb",
+      "addBoulder": "Add boulder",
+      "collapse": "Collapse",
+      "note": "note",
+      "afterSession": "Strong Mind · after the session",
+      "gradeSystems": {
+        "route": { "french": "French", "polish": "Polish", "american": "YDS" },
+        "boulder": { "french": "Font", "american": "V-scale" }
+      }
+    },
+    "strongMindPrompt": {
+      "title": "Track your headspace on lead?",
+      "body": "Add focus, falls and comfort zone to each climb, and see in Strong Mind how your head changes over time.",
+      "notNow": "Not now",
+      "turnOn": "Turn on",
+      "askedOnce": "Asked once. You can change it any time in Profile → Settings.",
+      "enabled": "Strong Mind is on. Turn it off any time in Profile."
+    },
     "deletedUndo": "Workout deleted"
   },
   "exercises": {
@@ -1156,6 +1177,8 @@
     "dataCollectionDesc": "Workout data and performance metrics",
     "cycleTracking": "Cycle Tracking",
     "cycleTrackingDesc": "Menstrual cycle data and phase tracking",
+    "strongMindTracking": "Strong Mind tracking",
+    "strongMindTrackingDesc": "Focus, falls and comfort zone for each lead climb",
     "pushNotifications": "Push Notifications",
     "pushNotificationsDesc": "Receive notifications even when the app is closed",
     "pushSubscriptionFailed": "Failed to enable push notifications. Please check your browser settings.",

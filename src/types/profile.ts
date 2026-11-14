@@ -8,6 +8,8 @@ export interface UserProfile {
   lastPeriodDate?: Date
   timezone: string
   cycleTrackingEnabled: boolean
+  strongMindTrackingEnabled: boolean
+  strongMindPromptAnswered: boolean
   createdAt: string
   updatedAt: string
 }

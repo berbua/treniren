@@ -464,3 +464,10 @@ note the answer.
   item. "Log" opens the workout form prefilled (type, TR, title + notes as notes) with `planId`; a plan with a workout
   counts as done and hides. Today: "Today's plan" / "Next planned" card, "Log it" → `/calendar?plan=<id>`. Keys
   `plans.*`. No mockup.
+- 2026-11-14: Climbs section + Strong Mind setting (mockup "Climbs section — Strong Mind first-use question, on, off,
+  bouldering"). `StrongMindSection` replaced by `ClimbsSection`: always shown on lead/bouldering after wall angle,
+  collapsible climb rows, header grade-system select (applies to new and ungraded climbs). Strong Mind fields only on
+  lead when `UserProfile.strongMindTrackingEnabled`; one-time question tracked in `strongMindPromptAnswered`
+  (`useStrongMindSetting`, localStorage copy + pending sync offline). Profile → Settings → Privacy toggle. Migration
+  `20261114_add_strong_mind_setting` applied to production 2026-11-14 (users with lead Strong Mind data switched on).
+  Grade stays a dropdown (mockup shows chips); mental state summary stays computed. Not checked in a browser yet.

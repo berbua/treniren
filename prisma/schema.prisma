@@ -198,6 +198,9 @@ model UserProfile {
   monthlyWorkoutGoal Int?      // If null, calculate as weeklyWorkoutGoal * 4
   useAutoMonthlyGoal Boolean   @default(true) // Auto-calculate monthly from weekly
   workoutTypeGoals   Json?     // Array of { type: string, count: number }
+  // Strong Mind fields (focus, falls, comfort zone) on lead climbs
+  strongMindTrackingEnabled Boolean @default(false)
+  strongMindPromptAnswered  Boolean @default(false) // The one-time "Track your headspace on lead?" question, or a change in Profile
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 

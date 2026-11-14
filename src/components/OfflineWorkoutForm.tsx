@@ -18,7 +18,7 @@ import {
 } from '@/lib/offline-storage';
 import { WorkoutType, TrainingVolume } from '@/types/workout';
 import CycleInfoComponent from './CycleInfo';
-import { StrongMindSection } from './StrongMindSection';
+import { ClimbsSection } from './ClimbsSection';
 import { BottomSheet, Button, ChoiceChip, FieldError, Icon, Input, Label, RatingDots, Select, Textarea, WorkoutTypeChip, phaseBandBg } from './ui';
 
 interface OfflineWorkoutFormProps {
@@ -327,9 +327,9 @@ export const OfflineWorkoutForm = ({ onClose }: OfflineWorkoutFormProps) => {
           </div>
         ))}
 
-        {/* Strong Mind Section */}
-        {formData.type !== 'MENTAL_PRACTICE' && (
-          <StrongMindSection
+        {/* Climbs - lead climbing and bouldering; Strong Mind fields on lead when the Profile setting is on */}
+        {(formData.type === 'LEAD_ROCK' || formData.type === 'LEAD_ARTIFICIAL' || formData.type === 'BOULDERING') && (
+          <ClimbsSection
             mentalState={formData.mentalState}
             onChange={(mentalState) => updateFormData('mentalState', mentalState)}
             workoutType={formData.type}

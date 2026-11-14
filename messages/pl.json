@@ -679,6 +679,27 @@
       "many": "{{count}} dróg",
       "other": "{{count}} drogi"
     },
+    "climbsSection": {
+      "climbs": "Drogi ({{count}})",
+      "boulders": "Bouldery ({{count}})",
+      "addClimb": "Dodaj drogę",
+      "addBoulder": "Dodaj boulder",
+      "collapse": "Zwiń",
+      "note": "notatka",
+      "afterSession": "Strong Mind · po sesji",
+      "gradeSystems": {
+        "route": { "french": "Francuska", "polish": "Polska", "american": "YDS" },
+        "boulder": { "french": "Font", "american": "Skala V" }
+      }
+    },
+    "strongMindPrompt": {
+      "title": "Śledzić głowę na prowadzeniu?",
+      "body": "Dodawaj skupienie, odpadnięcia i strefę komfortu do każdej drogi i sprawdzaj w Strong Mind, jak z czasem zmienia się Twoja głowa.",
+      "notNow": "Nie teraz",
+      "turnOn": "Włącz",
+      "askedOnce": "Pytamy tylko raz. Możesz to zmienić w każdej chwili w zakładce Profil → Ustawienia.",
+      "enabled": "Strong Mind jest włączony. Wyłączysz go w każdej chwili w Profilu."
+    },
     "deletedUndo": "Trening usunięty"
   },
   "exercises": {
@@ -1166,6 +1187,8 @@
     "dataCollectionDesc": "Dane treningowe i metryki wydajności",
     "cycleTracking": "Śledzenie cyklu",
     "cycleTrackingDesc": "Dane cyklu menstruacyjnego i śledzenie faz",
+    "strongMindTracking": "Śledzenie Strong Mind",
+    "strongMindTrackingDesc": "Skupienie, odpadnięcia i strefa komfortu dla każdej drogi z prowadzeniem",
     "pushNotifications": "Powiadomienia push",
     "pushNotificationsDesc": "Otrzymuj powiadomienia nawet gdy aplikacja jest zamknięta",
     "pushSubscriptionFailed": "Nie udało się włączyć powiadomień push. Sprawdź ustawienia przeglądarki.",
